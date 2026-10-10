@@ -3,6 +3,15 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0d1116">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Blockfire">
+<meta name="description" content="Blocky 6v6 shooter with bots, five maps, a shop and killstreaks. Plays in the browser.">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <title>Blockfire</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -190,7 +199,23 @@ body.touch .ctrl.desk{display:none} body:not(.touch) .ctrl.mob{display:none}
 .daily .ch.done span{color:var(--green);text-decoration:line-through}
 .toast{position:fixed;left:50%;top:calc(var(--st) + 14px);transform:translateX(-50%);background:var(--green);color:#08200f;font-family:var(--f-hud);font-size:22px;padding:6px 16px 2px;z-index:50;letter-spacing:.06em;max-width:90vw;text-align:center}
 
-#board,#pause,#end,#shop,#crate,#acct{background:rgba(9,12,16,.78)}
+#board,#pause,#end,#shop,#crate,#acct,#settings{background:rgba(9,12,16,.78)}
+#settings{z-index:30}
+.setgrid{display:grid;grid-template-columns:1fr;gap:10px}
+.setrow{display:grid;grid-template-columns:150px 1fr 56px;gap:10px;align-items:center;font-size:19px}
+.setrow input[type=range]{width:100%;accent-color:var(--amber)}
+.setrow output{font-variant-numeric:tabular-nums;text-align:right;color:var(--amber)}
+.setrow .opts{display:flex;gap:6px;flex-wrap:wrap;grid-column:2/4}
+@media (max-width:520px){.setrow{grid-template-columns:110px 1fr 46px;font-size:17px}}
+#fps{position:absolute;left:50%;bottom:calc(var(--sb) + 4px);transform:translateX(-50%);font-size:14px;color:var(--dim);letter-spacing:.1em}
+.tb{opacity:var(--ba,1)}
+/* each thumb cluster grows from its own screen corner, so bigger buttons never collide */
+.cl{position:absolute;inset:0;pointer-events:none}
+.cl>*{pointer-events:auto}
+#clR{transform:scale(var(--bs,1));transform-origin:100% 100%}
+#clL{transform:scale(var(--bs,1));transform-origin:0 100%}
+@media (max-width:760px),(max-height:360px){#clR,#clL{transform:scale(min(var(--bs,1),1.05))}}
+#wpills{opacity:var(--ba,1)}
 .tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px;margin-bottom:12px}
 .tile{background:rgba(0,0,0,.3);border:1px solid var(--line);padding:8px 10px 4px}
 .tile b{display:block;font-size:30px;font-weight:600;line-height:1;font-variant-numeric:tabular-nums}
@@ -252,6 +277,7 @@ body.touch .ctrl.desk{display:none} body:not(.touch) .ctrl.mob{display:none}
 </head>
 <body>
 
+
 <canvas id="c" aria-label="Blockfire game view"></canvas>
 
 <div id="hud" hidden>
@@ -271,7 +297,7 @@ body.touch .ctrl.desk{display:none} body:not(.touch) .ctrl.mob{display:none}
   <div id="nadeWarn" hidden>GRENADE</div>
   <div id="hpbox" class="cut"><div class="lbl">HP</div><div id="hp">100</div><div class="bar"><b id="hpbar"></b></div></div>
   <div id="ammo" class="cut">
-    <div id="wname">AK-47</div>
+    <div id="wname">KV-47</div>
     <div><span id="mag">30</span><span id="res">/ 120</span></div>
     <div id="nades">GRENADES ◆</div>
     <div id="reloadTxt" hidden>RELOADING</div>
@@ -279,24 +305,27 @@ body.touch .ctrl.desk{display:none} body:not(.touch) .ctrl.mob{display:none}
   </div>
   <div id="vig"></div>
   <div id="nukeFlash"></div>
+  <div id="fps" hidden>60 FPS</div>
   <div id="death" class="cut" hidden>
-    <div class="k">ELIMINATED BY</div><div class="n" id="dName">Yeti</div><div class="w" id="dWeap">AK-47</div>
+    <div class="k">ELIMINATED BY</div><div class="n" id="dName">Yeti</div><div class="w" id="dWeap">KV-47</div>
     <div class="t">Redeploying in <span id="dT">4</span></div>
   </div>
 </div>
 
 <div id="touch" hidden>
   <div id="joy"><div id="knob"></div></div>
-  <div class="tb" data-b="sprint">SPRINT</div>
-  <div id="wpills"><div data-b="w0">AK-47</div><div data-b="w1">M4A1</div></div>
-  <div class="tb" data-b="fire">FIRE</div>
-  <div class="tb" data-b="fire2">FIRE</div>
-  <div class="tb" data-b="jump">JUMP</div>
-  <div class="tb" data-b="reload">RLD</div>
-  <div class="tb" data-b="aim">AIM</div>
-  <div class="tb" data-b="nade">NADE</div>
-  <div class="tb" data-b="mine">MINE</div>
   <div class="tb" data-b="board">TAB</div>
+  <div class="cl" id="clL"><div class="tb" data-b="fire2">FIRE</div></div>
+  <div class="cl" id="clR">
+    <div class="tb" data-b="sprint">SPRINT</div>
+    <div id="wpills"><div data-b="w0">KV-47</div><div data-b="w1">MK-4</div></div>
+    <div class="tb" data-b="fire">FIRE</div>
+    <div class="tb" data-b="jump">JUMP</div>
+    <div class="tb" data-b="reload">RLD</div>
+    <div class="tb" data-b="aim">AIM</div>
+    <div class="tb" data-b="nade">NADE</div>
+    <div class="tb" data-b="mine">MINE</div>
+  </div>
 </div>
 
 <div id="menu" class="overlay">
@@ -327,6 +356,7 @@ body.touch .ctrl.desk{display:none} body:not(.touch) .ctrl.mob{display:none}
       <button class="btn ghost cut" id="openShop">Shop</button>
       <button class="btn ghost cut" id="openCrate">Crate</button>
       <button class="btn ghost cut" id="openAcct">Profile</button>
+      <button class="btn ghost cut" id="openSet">Settings</button>
     </div>
     <div class="daily cut" id="daily"></div>
     <div class="ctrl desk">
@@ -370,6 +400,13 @@ body.touch .ctrl.desk{display:none} body:not(.touch) .ctrl.mob{display:none}
   </div>
 </div>
 
+<div id="settings" class="overlay" hidden>
+  <div class="sheet cut">
+    <div class="shopHead"><h2>SETTINGS</h2><button class="btn sm ghost cut" id="setClose">Done</button></div>
+    <div class="setgrid" id="setBody"></div>
+    <div class="row" style="margin-top:12px"><button class="btn sm ghost cut" id="setReset">Reset to defaults</button></div>
+  </div>
+</div>
 <div id="acct" class="overlay" hidden>
   <div class="sheet cut">
     <div class="shopHead"><h2 id="acName">PLAYER</h2><button class="btn sm ghost cut" id="acClose">Close</button></div>
@@ -383,8 +420,8 @@ body.touch .ctrl.desk{display:none} body:not(.touch) .ctrl.mob{display:none}
     <div id="acBody"></div>
   </div>
 </div>
-<div id="board" class="overlay" hidden><div class="sheet cut"><h2>SCOREBOARD</h2><div class="teams" id="boardBody"></div><div class="row" style="margin-top:14px"><button class="btn cut" id="boardBack">Back to game</button></div></div></div>
-<div id="pause" class="overlay" hidden><div class="sheet cut"><h2>PAUSED</h2><p>Click to jump back in.</p></div></div>
+<div id="board" class="overlay" hidden><div class="sheet cut"><h2>SCOREBOARD</h2><div class="teams" id="boardBody"></div><div class="row" style="margin-top:14px"><button class="btn cut" id="boardBack">Back to game</button><button class="btn ghost cut" id="boardSet">Settings</button></div></div></div>
+<div id="pause" class="overlay" hidden><div class="sheet cut"><h2>PAUSED</h2><p>Click to jump back in.</p><button class="btn ghost cut" id="pauseSet">Settings</button></div></div>
 <div id="end" class="overlay" hidden>
   <div class="sheet cut">
     <p class="big" id="endTitle">VICTORY</p>
@@ -401,7 +438,7 @@ body.touch .ctrl.desk{display:none} body:not(.touch) .ctrl.mob{display:none}
   </div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="three.min.js"></script>
 <script>
 (()=>{
 'use strict';
@@ -442,12 +479,16 @@ function loadProfile(){
 function saveProfile(){if(!USERS)return;USERS.users[USERS.cur].p=profile;try{localStorage.setItem('blockfire.users',JSON.stringify(USERS));}catch(e){}}
 loadProfile();
 const ST=()=>profile.stats;
+const SET_DEFAULT={sens:1,adsSens:1,invert:false,vol:.8,quality:'auto',fov:75,btnScale:1,btnAlpha:1,fps:false};
+let SET=Object.assign({},SET_DEFAULT);
+try{Object.assign(SET,JSON.parse(localStorage.getItem('blockfire.settings')||'{}'));}catch(e){}
+function saveSettings(){try{localStorage.setItem('blockfire.settings',JSON.stringify(SET));}catch(e){}}
 const today=()=>{const d=new Date();return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;};
 const CHALLENGES=[
   {id:'kills',text:'Get 20 kills',goal:20,gp:500},
   {id:'heads',text:'Land 8 headshots',goal:8,gp:500},
   {id:'win',text:'Win a match',goal:1,gp:600},
-  {id:'boom',text:'Get 3 kills with grenades or the RPG',goal:3,gp:600},
+  {id:'boom',text:'Get 3 kills with grenades or the rocket launcher',goal:3,gp:600},
   {id:'streak',text:'Reach a 5 kill streak',goal:1,gp:700},
   {id:'sniper',text:'Get 5 kills with a sniper rifle',goal:5,gp:600},
   {id:'matches',text:'Finish 2 matches',goal:2,gp:400},
@@ -475,6 +516,7 @@ function chProgress(id,n){
 const canvas=$('c');
 const renderer=new THREE.WebGLRenderer({canvas,antialias:false,powerPreference:'high-performance'});
 renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,isTouch?1.25:1.5));
+const qualityRatio=()=>({low:.6,med:1,high:Math.min(window.devicePixelRatio||1,2)})[SET.quality]||Math.min(window.devicePixelRatio||1,isTouch?1.25:1.5);
 renderer.autoClear=false;
 const scene=new THREE.Scene();
 scene.background=new THREE.Color(0xa7b6c6);
@@ -492,8 +534,8 @@ let baseFov=75;
 function resize(){
   const w=innerWidth,h=innerHeight;renderer.setSize(w,h,false);
   const a=w/h;camera.aspect=a;gunCam.aspect=a;
-  baseFov=a<1?Math.min(100,2*Math.atan(Math.tan(37*Math.PI/180)/a)*180/Math.PI*0.8):75;
-  baseFov=Math.max(75,baseFov);
+  baseFov=a<1?Math.min(100,2*Math.atan(Math.tan(37*Math.PI/180)/a)*180/Math.PI*0.8):SET.fov;
+  baseFov=Math.max(SET.fov,baseFov);
   camera.fov=baseFov;camera.updateProjectionMatrix();gunCam.updateProjectionMatrix();
 }
 addEventListener('resize',resize);resize();
@@ -925,7 +967,7 @@ function initAudio(){
   try{
     AC=new(window.AudioContext||window.webkitAudioContext)();
     const comp=AC.createDynamicsCompressor();comp.threshold.value=-14;comp.ratio.value=4;comp.connect(AC.destination);
-    master=AC.createGain();master.gain.value=.6;master.connect(comp);
+    master=AC.createGain();master.gain.value=.75*SET.vol;master.connect(comp);
     noiseBuf=AC.createBuffer(1,AC.sampleRate*3,AC.sampleRate);
     const d=noiseBuf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;
     // two short echoes through a lowpass: a cheap outdoor slap-back that gives shots their tail
@@ -967,7 +1009,7 @@ const GUN={
   shotgun:{c:[2000,110,.45],b:[80,28,.32],cv:1.25,bv:1.45,snap:.5,rev:.55,after:'pump'},
   sniper:{c:[5200,180,.55],b:[85,26,.4],cv:1.35,bv:1.5,snap:1,rev:.85,after:'bolt'} // .338: huge crack and long echo
 };
-const BOT_SND={'AK-47':'ak','M4A1':'m4','MP5':'smg','SCAR-L':'scar','G36C':'m4','M416':'m4','AUG':'aug','AWM':'sniper'};
+const BOT_SND={'KV-47':'ak','MK-4':'m4','PX-9':'smg','Raptor AR':'scar','Talon AR':'m4','Striker AR':'m4','B7 Bullpup':'aug','Longbow .338':'sniper'};
 const distAt=(x,y,z)=>Math.hypot(x-camera.position.x,y-camera.position.y,z-camera.position.z);
 const sfx={
   gun(key,vol,dist){if(!AC||vol<.02)return;const P=GUN[key]||GUN.m4,t=AC.currentTime,o=bus(vol,dist||0,P.rev);
@@ -980,7 +1022,7 @@ const sfx={
     const g=AC.createGain();g.gain.value=0;s.connect(f);f.connect(g);g.connect(master);s.start();return{s,g};},
   stopLoop(l){if(l){try{l.g.gain.value=0;l.s.stop();}catch(e){}}},
   explosion(kind,vol,dist){if(!AC||vol<.02)return;const t=AC.currentTime;
-    const big=kind==='RPG-7'?1.2:kind==='Airstrike'?1.5:kind==='Tactical Nuke'?2.4:kind==='Claymore'?.9:1,o=bus(vol,dist||0,.6+.2*big);
+    const big=kind==='Viper RL'?1.2:kind==='Airstrike'?1.5:kind==='Tactical Nuke'?2.4:kind==='Claymore'?.9:1,o=bus(vol,dist||0,.6+.2*big);
     sNoise(t,.03,7000,3000,.8,'highpass',o);sNoise(t,1+big*.3,1400,50,1.1,'lowpass',o);sTone(t,.7*big,70,22,1.2*Math.min(1.4,big),'sine',o);
     if(big>=1.4)sNoise(t+.05,2.5*big,300,40,.8,'lowpass',o);
     for(let i=0;i<6;i++)sNoise(t+.15+Math.random()*.8,.05,3000+Math.random()*3000,1500,.15,'bandpass',o,2);},
@@ -1163,15 +1205,15 @@ function nameSprite(name,color){
 
 /* ================= weapons ================= */
 const WEAPONS={
-  ak47:{snd:'ak',name:'AK-47',kind:'rifle',model:'ak',auto:true,mag:30,reserve:120,rate:.1,dmg:29,head:2.3,spread:.016,move:.007,bloom:.008,recoil:.016,reload:2.3,adsFov:52,price:0,stats:[78,62,58,62]},
-  m4a1:{snd:'m4',name:'M4A1',kind:'rifle',model:'m4',auto:true,mag:30,reserve:120,rate:.085,dmg:24,head:2.4,spread:.012,move:.006,bloom:.0055,recoil:.011,reload:2.0,adsFov:52,price:0,stats:[64,74,70,66]},
-  mp5:{snd:'smg',name:'MP5',kind:'smg',model:'smg',auto:true,mag:30,reserve:150,rate:.068,dmg:19,head:2.0,spread:.018,move:.002,bloom:.004,recoil:.008,reload:1.8,adsFov:58,price:1500,speed:1.1,stats:[48,88,44,90]},
-  spas:{snd:'shotgun',name:'SPAS-12',kind:'shotgun',model:'shotgun',auto:false,mag:8,reserve:32,rate:.75,dmg:15,pellets:9,head:1.5,spread:.075,move:.004,bloom:0,recoil:.05,reload:2.6,adsFov:62,price:2200,stats:[96,22,20,72]},
-  m249:{snd:'lmg',name:'M249',kind:'lmg',model:'lmg',auto:true,mag:100,reserve:200,rate:.075,dmg:24,head:2.0,spread:.022,move:.01,bloom:.003,recoil:.012,reload:4.4,adsFov:52,price:3000,speed:.88,stats:[64,80,54,38]},
-  awm:{snd:'sniper',name:'AWM',kind:'sniper',model:'sniper',auto:false,mag:5,reserve:20,rate:1.25,dmg:105,head:2.0,spread:.06,adsSpread:.0004,move:.01,bloom:0,recoil:.06,reload:3.0,adsFov:18,price:3500,speed:.92,stats:[100,12,100,40]},
-  deagle:{snd:'pistol',name:'Desert Eagle',kind:'pistol',model:'pistol',auto:false,mag:7,reserve:35,rate:.3,dmg:47,head:2.2,spread:.009,move:.004,bloom:.022,recoil:.038,reload:1.5,adsFov:62,price:800,speed:1.1,stats:[86,40,60,94]},
+  ak47:{snd:'ak',name:'KV-47',kind:'rifle',model:'ak',auto:true,mag:30,reserve:120,rate:.1,dmg:29,head:2.3,spread:.016,move:.007,bloom:.008,recoil:.016,reload:2.3,adsFov:52,price:0,stats:[78,62,58,62]},
+  m4a1:{snd:'m4',name:'MK-4',kind:'rifle',model:'m4',auto:true,mag:30,reserve:120,rate:.085,dmg:24,head:2.4,spread:.012,move:.006,bloom:.0055,recoil:.011,reload:2.0,adsFov:52,price:0,stats:[64,74,70,66]},
+  mp5:{snd:'smg',name:'PX-9',kind:'smg',model:'smg',auto:true,mag:30,reserve:150,rate:.068,dmg:19,head:2.0,spread:.018,move:.002,bloom:.004,recoil:.008,reload:1.8,adsFov:58,price:1500,speed:1.1,stats:[48,88,44,90]},
+  spas:{snd:'shotgun',name:'Breaker 12',kind:'shotgun',model:'shotgun',auto:false,mag:8,reserve:32,rate:.75,dmg:15,pellets:9,head:1.5,spread:.075,move:.004,bloom:0,recoil:.05,reload:2.6,adsFov:62,price:2200,stats:[96,22,20,72]},
+  m249:{snd:'lmg',name:'Rhino LMG',kind:'lmg',model:'lmg',auto:true,mag:100,reserve:200,rate:.075,dmg:24,head:2.0,spread:.022,move:.01,bloom:.003,recoil:.012,reload:4.4,adsFov:52,price:3000,speed:.88,stats:[64,80,54,38]},
+  awm:{snd:'sniper',name:'Longbow .338',kind:'sniper',model:'sniper',auto:false,mag:5,reserve:20,rate:1.25,dmg:105,head:2.0,spread:.06,adsSpread:.0004,move:.01,bloom:0,recoil:.06,reload:3.0,adsFov:18,price:3500,speed:.92,stats:[100,12,100,40]},
+  deagle:{snd:'pistol',name:'Magnum .50',kind:'pistol',model:'pistol',auto:false,mag:7,reserve:35,rate:.3,dmg:47,head:2.2,spread:.009,move:.004,bloom:.022,recoil:.038,reload:1.5,adsFov:62,price:800,speed:1.1,stats:[86,40,60,94]},
   knife:{name:'Combat Knife',kind:'knife',model:'knife',auto:true,mag:1,reserve:0,rate:.42,dmg:55,head:1,spread:0,move:0,bloom:0,recoil:0,reload:1,adsFov:75,price:0,speed:1.15,range:2.3,stats:[60,70,4,100]},
-  rpg:{snd:'rpg',name:'RPG-7',kind:'rpg',model:'rpg',auto:false,mag:1,reserve:3,rate:1,dmg:0,head:1,spread:.004,move:.01,bloom:0,recoil:.08,reload:2.8,adsFov:55,price:5000,speed:.85,stats:[100,8,46,30]}
+  rpg:{snd:'rpg',name:'Viper RL',kind:'rpg',model:'rpg',auto:false,mag:1,reserve:3,rate:1,dmg:0,head:1,spread:.004,move:.01,bloom:0,recoil:.08,reload:2.8,adsFov:55,price:5000,speed:.85,stats:[100,8,46,30]}
 };
 const WORDER=['ak47','m4a1','mp5','spas','m249','awm','deagle','rpg'];
 const CAMOS={
@@ -1192,7 +1234,7 @@ function camoMat(id){
   if(c.emissive)m.emissive=new THREE.Color(c.emissive);
   return camoMats[id]=m;
 }
-const WEAP_NAMES=['AK-47','M4A1','MP5','SCAR-L','G36C','M416','AUG'];
+const WEAP_NAMES=['KV-47','MK-4','PX-9','Raptor AR','Talon AR','Striker AR','B7 Bullpup'];
 
 /* ================= entities ================= */
 const ents=[];
@@ -1244,7 +1286,7 @@ function respawn(e){
     LW=loadout.map(effW);ammo=LW.map(w=>({mag:w.mag,reserve:w.reserve}));cur=0;nades=noNades()?0:profile.nadeLvl;minesLeft=noNades()?0:profile.mineLvl;reloadT=0;swapT=.35;bloom=0;recoilP=0;ads=false;
     buildViewmodels();$('death').hidden=true;
   }else{
-    e.mesh.visible=true;e.mesh.rotation.x=0;e.gun.visible=MAP.mode!=='knife';e.weapon=MAP.mode==='knife'?'Knife':MAP.mode==='sniper'?'AWM':e.baseWeapon;e.meleeCD=0;e.mesh.position.set(e.x,e.y,e.z);e.path=null;e.target=null;e.seeing=false;e.lastSeenT=0;e.burst=0;e.fireCD=.3;e.deadT=0;
+    e.mesh.visible=true;e.mesh.rotation.x=0;e.gun.visible=MAP.mode!=='knife';e.weapon=MAP.mode==='knife'?'Knife':MAP.mode==='sniper'?'Longbow .338':e.baseWeapon;e.meleeCD=0;e.mesh.position.set(e.x,e.y,e.z);e.path=null;e.target=null;e.seeing=false;e.lastSeenT=0;e.burst=0;e.fireCD=.3;e.deadT=0;
   }
 }
 
@@ -1543,7 +1585,7 @@ function updateProjs(dt){
       }
       g.m.position.set(g.x,g.y,g.z);if(g.snd)g.snd.g.gain.value=volAt(g.x,g.y,g.z,.35,60);
       if(rand()<.8)burst(g.x,g.y,g.z,0x9a9a9a,1,1,.12,.6);
-      if(boom)explode(g.x,g.y,g.z,g.owner,{r:3.4,dr:6.5,dmg:170,weapon:'RPG-7'});
+      if(boom)explode(g.x,g.y,g.z,g.owner,{r:3.4,dr:6.5,dmg:170,weapon:'Viper RL'});
     }
     if(boom){scene.remove(g.m);if(g.snd)sfx.stopLoop(g.snd);projs.splice(i,1);}
   }
@@ -1632,7 +1674,7 @@ function botShoot(b,t,dist){
   tracer(m[0],m[1],m[2],ex,ey,ez,snipe?[1,1,1]:b.team==='red'?[1,.6,.45]:[.7,.85,1]);
   b.flash.visible=true;b.flashT=.05;
   sfx.gun(snipe?'sniper':BOT_SND[b.weapon]||'m4',volAt(m[0],m[1],m[2],snipe?.55:.38,85),distAt(m[0],m[1],m[2]));
-  if(hit&&snipe){const head=rand()<.2;damage(t,head?150:80,b,head,'AWM','sniper');return;}
+  if(hit&&snipe){const head=rand()<.2;damage(t,head?150:80,b,head,'Longbow .338','sniper');return;}
   if(hit){const head=rand()<.12;if(!t.isPlayer)burst(ex,ey,ez,0x9a1c1c,3,3,.08,.5);damage(t,(9+rand()*5)*(head?2.2:1),b,head,b.weapon,'rifle');}
 }
 function updateBot(b,dt){
@@ -1953,6 +1995,45 @@ $('callsign').value=profile.name;
 $('callsign').addEventListener('input',e=>{const v=e.target.value.replace(/[^\w \-.]/g,'').slice(0,14);profile.name=v||'Recruit';player.name=profile.name;saveProfile();});
 $('mapPick').addEventListener('click',e=>{const b=e.target.closest('[data-map]');if(!b)return;profile.map=b.dataset.map;saveProfile();MAP=MAPS[profile.map];renderProfile();resetMatch(false);});
 
+/* ---------- settings ---------- */
+const SET_ROWS=[
+  ['sens','Look speed','range',.3,2.5,.05,v=>v.toFixed(2)+'x'],
+  ['adsSens','Aim look speed','range',.3,1.5,.05,v=>v.toFixed(2)+'x'],
+  ['fov','Field of view','range',65,100,1,v=>v+'°'],
+  ['vol','Volume','range',0,1,.05,v=>Math.round(v*100)+'%'],
+  ['btnScale','Button size','range',.8,1.2,.05,v=>Math.round(v*100)+'%'],
+  ['btnAlpha','Button opacity','range',.35,1,.05,v=>Math.round(v*100)+'%'],
+  ['quality','Graphics','opts',['auto','low','med','high'],{auto:'Auto',low:'Low',med:'Medium',high:'High'}],
+  ['invert','Invert look','opts',[false,true],{false:'Off',true:'On'}],
+  ['fps','Show FPS','opts',[false,true],{false:'Off',true:'On'}]
+];
+function renderSettings(){
+  $('setBody').innerHTML=SET_ROWS.map(r=>{
+    if(r[2]==='range')return `<label class="setrow"><span>${r[1]}</span><input type="range" id="set_${r[0]}" min="${r[3]}" max="${r[4]}" step="${r[5]}" value="${SET[r[0]]}"><output id="out_${r[0]}">${r[6](+SET[r[0]])}</output></label>`;
+    return `<div class="setrow"><span>${r[1]}</span><div class="opts">${r[3].map(v=>`<button class="chip ${SET[r[0]]===v?'on':''}" data-set="${r[0]}" data-val="${v}">${r[4][v]}</button>`).join('')}</div></div>`;
+  }).join('');
+}
+function applySettings(){
+  if(master)master.gain.value=.75*SET.vol;
+  renderer.setPixelRatio(qualityRatio());
+  snowGeo.setDrawRange(0,SET.quality==='low'?Math.floor(SN/3):SN);
+  document.documentElement.style.setProperty('--bs',SET.btnScale);
+  document.documentElement.style.setProperty('--ba',SET.btnAlpha);
+  $('fps').hidden=!SET.fps;
+  resize();
+}
+$('setBody').addEventListener('input',e=>{const el=e.target;if(!el.id||!el.id.startsWith('set_'))return;const k=el.id.slice(4),r=SET_ROWS.find(x=>x[0]===k);SET[k]=+el.value;$('out_'+k).textContent=r[6](SET[k]);applySettings();saveSettings();});
+$('setBody').addEventListener('click',e=>{const b=e.target.closest('[data-set]');if(!b)return;const k=b.dataset.set,r=SET_ROWS.find(x=>x[0]===k);SET[k]=r[3].find(v=>String(v)===b.dataset.val);applySettings();saveSettings();renderSettings();});
+const openSettings=()=>{renderSettings();$('settings').hidden=false;};
+$('openSet').addEventListener('click',openSettings);
+$('boardSet').addEventListener('click',e=>{e.stopPropagation();openSettings();});
+$('boardSet').addEventListener('touchend',e=>{e.stopPropagation();e.preventDefault();openSettings();},{passive:false});
+$('pauseSet').addEventListener('click',e=>{e.stopPropagation();openSettings();});
+$('setClose').addEventListener('click',()=>{$('settings').hidden=true;});
+$('setReset').addEventListener('click',()=>{SET=Object.assign({},SET_DEFAULT);saveSettings();applySettings();renderSettings();});
+applySettings();
+let fpsN=0,fpsT=0;
+
 /* ---------- accounts and stats ---------- */
 let acTab='stats',acMsg='';
 const fmtTime=s=>{s=Math.round(s);const h=Math.floor(s/3600),m=Math.floor(s%3600/60);return h?`${h}h ${m}m`:`${m}m`;};
@@ -2184,7 +2265,7 @@ document.addEventListener('pointerlockchange',()=>{
 $('pause').addEventListener('click',()=>{paused=false;$('pause').hidden=true;tryLock();});
 addEventListener('mousemove',e=>{
   if(state!=='play'||paused||isTouch)return;
-  if(locked||mouseDown){const s=.0022*(1-adsK*(curW().kind==='sniper'?.75:.45));player.yaw-=e.movementX*s;player.pitch-=e.movementY*s;player.pitch=clamp(player.pitch,-1.5,1.5);lookDX+=e.movementX;lookDY+=e.movementY;}
+  if(locked||mouseDown){const s=.0022*SET.sens*(1-adsK*(curW().kind==='sniper'?.75:.45))*(1+adsK*(SET.adsSens-1));player.yaw-=e.movementX*s;player.pitch-=e.movementY*s*(SET.invert?-1:1);player.pitch=clamp(player.pitch,-1.5,1.5);lookDX+=e.movementX;lookDY+=e.movementY;}
 });
 canvas.addEventListener('mousedown',e=>{
   if(state!=='play'||paused||isTouch)return;
@@ -2251,8 +2332,8 @@ tl.addEventListener('touchmove',e=>{
       touch.mx=dx/max;touch.my=dy/max;touch.sprint=touch.my<-.92;
       knob.style.transform=`translate(${dx}px,${dy}px)`;
     }else if(id===touch.lookId||id===touch.fireId){
-      const dx=t.clientX-lp[0],dy=t.clientY-lp[1],s=.0058*(1-adsK*(curW().kind==='sniper'?.75:.5));
-      player.yaw-=dx*s;player.pitch=clamp(player.pitch-dy*s,-1.5,1.5);lookDX+=dx;lookDY+=dy;
+      const dx=t.clientX-lp[0],dy=t.clientY-lp[1],s=.0058*SET.sens*(1-adsK*(curW().kind==='sniper'?.75:.5))*(1+adsK*(SET.adsSens-1));
+      player.yaw-=dx*s;player.pitch=clamp(player.pitch-dy*s*(SET.invert?-1:1),-1.5,1.5);lookDX+=dx;lookDY+=dy;
     }
     touch.last[id]=[t.clientX,t.clientY];
   }
@@ -2275,7 +2356,8 @@ tl.addEventListener('touchcancel',touchEnd,{passive:false});
 let last=performance.now(),menuT=0;
 function frame(now){
   requestAnimationFrame(frame);
-  const dt=Math.min(.05,(now-last)/1000);last=now;
+  const rdt=(now-last)/1000,dt=Math.min(.05,rdt);last=now;
+  if(SET.fps){fpsN++;fpsT+=rdt;if(fpsT>=.5){$('fps').textContent=Math.round(fpsN/fpsT)+' FPS';fpsN=0;fpsT=0;}}
   step(dt,now);
   renderer.clear();
   renderer.render(scene,camera);
@@ -2318,5 +2400,7 @@ resetMatch(false);
 requestAnimationFrame(frame);
 })();
 </script>
+
+<script>if("serviceWorker" in navigator&&(location.protocol==="https:"||location.hostname==="localhost"))navigator.serviceWorker.register("sw.js").catch(function(){});</script>
 </body>
 </html>
