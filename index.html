@@ -104,13 +104,13 @@ body{font-family:var(--f-body);touch-action:none;user-select:none;-webkit-user-s
 .tb[data-b=reload]{right:calc(var(--sr) + 132px);bottom:calc(var(--sb) + 96px)}
 .tb[data-b=aim]{right:calc(var(--sr) + 42px);bottom:calc(var(--sb) + 140px)}
 .tb[data-b=nade]{right:calc(var(--sr) + 206px);bottom:calc(var(--sb) + 64px);width:52px;height:52px;font-size:16px;border-color:rgba(243,181,74,.7)}
-.tb[data-b=sprint]{left:calc(var(--sl) + 30px);bottom:calc(var(--sb) + 192px);width:60px;height:46px;border-radius:10px;font-size:17px}
-.tb[data-b=board]{left:50%;transform:translateX(-50%);top:calc(var(--st) + 70px);width:56px;height:30px;border-radius:6px;font-size:15px}
+.tb[data-b=sprint]{right:calc(var(--sr) + 206px);bottom:calc(var(--sb) + 10px);width:62px;height:46px;border-radius:10px;font-size:17px}
+.tb[data-b=board]{left:calc(var(--sl) + 10px);top:calc(var(--st) + 8px);width:56px;height:30px;border-radius:6px;font-size:15px}
 #wpills{position:absolute;right:calc(var(--sr) + 116px);bottom:calc(var(--sb) + 168px);display:flex;gap:6px}
 #wpills div{font-family:var(--f-hud);font-size:16px;padding:6px 10px 3px;background:rgba(11,15,20,.55);border:2px solid rgba(238,242,244,.3);border-radius:6px;white-space:nowrap}
 #wpills div.on{border-color:var(--amber);color:var(--amber)}
-body.touch #radar{width:96px;height:96px;left:calc(var(--sl) + 10px);top:calc(var(--st) + 8px)}
-body.touch #uavTag{width:96px;left:calc(var(--sl) + 10px);top:calc(var(--st) + 106px);font-size:14px}
+body.touch #radar{width:96px;height:96px;left:calc(var(--sl) + 10px);top:calc(var(--st) + 46px)}
+body.touch #uavTag{width:96px;left:calc(var(--sl) + 10px);top:calc(var(--st) + 144px);font-size:14px}
 body.touch #hpbox{top:calc(var(--st) + 8px);bottom:auto;left:calc(var(--sl) + 116px);padding:4px 10px 2px}
 body.touch #hp{font-size:32px} body.touch #hpbox .bar{width:90px}
 body.touch #ammo{top:calc(var(--st) + 8px);bottom:auto;right:calc(var(--sr) + 12px);padding:4px 10px 2px}
@@ -276,8 +276,8 @@ body.touch .ctrl.desk{display:none} body:not(.touch) .ctrl.mob{display:none}
       <b>Tab</b><span>Open or close the scoreboard. Esc pauses.</span>
     </div>
     <div class="ctrl mob">
-      <b>Left side</b><span>Stick to move, SPRINT to run (or push the stick all the way up)</span>
-      <b>Right side</b><span>FIRE, JUMP, RLD, AIM and NADE around your thumb. Tap a weapon name to switch. Drag any empty spot to look.</span>
+      <b>Left side</b><span>Stick to move (push it all the way up to run). TAB in the top-left corner opens the scoreboard.</span>
+      <b>Right side</b><span>FIRE, JUMP, SPRINT, RLD, AIM and NADE around your thumb. Tap a weapon name to switch. Drag any empty spot to look.</span>
       <b>Tip</b><span>Turn your phone sideways.</span>
     </div>
   </div>
