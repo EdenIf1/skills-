@@ -106,6 +106,7 @@ body{font-family:var(--f-body);touch-action:none;user-select:none;-webkit-user-s
 .tb{position:absolute;display:grid;place-items:center;border-radius:50%;background:rgba(11,15,20,.5);border:2px solid rgba(238,242,244,.4);color:var(--ink);font-family:var(--f-hud);font-size:18px;letter-spacing:.06em;width:58px;height:58px;line-height:1}
 .tb.on{background:rgba(243,181,74,.45);border-color:var(--amber)}
 .tb[data-b=fire]{width:98px;height:98px;right:calc(var(--sr) + 22px);bottom:calc(var(--sb) + 26px);font-size:26px;border-color:rgba(239,90,79,.85);background:rgba(239,90,79,.28)}
+.tb[data-b=fire2]{left:calc(var(--sl) + 196px);bottom:calc(var(--sb) + 26px);width:70px;height:70px;font-size:20px;border-color:rgba(239,90,79,.85);background:rgba(239,90,79,.28)}
 .tb[data-b=jump]{right:calc(var(--sr) + 138px);bottom:calc(var(--sb) + 18px)}
 .tb[data-b=reload]{right:calc(var(--sr) + 132px);bottom:calc(var(--sb) + 96px)}
 .tb[data-b=aim]{right:calc(var(--sr) + 42px);bottom:calc(var(--sb) + 140px)}
@@ -139,6 +140,7 @@ body.touch .msg.small,body.touch .msg.gp{font-size:18px}
 body.touch #score .tm{font-size:30px;min-width:48px}
 @media (max-width:720px){body.touch #hpbox .lbl{display:none}body.touch #hp{font-size:26px}body.touch #hpbox .bar{width:60px}body.touch #score .tm{font-size:24px;min-width:38px;padding:2px 8px 0}body.touch #timer{font-size:18px}body.touch #score .goal{font-size:11px}}
 @media (max-height:400px){
+  .tb[data-b=fire2]{left:calc(var(--sl) + 180px);bottom:calc(var(--sb) + 20px);width:64px;height:64px;font-size:18px}
   body.touch #feed div:nth-child(n+3){display:none}
   .tb{width:52px;height:52px;font-size:16px}
   .tb[data-b=fire]{width:86px;height:86px;right:calc(var(--sr) + 18px);bottom:calc(var(--sb) + 20px)}
@@ -288,6 +290,7 @@ body.touch .ctrl.desk{display:none} body:not(.touch) .ctrl.mob{display:none}
   <div class="tb" data-b="sprint">SPRINT</div>
   <div id="wpills"><div data-b="w0">AK-47</div><div data-b="w1">M4A1</div></div>
   <div class="tb" data-b="fire">FIRE</div>
+  <div class="tb" data-b="fire2">FIRE</div>
   <div class="tb" data-b="jump">JUMP</div>
   <div class="tb" data-b="reload">RLD</div>
   <div class="tb" data-b="aim">AIM</div>
@@ -334,6 +337,7 @@ body.touch .ctrl.desk{display:none} body:not(.touch) .ctrl.mob{display:none}
     </div>
     <div class="ctrl mob">
       <b>Left side</b><span>Stick to move (push it all the way up to run). TAB in the top-left corner opens the scoreboard.</span>
+      <b>Two triggers</b><span>A small FIRE next to the stick lets you shoot with your left thumb while your right thumb aims.</span>
       <b>Right side</b><span>FIRE, JUMP, SPRINT, RLD, AIM and NADE around your thumb. Tap a weapon name to switch. Drag any empty spot to look.</span>
       <b>Tip</b><span>Turn your phone sideways.</span>
     </div>
@@ -1246,7 +1250,7 @@ function respawn(e){
 
 /* ================= player weapon state & viewmodels ================= */
 const noNades=()=>MAP.mode==='knife'||MAP.mode==='sniper';
-let swingT=0;
+let swingT=0,scopedView=false;
 let loadout=profile.slots.slice(),ammo=[],cur=0,nades=1,reloadT=0,swapT=0,fireCD=0,bloom=0,recoilP=0,ads=false,adsK=0;
 let fireHeld=false,firedThisPress=false,shake=0;
 const ATT={
@@ -1706,13 +1710,13 @@ function updateBot(b,dt){
   b.legL.rotation.x=sw;b.legR.rotation.x=-sw;b.head.rotation.x=b.pitch*.7;
   b.mesh.position.set(b.x,b.y+b.smoothY,b.z);b.mesh.rotation.y=b.yaw;b.mesh.rotation.x=0;
   b.aimedT-=dt;
-  b.sprite.visible=state==='play'&&(b.team===player.team||b.aimedT>0);
+  b.sprite.visible=state==='play'&&!scopedView&&(b.team===player.team||b.aimedT>0);
 }
 
 /* ================= player ================= */
 const keys={};
 let jumpHeld=false,sprintLock=false;
-const touch={mx:0,my:0,moveId:null,ox:0,oy:0,lookId:null,fireId:null,jumpId:null,sprint:false,last:{}};
+const touch={mx:0,my:0,moveId:null,ox:0,oy:0,lookId:null,fireId:null,fire2Id:null,jumpId:null,sprint:false,last:{}};
 function camVectors(){
   const cy=Math.cos(player.yaw),sy=Math.sin(player.yaw),cp=Math.cos(player.pitch),sp=Math.sin(player.pitch);
   return{f:[-sy*cp,sp,-cy*cp],r:[cy,0,-sy],u:[sy*sp,cp,cy*sp]};
@@ -1851,7 +1855,7 @@ function updateViewmodel(dt,lookDX,lookDY){
   const w=curW(),g=vmGuns[cur];if(!g)return;
   vmGuns.forEach((x,i)=>x.visible=i===cur);
   const scoped=w.kind==='sniper'&&adsK>.85;
-  VM.visible=player.alive&&!scoped;$('scope').hidden=!scoped;
+  VM.visible=player.alive&&!scoped;$('scope').hidden=!scoped;scopedView=scoped;
   const ud=g.userData;
   vmKick*=Math.exp(-dt*16);
   vmSwayX+=(clamp(-lookDX*.0006,-.04,.04)-vmSwayX)*Math.min(1,10*dt);vmSwayY+=(clamp(lookDY*.0006,-.04,.04)-vmSwayY)*Math.min(1,10*dt);
@@ -2221,6 +2225,8 @@ tl.addEventListener('touchstart',e=>{
     if(btn){
       const b=btn.dataset.b;
       if(b==='fire'){btn.classList.add('on');fireHeld=true;firedThisPress=false;touch.fireId=t.identifier;continue;}
+      // left-thumb trigger: shoots without moving the view, so the right thumb can keep aiming
+      if(b==='fire2'){btn.classList.add('on');fireHeld=true;firedThisPress=false;touch.fire2Id=t.identifier;continue;}
       if(b==='jump'){btn.classList.add('on');jumpHeld=true;touch.jumpId=t.identifier;continue;}
       if(b==='aim'){if(curW().kind!=='knife')ads=!ads;syncAimBtn();continue;}
       if(b==='sprint'){setSprintLock(!sprintLock);continue;}
@@ -2257,7 +2263,8 @@ function touchEnd(e){
     const id=t.identifier;delete touch.last[id];
     if(id===touch.moveId){touch.moveId=null;touch.mx=touch.my=0;touch.sprint=false;joyHome();}
     if(id===touch.lookId)touch.lookId=null;
-    if(id===touch.fireId){touch.fireId=null;fireHeld=false;tl.querySelector('[data-b=fire]').classList.remove('on');}
+    if(id===touch.fireId){touch.fireId=null;if(touch.fire2Id===null)fireHeld=false;tl.querySelector('[data-b=fire]').classList.remove('on');}
+    if(id===touch.fire2Id){touch.fire2Id=null;if(touch.fireId===null)fireHeld=false;tl.querySelector('[data-b=fire2]').classList.remove('on');}
     if(id===touch.jumpId){touch.jumpId=null;jumpHeld=false;tl.querySelector('[data-b=jump]').classList.remove('on');}
   }
 }
