@@ -97,6 +97,7 @@ body.touch #zprompt{bottom:calc(var(--sb) + 148px);font-size:15px}
 body.touch #gas .gl{top:24%;font-size:15px}body.touch #gas small{font-size:11px}
 #netBanner{position:absolute;left:50%;top:38%;transform:translateX(-50%);background:rgba(8,11,15,.86);border:1px solid var(--amber);color:var(--amber);font-size:22px;letter-spacing:.06em;padding:6px 18px 2px;white-space:nowrap;z-index:5}
 .diag{margin-top:8px;border:1px solid var(--line);background:rgba(0,0,0,.3);padding:6px 10px;font-family:var(--f-hud);font-size:17px}.diag div{display:flex;justify-content:space-between;gap:10px}
+.relayBox{margin-top:8px;border:1px solid var(--line);background:rgba(0,0,0,.25);padding:8px 10px}.relayBox .note{margin:2px 0 6px}.relayBox input{font-size:16px}
 .slot .pg{font-size:13px;margin-right:6px;letter-spacing:.04em}
 #squad{position:absolute;right:calc(var(--sr) + 16px);top:calc(var(--st) + 10px);background:var(--panel);padding:6px 10px 4px;min-width:150px;font-size:16px;line-height:1.1}
 #squad .sl{font-size:12px;color:var(--dim);letter-spacing:.14em}
@@ -624,8 +625,8 @@ body.touch .ctrl.desk{display:none} body:not(.touch) .ctrl.mob{display:none}
     <div id="acBody"></div>
   </div>
 </div>
-<div id="board" class="overlay" hidden><div class="sheet cut"><h2>SCOREBOARD</h2><div class="teams" id="boardBody"></div><div class="row" style="margin-top:14px"><button class="btn cut" id="boardBack">Back to game</button><button class="btn ghost cut" id="boardSet">Settings</button></div></div></div>
-<div id="pause" class="overlay" hidden><div class="sheet cut"><h2>PAUSED</h2><p>Click to jump back in.</p><button class="btn ghost cut" id="pauseSet">Settings</button></div></div>
+<div id="board" class="overlay" hidden><div class="sheet cut"><div class="row" style="justify-content:space-between;align-items:center;flex-wrap:nowrap"><h2 style="margin:0">SCOREBOARD</h2><button class="btn sm ghost cut" id="boardLeave">Leave match</button></div><div class="teams" id="boardBody"></div><div class="row" style="margin-top:14px"><button class="btn cut" id="boardBack">Back to game</button><button class="btn ghost cut" id="boardSet">Settings</button></div></div></div>
+<div id="pause" class="overlay" hidden><div class="sheet cut"><h2>PAUSED</h2><p>Click to jump back in.</p><div class="row" style="justify-content:center"><button class="btn ghost cut" id="pauseSet">Settings</button><button class="btn ghost cut" id="pauseLeave">Leave match</button></div></div></div>
 <div id="end" class="overlay" hidden>
   <div class="sheet cut">
     <p class="big" id="endTitle">VICTORY</p>
@@ -2893,7 +2894,8 @@ function renderHome(){
   const me=`<div class="pm"><i style="background:${player.team==='red'?'var(--red)':'var(--blue)'}">${esc((profile.name||'?').charAt(0).toUpperCase())}</i><b>${esc(profile.name)} <span class="prank">Lv ${levelInfo(profile.xp).level}</span></b><small class="ca">${isClient()?(NET.ready?'READY':'IN ROOM'):NET.mode?'♛ HOST':'YOU'}</small></div>`;
   let h=`<h4><span>Party${NET.mode?' · '+esc(NET.code):''}</span>${NET.mode?'<a id="hOpenLobby">Lobby ›</a>':''}</h4>`+me;
   if(NET.mode){for(const r of NET.roster||[]){if(r.nid===(isHost()?'P0':NET.nid))continue;h+=`<div class="pm"><i style="background:${r.team==='red'?'var(--red)':'var(--blue)'}">${esc(r.name.charAt(0).toUpperCase())}</i><b style="color:#ffd34a">★ ${esc(r.name)}</b><small class="${r.nid==='P0'||r.rd?'cg':'ca'}">${r.nid==='P0'?'HOST':r.rd?'READY':'NOT READY'}</small></div>`;}
-    h+=`<div class="hJoin"><button class="btn sm cut" id="openMP" style="flex:1">Open lobby</button></div>`;}
+    h+=`<div class="hJoin"><button class="btn sm cut" id="openMP" style="flex:1">Open lobby</button><button class="btn sm ghost cut" id="hLeave">${isHost()?'Close room':'Leave room'}</button></div>`;}
+  else if(NET.status&&NET.peer)h+=`<div class="note ca">${esc(NET.status)}</div><div class="hJoin"><button class="btn sm cut" id="openMP" style="flex:1">Open lobby</button><button class="btn sm ghost cut" id="hLeave">Stop</button></div>`;
   else if(!mpAvailable())h+=`<div class="note">Playing with friends works on the public link of the game, not inside Claude.</div><div class="hJoin"><a class="btn sm cut" href="${PUBLIC_URL}" target="_blank" rel="noopener" style="text-decoration:none">Open the public game</a></div>`;
   else h+=`<div class="hJoin"><button class="btn sm cut" id="hInvite" style="flex:1">Invite friends</button><button class="btn sm ghost cut" id="openMP">Lobby</button></div>
     <div class="hJoin"><input id="hCode" maxlength="6" placeholder="ROOM CODE" autocomplete="off"><button class="btn sm ghost cut" id="hJoinBtn">Join</button></div>`;
@@ -2907,6 +2909,7 @@ $('hModes').addEventListener('click',e=>{const b=e.target.closest('[data-hmode]'
 $('hParty').addEventListener('click',e=>{const t=e.target.closest('button,a');if(!t)return;
   if(t.id==='hInvite'){openLobby();mpHost();}
   if(t.id==='openMP'||t.id==='hOpenLobby')openLobby();
+  if(t.id==='hLeave'){mpLeave(false);renderHome();}
   if(t.id==='hJoinBtn'){const c=$('hCode').value;openLobby();mpJoin(c);}});
 $('hLB').addEventListener('click',e=>{if(e.target.closest('[data-open=lb]'))openLB();});
 $('hCard').addEventListener('click',()=>$('openAcct').click());
@@ -2952,6 +2955,16 @@ $('openSet').addEventListener('click',openSettings);
 $('boardSet').addEventListener('click',e=>{e.stopPropagation();openSettings();});
 $('boardSet').addEventListener('touchend',e=>{e.stopPropagation();e.preventDefault();openSettings();},{passive:false});
 $('pauseSet').addEventListener('click',e=>{e.stopPropagation();openSettings();});
+// leave in the middle of a match: back to the main screen and out of the room, so a new room can be opened straight away
+function leaveMatch(){
+  if(state!=='play'&&state!=='end')return;
+  if(NET.mode&&!confirm(isHost()?'Leave the match? This closes the room for your friends.':'Leave the match and the room?'))return;
+  if(NET.mode)mpLeave(false);
+  if(document.pointerLockElement)try{document.exitPointerLock();}catch(e){}
+  state='menu';paused=false;fireHeld=false;ads=false;['hud','touch','end','board','pause','death','scope'].forEach(id=>$(id).hidden=true);
+  MAP=MAPS[profile.map]||MAP;resetMatch(false);renderProfile();$('menu').hidden=false;
+}
+for(const id of['boardLeave','pauseLeave']){$(id).addEventListener('click',e=>{e.stopPropagation();leaveMatch();});$(id).addEventListener('touchend',e=>{e.stopPropagation();e.preventDefault();leaveMatch();},{passive:false});}
 $('setClose').addEventListener('click',()=>{$('settings').hidden=true;});
 $('setReset').addEventListener('click',()=>{SET=Object.assign({},SET_DEFAULT);saveSettings();applySettings();renderSettings();});
 applySettings();
@@ -3474,12 +3487,20 @@ function netSendTo(e,msg){if(e&&e.conn&&e.conn.open)try{e.conn.send(msg);}catch(
 function netBroadcast(msg){for(const c of NET.conns.keys())if(c.open)try{c.send(msg);}catch(err){}}
 // STUN finds a direct path between phones; TURN relays the game when a mobile network blocks direct connections
 const ICE=[{urls:['stun:stun.l.google.com:19302','stun:stun1.l.google.com:19302','stun:stun2.l.google.com:19302']},{urls:'stun:stun.cloudflare.com:3478'},
+  {urls:['turn:freestun.net:3478','turn:freestun.net:3478?transport=tcp','turns:freestun.net:5349'],username:'free',credential:'free'},
   {urls:['turn:openrelay.metered.ca:80','turn:openrelay.metered.ca:443','turn:openrelay.metered.ca:443?transport=tcp'],username:'openrelayproject',credential:'openrelayproject'}];
 // optional relay service with short-lived credentials (Metered TURN API URL); set TURN_API or localStorage 'blockfire.turn'
 const TURN_API='';
 let iceDyn=null;
-function fetchIce(){let u=TURN_API;try{u=localStorage.getItem('blockfire.turn')||u;}catch(e){}if(!u||!window.fetch)return Promise.resolve(null);
-  return Promise.race([fetch(u).then(r=>r.ok?r.json():null).then(j=>{if(Array.isArray(j)&&j.length){iceDyn=ICE.slice(0,2).concat(j);}return iceDyn;}).catch(()=>null),new Promise(r=>setTimeout(()=>r(null),4000))]);}
+// your own relay: a Metered API link (https://…) or "server:port username password" (ExpressTURN, Metered, coturn…)
+// only the host needs a working relay for every friend to get in
+function relayParse(v){v=String(v||'').trim();if(!v||/^https?:/i.test(v))return null;const [u0,user,pass]=v.split(/[\s,]+/);if(!u0||!user||!pass)return null;
+  const u=u0.replace(/^turns?:/i,'');const tls=/^turns:/i.test(u0)||/:(443|5349)$/.test(u);
+  return {urls:tls?['turns:'+u,'turn:'+u+'?transport=tcp']:['turn:'+u,'turn:'+u+'?transport=tcp'],username:user,credential:pass};}
+function fetchIce(){let u=TURN_API;try{u=localStorage.getItem('blockfire.turn')||u;}catch(e){}
+  const st=relayParse(u);if(st){iceDyn=ICE.slice(0,2).concat([st],ICE.slice(2));return Promise.resolve(iceDyn);}
+  iceDyn=null;if(!u||!window.fetch)return Promise.resolve(null);
+  return Promise.race([fetch(u).then(r=>r.ok?r.json():null).then(j=>{if(Array.isArray(j)&&j.length){iceDyn=ICE.slice(0,2).concat(j,ICE.slice(2));}return iceDyn;}).catch(()=>null),new Promise(r=>setTimeout(()=>r(null),4000))]);}
 fetchIce();
 function peerOpts(){const o={debug:0,config:{iceServers:iceDyn||ICE}};let ps=null;try{ps=localStorage.getItem('blockfire.ps');}catch(e){}if(ps){const [h,p]=ps.split(':');o.host=h;o.port=+p||9000;o.path='/';o.secure=false;}return o;}
 const roomId=c=>'blockfire-r1-'+c.toLowerCase();
@@ -3528,17 +3549,17 @@ function netFitBots(){
 function mpHost(code,tries){
   if(!mpAvailable())return mpErr('Multiplayer needs the public link of the game. Open it from GitHub and try again.');
   if(!code){mpLeave(true);NET.err='';NET.status='Opening a room…';renderMP();code=Array.from({length:5},()=>'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[(Math.random()*32)|0]).join('');}
-  const peer=new Peer(roomId(code),peerOpts());NET.peer=peer;
+  const peer=new Peer(roomId(code),peerOpts());NET.peer=peer;if(tries&&NET.mode!=='host'){NET.status='Reopening your room '+code+'…';renderMP();renderMPPill();}
   peer.on('open',()=>{if(NET.peer!==peer)return;NET.offline=false;const first=NET.mode!=='host';requestWake();NET.mode='host';NET.code=code;NET.nid='P0';player.nid='P0';NET.status='';if(first&&!tries)NET.blk.clear();ss('bf.host',code);renderMP();renderMPPill();});
   peer.on('connection',c=>{c.lastIn=now();c.born=now();NET.pend.add(c);c.on('open',()=>attachU(c,d=>hostRecv(c,d)));c.on('data',d=>{c.lastIn=now();hostRecv(c,d);});c.on('close',()=>hostDrop(c));c.on('error',()=>hostDrop(c));});
   peer.on('error',e=>{if(NET.peer!==peer)return;
     if(e.type==='unavailable-id'){
       // the server still remembers our old connection: keep the room (and every friend in it) and try again shortly
       if(NET.mode==='host'){NET.offline=true;return;}
-      if(tries){if(tries<15){try{peer.destroy();}catch(err){}setTimeout(()=>{if(NET.peer===peer)mpHost(code,tries+1);},4000);}else{NET.status='';mpErr('Could not reopen room '+code+'. Open a new room.');ss('bf.host',null);}return;}
+      if(tries){if(tries<15){try{peer.destroy();}catch(err){}setTimeout(()=>{if(NET.peer===peer)mpHost(code,tries+1);},4000);}else{NET.status='';try{peer.destroy();}catch(err){}NET.peer=null;mpErr('Could not reopen room '+code+'. Open a new room.');ss('bf.host',null);renderMPPill();}return;}
       mpHost();return;}
     if(e.type==='peer-unavailable')return;if(!NET.mode)mpErr(netErrText(e));});
-  peer.on('disconnected',()=>{if(NET.peer===peer&&!peer.destroyed)setTimeout(()=>{try{if(NET.peer===peer&&peer.disconnected&&!peer.destroyed)peer.reconnect();}catch(err){}},NET.offline?4000:600);});
+  peer.on('disconnected',()=>{if(NET.peer===peer&&!peer.destroyed)setTimeout(()=>{try{if(NET.peer===peer&&peer.disconnected&&!peer.destroyed)peer.reconnect();}catch(err){}},NET.offline?2000:600);});
   setTimeout(()=>{if(NET.peer===peer&&NET.mode!=='host'&&!tries){mpLeave(true);mpErr('Could not reach the game server to open a room. Check your internet connection and try again.');}},15000);
 }
 // coming back from WhatsApp or another app: get the room back online straight away
@@ -3556,7 +3577,8 @@ function hostRecv(c,d){
       back.conn=c;back.away=0;back.spawnOk=true;back.deadAt=0;NET.conns.set(c,back);
       c.send({t:'welcome',v:PROTO,name:back.name,nid:back.nid,team:back.team,map:MAP.key,playing:state==='play',changes:[...NET.blk].map(([k,v])=>k.split(',').map(Number).concat(v)),teamUp:NET.teamUp,host:profile.name,zd:profile.zdiff||'medium'});
       netRoster();toast(back.name+' is back');renderMP();renderMPPill();return;}
-    const cap=isZ()?4:12;if([...NET.remotes.values()].length+1>=cap){try{c.send({t:'full',cap});}catch(e){}setTimeout(()=>c.close(),600);return;}
+    const cap=isZ()?4:12;if(NET.remotes.size+1>=cap){const gone=[...NET.remotes.values()].filter(x=>x.away).sort((a,b)=>a.away-b.away)[0];if(gone)hostRemove(gone);}
+    if(NET.remotes.size+1>=cap){try{c.send({t:'full',cap});}catch(e){}setTimeout(()=>c.close(),600);return;}
     const nid='P'+(NET.next++),oth=player.team==='blue'?'red':'blue',team=isZ()?'blue':NET.teamUp?(teamCount(player.team)<6?player.team:oth):(teamCount('red')<teamCount('blue')?'red':'blue');
     let nm=String(d.name||'Friend').replace(/[^\w \-.]/g,'').trim().slice(0,12)||'Friend';
     // nobody in the room shares a name, so kills and messages never mix people up
@@ -3657,7 +3679,7 @@ function mpJoin(code,rejoin){
   if(!mpAvailable())return mpErr('Multiplayer needs the public link of the game. Open it from GitHub and try again.');
   if(rejoin)netDropTransport();else{mpLeave(true);NET.err='';}
   NET.code=code;NET.retryCode=code;NET.status=rejoin?'Reconnecting to room '+code+'…':'Step 1 of 3 · Connecting to the game server…';renderMP();
-  const peer=new Peer(peerOpts());NET.peer=peer;let tries=0,to=0;const t0=now(),LIMIT=rejoin?28000:40000;
+  const peer=new Peer(peerOpts());NET.peer=peer;let tries=0,to=0;const t0=now(),LIMIT=rejoin?28000:90000;
   const give=(msg)=>{clearTimeout(to);if(NET.peer!==peer)return;if(rejoin){mpLost('Could not get back into the room. The host may have closed it.');return;}mpLeave(true);mpErr(msg);};
   const attempt=()=>{
     if(NET.peer!==peer||NET.mode==='client'&&!rejoin)return;tries++;
@@ -3677,7 +3699,7 @@ function mpJoin(code,rejoin){
   peer.on('error',e=>{if(NET.peer!==peer)return;
     if(NET.mode==='client'&&NET.host&&NET.host.joined&&!NET.reconnecting)return;
     // the host's phone may be switching back from another app: keep trying for a while instead of failing at once
-    if(e.type==='peer-unavailable'){clearTimeout(to);if(now()-t0<(rejoin?LIMIT:11000)){NET.status=(rejoin?'Waiting for the host to come back':'Room '+code+' is not online yet. Ask your friend to open the game')+`… (try ${tries})`;renderMP();to=setTimeout(attempt,3000);}else give(netErrText(e));return;}
+    if(e.type==='peer-unavailable'){clearTimeout(to);if(now()-t0<LIMIT){NET.status=rejoin?`Waiting for the host to come back… (try ${tries})`:`Room ${code} is not open right now. If your friend is in WhatsApp, they need to go back to the game. Still trying… ${Math.round((now()-t0)/1000)}s`;renderMP();to=setTimeout(attempt,2500);}else give(netErrText(e));return;}
     if((e.type==='network'||e.type==='server-error'||e.type==='socket-error'||e.type==='socket-closed')&&now()-t0<LIMIT){clearTimeout(to);NET.status='The game server did not answer, trying again…';renderMP();to=setTimeout(()=>{if(NET.peer!==peer)return;try{peer.destroy();}catch(err){}if(rejoin)mpJoin(code,true);else{const keep=NET.retryCode;mpJoin(keep);}},3000);return;}
     give(netErrText(e));});
 }
@@ -3863,12 +3885,13 @@ function iceProbe(servers,want,ms){return new Promise(res=>{let pc;try{pc=new RT
   pc.onicecandidate=e=>{if(e.candidate&&e.candidate.candidate.includes(' typ '+want+' '))fin2(true);if(!e.candidate)fin2(false);};
   pc.createDataChannel('t');pc.createOffer().then(o=>pc.setLocalDescription(o)).catch(()=>fin2(false));setTimeout(()=>fin2(false),ms);});}
 async function netDiag(){
-  NET.diag=[['Game server','checking…'],['Direct connection (STUN)','checking…'],['Relay for mobile networks (TURN)','checking…']];renderMP();
+  await fetchIce();try{if(NET.peer&&NET.peer.options&&NET.peer.options.config)NET.peer.options.config.iceServers=iceDyn||ICE;}catch(e){}const relays=(iceDyn||ICE).slice(2),rName=r=>{const u=[].concat(r.urls)[0]||'';return 'Relay · '+u.replace(/^turns?:/,'').split(/[:?]/)[0];};
+  NET.diag=[['Game server','checking…'],['Direct connection (STUN)','checking…']].concat(relays.map(r=>[rName(r),'checking…']));renderMP();
   const srv=await new Promise(res=>{let p;try{p=new Peer(peerOpts());}catch(e){res(false);return;}const t=setTimeout(()=>{try{p.destroy();}catch(e){}res(false);},9000);
     p.on('open',()=>{clearTimeout(t);try{p.destroy();}catch(e){}res(true);});p.on('error',()=>{clearTimeout(t);try{p.destroy();}catch(e){}res(false);});});
   NET.diag[0][1]=srv?'ok':'failed';renderMP();
   const st=await iceProbe(ICE.slice(0,2),'srflx',6000);NET.diag[1][1]=st?'ok':'failed';renderMP();
-  const tu=await iceProbe((iceDyn||ICE).slice(2),'relay',9000);NET.diag[2][1]=tu?'ok':'failed';
+  const rs=await Promise.all(relays.map((r,i)=>iceProbe([r],'relay',9000).then(v=>{NET.diag[2+i][1]=v?'ok':'failed';renderMP();return v;})));const tu=rs.some(Boolean);
   NET.diag.push(['Result',!srv?'No internet or the game server is down. Try again in a minute.':st&&tu?'Everything looks good.':st?'Should work on Wi-Fi. On some mobile networks the relay is needed and it is not reachable right now.':tu?'Works through the relay only. Expect a bit more delay.':'Your network blocks game connections. Try another Wi-Fi or mobile data.']);
   renderMP();
 }
@@ -3949,6 +3972,8 @@ function renderMP(){
   h+=`<div class="lobBar">${solo?'':`<button class="btn sm ghost cut" id="mpLeave">${isHost()?'Close room':'Leave'}</button>`}<button class="btn sm ghost cut" id="mpChar">Character</button><button class="btn sm ghost cut" id="mpDiag">Test connection</button><span class="lobMsg ${(solo||allReady&&others.length)?'cg':''}">${esc(msg)}</span>`+
     (host?`<button class="btn cut" id="mpStart" ${allReady?'':'disabled'}>Start</button>`:(state==='play'?'':`<button class="btn cut ${NET.ready?'ghost':''}" id="mpReady">${NET.ready?'Ready ✓':'Ready'}</button>`))+`</div>`;
   if(NET.diag)h+=`<div class="diag">${NET.diag.map(([k,v])=>`<div><span>${esc(k)}</span><b class="${v==='ok'?'cg':v==='failed'?'cr':v==='checking…'?'ca':''}">${esc(v==='ok'?'✓ OK':v==='failed'?'✗ Failed':v)}</b></div>`).join('')}</div>`;
+  if(NET.diag&&NET.diag.length>3&&NET.diag[NET.diag.length-1][0]==='Result'){let cur='';try{cur=localStorage.getItem('blockfire.turn')||'';}catch(e){}
+    h+=`<div class="relayBox"><div class="lbl2">Your own relay (optional)</div><div class="note">For friends on mobile data. Paste a Metered link, or "server:port username password". Only the host needs it.</div><div class="row" style="flex-wrap:nowrap"><input id="relayIn" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="relay.example.com:3478 user pass" value="${esc(cur)}" style="flex:1;min-width:0"><button class="btn sm cut" id="relaySave">Save &amp; test</button></div></div>`;}
   if(NET.err)h+=`<div class="err" style="margin-top:8px">${esc(NET.err)}</div>`+(NET.retryCode&&!NET.mode?`<div class="row" style="margin-top:6px"><button class="btn sm cut" id="mpRetry">Try again</button><button class="btn sm ghost cut" id="mpDiag">Test my connection</button></div>`:'');
   b.innerHTML=h;
 }
@@ -3972,6 +3997,7 @@ $('mpBody').addEventListener('click',e=>{
   if(t.id==='mpLeave')mpLeave(false);
   if(t.id==='mpRetry'){const c=NET.retryCode;NET.err='';mpJoin(c);}
   if(t.id==='mpDiag')netDiag();
+  if(t.id==='relaySave'){const v=($('relayIn').value||'').trim();if(v&&!/^https?:/i.test(v)&&!relayParse(v)){toast('Use: server:port username password');return;}try{if(v)localStorage.setItem('blockfire.turn',v);else localStorage.removeItem('blockfire.turn');}catch(e){}netDiag();}
   if(t.id==='mpCopy'){const text=`Join my BLOCKFIRE room! Code ${NET.code}: ${inviteUrl()}`;
     const fallback=()=>{if(navigator.share)navigator.share({text}).catch(()=>{});else $('mpUrl').select();};
     if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(text).then(()=>toast('Invite copied. Paste it to your friend, then come straight back here'),fallback);else fallback();}
