@@ -511,8 +511,21 @@ function readUsers(){
     let old=null;try{old=JSON.parse(localStorage.getItem('blockfire.v1')||'null');}catch(e){}
     if(old){const n=(old.name||'Player').slice(0,14);u.users[n]={pin:'',p:old};u.cur=n;}
   }
+  // older saves kept PINs as plain text: hash them in place
+  for(const n in u.users){const x=u.users[n];if(x&&typeof x.pin==='string'&&x.pin)x.pin=makePin(x.pin);}
   return u;
 }
+// PINs are never stored as typed: each user keeps a random salt and a slow hash of salt+PIN
+function pinHash(pin,salt){let a='bf1:'+salt+':'+pin,h1=0x9e3779b9,h2=0x85ebca6b;
+  for(let r=0;r<4000;r++){for(let i=0;i<a.length;i++){const c=a.charCodeAt(i);h1=Math.imul(h1^c,2654435761);h2=Math.imul(h2^c,1597334677);}
+    h1=Math.imul(h1^(h1>>>16),2246822507)^Math.imul(h2^(h2>>>13),3266489909);h2=Math.imul(h2^(h2>>>16),2246822507)^Math.imul(h1^(h1>>>13),3266489909);
+    a=(h1>>>0).toString(36)+'.'+(h2>>>0).toString(36);}
+  return a;}
+function makePin(pin){if(!pin)return '';const salt=Array.from(crypto.getRandomValues(new Uint8Array(12)),b=>b.toString(16).padStart(2,'0')).join('');return{s:salt,h:pinHash(pin,salt)};}
+function pinOk(u,pin){if(!u.pin)return true;if(typeof u.pin==='string')return u.pin===pin;return pinHash(String(pin||''),u.pin.s)===u.pin.h;}
+// usernames are unique on this device whatever the capitals or spaces; "Player" stays the guest's name
+const nameKey=n=>String(n||'').toLowerCase().replace(/\s+/g,'');
+function nameTaken(n){const k=nameKey(n);return k==='player'||Object.keys(USERS.users).some(x=>nameKey(x)===k);}
 function fillProfile(p,name){const base=makeProfile(name);const out=Object.assign(base,p||{});out.stats=Object.assign(newStats(),out.stats||{});out.attOwn=out.attOwn||{};if(!out.attOwn.m4a1)out.attOwn.m4a1=['holo'];return out;}
 function loadProfile(){
   USERS=readUsers();
@@ -538,8 +551,9 @@ function mergeProfiles(a,b){
   o.created=Math.min(o.created||Date.now(),p.created||Date.now());
   return o;
 }
-function saveProfile(){if(!USERS)return;USERS.users[USERS.cur].p=profile;try{localStorage.setItem('blockfire.users',JSON.stringify(USERS));}catch(e){}}
+function saveProfile(){if(!USERS||!USERS.users[USERS.cur])return;USERS.users[USERS.cur].p=profile;try{localStorage.setItem('blockfire.users',JSON.stringify(USERS));}catch(e){}}
 loadProfile();
+try{localStorage.setItem('blockfire.users',JSON.stringify(USERS));}catch(e){}
 const ST=()=>profile.stats;
 const SET_DEFAULT={sens:1,adsSens:1,invert:false,vol:.8,quality:'auto',fov:75,btnScale:1,btnAlpha:1,fps:false};
 let SET=Object.assign({},SET_DEFAULT);
@@ -2595,12 +2609,14 @@ function renderAcct(){
     h+=`<div class="note">Each user keeps their own GP, rank, weapons and stats on this device. Add a PIN to stop others switching to your user.</div><div class="ulist">`;
     for(const n of Object.keys(USERS.users)){const u=USERS.users[n],li2=levelInfo((u.p&&u.p.xp)||0),gp=((u.p&&u.p.gp)||0).toLocaleString();
       const canMerge=n!==USERS.cur&&isGuest(n)&&hasProgress(u.p);
-      h+=`<div class="urow ${n===USERS.cur?'on':''}"><span style="font-family:var(--f-hud);font-size:20px">${esc(n)} <span class="prank">Lv ${li2.level} · ${gp} GP${u.pin?' · PIN':''}${isGuest(n)?' · guest':''}</span></span>${n===USERS.cur?'<span class="ca" style="font-family:var(--f-hud)">ACTIVE</span>':`<span class="form" style="margin:0">${canMerge?`<button class="btn sm cut" data-merge="${esc(n)}">Move progress to ${esc(USERS.cur)}</button>`:''}${u.pin?`<input data-pinfor="${esc(n)}" inputmode="numeric" maxlength="4" placeholder="PIN" style="width:70px">`:''}<button class="btn sm ghost cut" data-switch="${esc(n)}">Switch</button></span>`}</div>`;}
-    const carry=isGuest(USERS.cur)&&hasProgress(profile);
-    h+=`</div><div class="lbl2">Create a user</div><div class="form"><input id="nuName" maxlength="14" placeholder="Username" autocomplete="off"><input id="nuPin" maxlength="4" inputmode="numeric" placeholder="PIN (optional)" style="width:140px"><button class="btn sm cut" id="nuMake">Create</button></div>`+
+      const priv=u.pin&&n!==USERS.cur;
+      h+=`<div class="urow ${n===USERS.cur?'on':''}"><span style="font-family:var(--f-hud);font-size:20px">${esc(n)} <span class="prank">${priv?'🔒 locked with a PIN':`Lv ${li2.level} · ${gp} GP${u.pin?' · PIN':''}${isGuest(n)?' · guest':''}`}</span></span>${n===USERS.cur?'<span class="ca" style="font-family:var(--f-hud)">ACTIVE</span>':`<span class="form" style="margin:0">${canMerge?`<button class="btn sm cut" data-merge="${esc(n)}">Move progress to ${esc(USERS.cur)}</button>`:''}${u.pin?`<input data-pinfor="${esc(n)}" type="password" inputmode="numeric" maxlength="4" placeholder="PIN" autocomplete="off" style="width:70px">`:''}<button class="btn sm ghost cut" data-switch="${esc(n)}">Switch</button></span>`}</div>`;}
+    const carry=isGuest(USERS.cur)&&hasProgress(profile),me=USERS.users[USERS.cur];
+    if(!isGuest(USERS.cur))h+=`<div class="lbl2">Your PIN</div><div class="form">${me.pin?`<input id="pinOld" type="password" inputmode="numeric" maxlength="4" placeholder="Current PIN" autocomplete="off" style="width:130px">`:''}<input id="pinNew" type="password" inputmode="numeric" maxlength="4" placeholder="${me.pin?'New PIN (empty = remove)':'New 4-digit PIN'}" autocomplete="new-password" style="width:190px"><button class="btn sm ghost cut" id="pinSave">${me.pin?'Change PIN':'Set PIN'}</button></div>`;
+    h+=`</div><div class="lbl2">Create a user</div><div class="form"><input id="nuName" maxlength="14" placeholder="Username" autocomplete="off"><input id="nuPin" type="password" maxlength="4" inputmode="numeric" placeholder="PIN (optional)" autocomplete="new-password" style="width:140px"><button class="btn sm cut" id="nuMake">Create</button></div>`+
       (carry?`<label class="note" style="display:flex;gap:8px;align-items:center;cursor:pointer"><input type="checkbox" id="nuCarry" checked style="width:20px;height:20px"> Keep what you played as a guest (Lv ${levelInfo(profile.xp).level}, ${profile.gp.toLocaleString()} GP, ${ST().matches} matches) in the new user</label>`:'');
   }else{
-    h+=`<div class="note">Your progress is saved in this browser automatically. To move it to another phone or browser, copy this code there and load it.</div>
+    h+=`<div class="note">Your progress is saved in this browser automatically. To move it to another phone or browser, copy this code there and load it. The code holds your progress only, never your PIN. Anyone who has it can copy your progress, so only paste it into your own devices.</div>
       <div class="form"><textarea id="saveOut" rows="4" readonly></textarea><button class="btn sm cut" id="saveCopy">Copy code</button></div>
       <div class="lbl2" style="margin-top:10px">Load a save code</div>
       <div class="form"><textarea id="saveIn" rows="3" placeholder="Paste a save code here"></textarea><button class="btn sm ghost cut" id="saveLoad">Load into a new user</button></div>`;
@@ -2617,20 +2633,30 @@ $('acTabs').addEventListener('click',e=>{const b=e.target.closest('[data-ac]');i
 $('acBody').addEventListener('click',e=>{
   const b=e.target.closest('button');if(!b)return;
   if(b.dataset.switch){const n=b.dataset.switch,u=USERS.users[n];const pi=$('acBody').querySelector(`[data-pinfor="${CSS.escape(n)}"]`);
-    if(u.pin&&(!pi||pi.value!==u.pin)){acMsg='!Wrong PIN for '+n+'.';renderAcct();return;}
+    const L=pinLock[n]||(pinLock[n]={bad:0,until:0});
+    if(Date.now()<L.until){acMsg=`!Too many wrong PINs for ${n}. Try again in ${Math.ceil((L.until-Date.now())/1000)} seconds.`;renderAcct();return;}
+    if(u.pin&&!pinOk(u,pi?pi.value:'')){L.bad++;if(L.bad>=5){L.bad=0;L.until=Date.now()+60000;acMsg=`!Too many wrong PINs for ${n}. Locked for 60 seconds.`;}else acMsg=`!Wrong PIN for ${n}.`;renderAcct();return;}
+    L.bad=0;
     switchUser(n);acMsg='Switched to '+n+'.';renderAcct();}
   if(b.id==='nuMake'){const n=$('nuName').value.replace(/[^\w \-.]/g,'').trim().slice(0,14),pin=$('nuPin').value.replace(/\D/g,'').slice(0,4);
     if(!n){acMsg='!Type a username first.';renderAcct();return;}
-    if(USERS.users[n]){acMsg='!That username already exists on this device.';renderAcct();return;}
+    if(n.length<2){acMsg='!Usernames need at least 2 letters.';renderAcct();return;}
+    if(nameTaken(n)){acMsg=nameKey(n)==='player'?'!"Player" is the guest name. Pick another username.':'!That username is already taken on this device. Pick another one.';renderAcct();return;}
+    if(pin&&pin.length!==4){acMsg='!A PIN has exactly 4 digits.';renderAcct();return;}
     const carry=$('nuCarry')&&$('nuCarry').checked&&isGuest(USERS.cur);
     if(carry){
       // the guest becomes the new user, so nothing played before signing up is lost
       saveProfile();const old=USERS.cur,p=USERS.users[old].p;if(!p.name||p.name==='Player')p.name=n;
-      USERS.users[n]={pin,p};delete USERS.users[old];USERS.cur=n;
+      USERS.users[n]={pin:makePin(pin),p};delete USERS.users[old];USERS.cur=n;
       try{localStorage.setItem('blockfire.users',JSON.stringify(USERS));}catch(e){}
       loadProfile();player.name=profile.name;$('callsign').value=profile.name;renderProfile();
       acMsg=`Created ${n} with everything you played so far.`;renderAcct();return;}
-    saveProfile();USERS.users[n]={pin,p:makeProfile(n)};switchUser(n);acMsg=`Created ${n}. You start with 1,500 GP.`;renderAcct();}
+    saveProfile();USERS.users[n]={pin:makePin(pin),p:makeProfile(n)};switchUser(n);acMsg=`Created ${n}. You start with 1,500 GP.`;renderAcct();}
+  if(b.id==='pinSave'){const me=USERS.users[USERS.cur],np=($('pinNew').value||'').replace(/\D/g,'');
+    if(me.pin&&!pinOk(me,$('pinOld')?$('pinOld').value:'')){acMsg='!Your current PIN is wrong.';renderAcct();return;}
+    if(np&&np.length!==4){acMsg='!A PIN has exactly 4 digits.';renderAcct();return;}
+    if(!np&&!me.pin){acMsg='!Type a 4-digit PIN.';renderAcct();return;}
+    me.pin=makePin(np);saveProfile();acMsg=np?'PIN saved. Nobody can switch to your user without it.':'PIN removed.';renderAcct();}
   if(b.dataset.merge){const n=b.dataset.merge,u=USERS.users[n];if(!u||!isGuest(n))return;
     saveProfile();const into=USERS.cur;USERS.users[into].p=mergeProfiles(USERS.users[into].p,u.p);delete USERS.users[n];
     try{localStorage.setItem('blockfire.users',JSON.stringify(USERS));}catch(e){}
@@ -2638,11 +2664,12 @@ $('acBody').addEventListener('click',e=>{
   if(b.id==='saveCopy'){const t=$('saveOut');t.select();if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t.value).then(()=>{acMsg='Save code copied.';renderAcct();},()=>{});}
   if(b.id==='saveLoad'){
     try{const o=JSON.parse(decodeURIComponent(escape(atob($('saveIn').value.trim()))));if(!o||!o.p||typeof o.p.xp!=='number')throw 0;
-      let n=(o.u||'Player').slice(0,14);while(USERS.users[n])n=n.slice(0,12)+'_'+((Math.random()*90+10)|0);
+      let n=String(o.u||'Saved').replace(/[^\w \-.]/g,'').trim().slice(0,14)||'Saved';while(nameTaken(n))n=n.slice(0,11)+'_'+((Math.random()*900+100)|0);
       saveProfile();USERS.users[n]={pin:'',p:o.p};switchUser(n);acMsg=`Loaded the save into a new user called ${n}.`;}
     catch(err){acMsg='!That save code is not valid. Copy the whole code and try again.';}
     renderAcct();}
 });
+const pinLock={};
 let shopTab='guns',attGun='m4a1';
 function bar(label,v){return `<div class="stat"><span>${label}</span><b><i style="width:${v}%"></i></b></div>`;}
 function renderShop(){
@@ -2764,7 +2791,7 @@ function resetMatch(inMatch){
 }
 function startMatch(){
   initAudio();
-  state='play';paused=false;player.name=profile.name;
+  state='play';paused=false;player.name=isClient()&&NET.myName?NET.myName:profile.name;
   ['menu','end','shop','crate','mp','acct','settings'].forEach(id=>$(id).hidden=true);$('hud').hidden=false;$('touch').hidden=!isTouch;
   if(isHost()){player.team='blue';let i=0;for(const r of [...NET.remotes.values()])hostSetTeam(r,isZ()||NET.teamUp?'blue':(i++%2===0?'red':'blue'));}
   resetMatch(true);setSprintLock(false);
@@ -2993,11 +3020,15 @@ function hostRecv(c,d){
     if(NET.conns.has(c))return;
     if(NET.conns.size+1>=(isZ()?4:12)){try{c.send({t:'full'});}catch(e){}setTimeout(()=>c.close(),400);return;}
     const nid='P'+(NET.next++),team=isZ()||NET.teamUp?'blue':(teamCount('red')<teamCount('blue')?'red':'blue');
-    const e=makeEnt(String(d.name||'Friend').replace(/[^\w \-.]/g,'').slice(0,14)||'Friend',team,false);
+    let nm=String(d.name||'Friend').replace(/[^\w \-.]/g,'').trim().slice(0,12)||'Friend';
+    // nobody in the room shares a name, so kills and messages never mix people up
+    const taken=k=>[profile.name].concat(ents.map(x=>x.name)).some(x=>nameKey(x)===nameKey(k));
+    if(taken(nm)){let i=2;while(taken(nm+' '+i))i++;nm=nm+' '+i;}
+    const e=makeEnt(nm,team,false);
     Object.assign(e,{remote:true,conn:c,nid,inMatch:true,alive:false,maxHp:100,ready:false});e.mesh.visible=false;friendTag(e);
     NET.conns.set(c,e);NET.remotes.set(nid,e);
     netFitBots();
-    c.send({t:'welcome',nid,team,map:MAP.key,playing:state==='play',changes:[...NET.blk].map(([k,v])=>k.split(',').map(Number).concat(v)),teamUp:NET.teamUp,host:profile.name});
+    c.send({t:'welcome',name:e.name,nid,team,map:MAP.key,playing:state==='play',changes:[...NET.blk].map(([k,v])=>k.split(',').map(Number).concat(v)),teamUp:NET.teamUp,host:profile.name});
     netRoster();toast(e.name+' joined the room');renderMP();renderMPPill();
     return;
   }
@@ -3077,7 +3108,7 @@ function mpJoin(code){
 function clientRecv(d){
   if(!d||!d.t)return;
   if(d.t==='full'){mpLeave(true);mpErr('That room is full.');return;}
-  if(d.t==='welcome'){NET.mode='client';NET.nid=d.nid;player.nid=d.nid;player.team=d.team;NET.teamUp=d.teamUp;NET.mapKey=d.map;NET.pendingBlk=d.changes;NET.hostName=d.host;NET.status='';
+  if(d.t==='welcome'){NET.myName=d.name||profile.name;player.name=NET.myName;NET.mode='client';NET.nid=d.nid;player.nid=d.nid;player.team=d.team;NET.teamUp=d.teamUp;NET.mapKey=d.map;NET.pendingBlk=d.changes;NET.hostName=d.host;NET.status='';
     renderMP();renderMPPill();if(d.playing)clientStart(d.map);return;}
   if(d.t==='roster'){netApplyRoster(d.list);if(d.map){NET.mapKey=d.map;NET.zdiff=d.zd||'medium';NET.teamUpC=d.teamUp!==false;if(state==='menu'&&MAPS[d.map]&&MAP!==MAPS[d.map]){MAP=MAPS[d.map];resetMatch(false);}renderProfile();}renderMP();renderMPPill();return;}
   if(d.t==='start'){NET.pendingBlk=[];NET.ready=false;if(d.zd)NET.zdiff=d.zd;clientStart(d.map);return;}
@@ -3215,7 +3246,7 @@ function mpLeave(silent){
   try{if(NET.peer)NET.peer.destroy();}catch(e){}
   for(const e of NET.remotes.values()){scene.remove(e.mesh);const i=ents.indexOf(e);if(i>=0)ents.splice(i,1);}
   NET.remotes.clear();NET.conns.clear();
-  Object.assign(NET,{mode:null,peer:null,host:null,nid:'P0',q:[],roster:[],status:'',hostName:'',ready:false});player.nid='P0';player.team='blue';
+  Object.assign(NET,{mode:null,peer:null,host:null,nid:'P0',q:[],roster:[],status:'',hostName:'',ready:false,myName:''});player.nid='P0';player.team='blue';
   for(const [,g] of pMine)scene.remove(g);pMine.clear();for(const m of pProj)m.visible=false;
   if(wasClient&&state!=='menu'){state='menu';['hud','touch','end','board','pause','death'].forEach(id=>$(id).hidden=true);MAP=MAPS[profile.map]||MAPS.junk;resetMatch(false);renderProfile();$('menu').hidden=false;}
   else if(state==='menu')for(const b of bots)if(b.inMatch===false&&(!isZ()||ZALLY.includes(b.name))){b.inMatch=true;respawn(b);}
