@@ -109,14 +109,37 @@ body{font-family:var(--f-body);touch-action:none;user-select:none;-webkit-user-s
 #wpills{position:absolute;right:calc(var(--sr) + 116px);bottom:calc(var(--sb) + 168px);display:flex;gap:6px}
 #wpills div{font-family:var(--f-hud);font-size:16px;padding:6px 10px 3px;background:rgba(11,15,20,.55);border:2px solid rgba(238,242,244,.3);border-radius:6px;white-space:nowrap}
 #wpills div.on{border-color:var(--amber);color:var(--amber)}
-body.touch #radar{width:96px;height:96px;left:calc(var(--sl) + 10px);top:calc(var(--st) + 46px)}
-body.touch #uavTag{width:96px;left:calc(var(--sl) + 10px);top:calc(var(--st) + 144px);font-size:14px}
+body.touch #radar{width:84px;height:84px;left:calc(var(--sl) + 10px);top:calc(var(--st) + 44px)}
+body.touch #uavTag{width:84px;left:calc(var(--sl) + 10px);top:calc(var(--st) + 130px);font-size:13px}
 body.touch #hpbox{top:calc(var(--st) + 8px);bottom:auto;left:calc(var(--sl) + 116px);padding:4px 10px 2px}
 body.touch #hp{font-size:32px} body.touch #hpbox .bar{width:90px}
 body.touch #ammo{top:calc(var(--st) + 8px);bottom:auto;right:calc(var(--sr) + 12px);padding:4px 10px 2px}
 body.touch #mag{font-size:32px}
-body.touch #feed{top:calc(var(--st) + 150px);font-size:16px}
+/* phones: keep the top strip compact so nothing reaches the thumb buttons */
+body.touch #feed{top:calc(var(--st) + 64px);right:auto;left:50%;transform:translateX(-50%);align-items:center;font-size:14px;max-width:56vw}
+body.touch #feed div:nth-child(n+4){display:none}
+body.touch #feed em{font-size:13px}
+body.touch #streak{display:none}
+body.touch #wname{font-size:14px}
+body.touch #res{font-size:17px}
+body.touch #nades{font-size:13px}
+body.touch #reloadTxt{font-size:14px}
+body.touch #msgs{top:38%}
+body.touch .msg{font-size:26px}
+body.touch .msg.small,body.touch .msg.gp{font-size:18px}
 body.touch #score .tm{font-size:30px;min-width:48px}
+@media (max-height:400px){
+  .tb{width:52px;height:52px;font-size:16px}
+  .tb[data-b=fire]{width:86px;height:86px;right:calc(var(--sr) + 18px);bottom:calc(var(--sb) + 20px)}
+  .tb[data-b=jump]{right:calc(var(--sr) + 120px);bottom:calc(var(--sb) + 12px)}
+  .tb[data-b=sprint]{right:calc(var(--sr) + 182px);bottom:calc(var(--sb) + 8px);width:58px;height:42px}
+  .tb[data-b=reload]{right:calc(var(--sr) + 116px);bottom:calc(var(--sb) + 80px)}
+  .tb[data-b=nade]{right:calc(var(--sr) + 184px);bottom:calc(var(--sb) + 64px);width:48px;height:48px;font-size:15px}
+  .tb[data-b=aim]{right:calc(var(--sr) + 34px);bottom:calc(var(--sb) + 118px)}
+  #wpills{right:calc(var(--sr) + 100px);bottom:calc(var(--sb) + 146px)}
+  #wpills div{font-size:14px;padding:4px 8px 2px}
+  .tb[data-b=board]{width:52px;height:30px}
+}
 body.touch #timer{font-size:22px}
 
 /* overlays */
