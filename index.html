@@ -394,6 +394,7 @@ body.touch .ctrl.desk{display:none} body:not(.touch) .ctrl.mob{display:none}
       <button class="btn ghost cut" id="openAcct">Profile</button>
       <button class="btn ghost cut" id="openSet">Settings</button>
     </div>
+    <div class="note" id="iosTip" hidden>Full screen on iPhone: tap Share <b>⎙</b> in Safari, then <b>Add to Home Screen</b>, and play from the Blockfire icon.</div>
     <div class="daily cut" id="daily"></div>
     <div class="ctrl desk">
       <b>WASD · Shift · Space</b><span>Move, sprint, jump</span>
@@ -488,6 +489,15 @@ body.touch .ctrl.desk{display:none} body:not(.touch) .ctrl.mob{display:none}
 const $=id=>document.getElementById(id);
 const isTouch=matchMedia('(pointer: coarse)').matches||('ontouchstart' in window);
 if(isTouch)document.body.classList.add('touch');
+const isIOS=/iP(hone|od|ad)/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+const standalone=matchMedia('(display-mode: fullscreen), (display-mode: standalone)').matches||navigator.standalone===true;
+const inFrame=(()=>{try{return window.self!==window.top;}catch(e){return true;}})();
+// phones go full screen and landscape when a match starts (Android; iPhone needs the home-screen icon)
+function goFull(){
+  if(!isTouch||standalone)return;const d=document.documentElement,f=d.requestFullscreen||d.webkitRequestFullscreen;
+  if(!f||document.fullscreenElement||document.webkitFullscreenElement)return;
+  try{const r=f.call(d,{navigationUI:'hide'});const lock=()=>{try{screen.orientation.lock('landscape').catch(()=>{});}catch(e){}};if(r&&r.then)r.then(lock).catch(()=>{});else lock();}catch(e){}
+}
 const reduceMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
 const PUBLIC_URL='https://raw.githack.com/EdenIf1/skills-/gh-pages/index.html';
 
@@ -2841,6 +2851,7 @@ $('share').addEventListener('click',()=>{
   if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t).then(()=>{$('shareMsg').textContent='Copied. Paste it in WhatsApp to challenge a friend.';},fallback);else fallback();
 });
 $('play').addEventListener('click',()=>{
+  goFull();
   if(isClient()){NET.ready=!NET.ready;try{NET.host.send({t:'rdy',v:NET.ready});}catch(e){}renderMPPill();renderMP();return;}
   if(isHost()&&!mpAllReady()){toast('Waiting for everyone to press Ready');return;}
   startMatch();
@@ -3370,6 +3381,7 @@ window.__bf={
 };
 const loginMsg=rollDaily();
 renderProfile();renderMPPill();
+$('iosTip').hidden=!(isIOS&&!standalone&&!inFrame);
 if(loginMsg)setTimeout(()=>toast(loginMsg),600);
 resetMatch(false);
 requestAnimationFrame(frame);

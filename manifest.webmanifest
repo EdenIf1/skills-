@@ -1,7 +1,7 @@
 {
   "name": "Blockfire",
   "short_name": "Blockfire",
-  "description": "Blocky 6v6 shooter with bots, five maps, a shop and killstreaks.",
+  "description": "Blocky 6v6 shooter with bots, zombies and multiplayer rooms.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "fullscreen",
