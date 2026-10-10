@@ -95,6 +95,9 @@ body.touch #zprompt{bottom:calc(var(--sb) + 148px);font-size:15px}
 #gas small{display:block;font-size:15px;color:var(--ink);letter-spacing:.03em}
 @keyframes gasP{50%{box-shadow:inset 0 0 190px 70px rgba(110,190,60,.55)}}
 body.touch #gas .gl{top:24%;font-size:15px}body.touch #gas small{font-size:11px}
+#netBanner{position:absolute;left:50%;top:38%;transform:translateX(-50%);background:rgba(8,11,15,.86);border:1px solid var(--amber);color:var(--amber);font-size:22px;letter-spacing:.06em;padding:6px 18px 2px;white-space:nowrap;z-index:5}
+.diag{margin-top:8px;border:1px solid var(--line);background:rgba(0,0,0,.3);padding:6px 10px;font-family:var(--f-hud);font-size:17px}.diag div{display:flex;justify-content:space-between;gap:10px}
+.slot .pg{font-size:13px;margin-right:6px;letter-spacing:.04em}
 #squad{position:absolute;right:calc(var(--sr) + 16px);top:calc(var(--st) + 10px);background:var(--panel);padding:6px 10px 4px;min-width:150px;font-size:16px;line-height:1.1}
 #squad .sl{font-size:12px;color:var(--dim);letter-spacing:.14em}
 #squad .sq{display:grid;grid-template-columns:1fr 54px;align-items:center;gap:8px;margin:2px 0}
@@ -120,6 +123,9 @@ body.touch #squad{top:calc(var(--st) + 160px);right:calc(var(--sr) + 12px);font-
 #streak span{font-size:14px;letter-spacing:.08em;padding:1px 6px 0;border:1px solid var(--line);color:var(--dim)}
 #streak span.on{border-color:var(--amber);color:#1a1206;background:var(--amber)}
 
+#dmgDir{position:absolute;left:50%;top:50%;width:0;height:0;pointer-events:none}
+#dmgDir i{position:absolute;left:-130px;top:-130px;width:260px;height:260px;border-radius:50%;border-top:7px solid rgba(255,40,30,.9);filter:drop-shadow(0 0 6px rgba(255,0,0,.7));-webkit-mask:linear-gradient(90deg,transparent 28%,#000 42%,#000 58%,transparent 72%);mask:linear-gradient(90deg,transparent 28%,#000 42%,#000 58%,transparent 72%)}
+body.touch #dmgDir i{left:-100px;top:-100px;width:200px;height:200px}
 #vig{position:absolute;inset:0;background:radial-gradient(ellipse at center,transparent 45%,rgba(200,20,20,.75) 100%);opacity:0}
 #death{position:absolute;left:50%;top:40%;transform:translate(-50%,-50%);text-align:center;background:var(--panel);padding:12px 26px 8px;min-width:240px}
 #death .k{font-size:18px;letter-spacing:.2em;color:var(--dim)}
@@ -188,7 +194,9 @@ body.touch #timer{font-size:22px}
 .overlay>*{min-width:0}
 .overlay{position:fixed;inset:0;display:grid;place-items:center;padding:calc(var(--st) + 16px) calc(var(--sr) + 16px) calc(var(--sb) + 16px) calc(var(--sl) + 16px);overflow:auto;touch-action:pan-y;-webkit-overflow-scrolling:touch}
 #menu{background:none}
-#menu.home{display:block;padding:0;overflow:hidden}
+#menu.home{display:block;padding:0;overflow:hidden;touch-action:none}
+#menu.home .hMain,#menu.home .hLeft,#menu.home .hSide{touch-action:pan-y}#menu.home .hNav{touch-action:pan-x}
+html,body{overscroll-behavior:none}
 .hShade{position:absolute;inset:0;pointer-events:none;background:linear-gradient(90deg,rgba(6,9,12,.62) 0%,rgba(6,9,12,.1) 36%,rgba(6,9,12,0) 55%,rgba(6,9,12,.1) 66%,rgba(6,9,12,.6) 100%)}
 .hTop{position:absolute;top:0;left:0;right:0;display:flex;align-items:center;gap:22px;padding:calc(var(--st) + 8px) calc(var(--sr) + 16px) 8px calc(var(--sl) + 16px);background:linear-gradient(rgba(6,9,12,.9),rgba(6,9,12,.45));border-bottom:1px solid rgba(238,242,244,.08)}
 .hLogo{font-family:var(--f-pix);font-size:22px;color:var(--snow);letter-spacing:.06em;white-space:nowrap;text-shadow:2px 2px 0 #6b4b2a}.hLogo b{color:var(--amber);font-weight:400}
@@ -229,6 +237,32 @@ body.touch #timer{font-size:22px}
   .hBottom{padding-top:6px;padding-bottom:calc(var(--sb) + 8px)}.hSel b{font-size:21px}.hPlay{font-size:28px;padding:6px 34px 2px}
 }
 @media (max-width:760px){.hLogo{display:none}.hNet{display:none}.hLeft{width:min(270px,42vw)}.hSide{width:min(250px,40vw)}}
+.hLeft,.hSide{overflow-x:hidden;overscroll-behavior:contain}
+/* no popup may ever be dragged sideways */
+.overlay{overflow-x:hidden}.sheet{box-sizing:border-box;max-width:100%;min-width:0}.sheet>*{min-width:0;max-width:100%}
+.lobBar{flex-wrap:wrap}.lobTop>*{min-width:0}.lobSide,.slot{min-width:0}.lobChips .chip{white-space:nowrap}
+#charBody{grid-template-columns:repeat(auto-fill,minmax(min(170px,100%),1fr))}
+.hPanel,.hMode,.hMapRow{min-width:0;max-width:100%;box-sizing:border-box}.hPanel *{max-width:100%}
+.hJoin .btn{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* phone held upright: one scrolling column instead of two squeezed ones */
+@media (orientation:portrait) and (max-width:820px){
+  .hTop{gap:10px}.hLogo,.hNet{display:none}.hNav{gap:12px}.hNav button{font-size:18px}
+  .hMain{flex-direction:column;justify-content:flex-start;overflow-y:auto;overflow-x:hidden;pointer-events:auto;gap:10px;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+  .hLeft,.hSide{width:100%;flex:none;overflow:visible}
+  .hModes{display:grid;grid-template-columns:1fr 1fr;gap:6px}.hMode small{display:none}.hMode b{font-size:20px}
+  .hShade{background:linear-gradient(rgba(6,9,12,.55),rgba(6,9,12,.35) 40%,rgba(6,9,12,.7))}
+  .hBottom{justify-content:space-between}.hPlay{font-size:30px;padding:8px 40px 2px}
+  .hNews{display:block}
+  #char .charMain{grid-template-columns:1fr}#char .charPrev{height:min(46vh,360px)}#char #charBody{max-height:none;grid-template-columns:repeat(auto-fill,minmax(min(150px,100%),1fr))}
+  .hTop{flex-wrap:wrap;row-gap:4px}.hNav{order:3;flex-basis:100%}.hMain{top:calc(var(--st) + 100px)}
+  #mp .lobMain{grid-template-columns:1fr}#mp .lobTeams{grid-template-columns:1fr}
+  #mp .lobTop{gap:8px}#mp .lobInv{flex-wrap:wrap}
+}
+/* a match needs the phone sideways */
+#rotate{display:none}
+@media (orientation:portrait){body.touch.playing #rotate{display:flex}}
+#rotate{position:fixed;inset:0;z-index:60;background:rgba(6,9,12,.94);color:var(--ink);flex-direction:column;align-items:center;justify-content:center;gap:14px;font-family:var(--f-hud);font-size:28px;letter-spacing:.08em;text-align:center;padding:24px}
+#rotate i{font-style:normal;font-size:64px;animation:rot 1.6s ease-in-out infinite}@keyframes rot{0%,30%{transform:rotate(0)}60%,100%{transform:rotate(-90deg)}}
 .charSheet{width:min(980px,100%)}
 .charMain{display:grid;grid-template-columns:minmax(0,300px) minmax(0,1fr);gap:16px}
 .charPrev{position:relative;background:radial-gradient(ellipse at 50% 70%,rgba(243,181,74,.16),rgba(0,0,0,.5) 70%);border:1px solid var(--line);height:min(62vh,440px);min-height:220px;overflow:hidden}
@@ -414,6 +448,7 @@ body.touch .ctrl.desk{display:none} body:not(.touch) .ctrl.mob{display:none}
   <div id="nadeWarn" hidden>GRENADE</div>
   <div id="zhud" hidden><div id="zRound">ROUND 1</div><div id="zLeft">0 zombies left</div><div id="zCash">$500</div></div>
   <div id="zprompt" hidden></div>
+  <div id="netBanner" hidden>Waiting for the host…</div>
   <div id="gas" hidden><div class="gl">TOXIC GAS · -1 HP every 2s<small>Get back inside, or buy a gas mask upstairs</small></div></div>
   <div id="squad" hidden></div>
   <div id="hpbox" class="cut"><div class="lbl">HP</div><div id="hp">100</div><div class="bar"><b id="hpbar"></b></div></div>
@@ -425,6 +460,7 @@ body.touch .ctrl.desk{display:none} body:not(.touch) .ctrl.mob{display:none}
     <div id="streak"><span data-k="3">UAV 3</span><span data-k="5">AIR 5</span><span data-k="15">NUKE 15</span></div>
   </div>
   <div id="vig"></div>
+  <div id="dmgDir"></div>
   <div id="nukeFlash"></div>
   <div id="fps" hidden>60 FPS</div>
   <div id="death" class="cut" hidden>
@@ -433,6 +469,7 @@ body.touch .ctrl.desk{display:none} body:not(.touch) .ctrl.mob{display:none}
   </div>
 </div>
 
+<div id="rotate"><i>📱</i>Turn your phone sideways to play</div>
 <div id="touch" hidden>
   <div id="joy"><div id="knob"></div></div>
   <div class="tb" data-b="board">TAB</div>
@@ -692,7 +729,7 @@ function saveProfile(){if(!USERS||!USERS.users[USERS.cur])return;USERS.users[USE
 loadProfile();
 try{localStorage.setItem('blockfire.users',JSON.stringify(USERS));}catch(e){}
 const ST=()=>profile.stats;
-const SET_DEFAULT={sens:1,adsSens:1,invert:false,vol:.8,quality:'auto',fov:75,btnScale:1,btnAlpha:1,fps:false};
+const SET_DEFAULT={sens:1,adsSens:1,invert:false,vol:.8,quality:'auto',fov:75,btnScale:1,btnAlpha:1,fps:false,aim:true};
 let SET=Object.assign({},SET_DEFAULT);
 try{Object.assign(SET,JSON.parse(localStorage.getItem('blockfire.settings')||'{}'));}catch(e){}
 function saveSettings(){try{localStorage.setItem('blockfire.settings',JSON.stringify(SET));}catch(e){}}
@@ -1336,6 +1373,8 @@ const sfx={
   mineArm(){if(!AC)return;const t=AC.currentTime;mech(t,master,.5);sTone(t+.12,.07,2200,2200,.12,'square');sTone(t+.3,.07,2200,2200,.12,'square');},
   stab(){if(!AC)return;const t=AC.currentTime;sNoise(t,.08,900,200,.5,'lowpass');sTone(t,.06,120,60,.4);},
   boom(vol){this.explosion('Grenade',vol,0);},
+  step(vol,dist,hard){if(!AC||vol<.012)return;const t=AC.currentTime,o=bus(vol,dist||0,.04);sNoise(t,.055,(hard?1400:800)+Math.random()*300,160,1,'lowpass',o);},
+  kill(head){if(!AC)return;const t=AC.currentTime;sTone(t,.07,head?1500:1100,head?1500:1100,.16,'triangle');sTone(t+.07,.14,head?2200:1650,head?2200:1650,.16,'triangle');},
   hit(head){if(!AC)return;const t=AC.currentTime;sTone(t,.05,head?2400:1700,head?2000:1400,.18,'square');},
   click(){if(!AC)return;const t=AC.currentTime;sTone(t,.03,900,700,.12,'square');},
   reload(){if(!AC)return;const t=AC.currentTime;mech(t+.15,master,.5);mech(t+.9,master,.6);},
@@ -1812,8 +1851,8 @@ function damage(v,amt,att,head,weapon,kind){
   if(!v.alive||v.spawnProt>0)return;
   if(att&&att!==v&&att.team===v.team)return;
   v.hp-=amt;v.lastAttacker=att;v.lastHurt=0;
-  if(v.remote)netSendTo(v,{t:'hurt',v:Math.round(amt)});
-  if(v.isPlayer){vigT=Math.min(1,vigT+amt/45);sfx.hurt();}
+  if(v.remote&&state==='play')netSendTo(v,att&&att!==v?{t:'hurt',v:Math.round(amt),ax:r1(att.x),az:r1(att.z)}:{t:'hurt',v:Math.round(amt)});
+  if(v.isPlayer){vigT=Math.min(1,vigT+amt/45);sfx.hurt();if(att&&att!==v)showDmgDir(att.x,att.z);}
   else if(att){v.lastSeen={x:att.x,z:att.z};v.lastSeenT=6;v.scanT=0;v.alertBy=att;}
   if(v.hp<=0)kill(v,att,head,weapon,kind);
 }
@@ -1823,7 +1862,8 @@ function kill(v,att,head,weapon,kind){
   const counted=att&&att!==v&&att.team!==v.team;
   if(counted){att.kills++;att.streak=(att.streak||0)+1;if(state==='play'&&scores[att.team]!==undefined)scores[att.team]++;}
   addFeed(att,v,weapon,head);
-  if(v.remote)netSendTo(v,{t:'die',by:att&&att!==v?att.name:kind==='gas'?'Toxic gas':'Yourself',bt:att&&att!==v?att.team:'',w:weapon});
+  if(v.remote){v.life=(v.life|0)+1;v.deadAt=now();}
+  if(v.remote&&state==='play')netSendTo(v,{t:'die',l:v.life,by:att&&att!==v?att.name:kind==='gas'?'Toxic gas':'Yourself',bt:att&&att!==v?att.team:'',w:weapon});
   if(counted&&att.remote)netSendTo(att,{t:'kc',v:v.name,h:head?1:0,w:weapon,k:kind});
   if(!v.isPlayer){v.deadT=0;v.sprite.visible=false;v.flash.visible=false;}
   else{
@@ -1846,7 +1886,7 @@ function onMyKill(vname,head,weapon,kind){
     streakN=streakT>0?streakN+1:1;streakT=3.5;
     const names=['','','DOUBLE KILL','TRIPLE KILL','MULTI KILL','MEGA KILL','ULTRA KILL','MONSTER KILL'];
     if(streakN>=2)showMsg(names[Math.min(streakN,7)]);else showMsg(head?'HEADSHOT':'ENEMY DOWN');
-    showMsg(vname,true);
+    showMsg(vname,true);sfx.kill(head);
     award(100+(head?50:0)+(streakN>=2?50*(streakN-1):0));
     chProgress('kills',1);if(head)chProgress('heads',1);
     if(kind==='boom')chProgress('boom',1);if(kind==='sniper')chProgress('sniper',1);if(kind==='shotgun')chProgress('shotgun',1);
@@ -2240,7 +2280,7 @@ function zSpawn(type,pos,nid){
 }
 function zStartRound(){
   Z.round++;Z.toSpawn=Math.round(Math.min(4+Z.round*3,90)*zD().count);Z.spawnT=1.2;
-  for(const e of ents)if(e.team==='blue'&&e.inMatch!==false&&!e.alive){if(e.remote)netSendTo(e,{t:'spawn'});else respawn(e);}
+  for(const e of ents)if(e.team==='blue'&&e.inMatch!==false&&!e.alive){if(e.remote){e.spawnOk=true;e.deadAt=0;netSendTo(e,{t:'spawn'});}else respawn(e);}
   if(player.alive&&state==='play'){nades=Math.max(nades,profile.nadeLvl+1);}
   showMsg('ROUND '+Z.round,false,'big');sfx.round();netEv(['m','ROUND '+Z.round,0,'big']);
   const tip=m=>{setTimeout(()=>showMsg(m),1800);netEv(['m',m]);};
@@ -2453,6 +2493,43 @@ function zGameOver(win){
   for(const e of ents)e.inMatch=false;
   while(pendingToasts.length)toast(pendingToasts.shift());
 }
+
+/* ================= feel: where hits come from, footsteps, touch aim assist ================= */
+const dmgArcs=[];
+function showDmgDir(x,z){
+  const box=$('dmgDir');if(!box)return;while(dmgArcs.length>=4){const o=dmgArcs.shift();o.el.remove();}
+  const el=document.createElement('i');box.appendChild(el);dmgArcs.push({el,x,z,t:1.1});
+}
+function updateDmgDir(dt){
+  for(let i=dmgArcs.length-1;i>=0;i--){const a=dmgArcs[i];a.t-=dt;if(a.t<=0){a.el.remove();dmgArcs.splice(i,1);continue;}
+    const w=Math.atan2(-(a.x-player.x),-(a.z-player.z)),rel=w-player.yaw;a.el.style.transform=`rotate(${(-rel*180/Math.PI).toFixed(1)}deg)`;a.el.style.opacity=Math.min(1,a.t*1.6).toFixed(2);}
+}
+// footsteps: yours quietly, others' from their direction (the 4 closest only)
+let myStep=0;
+function stepSounds(dt){
+  const p=player;
+  if(p.alive&&p.onGround){const sp=Math.hypot(p.vx,p.vz);if(sp>1.5){myStep+=sp*dt;if(myStep>2.3){myStep=0;sfx.step(.07,0,sp>6.5);}}}
+  const near=[];for(const e of ents){if(e===p||!e.alive||e.inMatch===false)continue;const d=Math.hypot(e.x-p.x,e.z-p.z);if(d<20)near.push([d,e]);}
+  near.sort((a,b)=>a[0]-b[0]);
+  for(const [d,e] of near.slice(0,4)){const sp=Math.hypot(e.vx||0,e.vz||0);if(sp<1.5)continue;e.stepAcc=(e.stepAcc||0)+sp*dt;
+    if(e.stepAcc>2.3){e.stepAcc=0;sfx.step(volAt(e.x,e.y,e.z,e.team===p.team?.12:.2,20),distAt(e.x,e.y,e.z),sp>6.5);}}
+}
+// touch aim assist: the aim slows down over an enemy and, while firing, drifts gently onto them
+let aaK=1;
+function aimAssist(dt){
+  aaK=1;if(!isTouch||!SET.aim||!player.alive||state!=='play')return;
+  const v=camVectors(),o=camera.position;let best=null,bs=0,bdx=0,bdy=0,bdist=0;
+  for(const t of zombies.concat(ents)){if(t===player||!t.alive||t.inMatch===false||t.team===player.team||t.remote&&t.away)continue;
+    const ty=t.y+(t.zombie?1.1*t.s:1.25),dx=t.x-o.x,dy=ty-o.y,dz=t.z-o.z,d=Math.hypot(dx,dy,dz);if(d>55||d<1)continue;
+    const cos=(dx*v.f[0]+dy*v.f[1]+dz*v.f[2])/d,ang=Math.acos(Math.min(1,cos)),lim=Math.max(.06,1/d);
+    if(ang>lim)continue;const sc=1-ang/lim;if(sc<=bs)continue;
+    const h=rayVoxel(o.x,o.y,o.z,dx/d,dy/d,dz/d,d,true);if(h&&h.t<d-.5)continue;bs=sc;best=t;bdx=dx;bdy=dy;bdist=d;bdz=dz;}
+  if(!best)return;
+  aaK=1-.45*bs;
+  if(fireHeld||adsK>.5){const wantYaw=Math.atan2(-bdx,-bdz),wantPitch=Math.atan2(bdy,Math.hypot(bdx,bdz));
+    const k=Math.min(1,dt*3*Math.max(bs,.35));player.yaw+=angDiff(player.yaw,wantYaw)*k;player.pitch+=(wantPitch-player.pitch)*k*.6;}
+}
+let bdz=0;
 
 /* ================= dropped weapons ================= */
 // a soldier's gun falls where they die; walk up, look at it and pick it up (your current gun drops in its place)
@@ -2753,7 +2830,7 @@ function refreshHUD(dt){
   $('nadeWarn').hidden=!warn;
   const st=player.streak||0;for(const sEl of $('streak').children)sEl.classList.toggle('on',st>=+sEl.dataset.k);
   if(uavT>0)uavT-=dt;$('uavTag').hidden=!(uavT>0);
-  drawRadar();renderSquad(dt);
+  drawRadar();renderSquad(dt);updateDmgDir(dt);stepSounds(dt);aimAssist(dt);
 }
 function renderBoard(el){
   const row=e=>`<tr class="${e===player?'me':''}"><td>${e.remote?'★ ':''}${esc(e.name)}</td><td>${e.kills}</td><td>${e.deaths}</td></tr>`;
@@ -2836,6 +2913,7 @@ const SET_ROWS=[
   ['btnAlpha','Button opacity','range',.35,1,.05,v=>Math.round(v*100)+'%'],
   ['quality','Graphics','opts',['auto','low','med','high'],{auto:'Auto',low:'Low',med:'Medium',high:'High'}],
   ['invert','Invert look','opts',[false,true],{false:'Off',true:'On'}],
+  ['aim','Aim assist (touch)','opts',[true,false],{true:'On',false:'Off'}],
   ['fps','Show FPS','opts',[false,true],{false:'Off',true:'On'}]
 ];
 function renderSettings(){
@@ -3176,10 +3254,10 @@ function resetMatch(inMatch){
   match={gp:0,xp:0,heads:0,best:0,kills:0};
   $('goalTxt').textContent=`First to ${GOAL}`;
   for(const g of projs){scene.remove(g.m);if(g.snd)sfx.stopLoop(g.snd);}projs.length=0;parts.length=0;tracers.length=0;
-  clearDrops();fires.length=0;for(const s of smokes){for(const p of s.sp)scene.remove(p);s.mat.dispose();}smokes.length=0;for(const m of mines)scene.remove(m.m);mines.length=0;
+  clearDrops();for(const a of dmgArcs)a.el.remove();dmgArcs.length=0;fires.length=0;for(const s of smokes){for(const p of s.sp)scene.remove(p);s.mat.dispose();}smokes.length=0;for(const m of mines)scene.remove(m.m);mines.length=0;
   matchId++;
   feedEl.innerHTML='';msgsEl.innerHTML='';
-  for(const e of ents){e.kills=0;e.deaths=0;e.streak=0;e.inMatch=e.isPlayer?inMatch:e.remote?true:(!isZ()||ZALLY.includes(e.name));e.alive=false;if(!e.isPlayer&&!e.inMatch)e.mesh.visible=false;}
+  for(const e of ents){e.kills=0;e.deaths=0;e.streak=0;e.life=0;e.inMatch=e.isPlayer?inMatch:e.remote?inMatch:(!isZ()||ZALLY.includes(e.name));e.alive=false;if(!e.isPlayer&&!e.inMatch)e.mesh.visible=false;}
   Z.loadout=['deagle'];player.maxHp=100+armorHp(armorBits());
   for(const e of ents){if(e.inMatch)respawn(e);}
   zReset();
@@ -3194,6 +3272,7 @@ function startMatch(){
   ['menu','end','shop','crate','mp','acct','settings','char','lb'].forEach(id=>$(id).hidden=true);$('hud').hidden=false;$('touch').hidden=!isTouch;
   if(isZ()){player.team='blue';if(isHost())for(const r of [...NET.remotes.values()])hostSetTeam(r,'blue');}
   resetMatch(true);setSprintLock(false);
+  NET.q=[];NET.life=0;
   if(isHost()){for(const r of NET.remotes.values())r.ready=false;netRoster();netBroadcast({t:'start',map:MAP.key,zd:profile.zdiff||'medium'});renderMPPill();}
   tl.querySelector('[data-b=nade]').hidden=noNades();tl.querySelector('[data-b=nade]').textContent=EQUIP[profile.equip].short;tl.querySelector('[data-b=mine]').hidden=noNades()||!profile.mineLvl;tl.querySelector('[data-b=reload]').hidden=MAP.mode==='knife';tl.querySelector('[data-b=aim]').hidden=MAP.mode==='knife';tl.querySelector('[data-b=drop]').hidden=!dropsOn();$('wpills').hidden=loadout.length<2;$('nades').hidden=noNades();
   tryLock();
@@ -3244,7 +3323,7 @@ function toggleReady(){if(!isClient())return;NET.ready=!NET.ready;try{NET.host.s
 function lobbyStart(){goFull();if(isClient()){toggleReady();return;}if(isHost()&&!mpAllReady()){toast('Waiting for everyone to press Ready');return;}startMatch();}
 $('play').addEventListener('click',()=>{goFull();openLobby();});
 $('navPlay').addEventListener('click',()=>{for(const id of['char','lb','shop','crate','acct','settings','mp'])$(id).hidden=true;renderProfile();});
-function backToMenu(){$('end').hidden=true;state='menu';const lm=rollDaily();if(lm)toast(lm);resetMatch(false);renderProfile();$('menu').hidden=false;}
+function backToMenu(){$('end').hidden=true;state='menu';if(isClient()&&MAPS[NET.mapKey])MAP=MAPS[NET.mapKey];const lm=rollDaily();if(lm)toast(lm);resetMatch(false);renderProfile();$('menu').hidden=false;}
 $('again').addEventListener('click',()=>{if(NET.mode){backToMenu();openLobby();}else startMatch();});
 $('toMenu').addEventListener('click',backToMenu);
 
@@ -3331,7 +3410,7 @@ tl.addEventListener('touchmove',e=>{
       touch.mx=dx/max;touch.my=dy/max;touch.sprint=touch.my<-.92;
       knob.style.transform=`translate(${dx}px,${dy}px)`;
     }else if(id===touch.lookId||id===touch.fireId){
-      const dx=t.clientX-lp[0],dy=t.clientY-lp[1],s=.0058*SET.sens*(1-adsK*(curW().kind==='sniper'?.75:.5))*(1+adsK*(SET.adsSens-1));
+      const dx=t.clientX-lp[0],dy=t.clientY-lp[1],s=.0058*aaK*SET.sens*(1-adsK*(curW().kind==='sniper'?.75:.5))*(1+adsK*(SET.adsSens-1));
       player.yaw-=dx*s;player.pitch=clamp(player.pitch-dy*s*(SET.invert?-1:1),-1.5,1.5);lookDX+=dx;lookDY+=dy;
     }
     touch.last[id]=[t.clientX,t.clientY];
@@ -3355,27 +3434,46 @@ tl.addEventListener('touchcancel',touchEnd,{passive:false});
 /* ================= MULTIPLAYER ================= */
 // Rooms over WebRTC (PeerJS). The host's game is the referee: it runs bots, zombies, damage and scores.
 // Friends move their own soldier, send their shots and throws to the host, and draw everyone else from the host's snapshots.
-const NET={ready:false,zdiff:'medium',teamUpC:true,mode:null,peer:null,conns:new Map(),host:null,code:'',nid:'P0',q:[],sendT:0,snapT:0,teamUp:true,remotes:new Map(),next:1,blk:new Map(),err:'',status:'',roster:[],mapKey:'',hostName:''};
+const NET={pend:new Set(),offline:false,life:0,seq:0,lastSeq:-1,lastIn:0,lastSnapAt:0,ping:0,pings:{},hostAway:false,reconnecting:false,leaving:false,retryCode:'',diag:null,ready:false,zdiff:'medium',teamUpC:true,mode:null,peer:null,conns:new Map(),host:null,code:'',nid:'P0',q:[],sendT:0,snapT:0,teamUp:true,remotes:new Map(),next:1,blk:new Map(),err:'',status:'',roster:[],mapKey:'',hostName:''};
 const isHost=()=>NET.mode==='host',isClient=()=>NET.mode==='client';
 const r1=v=>Math.round(v*10)/10,r2=v=>Math.round(v*100)/100;
 player.nid='P0';bots.forEach((b,i)=>b.nid='B'+i);
 for(const k in MAPS)MAPS[k].key=k;
 let mineSeq=1;
-function netEv(e){if(isHost()&&NET.conns.size)NET.q.push(e);}
-function netOut(e){if(isClient())NET.q.push(e);}
+// protocol version: a friend with an older cached copy of the game gets a clear "refresh" message instead of strange bugs
+const PROTO=2,DEAD_MS=8000,GRACE_MS=20000;
+const now=()=>performance.now();
+function netEv(e){if(isHost()&&NET.conns.size&&state==='play'){NET.q.push(e);if(NET.q.length>400)NET.q.splice(0,NET.q.length-400);}}
+function netOut(e){if(isClient()&&state==='play'){NET.q.push(e);if(NET.q.length>200)NET.q.splice(0,NET.q.length-200);}}
+// a lossy side channel on the same WebRTC link for position/state updates: a lost packet never holds up the next one
+function attachU(c,onMsg){
+  try{const pc=c.peerConnection;if(!pc||c.u)return;const ch=pc.createDataChannel('bfu',{negotiated:true,id:101,ordered:false,maxRetransmits:0});
+    ch.onmessage=ev=>{let d;try{d=JSON.parse(ev.data);}catch(err){return;}c.lastIn=now();onMsg(d);};c.u=ch;}catch(err){}
+}
+function sendU(c,msg){const u=c&&c.u;if(u&&u.readyState==='open'){if(u.bufferedAmount>65536)return;try{u.send(JSON.stringify(msg));return;}catch(err){}}
+  const dc=c&&c.dataChannel;if(dc&&dc.bufferedAmount>65536)return;if(c&&c.open)try{c.send(msg);}catch(err){}}
+const fin=(v,d,a,b)=>{v=+v;if(!Number.isFinite(v))return d;return a===undefined?v:Math.max(a,Math.min(b,v));};
+function mySid(){let s2='';try{s2=sessionStorage.getItem('bf.sid')||'';if(!s2){s2=Math.random().toString(36).slice(2,12);sessionStorage.setItem('bf.sid',s2);}}catch(e){s2=s2||Math.random().toString(36).slice(2,12);}return s2;}
+const ss=(k,v)=>{try{if(v===undefined)return sessionStorage.getItem(k);if(v===null)sessionStorage.removeItem(k);else sessionStorage.setItem(k,v);}catch(e){}return null;};
 function netBlk(x,y,z,id){if(isHost()&&state==='play'){NET.blk.set(x+','+y+','+z,id);netEv(['x',x,y,z,id]);}}
 function netSendTo(e,msg){if(e&&e.conn&&e.conn.open)try{e.conn.send(msg);}catch(err){}}
 function netBroadcast(msg){for(const c of NET.conns.keys())if(c.open)try{c.send(msg);}catch(err){}}
 // STUN finds a direct path between phones; TURN relays the game when a mobile network blocks direct connections
 const ICE=[{urls:['stun:stun.l.google.com:19302','stun:stun1.l.google.com:19302','stun:stun2.l.google.com:19302']},{urls:'stun:stun.cloudflare.com:3478'},
   {urls:['turn:openrelay.metered.ca:80','turn:openrelay.metered.ca:443','turn:openrelay.metered.ca:443?transport=tcp'],username:'openrelayproject',credential:'openrelayproject'}];
-function peerOpts(){const o={debug:0,config:{iceServers:ICE}};let ps=null;try{ps=localStorage.getItem('blockfire.ps');}catch(e){}if(ps){const [h,p]=ps.split(':');o.host=h;o.port=+p||9000;o.path='/';o.secure=false;}return o;}
+// optional relay service with short-lived credentials (Metered TURN API URL); set TURN_API or localStorage 'blockfire.turn'
+const TURN_API='';
+let iceDyn=null;
+function fetchIce(){let u=TURN_API;try{u=localStorage.getItem('blockfire.turn')||u;}catch(e){}if(!u||!window.fetch)return Promise.resolve(null);
+  return Promise.race([fetch(u).then(r=>r.ok?r.json():null).then(j=>{if(Array.isArray(j)&&j.length){iceDyn=ICE.slice(0,2).concat(j);}return iceDyn;}).catch(()=>null),new Promise(r=>setTimeout(()=>r(null),4000))]);}
+fetchIce();
+function peerOpts(){const o={debug:0,config:{iceServers:iceDyn||ICE}};let ps=null;try{ps=localStorage.getItem('blockfire.ps');}catch(e){}if(ps){const [h,p]=ps.split(':');o.host=h;o.port=+p||9000;o.path='/';o.secure=false;}return o;}
 const roomId=c=>'blockfire-r1-'+c.toLowerCase();
 const mpAvailable=()=>typeof window.Peer==='function'&&typeof window.RTCPeerConnection==='function'&&!/claude|anthropic/i.test(location.hostname);
 const inviteUrl=()=>PUBLIC_URL+'#room-'+NET.code;
 function findNid(nid){if(!nid)return null;if(nid[0]==='B')return bots[+nid.slice(1)]||null;if(nid[0]==='Z')return zombies.find(z=>z.nid===nid)||null;if(nid===NET.nid)return player;if(nid==='P0'&&isHost())return player;return NET.remotes.get(nid)||null;}
 const teamCount=t=>ents.filter(e=>(e.isPlayer||e.remote)&&e.team===t).length;
-const mpAllReady=()=>[...NET.remotes.values()].every(e=>e.ready);
+const mpAllReady=()=>[...NET.remotes.values()].every(e=>e.ready||e.away);
 // a friend's name tag is gold with a star so you always know which soldier is a real person
 function friendTag(e){if(!e.mesh||!e.sprite)return;e.mesh.remove(e.sprite);const sp=nameSprite('★ '+e.name,'#ffd34a');sp.position.y=2.4;e.mesh.add(sp);e.sprite=sp;e.friend=true;}
 // who plays on which side once bots fill the gaps
@@ -3395,7 +3493,7 @@ function renderSquad(dt){
     return `<div class="sq ${e.alive?'':'dead'}"><span class="${e===player?'':'fr'}">${e===player?'You':'★ '+esc(e.name)}</span><b><i style="width:${(hp*100).toFixed(0)}%;background:${hp<.35?'var(--red)':e.team==='red'?'#ef5a4f':'var(--green)'}"></i></b></div>`;}).join('');
 }
 function netErrText(e){const t=e&&e.type;
-  if(t==='peer-unavailable')return 'No room with that code. Check the code, or ask your friend to open the room again.';
+  if(t==='peer-unavailable')return 'Room not found. Check the code. If it is right, your friend\'s game may be in the background: ask them to open it, then press Try again.';
   if(t==='network'||t==='server-error'||t==='socket-error'||t==='socket-closed')return 'Could not reach the room server. Check your internet connection and try again.';
   if(t==='browser-incompatible')return 'This browser cannot do multiplayer. Try Safari or Chrome.';
   return 'The connection failed ('+(t||'unknown')+'). Try again.';}
@@ -3417,65 +3515,90 @@ function mpHost(code,tries){
   if(!mpAvailable())return mpErr('Multiplayer needs the public link of the game. Open it from GitHub and try again.');
   if(!code){mpLeave(true);NET.err='';NET.status='Opening a room…';renderMP();code=Array.from({length:5},()=>'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[(Math.random()*32)|0]).join('');}
   const peer=new Peer(roomId(code),peerOpts());NET.peer=peer;
-  peer.on('open',()=>{if(NET.peer!==peer)return;NET.mode='host';NET.code=code;NET.nid='P0';player.nid='P0';NET.status='';if(!tries)NET.blk.clear();renderMP();renderMPPill();});
-  peer.on('connection',c=>{c.on('data',d=>hostRecv(c,d));c.on('close',()=>hostDrop(c));c.on('error',()=>hostDrop(c));});
+  peer.on('open',()=>{if(NET.peer!==peer)return;NET.offline=false;const first=NET.mode!=='host';requestWake();NET.mode='host';NET.code=code;NET.nid='P0';player.nid='P0';NET.status='';if(first&&!tries)NET.blk.clear();ss('bf.host',code);renderMP();renderMPPill();});
+  peer.on('connection',c=>{c.lastIn=now();c.born=now();NET.pend.add(c);c.on('open',()=>attachU(c,d=>hostRecv(c,d)));c.on('data',d=>{c.lastIn=now();hostRecv(c,d);});c.on('close',()=>hostDrop(c));c.on('error',()=>hostDrop(c));});
   peer.on('error',e=>{if(NET.peer!==peer)return;
     if(e.type==='unavailable-id'){
-      // the old connection for this code has not timed out yet: keep the same code and try again, so the invite stays valid
-      if(NET.mode==='host'||tries){if((tries||0)<12){try{peer.destroy();}catch(err){}setTimeout(()=>{if(NET.peer===peer)mpHost(code,(tries||0)+1);},5000);}return;}
+      // the server still remembers our old connection: keep the room (and every friend in it) and try again shortly
+      if(NET.mode==='host'){NET.offline=true;return;}
+      if(tries){if(tries<15){try{peer.destroy();}catch(err){}setTimeout(()=>{if(NET.peer===peer)mpHost(code,tries+1);},4000);}else{NET.status='';mpErr('Could not reopen room '+code+'. Open a new room.');ss('bf.host',null);}return;}
       mpHost();return;}
     if(e.type==='peer-unavailable')return;if(!NET.mode)mpErr(netErrText(e));});
-  peer.on('disconnected',()=>{if(NET.peer===peer&&!peer.destroyed)setTimeout(()=>{try{if(NET.peer===peer&&peer.disconnected&&!peer.destroyed)peer.reconnect();}catch(err){}},500);});
+  peer.on('disconnected',()=>{if(NET.peer===peer&&!peer.destroyed)setTimeout(()=>{try{if(NET.peer===peer&&peer.disconnected&&!peer.destroyed)peer.reconnect();}catch(err){}},NET.offline?4000:600);});
+  setTimeout(()=>{if(NET.peer===peer&&NET.mode!=='host'&&!tries){mpLeave(true);mpErr('Could not reach the game server to open a room. Check your internet connection and try again.');}},15000);
 }
 // coming back from WhatsApp or another app: get the room back online straight away
 document.addEventListener('visibilitychange',()=>{if(document.hidden||!NET.peer)return;const p=NET.peer;try{if(p.disconnected&&!p.destroyed)p.reconnect();}catch(e){}});
 function hostRecv(c,d){
   if(!d||!d.t)return;
+  if(d.t==='pi'){try{c.send({t:'po',ts:d.ts});}catch(e){}return;}
+  if(d.t==='po'){const e=NET.conns.get(c);if(e)e.ping=Math.round(now()-d.ts);return;}
   if(d.t==='hello'){
     if(NET.conns.has(c))return;
-    if(NET.conns.size+1>=(isZ()?4:12)){try{c.send({t:'full'});}catch(e){}setTimeout(()=>c.close(),400);return;}
+    if(d.v!==PROTO){try{c.send({t:'ver',v:PROTO});}catch(e){}setTimeout(()=>c.close(),600);return;}
+    // the same player coming back (reload, lost signal, app switch): give them their old slot, team and score
+    const back=d.sid&&[...NET.remotes.values()].find(x=>x.sid===d.sid);
+    if(back){if(back.conn&&back.conn!==c){NET.conns.delete(back.conn);try{back.conn.close();}catch(e){}}
+      back.conn=c;back.away=0;back.spawnOk=true;back.deadAt=0;NET.conns.set(c,back);
+      c.send({t:'welcome',v:PROTO,name:back.name,nid:back.nid,team:back.team,map:MAP.key,playing:state==='play',changes:[...NET.blk].map(([k,v])=>k.split(',').map(Number).concat(v)),teamUp:NET.teamUp,host:profile.name,zd:profile.zdiff||'medium'});
+      netRoster();toast(back.name+' is back');renderMP();renderMPPill();return;}
+    const cap=isZ()?4:12;if([...NET.remotes.values()].length+1>=cap){try{c.send({t:'full',cap});}catch(e){}setTimeout(()=>c.close(),600);return;}
     const nid='P'+(NET.next++),oth=player.team==='blue'?'red':'blue',team=isZ()?'blue':NET.teamUp?(teamCount(player.team)<6?player.team:oth):(teamCount('red')<teamCount('blue')?'red':'blue');
     let nm=String(d.name||'Friend').replace(/[^\w \-.]/g,'').trim().slice(0,12)||'Friend';
     // nobody in the room shares a name, so kills and messages never mix people up
     const taken=k=>[profile.name].concat(ents.map(x=>x.name)).some(x=>nameKey(x)===nameKey(k));
     if(taken(nm)){let i=2;while(taken(nm+' '+i))i++;nm=nm+' '+i;}
     const e=makeEnt(nm,team,false);
-    Object.assign(e,{remote:true,conn:c,nid,inMatch:true,alive:false,maxHp:100,ready:false,lv:Math.max(1,Math.min(99,d.lv|0))});e.mesh.visible=false;friendTag(e);applyLook(e,CHARS[d.sk]?d.sk:'std',(d.ar|0)&7);
+    Object.assign(e,{remote:true,conn:c,nid,sid:String(d.sid||'').slice(0,20),inMatch:true,alive:false,maxHp:100,ready:false,ping:0,away:0,lv:Math.max(1,Math.min(99,d.lv|0))});e.mesh.visible=false;friendTag(e);applyLook(e,CHARS[d.sk]?d.sk:'std',(d.ar|0)&7);
     NET.conns.set(c,e);NET.remotes.set(nid,e);
     netFitBots();
-    c.send({t:'welcome',name:e.name,nid,team,map:MAP.key,playing:state==='play',changes:[...NET.blk].map(([k,v])=>k.split(',').map(Number).concat(v)),teamUp:NET.teamUp,host:profile.name});
+    c.send({t:'welcome',v:PROTO,name:e.name,nid,team,map:MAP.key,playing:state==='play',changes:[...NET.blk].map(([k,v])=>k.split(',').map(Number).concat(v)),teamUp:NET.teamUp,host:profile.name,zd:profile.zdiff||'medium'});
     netRoster();toast(e.name+' joined the room');renderMP();renderMPPill();
     return;
   }
   const e=NET.conns.get(c);if(!e)return;
+  if(d.t==='bye'){hostRemove(e);return;}
+  if(d.t==='cev'){if(Array.isArray(d.ev))for(const ev of d.ev.slice(0,64))if(Array.isArray(ev))hostClientEv(e,ev);return;}
   if(d.t==='look'){applyLook(e,CHARS[d.sk]?d.sk:'std',(d.ar|0)&7);netRoster();renderMP();return;}
-  if(d.t==='rdy'){e.ready=!!d.v;if(e.ready)toast(e.name+' is ready');netRoster();renderMP();renderMPPill();return;}
+  if(d.t==='rdy'){if(state==='play'){netRoster();return;}e.ready=!!d.v;if(e.ready)toast(e.name+' is ready');netRoster();renderMP();renderMPPill();return;}
   if(d.t==='st'){
-    const p=d.p;e.x=p[0];e.y=p[1];e.z=p[2];e.yaw=p[3];e.pitch=p[4];e.vx=p[5];e.vz=p[6];e.maxHp=d.mh||100;e.mask=!!d.mk;e.wpId=d.wp;
-    if(d.a&&!e.alive&&state==='play'){e.alive=true;e.hp=e.maxHp;e.spawnProt=1.5;e.deadT=0;e.mesh.visible=true;e.mesh.rotation.x=0;e.lastHurt=99;}
-    for(const ev of d.ev||[])hostClientEv(e,ev);
+    // never trust the wire: bad numbers from a buggy or old client must not break the host's game
+    const p=Array.isArray(d.p)?d.p:[];if(d.q!==undefined){if(d.q<=(e.lastQ||-1)&&e.lastQ-d.q<5000)return;e.lastQ=d.q;}
+    e.x=fin(p[0],e.x,0,W);e.y=fin(p[1],e.y,0,H);e.z=fin(p[2],e.z,0,D);e.yaw=fin(p[3],e.yaw);e.pitch=fin(p[4],0,-1.6,1.6);e.vx=fin(p[5],0,-30,30);e.vz=fin(p[6],0,-30,30);
+    e.maxHp=fin(d.mh,100,1,400);e.mask=!!d.mk;e.wpId=WEAPONS[d.wp]?d.wp:e.wpId;
+    if(d.a&&!e.alive&&state==='play'&&!e.away&&(d.l|0)===(e.life|0)&&now()-(e.deadAt||0)>1500&&(!isZ()||e.spawnOk)){e.spawnOk=false;e.alive=true;e.hp=e.maxHp;e.spawnProt=1.5;e.deadT=0;e.mesh.visible=true;e.mesh.rotation.x=0;e.lastHurt=99;}
+    if(Array.isArray(d.ev))for(const ev of d.ev.slice(0,64))if(Array.isArray(ev))hostClientEv(e,ev);
   }
 }
 function hostClientEv(e,ev){
-  if(state!=='play')return;const k=ev[0];
-  if(k==='h'){const t=findNid(ev[1]);if(t&&t.alive&&e.alive)damage(t,ev[2],e,!!ev[3],ev[4],ev[5]);}
+  if(state!=='play'||!e||e.away)return;const k=ev[0];if(typeof k!=='string')return;
+  if(k==='h'){const t=findNid(ev[1]);const dmg=fin(ev[2],0,0,250);if(t&&t!==e&&t.alive&&e.alive&&dmg>0&&Math.hypot(t.x-e.x,t.z-e.z)<160)damage(t,dmg,e,!!ev[3],String(ev[4]||'').slice(0,24),String(ev[5]||'').slice(0,12));}
   else if(k==='t'){tracer(ev[1],ev[2],ev[3],ev[4],ev[5],ev[6],[1,.85,.5]);sfx.gun(ev[7],volAt(ev[1],ev[2],ev[3],.38,85),distAt(ev[1],ev[2],ev[3]));e.firedT=1.2;netEv(['t',e.nid].concat(ev.slice(1)));}
-  else if(k==='n'){throwNade(e,ev[2],ev[3],ev[4],ev[5],ev[6],ev[7],ev[1]);}
-  else if(k==='r'){fireRocket(e,ev[1],ev[2],ev[3],ev[4],ev[5],ev[6]);}
-  else if(k==='m'){placeMineAt(e,ev[1],ev[2],ev[3],ev[4]);}
+  else if((k==='n'||k==='r'||k==='m')&&now()-(e.lastThrow||0)<350)return;
+  else if(k==='n'){e.lastThrow=now();throwNade(e,ev[2],ev[3],ev[4],ev[5],ev[6],ev[7],ev[1]);}
+  else if(k==='r'){e.lastThrow=now();fireRocket(e,ev[1],ev[2],ev[3],ev[4],ev[5],ev[6]);}
+  else if(k==='m'){e.lastThrow=now();if(mines.filter(m=>m.owner===e).length>=4)return;placeMineAt(e,ev[1],ev[2],ev[3],ev[4]);}
   else if(k==='w'){const w=WINDOWS[ev[1]];if(w&&zAddBoard(w))netSendTo(e,{t:'cash',v:Math.round(10*zD().cash)});}
-  else if(k==='k'){killstreak(ev[1],e);}
+  else if(k==='k'){if((ev[1]==='air'&&(e.streak|0)>=5)||(ev[1]==='nuke'&&(e.streak|0)>=15)||ev[1]==='uav')killstreak(ev[1],e);}
   else if(k==='pk'){const d=drops.find(x=>x.id===ev[1]);if(d&&e.alive&&Math.hypot(d.x-e.x,d.z-e.z)<3.2){removeDrop(d);if(ev[2]&&ev[2]!=='knife')spawnDrop(ev[2],d.x,d.y,d.z);netSendTo(e,{t:'pk',w:d.w});}}
   else if(k==='dw'){if(e.alive&&WEAPONS[ev[1]])spawnDrop(ev[1],ev[2],ev[3],ev[4]);}
   else if(k==='fl'){flameFX(ev[1],ev[2],ev[3],ev[4],ev[5],ev[6],10);if(rand()<.4)sfx.crackle(volAt(ev[1],ev[2],ev[3],.5,40),distAt(ev[1],ev[2],ev[3]));e.firedT=1.2;netEv(['fl',e.nid].concat(ev.slice(1)));}
 }
+// a dropped link is not a goodbye: keep the player's slot for 30 s so they can come back
 function hostDrop(c){
   const e=NET.conns.get(c);if(!e)return;
-  NET.conns.delete(c);NET.remotes.delete(e.nid);scene.remove(e.mesh);const i=ents.indexOf(e);if(i>=0)ents.splice(i,1);
+  NET.conns.delete(c);if(e.conn===c)e.conn=null;try{c.close();}catch(err){}
+  if(!e.away){e.away=now();e.alive=false;if(e.mesh)e.mesh.visible=false;toast(e.name+' lost connection, waiting for them…');}
+  netRoster();renderMP();renderMPPill();
+}
+function disposeEnt(e){if(!e||!e.mesh)return;e.mesh.traverse(o=>{if(o.geometry)o.geometry.dispose();});if(e.sprite&&e.sprite.material){if(e.sprite.material.map)e.sprite.material.map.dispose();e.sprite.material.dispose();}}
+function hostRemove(e){
+  if(e.conn){NET.conns.delete(e.conn);try{e.conn.close();}catch(err){}}
+  e.alive=false;NET.remotes.delete(e.nid);if(e.mesh)scene.remove(e.mesh);disposeEnt(e);const i=ents.indexOf(e);if(i>=0)ents.splice(i,1);
   netFitBots();netRoster();toast(e.name+' left the room');renderMP();renderMPPill();
 }
 function netRoster(){
-  const list=[{nid:'P0',name:profile.name,team:player.team,rd:1,lv:levelInfo(profile.xp).level}].concat([...NET.remotes.values()].map(e=>({nid:e.nid,name:e.name,team:e.team,rd:e.ready?1:0,lv:e.lv||1})));
+  const list=[{nid:'P0',name:profile.name,team:player.team,rd:1,lv:levelInfo(profile.xp).level}].concat([...NET.remotes.values()].map(e=>({nid:e.nid,name:e.name,team:e.team,rd:e.ready?1:0,lv:e.lv||1,aw:e.away?1:0,pg:e.ping||0})));
   const bl=t=>bots.filter(b=>b.team===t&&b.inMatch!==false&&(!isZ()||ZALLY.includes(b.name))).map(b=>b.name);
   for(const r of list){const e=r.nid==='P0'?null:NET.remotes.get(r.nid);r.sk=r.nid==='P0'?(profile.skin||'std'):e&&e.sk;r.ar=r.nid==='P0'?armorBits():e&&e.ar;}
   NET.roster=list;NET.botsList={blue:bl('blue'),red:bl('red')};
@@ -3491,10 +3614,11 @@ function hostSnap(){
     M:mines.map(m=>[m.id,r1(m.x),m.y,r1(m.z)]),
     D:drops.map(d=>[d.id,WKEYS.indexOf(d.w),r1(d.x),r1(d.y),r1(d.z)]),
     sc:[scores.blue,scores.red],mt:Math.ceil(matchT),
-    z:isZ()?[Z.round,Z.toSpawn+zombies.filter(z=>z.alive).length,Math.ceil(Z.breakT),WINDOWS.map(w=>w.up)]:null,ev:NET.q};
+    z:isZ()?[Z.round,Z.toSpawn+zombies.filter(z=>z.alive).length,Math.ceil(Z.breakT),WINDOWS.map(w=>w.up)]:null,s:++NET.seq};
 }
 function hostTick(dt){
   for(const e of NET.remotes.values()){
+    if(e.inMatch===false||e.away){if(e.mesh)e.mesh.visible=false;continue;}
     e.spawnProt-=dt;e.lastHurt=(e.lastHurt||0)+dt;e.firedT-=dt;
     if(e.alive){if(e.lastHurt>5&&e.hp<e.maxHp)e.hp=Math.min(e.maxHp,e.hp+14*dt);
       const sp=Math.hypot(e.vx||0,e.vz||0);e.walk=(e.walk||0)+sp*dt*2.4;const sw=Math.sin(e.walk)*Math.min(1,sp/3)*.75;
@@ -3504,51 +3628,74 @@ function hostTick(dt){
     else{e.deadT=(e.deadT||0)+dt;if(e.deadT<1.6)e.mesh.rotation.x=-Math.min(1,e.deadT*3)*Math.PI/2;else e.mesh.visible=false;}
   }
   NET.snapT-=dt;
-  if(NET.snapT<=0){NET.snapT=1/15;if(NET.conns.size&&state==='play')netBroadcast(hostSnap());NET.q=[];}
+  if(NET.snapT<=0){NET.snapT=1/15;if(NET.conns.size&&state==='play'){const sn=hostSnap(),t=now();for(const c of NET.conns.keys())if(t-(c.lastIn||t)<2500)sendU(c,sn);if(NET.q.length)netBroadcast({t:'evs',ev:NET.q});}NET.q=[];}
 }
 function hostSetTeam(e,team){
   if(e.team===team)return;
-  const n=makeEnt(e.name,team,false);Object.assign(n,{remote:true,conn:e.conn,nid:e.nid,inMatch:true,alive:false,maxHp:e.maxHp,kills:e.kills,deaths:e.deaths,ready:e.ready,lv:e.lv});n.mesh.visible=false;friendTag(n);applyLook(n,e.sk||'std',e.ar|0);
-  scene.remove(e.mesh);const i=ents.indexOf(e);if(i>=0)ents.splice(i,1);NET.conns.set(e.conn,n);NET.remotes.set(e.nid,n);
+  const n=makeEnt(e.name,team,false);Object.assign(n,{remote:true,conn:e.conn,nid:e.nid,sid:e.sid,away:e.away,ping:e.ping,inMatch:true,alive:false,maxHp:e.maxHp,kills:e.kills,deaths:e.deaths,ready:e.ready,lv:e.lv});n.mesh.visible=false;friendTag(n);applyLook(n,e.sk||'std',e.ar|0);
+  scene.remove(e.mesh);const i=ents.indexOf(e);if(i>=0)ents.splice(i,1);if(e.conn)NET.conns.set(e.conn,n);NET.remotes.set(e.nid,n);
 }
 /* ---- joining ---- */
-function mpJoin(code){
+function mpJoin(code,rejoin){
   code=String(code||'').trim().toUpperCase().replace(/[^A-Z0-9]/g,'');
   if(code.length<4)return mpErr('Type the 5-letter room code.');
   if(!mpAvailable())return mpErr('Multiplayer needs the public link of the game. Open it from GitHub and try again.');
-  mpLeave(true);NET.err='';NET.status='Connecting to room '+code+'…';NET.code=code;renderMP();
-  const peer=new Peer(peerOpts());NET.peer=peer;let tries=0,to=0;
+  if(rejoin)netDropTransport();else{mpLeave(true);NET.err='';}
+  NET.code=code;NET.retryCode=code;NET.status=rejoin?'Reconnecting to room '+code+'…':'Step 1 of 3 · Connecting to the game server…';renderMP();
+  const peer=new Peer(peerOpts());NET.peer=peer;let tries=0,to=0;const t0=now(),LIMIT=rejoin?28000:40000;
+  const give=(msg)=>{clearTimeout(to);if(NET.peer!==peer)return;if(rejoin){mpLost('Could not get back into the room. The host may have closed it.');return;}mpLeave(true);mpErr(msg);};
   const attempt=()=>{
-    if(NET.peer!==peer||NET.mode==='client')return;tries++;
-    if(tries>1){NET.status=`Still reaching room ${code}… (try ${tries} of 4). Ask your friend to keep the game open on screen.`;renderMP();}
-    const c=peer.connect(roomId(code),{reliable:true});NET.host=c;
-    clearTimeout(to);to=setTimeout(()=>{if(NET.mode==='client'||NET.peer!==peer)return;try{c.close();}catch(e){}
-      if(tries<4)attempt();else{mpLeave(true);mpErr('The room did not answer. Your friend must keep the game open on screen (not in WhatsApp or another app). If you are both on mobile data, try Wi-Fi on one phone, then try again.');}},12000);
-    c.on('open',()=>c.send({t:'hello',name:profile.name,lv:levelInfo(profile.xp).level,sk:profile.skin||'std',ar:armorBits()}));
-    c.on('data',d=>{clearTimeout(to);if(NET.host===c)clientRecv(d);});
-    c.on('close',()=>{if(NET.host===c&&NET.mode==='client')mpLost();});
+    if(NET.peer!==peer||NET.mode==='client'&&!rejoin)return;tries++;
+    NET.status=(rejoin?'Reconnecting':'Step 2 of 3 · Looking for room '+code)+(tries>1?` · try ${tries}`:'')+'…';renderMP();
+    const c=peer.connect(roomId(code),{reliable:true,metadata:{sid:mySid()}});NET.host=c;c.lastIn=now();
+    clearTimeout(to);to=setTimeout(()=>{if(NET.peer!==peer||NET.host!==c||c.joined)return;try{c.close();}catch(e){}
+      if(now()-t0<LIMIT)attempt();else give(c.iceFailed?'Your phone and your friend\'s phone could not connect. This happens on some mobile networks: put one phone on Wi-Fi and press Try again.':'The room did not answer. Your friend must keep the game open on screen (not in WhatsApp or another app). If you are both on mobile data, try Wi-Fi on one phone, then press Try again.');},10000);
+    c.on('iceStateChanged',st=>{if(NET.host!==c||c.joined)return;if(st==='failed'){c.iceFailed=true;NET.status='Your phones could not reach each other directly, trying again…';renderMP();}});
+    c.on('open',()=>{if(NET.host!==c)return;NET.status='Step 3 of 3 · Joining '+code+'…';renderMP();attachU(c,d=>{NET.lastIn=now();if(NET.host===c)clientRecv(d);});
+      c.send({t:'hello',v:PROTO,sid:mySid(),name:profile.name,lv:levelInfo(profile.xp).level,sk:profile.skin||'std',ar:armorBits()});});
+    c.on('data',d=>{NET.lastIn=now();if(NET.host!==c)return;if(d&&d.t==='welcome'){c.joined=true;clearTimeout(to);}clientRecv(d);});
+    c.on('close',()=>{if(NET.host!==c)return;if(NET.mode==='client'&&!NET.leaving)clientReconnect();});
   };
-  peer.on('open',attempt);
+  peer.once('open',attempt);
+  setTimeout(()=>{if(NET.peer===peer&&!peer.open&&!(NET.host&&NET.host.joined))give('Could not reach the game server. Check your internet connection, then press Try again.');},15000);
+  peer.on('disconnected',()=>{if(NET.peer===peer&&!peer.destroyed)setTimeout(()=>{try{if(NET.peer===peer&&peer.disconnected&&!peer.destroyed)peer.reconnect();}catch(err){}},800);});
   peer.on('error',e=>{if(NET.peer!==peer)return;
-    // the host's phone may be switching back from another app: wait and retry instead of failing at once
-    if(e.type==='peer-unavailable'&&tries<4){clearTimeout(to);NET.status=`Room ${code} is not online yet… (try ${tries} of 4). Ask your friend to open the game.`;renderMP();to=setTimeout(attempt,4000);return;}
-    mpLeave(true);mpErr(netErrText(e));});
+    if(NET.mode==='client'&&NET.host&&NET.host.joined&&!NET.reconnecting)return;
+    // the host's phone may be switching back from another app: keep trying for a while instead of failing at once
+    if(e.type==='peer-unavailable'){clearTimeout(to);if(now()-t0<(rejoin?LIMIT:11000)){NET.status=(rejoin?'Waiting for the host to come back':'Room '+code+' is not online yet. Ask your friend to open the game')+`… (try ${tries})`;renderMP();to=setTimeout(attempt,3000);}else give(netErrText(e));return;}
+    if((e.type==='network'||e.type==='server-error'||e.type==='socket-error'||e.type==='socket-closed')&&now()-t0<LIMIT){clearTimeout(to);NET.status='The game server did not answer, trying again…';renderMP();to=setTimeout(()=>{if(NET.peer!==peer)return;try{peer.destroy();}catch(err){}if(rejoin)mpJoin(code,true);else{const keep=NET.retryCode;mpJoin(keep);}},3000);return;}
+    give(netErrText(e));});
 }
+// the link to the host died: get back in automatically and keep playing
+function clientReconnect(){
+  if(NET.reconnecting||!isClient()||NET.leaving)return;
+  NET.reconnecting=true;NET.lastIn=now();$('netBanner').hidden=false;$('netBanner').textContent='Connection lost · reconnecting…';
+  mpJoin(NET.code,true);
+}
+function netDropTransport(){const p=NET.peer;NET.peer=null;NET.host=null;try{if(p)p.destroy();}catch(e){}}
 function clientRecv(d){
   if(!d||!d.t)return;
-  if(d.t==='full'){mpLeave(true);mpErr('That room is full.');return;}
-  if(d.t==='welcome'){NET.myName=d.name||profile.name;player.name=NET.myName;NET.mode='client';NET.nid=d.nid;player.nid=d.nid;player.team=d.team;NET.teamUp=d.teamUp;NET.mapKey=d.map;NET.pendingBlk=d.changes;NET.hostName=d.host;NET.status='';
+  if(d.t==='po'){NET.ping=Math.round(now()-d.ts);return;}
+  if(d.t==='pi'){try{NET.host.send({t:'po',ts:d.ts});}catch(e){}return;}
+  if(d.t==='pgs'){NET.pings=d.v||{};return;}
+  if(d.t==='away'){NET.hostAway=true;return;}
+  if(d.t==='back'){NET.hostAway=false;return;}
+  if(d.t==='evs'){if(state==='play'&&Array.isArray(d.ev))for(const ev of d.ev)clientEvent(ev);return;}
+  if(d.t==='ver'){NET.leaving=true;mpLeave(true);mpErr('You and your friend have different versions of the game. Both of you: close the game and open the link again (pull down to refresh), then try again.');return;}
+  if(d.t==='full'){NET.leaving=true;mpLeave(true);mpErr(`That room is full (${d.cap||12} players).`);return;}
+  if(d.t==='welcome'&&d.v!==PROTO){NET.leaving=true;mpLeave(true);mpErr('Your friend has an older version of the game. Ask them to close it and open the link again, then try again.');return;}
+  if(d.t==='welcome'){requestWake();const wasRe=NET.reconnecting;NET.reconnecting=false;$('netBanner').hidden=true;ss('bf.room',NET.code);NET.lastSeq=-1;if(d.zd)NET.zdiff=d.zd;if(wasRe)toast('Back in the room');NET.myName=d.name||profile.name;player.name=NET.myName;NET.mode='client';NET.nid=d.nid;player.nid=d.nid;player.team=d.team;NET.teamUp=d.teamUp;NET.mapKey=d.map;NET.pendingBlk=d.changes;NET.hostName=d.host;NET.status='';
     renderMP();renderMPPill();if(d.playing)clientStart(d.map);return;}
-  if(d.t==='roster'){netApplyRoster(d.list);NET.botsList=d.bots||null;NET.fillC=d.fill!==false;if(d.map){NET.mapKey=d.map;NET.zdiff=d.zd||'medium';NET.teamUpC=d.teamUp!==false;if(state==='menu'&&MAPS[d.map]&&MAP!==MAPS[d.map]){MAP=MAPS[d.map];resetMatch(false);}renderProfile();}renderMP();renderMPPill();return;}
+  if(d.t==='roster'){{const me=(d.list||[]).find(r=>r.nid===NET.nid);if(me&&state!=='play')NET.ready=!!me.rd;}netApplyRoster(d.list);NET.botsList=d.bots||null;NET.fillC=d.fill!==false;if(d.map){NET.mapKey=d.map;NET.zdiff=d.zd||'medium';NET.teamUpC=d.teamUp!==false;if(state==='menu'&&MAPS[d.map]&&MAP!==MAPS[d.map]){MAP=MAPS[d.map];resetMatch(false);}renderProfile();}renderMP();renderMPPill();return;}
   if(d.t==='start'){NET.pendingBlk=[];NET.ready=false;if(d.zd)NET.zdiff=d.zd;clientStart(d.map);return;}
-  if(d.t==='snap'){if(state==='play')clientSnap(d);return;}
+  if(d.t==='snap'){if(d.s!==undefined){if(d.s<=NET.lastSeq&&NET.lastSeq-d.s<5000)return;NET.lastSeq=d.s;}NET.lastSnapAt=now();if(state==='play')clientSnap(d);return;}
   if(d.t==='die'){clientDie(d);return;}
-  if(d.t==='hurt'){vigT=Math.min(1,vigT+d.v/45);sfx.hurt();return;}
+  if(d.t==='hurt'){vigT=Math.min(1,vigT+d.v/45);sfx.hurt();if(d.ax!==undefined)showDmgDir(d.ax,d.az);return;}
   if(d.t==='kc'){player.streak=(player.streak||0)+1;onMyKill(d.v,!!d.h,d.w,d.k);return;}
   if(d.t==='cash'){Z.money+=d.v;if(d.kill&&state==='play'){Z.kills++;match.kills++;if(d.h)match.heads++;const S=ST();S.kills++;S.zkills=(S.zkills||0)+1;if(d.h)S.heads++;S.weap[d.w]=(S.weap[d.w]||0)+1;chProgress('kills',1);if(d.h){chProgress('heads',1);showMsg('HEADSHOT',true);}}return;}
   if(d.t==='pk'){if(state==='play'&&player.alive){giveWeapon(d.w);sfx.reload();showMsg('PICKED UP '+WEAPONS[d.w].name.toUpperCase(),true);}return;}
   if(d.t==='spawn'){if(state==='play'&&!player.alive)respawn(player);return;}
-  if(d.t==='bye'){mpLost();return;}
+  if(d.t==='bye'){mpLost('The host closed the room.');return;}
   if(d.t==='end'&&isZ()){if(d.z)Z.round=d.z;if(state==='play')zGameOver(!!d.win);return;}
   if(d.t==='end'){scores.blue=d.sc[0];scores.red=d.sc[1];if(d.z)Z.round=d.z;if(state==='play')endMatch(!!d.nuke);return;}
 }
@@ -3590,7 +3737,7 @@ function clientSnap(d){
   netPuppetProjs(d.P);netPuppetMines(d.M);if(d.D)netPuppetDrops(d.D);
   scores.blue=d.sc[0];scores.red=d.sc[1];matchT=d.mt;
   if(d.z){Z.round=d.z[0];Z.left=d.z[1];Z.breakT=d.z[2];d.z[3].forEach((u,i)=>{if(WINDOWS[i])WINDOWS[i].up=u;});}
-  for(const ev of d.ev)clientEvent(ev);
+  for(const ev of d.ev||[])clientEvent(ev);
 }
 function clientEvent(ev){
   const k=ev[0];
@@ -3606,6 +3753,7 @@ function clientEvent(ev){
   else if(k==='fl'){if(ev[1]===NET.nid)return;flameFX(ev[2],ev[3],ev[4],ev[5],ev[6],ev[7],10);if(rand()<.4)sfx.crackle(volAt(ev[2],ev[3],ev[4],.5,40),distAt(ev[2],ev[3],ev[4]));}
 }
 function clientDie(d){
+  if(d.l!==undefined)NET.life=d.l;
   if(!player.alive)return;
   player.alive=false;player.hp=0;player.deaths++;player.streak=0;player.respawnT=isZ()?1e9:4;
   $('death').hidden=false;$('dName').textContent=d.by;$('dName').className='n '+(d.bt==='blue'?'cb':d.bt?'cr':'');$('dWeap').textContent=d.w;fireHeld=false;ads=false;
@@ -3661,27 +3809,72 @@ function stepClient(dt,now){
     if(!$('board').hidden&&((now/500)|0)%2===0)renderBoard($('boardBody'));
     NET.sendT-=dt;
     if(NET.sendT<=0&&NET.host&&NET.host.open){NET.sendT=.05;
-      try{NET.host.send({t:'st',p:[r2(player.x),r2(player.y),r2(player.z),r2(player.yaw),r2(player.pitch),r1(player.vx),r1(player.vz)],a:player.alive?1:0,mh:player.maxHp||100,mk:Z.perks.mask?1:0,wp:curW().id,ev:NET.q});}catch(e){}
-      NET.q=[];}
+      sendU(NET.host,{t:'st',q:++NET.seq,p:[r2(player.x),r2(player.y),r2(player.z),r2(player.yaw),r2(player.pitch),r1(player.vx),r1(player.vz)],a:player.alive?1:0,l:NET.life|0,mh:player.maxHp||100,mk:Z.perks.mask?1:0,wp:curW().id});
+      if(NET.q.length){try{NET.host.send({t:'cev',ev:NET.q});}catch(e){}NET.q=[];}}
+    $('netBanner').hidden=!(NET.reconnecting||NET.hostAway||performance.now()-NET.lastSnapAt>2500);
+    if(!$('netBanner').hidden&&!NET.reconnecting)$('netBanner').textContent=NET.hostAway?"Host's game is in the background · waiting for them…":'Waiting for the host…';
   }else{
     menuT+=dt;for(const b of bots)updateBot(b,dt);if(isZ())zUpdate(dt);menuCam(dt);
   }
   updateDrops(dt);updateFires(dt);updateSmokes(dt);updateParts(dt);updateTracers(dt);updateFlashes(dt);updateSnow(dt);
   if(worldDirty){worldDirty=false;rebuildWorld();}
 }
+/* ---- heartbeat: notice a dead link within seconds, not minutes ---- */
+setInterval(()=>{
+  const t=now();
+  if(isHost()){
+    for(const [c,e] of NET.conns){try{c.send({t:'pi',ts:t});}catch(err){}if(t-(c.lastIn||t)>DEAD_MS)hostDrop(c);}
+    for(const e of [...NET.remotes.values()])if(e.away&&t-e.away>GRACE_MS)hostRemove(e);
+    for(const c of [...NET.pend]){if(NET.conns.has(c)||!c.open&&t-c.born>15000||t-c.born>12000){NET.pend.delete(c);if(!NET.conns.has(c))try{c.close();}catch(err){}}}
+    const v={};for(const e of NET.remotes.values())v[e.nid]=e.ping||0;netBroadcast({t:'pgs',v});
+    if(!$('mp').hidden&&state!=='play')renderMP();
+  }else if(isClient()&&NET.host){
+    if(NET.host.open)try{NET.host.send({t:'pi',ts:t});}catch(err){}
+    if(!NET.reconnecting&&t-(NET.lastIn||t)>DEAD_MS)clientReconnect();
+  }
+},1000);
+// when the host's game goes to the background the browser stops drawing; keep the match running from a worker timer and tell friends
+let bgWorker=null,bgLast=0;
+document.addEventListener('visibilitychange',()=>{
+  if(isHost())netBroadcast({t:document.hidden?'away':'back'});
+  if(!document.hidden){NET.lastIn=now();if(NET.mode)requestWake();if(bgWorker){bgWorker.terminate();bgWorker=null;}
+    if(isClient()&&NET.host&&!NET.host.open&&!NET.reconnecting)clientReconnect();return;}
+  if(isHost()&&!bgWorker){try{bgWorker=new Worker(URL.createObjectURL(new Blob(['setInterval(function(){postMessage(0)},50)'],{type:'text/javascript'})));bgLast=now();
+    bgWorker.onmessage=()=>{if(!document.hidden)return;const t=now(),dt=Math.min(.1,(t-bgLast)/1000);bgLast=t;try{step(dt,t);}catch(e){}};}catch(e){bgWorker=null;}}
+});
+// connection check: game server, direct path (STUN) and relay (TURN)
+function iceProbe(servers,want,ms){return new Promise(res=>{let pc;try{pc=new RTCPeerConnection({iceServers:servers,iceTransportPolicy:want==='relay'?'relay':'all'});}catch(e){res(false);return;}
+  let done=false;const fin2=v=>{if(done)return;done=true;try{pc.close();}catch(e){}res(v);};
+  pc.onicecandidate=e=>{if(e.candidate&&e.candidate.candidate.includes(' typ '+want+' '))fin2(true);if(!e.candidate)fin2(false);};
+  pc.createDataChannel('t');pc.createOffer().then(o=>pc.setLocalDescription(o)).catch(()=>fin2(false));setTimeout(()=>fin2(false),ms);});}
+async function netDiag(){
+  NET.diag=[['Game server','checking…'],['Direct connection (STUN)','checking…'],['Relay for mobile networks (TURN)','checking…']];renderMP();
+  const srv=await new Promise(res=>{let p;try{p=new Peer(peerOpts());}catch(e){res(false);return;}const t=setTimeout(()=>{try{p.destroy();}catch(e){}res(false);},9000);
+    p.on('open',()=>{clearTimeout(t);try{p.destroy();}catch(e){}res(true);});p.on('error',()=>{clearTimeout(t);try{p.destroy();}catch(e){}res(false);});});
+  NET.diag[0][1]=srv?'ok':'failed';renderMP();
+  const st=await iceProbe(ICE.slice(0,2),'srflx',6000);NET.diag[1][1]=st?'ok':'failed';renderMP();
+  const tu=await iceProbe((iceDyn||ICE).slice(2),'relay',9000);NET.diag[2][1]=tu?'ok':'failed';
+  NET.diag.push(['Result',!srv?'No internet or the game server is down. Try again in a minute.':st&&tu?'Everything looks good.':st?'Should work on Wi-Fi. On some mobile networks the relay is needed and it is not reachable right now.':tu?'Works through the relay only. Expect a bit more delay.':'Your network blocks game connections. Try another Wi-Fi or mobile data.']);
+  renderMP();
+}
 /* ---- leaving ---- */
 function mpLeave(silent){
   const wasClient=isClient();
-  try{if(NET.peer)NET.peer.destroy();}catch(e){}
+  // say goodbye properly so the other side frees the slot at once
+  NET.leaving=true;try{if(isClient()&&NET.host&&NET.host.open)NET.host.send({t:'bye'});if(isHost())netBroadcast({t:'bye'});}catch(e){}
+  const old=NET.peer;setTimeout(()=>{try{if(old)old.destroy();}catch(e){}},150);
+  ss('bf.room',null);ss('bf.host',null);$('netBanner').hidden=true;
   for(const e of NET.remotes.values()){scene.remove(e.mesh);const i=ents.indexOf(e);if(i>=0)ents.splice(i,1);}
   NET.remotes.clear();NET.conns.clear();
-  Object.assign(NET,{mode:null,peer:null,host:null,nid:'P0',q:[],roster:[],status:'',hostName:'',ready:false,myName:''});player.nid='P0';player.team='blue';
+  Object.assign(NET,{mode:null,peer:null,host:null,nid:'P0',q:[],roster:[],status:'',hostName:'',ready:false,myName:'',reconnecting:false,hostAway:false,pings:{},ping:0,seq:0,lastSeq:-1});player.nid='P0';player.team='blue';
+  setTimeout(()=>{NET.leaving=false;},200);
   for(const [,g] of pMine)scene.remove(g);pMine.clear();for(const m of pProj)m.visible=false;
   if(wasClient&&state!=='menu'){state='menu';['hud','touch','end','board','pause','death'].forEach(id=>$(id).hidden=true);MAP=MAPS[profile.map]||MAPS.junk;resetMatch(false);renderProfile();$('menu').hidden=false;}
   else if(state==='menu')for(const b of bots)if(b.inMatch===false&&(!isZ()||ZALLY.includes(b.name))){b.inMatch=true;respawn(b);}
   if(!silent){renderMP();renderMPPill();}
 }
-function mpLost(){toast('Lost the connection to the room');mpLeave(false);}
+function requestWake(){try{if(navigator.wakeLock&&navigator.wakeLock.request&&!document.hidden)navigator.wakeLock.request('screen').catch(()=>{});}catch(e){}}
+function mpLost(why){NET.leaving=true;mpLeave(false);mpErr(why||'Lost the connection to the room.');toast(why||'Lost the connection to the room');}
 /* ---- lobby screen ---- */
 function renderMPPill(){
   const p=$('mpPill');if(p)p.hidden=true;
@@ -3693,7 +3886,8 @@ function lobSlot(o){
   // o: {name, team, lv, tag, me, friend, bot, ready, host, swap, empty}
   if(o.empty)return `<div class="slot empty"><i class="av">${o.locked?'–':'+'}</i><div class="sn"><b>${o.locked?'No bot':'Open slot'}</b><small>${o.locked?'Bots are off for your team':'Waiting for a friend'}</small></div></div>`;
   const col=o.team==='red'?'var(--red)':o.team==='zombie'?'var(--green)':'var(--blue)';
-  const st=o.bot?'<span class="st bot">BOT</span>':o.solo?'':o.host?'<span class="st host">♛ HOST</span>':o.ready?'<span class="st rd">READY</span>':'<span class="st nr">NOT READY</span>';
+  const pg=o.ping?`<span class="pg ${o.ping<90?'cg':o.ping<220?'ca':'cr'}">${o.ping} ms</span>`:'';
+  const st=o.bot?'<span class="st bot">BOT</span>':o.solo?'':o.away?'<span class="st nr">RECONNECTING</span>':o.host?pg+'<span class="st host">♛ HOST</span>':pg+(o.ready?'<span class="st rd">READY</span>':'<span class="st nr">NOT READY</span>');
   return `<div class="slot ${o.me?'me':''} ${o.bot?'bot':''} ${o.friend?'fr':''}"><i class="av" style="background:${o.bot?'rgba(255,255,255,.08)':col}">${o.bot?'⚙':esc(o.name.charAt(0).toUpperCase())}</i>
     <div class="sn"><b>${o.friend?'★ ':''}${esc(o.name)}${o.me?' <em>(you)</em>':''}</b><small>${o.bot?'Fills the spot':'Level '+(o.lv||1)+(o.sk&&o.sk!=='std'&&CHARS[o.sk]?' · '+CHARS[o.sk].name:'')}</small></div>${st}${o.swap?`<button class="swap" data-swap="${o.swap}" title="Switch team">⇄</button>`:''}</div>`;
 }
@@ -3704,7 +3898,7 @@ function renderMP(){
   const solo=!NET.mode,host=isHost()||solo,mk=host?MAP.key:(NET.mapKey||MAP.key),M=MAPS[mk]||MAP,zm=M.mode==='zombie',mode=modeOf(mk);
   const zdKey=host?(profile.zdiff||'medium'):(NET.zdiff||'medium'),teamUp=host?NET.teamUp:NET.teamUpC,fill=host?profile.fillBots!==false:NET.fillC!==false;
   const myLook={sk:profile.skin||'std',ar:armorBits()};
-  const roster=host?[Object.assign({nid:'P0',name:profile.name,team:player.team,rd:1,lv:levelInfo(profile.xp).level},myLook)].concat([...NET.remotes.values()].map(e=>({nid:e.nid,name:e.name,team:e.team,rd:e.ready?1:0,lv:e.lv||1,sk:e.sk,ar:e.ar}))):NET.roster;
+  const roster=host?[Object.assign({nid:'P0',name:profile.name,team:player.team,rd:1,lv:levelInfo(profile.xp).level},myLook)].concat([...NET.remotes.values()].map(e=>({nid:e.nid,name:e.name,team:e.team,rd:e.ready?1:0,lv:e.lv||1,sk:e.sk,ar:e.ar,aw:e.away?1:0,pg:e.ping||0}))):NET.roster;
   const bl=host?{blue:bots.filter(x=>x.team==='blue'&&x.inMatch!==false&&(!zm||ZALLY.includes(x.name))).map(x=>x.name),red:bots.filter(x=>x.team==='red'&&x.inMatch!==false&&!zm).map(x=>x.name)}:(NET.botsList||{blue:[],red:[]});
   const others=roster.filter(r=>r.nid!=='P0'),readyN=others.filter(r=>r.rd).length,allReady=readyN===others.length;
   const dis=host?'':'disabled',meNid=host?'P0':NET.nid;
@@ -3727,7 +3921,7 @@ function renderMP(){
   // right: the slots
   const side=(team,label,cls,n)=>{
     const hum=zm?roster:roster.filter(r=>r.team===team),botN=zm?bl.blue:bl[team];const rows=[];
-    for(const r of hum.slice(0,n))rows.push(lobSlot({name:r.name,team:zm?'blue':team,lv:r.lv,sk:r.sk,me:r.nid===meNid,friend:r.nid!==meNid,host:!solo&&r.nid==='P0',ready:!!r.rd,solo,swap:host&&!zm?r.nid:null}));
+    for(const r of hum.slice(0,n))rows.push(lobSlot({name:r.name,team:zm?'blue':team,lv:r.lv,sk:r.sk,me:r.nid===meNid,friend:r.nid!==meNid,host:!solo&&r.nid==='P0',ready:!!r.rd,solo,away:!!r.aw,ping:r.nid===meNid?(isClient()?NET.ping:0):(isHost()?r.pg:(r.nid==='P0'?NET.ping:(NET.pings[r.nid]||r.pg||0))),swap:host&&!zm?r.nid:null}));
     for(const nm of botN.slice(0,n-rows.length))rows.push(lobSlot({name:nm,team:zm?'blue':team,bot:true}));
     const bc=rows.length-Math.min(hum.length,n);
     while(rows.length<n)rows.push(lobSlot({empty:true,locked:!fill&&hum.some(r=>r.nid===meNid)}));
@@ -3737,9 +3931,10 @@ function renderMP(){
   // bottom bar
   const msg=solo?'Ready when you are':isHost()?(others.length?(allReady?'Everyone is ready':`Waiting for ${others.length-readyN} player${others.length-readyN===1?'':'s'} to ready up`):'Invite friends, or start now with bots'):
     (state==='play'?'The match is on':NET.ready?'You are ready. Waiting for the host…':'Press Ready when you are set');
-  h+=`<div class="lobBar">${solo?'':`<button class="btn sm ghost cut" id="mpLeave">${isHost()?'Close room':'Leave'}</button>`}<button class="btn sm ghost cut" id="mpChar">Character</button><span class="lobMsg ${(solo||allReady&&others.length)?'cg':''}">${esc(msg)}</span>`+
+  h+=`<div class="lobBar">${solo?'':`<button class="btn sm ghost cut" id="mpLeave">${isHost()?'Close room':'Leave'}</button>`}<button class="btn sm ghost cut" id="mpChar">Character</button><button class="btn sm ghost cut" id="mpDiag">Test connection</button><span class="lobMsg ${(solo||allReady&&others.length)?'cg':''}">${esc(msg)}</span>`+
     (host?`<button class="btn cut" id="mpStart" ${allReady?'':'disabled'}>Start</button>`:(state==='play'?'':`<button class="btn cut ${NET.ready?'ghost':''}" id="mpReady">${NET.ready?'Ready ✓':'Ready'}</button>`))+`</div>`;
-  if(NET.err)h+=`<div class="err" style="margin-top:8px">${esc(NET.err)}</div>`;
+  if(NET.diag)h+=`<div class="diag">${NET.diag.map(([k,v])=>`<div><span>${esc(k)}</span><b class="${v==='ok'?'cg':v==='failed'?'cr':v==='checking…'?'ca':''}">${esc(v==='ok'?'✓ OK':v==='failed'?'✗ Failed':v)}</b></div>`).join('')}</div>`;
+  if(NET.err)h+=`<div class="err" style="margin-top:8px">${esc(NET.err)}</div>`+(NET.retryCode&&!NET.mode?`<div class="row" style="margin-top:6px"><button class="btn sm cut" id="mpRetry">Try again</button><button class="btn sm ghost cut" id="mpDiag">Test my connection</button></div>`:'');
   b.innerHTML=h;
 }
 // the party panel on the main screen opens the lobby (see renderHome)
@@ -3759,12 +3954,16 @@ $('mpBody').addEventListener('click',e=>{
     else{const e=NET.remotes.get(id);if(e)hostSetTeam(e,e.team==='blue'?'red':'blue');}
     netFitBots();if(isHost())netRoster();renderMP();renderProfile();}
   if(t.id==='mpStart'){if(mpAllReady()){$('mp').hidden=true;lobbyStart();}}
-  if(t.id==='mpLeave'){if(isHost())netBroadcast({t:'bye'});mpLeave(false);}
+  if(t.id==='mpLeave')mpLeave(false);
+  if(t.id==='mpRetry'){const c=NET.retryCode;NET.err='';mpJoin(c);}
+  if(t.id==='mpDiag')netDiag();
   if(t.id==='mpCopy'){const text=`Join my BLOCKFIRE room! Code ${NET.code}: ${inviteUrl()}`;
     const fallback=()=>{if(navigator.share)navigator.share({text}).catch(()=>{});else $('mpUrl').select();};
     if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(text).then(()=>toast('Invite copied. Paste it to your friend, then come straight back here'),fallback);else fallback();}
   if(t.dataset.team!==undefined){NET.teamUp=t.dataset.team==='1';player.team='blue';let i=0;for(const r of [...NET.remotes.values()])hostSetTeam(r,NET.teamUp?'blue':(i++%2===0?'red':'blue'));netFitBots();netRoster();renderMP();renderMPPill();}
 });
+// after a reload: the host reopens the same room and a friend goes back into it
+{const hc=ss('bf.host'),rc=ss('bf.room');if(!location.hash.match(/room-/)){if(hc)setTimeout(()=>{if(mpAvailable()&&!NET.mode)mpHost(hc,1);},600);else if(rc)setTimeout(()=>{if(mpAvailable()&&!NET.mode){openLobby();mpJoin(rc);}},600);}}
 // a link with #room-CODE joins straight away
 {const m=location.hash.match(/room-([A-Za-z0-9]{4,6})/);if(m)setTimeout(()=>{$('mp').hidden=false;mpJoin(m[1]);},400);}
 
@@ -3796,7 +3995,8 @@ function frame(now){frameN++;
   requestAnimationFrame(frame);
   const rdt=(now-last)/1000,dt=Math.min(.05,rdt);last=now;
   if(SET.fps){fpsN++;fpsT+=rdt;if(fpsT>=.5){$('fps').textContent=Math.round(fpsN/fpsT)+' FPS';fpsN=0;fpsT=0;}}
-  step(dt,now);
+  if(!(document.hidden&&bgWorker))step(dt,now);
+  document.body.classList.toggle('playing',state==='play');
   if(flameSndT>0&&state==='play'){flameSndT-=dt;if(!flameSnd&&AC){flameSnd=sfx.loop(650);}if(flameSnd)flameSnd.g.gain.value=.5;}
   else if(flameSnd){sfx.stopLoop(flameSnd);flameSnd=null;}
   if(noRender)return;
