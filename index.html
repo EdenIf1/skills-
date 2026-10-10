@@ -1158,11 +1158,15 @@ function genSafehouse(){
     {kind:'gun',id:'m249',price:2500,x:30.5,z:38.8,w:'n',f:0},
     {kind:'box',price:950,x:27.5,z:32.5,f:0},
     {kind:'perk',perk:'quick',price:2000,x:40.8,z:35,w:'e',f:0},
+    {kind:'hp',price:50,x:34.5,z:25.2,w:'s',f:0},
+    {kind:'hp',price:50,x:31.5,z:25.2,w:'s',f:1},
+    {kind:'ammo',price:200,x:35.5,z:32.5,f:0},
     {kind:'perk',perk:'iron',price:2500,x:23.2,z:28,w:'w',f:1},
     {kind:'perk',perk:'mask',price:3000,x:23.2,z:33.5,w:'w',f:1},
     {kind:'gun',id:'minigun',price:5000,x:40.8,z:29,w:'e',f:1,min:5},
     {kind:'gun',id:'flamer',price:4000,x:40.8,z:34,w:'e',f:1,min:5}
   ];
+  for(const st of STATIONS)if(st.kind==='ammo')set(Math.floor(st.x),G+1,Math.floor(st.z),B.CRATE);
   for(const st of STATIONS)if(st.kind==='perk'){const y0=G+1+st.f*5;box(Math.floor(st.x),y0,Math.floor(st.z),Math.floor(st.x),y0+1,Math.floor(st.z),st.perk==='iron'?B.CRED:st.perk==='quick'?B.CBLUE:B.CGREEN);}
   // yard: low log fence with gaps, gravestones, dead trees, a wreck
   for(let i=0;i<80;i++){const a=i/80*Math.PI*2,x=Math.round(31.5+Math.cos(a)*17),z=Math.round(31.5+Math.sin(a)*17);if(i%10<7)set(x,G+1,z,B.LOG);}
@@ -1587,7 +1591,7 @@ const WEAPONS={
   m249:{snd:'lmg',name:'Rhino LMG',kind:'lmg',model:'lmg',auto:true,mag:100,reserve:200,rate:.075,dmg:24,head:2.0,spread:.022,move:.01,bloom:.003,recoil:.012,reload:4.4,adsFov:52,price:3000,speed:.88,stats:[64,80,54,38]},
   awm:{snd:'sniper',name:'Longbow .338',kind:'sniper',model:'sniper',auto:false,mag:5,reserve:20,rate:1.25,dmg:105,head:2.0,spread:.06,adsSpread:.0004,move:.01,bloom:0,recoil:.06,reload:3.0,adsFov:18,price:3500,speed:.92,stats:[100,12,100,40]},
   deagle:{snd:'pistol',name:'Magnum .50',kind:'pistol',model:'pistol',auto:false,mag:7,reserve:35,rate:.3,dmg:47,head:2.2,spread:.009,move:.004,bloom:.022,recoil:.038,reload:1.5,adsFov:62,price:800,speed:1.1,stats:[86,40,60,94]},
-  minigun:{snd:'minigun',name:'Ripper Minigun',kind:'lmg',model:'minigun',auto:true,mag:150,reserve:450,rate:.045,dmg:22,head:1.6,spread:.032,move:.006,bloom:.001,recoil:.005,reload:5,adsFov:62,price:0,speed:.72,stats:[70,100,40,20]},
+  minigun:{snd:'minigun',name:'Ripper Minigun',kind:'lmg',model:'minigun',auto:true,mag:500,reserve:500,rate:.045,dmg:22,head:1.6,spread:.032,move:.006,bloom:.001,recoil:.005,reload:5,adsFov:62,price:0,speed:.72,stats:[70,100,40,20]},
   knife:{name:'Combat Knife',kind:'knife',model:'knife',auto:true,mag:1,reserve:0,rate:.42,dmg:55,head:1,spread:0,move:0,bloom:0,recoil:0,reload:1,adsFov:75,price:0,speed:1.15,range:2.3,stats:[60,70,4,100]},
   flamer:{snd:'flame',name:'Inferno Flamethrower',kind:'flame',model:'flamer',auto:true,mag:150,reserve:450,rate:.05,dmg:14,head:1,spread:0,move:0,bloom:0,recoil:.0015,reload:3.2,adsFov:66,price:0,speed:.92,range:8.5,stats:[90,100,8,40]},
   rpg:{snd:'rpg',name:'Viper RL',kind:'rpg',model:'rpg',auto:false,mag:1,reserve:3,rate:1,dmg:0,head:1,spread:.004,move:.01,bloom:0,recoil:.08,reload:2.8,adsFov:55,price:5000,speed:.85,stats:[100,8,46,30]}
@@ -1987,7 +1991,7 @@ function updateProjs(dt){
     if(g.type==='spit'){
       g.vy-=14*dt;g.x+=g.vx*dt;g.y+=g.vy*dt;g.z+=g.vz*dt;g.m.position.set(g.x,g.y,g.z);
       if(solid(Math.floor(g.x),Math.floor(g.y),Math.floor(g.z)))boom=true;
-      for(const e of humans())if(!boom&&Math.abs(e.x-g.x)<.5&&Math.abs(e.z-g.z)<.5&&g.y>e.y&&g.y<e.y+1.9){boom=true;damage(e,14,g.owner,false,'Spitter','zombie');}
+      for(const e of humans())if(!boom&&Math.abs(e.x-g.x)<.5&&Math.abs(e.z-g.z)<.5&&g.y>e.y&&g.y<e.y+1.9){boom=true;damage(e,zHitDmg('acid'),g.owner,false,'Spitter','zombie');}
       if(boom)burst(g.x,g.y,g.z,0x9cff4a,8,3,.12,.6);
     }else if(g.type==='nade'){
       g.vy-=20*dt;
@@ -2196,6 +2200,8 @@ const ZDIFF={
   extreme:{name:'Extreme',rounds:20,hp:1.6,spd:1.12,dmg:1.3,cash:.6,count:1.3,wall:4,mask:4500}
 };
 const zD=()=>ZDIFF[Z.diff]||ZDIFF.medium;
+const zRand=(a,b)=>a+Math.floor(rand()*(b-a+1));
+function zHitDmg(type){if(Z.diff==='extreme')return 10;if(type==='brute')return zRand(2,4);if(type==='acid')return zRand(1,3);return zRand(0,2);}
 const ZALLY=['Kodiak','Pinecone','Moose'];
 const zSkins={};
 function zSkin(t){
@@ -2310,7 +2316,7 @@ function zHurt(z,amt,att,head,weapon,kind){
 }
 function zBoom(z){
   z.alive=false;z.dead=1;z.m.g.visible=false;
-  explode(z.x,z.y+.6,z.z,z,{r:0,dr:3.4,dmg:75,weapon:'Boomer'});
+  explode(z.x,z.y+.6,z.z,z,{r:0,dr:3.4,dmg:Z.diff==='extreme'?40:20,weapon:'Boomer'});
   // a boomer at a window blows every board off it
   const w=WINDOWS[z.win];if(w&&Math.hypot(w.out[0]-z.x,w.out[1]-z.z)<2.2)while(w.up>0)zTearBoard(w);
 }
@@ -2362,7 +2368,7 @@ function zUpdateOne(z,dt,hs){
   if((mx||mz)&&moved<.4){z.stuck+=dt;if(z.stuck>.6&&z.onGround&&blocked)z.vy=8;}else z.stuck=0;
   // melee
   z.atk-=dt;
-  if(best&&z.dmg>0&&bd<1.15+.25*z.s&&Math.abs(best.y-z.y)<1.5&&z.atk<=0){z.atk=.95;z.m.head.position.z=-.18;sfx.zbite(volAt(z.x,z.y,z.z,.5,30));damage(best,z.dmg,z,false,ZT[z.type].name,'zombie');}
+  if(best&&z.dmg>0&&bd<1.15+.25*z.s&&Math.abs(best.y-z.y)<1.5&&z.atk<=0){z.atk=.95;z.m.head.position.z=-.18;sfx.zbite(volAt(z.x,z.y,z.z,.5,30));{const hd=zHitDmg(z.type);if(hd>0)damage(best,hd,z,false,ZT[z.type].name,'zombie');}}
   // spitters lob acid from range
   if(ZT[z.type].ranged&&best&&bd<15&&bd>3){z.spitCD-=dt;if(z.spitCD<=0&&zCanSee(z,best)){z.spitCD=2.6+rand();const T=Math.max(.5,bd/12),sx=z.x,sy=z.y+1.4*z.s,sz=z.z;
     const m=new THREE.Mesh(spitGeo,spitMat);m.position.set(sx,sy,sz);scene.add(m);projs.push({type:'spit',owner:z,x:sx,y:sy,z:sz,vx:(best.x-sx)/T,vy:((best.y+1.2-sy)+.5*14*T*T)/T,vz:(best.z-sz)/T,t:3,m});}}
@@ -2411,6 +2417,8 @@ function zBuildStations(){
       const back=new THREE.Mesh(new THREE.PlaneGeometry(1.5,.55),chalkMat);back.rotation.y=side?Math.PI/2:0;
       mark(back,s.x+(s.w==='w'?-.15:s.w==='e'?.15:0),base+2.3,s.z+(s.w==='s'?-.15:s.w==='n'?.15:0));
       label=`${w.name}  $${s.price}`+(s.min?`  · ROUND ${s.min}+`:'');if(s.min)col='#ff7a3a';
+    }else if(s.kind==='hp'){label=`HEALTH +10 HP  $${s.price}`;col='#ef5a4f';mark(labelSprite('+','#ef5a4f',.9),s.x,base+2.25,s.z);
+    }else if(s.kind==='ammo'){label=`AMMO CRATE  $${s.price}`;col='#f3b54a';
     }else if(s.kind==='box'){
       label=`MYSTERY BOX  $${s.price}`;col='#7be04a';
       mark(labelSprite('?','#7be04a',1.2),s.x,base+3.1,s.z);
@@ -2435,6 +2443,8 @@ function zLabel(s){
   if(s.kind==='win')return `Hold to ${s.w.door?'board up the door':s.w.wall?'patch the wall':'repair window'} · +$${Math.round(10*zD().cash)} a board`;
   if(s.min&&Z.round<s.min)return `${WEAPONS[s.id].name} · unlocks at round ${s.min}`;
   if(s.kind==='box')return `Mystery box · $${s.price}`;
+  if(s.kind==='hp')return player.hp>=(player.maxHp||100)?'Health is full':`Buy 10 health · $${s.price}`;
+  if(s.kind==='ammo')return `Refill ammo for all your weapons · $${s.price}`;
   if(s.kind==='perk'){const P=ZPERK[s.perk];return Z.perks[s.perk]?`${P.name} · owned`:`${P.name}: ${P.desc} · $${s.price}`;}
   const w=WEAPONS[s.id];return loadout.includes(s.id)?`Refill ${w.name} ammo · $${Math.round(s.price/2)}`:`Buy ${w.name} · $${s.price}`;
 }
@@ -2453,10 +2463,14 @@ function zAct(){
   const s=zNear();if(!s||s.kind==='win')return;
   const cost=s.kind==='gun'&&loadout.includes(s.id)?Math.round(s.price/2):s.price;
   if(s.kind==='perk'&&Z.perks[s.perk])return;
+  if(s.kind==='hp'&&player.hp>=(player.maxHp||100)){showMsg('HEALTH IS FULL',true);sfx.click();return;}
+  if(s.kind==='ammo'&&ammo.every((a,i)=>!LW[i]||LW[i].kind==='knife'||a.mag>=LW[i].mag&&a.reserve>=LW[i].reserve)){showMsg('AMMO IS FULL',true);sfx.click();return;}
   if(s.min&&Z.round<s.min){showMsg('UNLOCKS AT ROUND '+s.min,true);sfx.click();return;}
   if(Z.money<cost){showMsg('NOT ENOUGH CASH',true);sfx.click();return;}
   Z.money-=cost;sfx.buy();
   if(s.kind==='gun')zGive(s.id);
+  else if(s.kind==='hp'){if(isClient())netOut(['hl']);else player.hp=Math.min(player.maxHp||100,player.hp+10);showMsg('+10 HEALTH',true);}
+  else if(s.kind==='ammo'){ammo=LW.map(w=>({mag:w.mag,reserve:w.kind==='knife'?0:w.reserve}));reloadT=0;showMsg('AMMO REFILLED',true);}
   else if(s.kind==='box'){const pool=['mp5','spas','m4a1','ak47','m249','awm','rpg'].concat(Z.round>=5?['minigun','flamer']:[]).filter(x=>!loadout.includes(x));const id=pool[(rand()*pool.length)|0];zGive(id);showMsg('MYSTERY BOX: '+WEAPONS[id].name.toUpperCase());}
   else if(s.kind==='perk'){Z.perks[s.perk]=true;if(s.perk==='iron'){player.maxHp=250+armorHp(armorBits());player.hp=player.maxHp;}showMsg(ZPERK[s.perk].name.toUpperCase());if(s.perk==='mask')showMsg('You can breathe outside now',true);}
 }
@@ -3579,6 +3593,7 @@ function hostClientEv(e,ev){
   else if(k==='r'){e.lastThrow=now();fireRocket(e,ev[1],ev[2],ev[3],ev[4],ev[5],ev[6]);}
   else if(k==='m'){e.lastThrow=now();if(mines.filter(m=>m.owner===e).length>=4)return;placeMineAt(e,ev[1],ev[2],ev[3],ev[4]);}
   else if(k==='w'){const w=WINDOWS[ev[1]];if(w&&zAddBoard(w))netSendTo(e,{t:'cash',v:Math.round(10*zD().cash)});}
+  else if(k==='hl'){if(isZ()&&e.alive&&zInside(e))e.hp=Math.min(e.maxHp||100,e.hp+10);}
   else if(k==='k'){if((ev[1]==='air'&&(e.streak|0)>=5)||(ev[1]==='nuke'&&(e.streak|0)>=15)||ev[1]==='uav')killstreak(ev[1],e);}
   else if(k==='pk'){const d=drops.find(x=>x.id===ev[1]);if(d&&e.alive&&Math.hypot(d.x-e.x,d.z-e.z)<3.2){removeDrop(d);if(ev[2]&&ev[2]!=='knife')spawnDrop(ev[2],d.x,d.y,d.z);netSendTo(e,{t:'pk',w:d.w});}}
   else if(k==='dw'){if(e.alive&&WEAPONS[ev[1]])spawnDrop(ev[1],ev[2],ev[3],ev[4]);}
