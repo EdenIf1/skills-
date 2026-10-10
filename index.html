@@ -284,6 +284,43 @@ body.touch .ctrl.desk{display:none} body:not(.touch) .ctrl.mob{display:none}
 .stat b i{display:block;height:100%;background:var(--ink)}
 .item .price{font-size:20px;color:var(--green)}
 .sw{height:22px;border:1px solid var(--line)}
+.lobStart{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.lobCard{background:rgba(0,0,0,.32);border:1px solid var(--line);padding:14px 16px}
+.lobCard h3{font-family:var(--f-hud);font-size:30px;margin:2px 0 0;letter-spacing:.04em}.lobCard p{font-family:var(--f-body);font-size:13px;color:var(--dim);margin:4px 0 12px}
+#mp{background:rgba(4,7,10,.82);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+#mp .sheet{background:#10151c;border:1px solid var(--line)}
+#mp.inroom .sheet{width:min(960px,100%)}
+.lobTop{display:flex;align-items:center;gap:14px;flex-wrap:wrap;background:rgba(0,0,0,.35);border:1px solid var(--line);padding:6px 12px;margin-bottom:8px}
+.lobCode{display:flex;flex-direction:column;line-height:1}.lobCode b{font-family:var(--f-pix);font-size:30px;letter-spacing:.14em;color:var(--amber)}
+.lobInv{display:flex;align-items:center;gap:10px;flex:1;min-width:0}.lobInv .note{margin:0}
+.lobCount{font-size:28px;line-height:1;text-align:right}.lobCount b{color:var(--amber)}.lobCount span{display:block;font-size:12px;color:var(--dim);letter-spacing:.14em;text-transform:uppercase}
+.lobUrl{position:absolute;left:-9999px;width:10px;height:10px;opacity:0}
+.lobMain{display:grid;grid-template-columns:minmax(0,290px) minmax(0,1fr);gap:12px}
+.lobCfg{display:flex;flex-direction:column;gap:5px}.lobCfg .lbl2{margin-top:4px}
+.lobChips{display:flex;flex-wrap:wrap;gap:5px}.lobChips .chip{font-size:16px;padding:4px 10px 1px}.lobChips .chip:disabled,.mapc:disabled{cursor:default}
+.lobChips .chip:disabled:not(.on){opacity:.45}
+.lobMaps{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.mapc{position:relative;height:58px;border:2px solid var(--line);color:#fff;text-align:left;padding:6px 8px;cursor:pointer;display:flex;flex-direction:column;justify-content:flex-end;font-family:var(--f-hud);overflow:hidden}
+.mapc::after{content:'';position:absolute;inset:0;background:linear-gradient(transparent 30%,rgba(0,0,0,.55));pointer-events:none}
+.mapc b,.mapc small{position:relative;z-index:1}.mapc b{font-size:20px;line-height:1;text-shadow:0 1px 2px #000}.mapc small{font-size:12px;color:rgba(255,255,255,.8);letter-spacing:.06em}
+.mapc.on{border-color:var(--amber);box-shadow:0 0 0 1px var(--amber) inset}.mapc:disabled:not(.on){opacity:.4}
+.lobTeams{display:grid;grid-template-columns:1fr 1fr;gap:8px}.lobTeams.one{grid-template-columns:1fr}
+.lobSide{display:flex;flex-direction:column;gap:4px}
+.lobSideH{display:flex;justify-content:space-between;align-items:baseline;padding:2px 2px 0;border-bottom:2px solid currentColor;margin-bottom:2px}.lobSideH span{font-size:20px;letter-spacing:.12em}.lobSideH small{font-size:12px;color:var(--dim);letter-spacing:.06em}
+.lobSide.bs .lobSideH{color:var(--blue)}.lobSide.rs .lobSideH{color:var(--red)}.lobSide.zs .lobSideH{color:var(--green)}
+.slot{display:flex;align-items:center;gap:8px;height:34px;padding:0 8px 0 0;background:rgba(0,0,0,.34);border:1px solid var(--line);min-width:0}
+.slot .av{width:34px;height:32px;display:grid;place-items:center;font-style:normal;font-size:20px;color:#fff;flex:none}
+.slot .sn{flex:1;min-width:0;line-height:1}.slot .sn b{display:block;font-weight:400;font-size:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.slot .sn em{font-style:normal;color:var(--dim);font-size:14px}
+.slot .sn small{font-size:11px;color:var(--dim);letter-spacing:.06em}
+.slot.me{border-color:var(--amber);background:rgba(243,181,74,.1)}.slot.fr .sn b{color:#ffd34a}.slot.bot{opacity:.62}
+.slot.empty{border-style:dashed;opacity:.5}.slot.empty .av{color:var(--dim)}
+.slot .st{font-size:13px;letter-spacing:.1em;padding:2px 6px 0;border:1px solid currentColor;white-space:nowrap}.st.rd{color:var(--green)}.st.nr{color:var(--amber)}.st.host{color:#ffd34a}.st.bot{color:var(--dim)}
+.slot .swap{background:none;border:1px solid var(--line);color:var(--ink);font-size:16px;width:28px;height:24px;cursor:pointer;padding:0}
+.lobZ{display:flex;justify-content:space-between;align-items:center;margin-top:6px;padding:8px 10px;background:rgba(111,208,140,.08);border:1px solid rgba(111,208,140,.35)}.lobZ b{font-weight:400;font-size:20px;color:var(--green)}.lobZ span{font-size:15px;color:var(--dim)}
+.lobBar{display:flex;align-items:center;gap:12px;margin-top:10px;padding:8px 0 2px;border-top:1px solid var(--line);position:sticky;bottom:calc(-1 * var(--sb) - 16px);background:#10151c;z-index:2}.lobMsg{flex:1;font-size:18px;color:var(--dim);letter-spacing:.04em}.lobMsg.cg{color:var(--green)}
+.lobBar .btn:disabled{opacity:.45;cursor:default}
+@media (max-width:700px){.lobMain{grid-template-columns:1fr}.lobStart{grid-template-columns:1fr}}
+@media (max-height:440px){#mp.inroom .sheet{padding:10px 14px}#mp.inroom .shopHead h2{font-size:18px}.lobCode b{font-size:24px}.slot{height:28px}.slot .av{width:28px;height:26px;font-size:16px}.slot .sn b{font-size:16px}.slot .sn small{display:none}.mapc{height:46px}.lobBar{margin-top:6px;padding-top:6px}.lobBar .btn:not(.sm){font-size:22px;padding:6px 22px 1px}}
 .shopHead{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
 #crate .sheet{text-align:center}
 .reelWrap{position:relative;overflow:hidden;height:96px;margin:14px 0;border:1px solid var(--line);background:rgba(0,0,0,.35)}
@@ -2553,7 +2590,8 @@ function renderProfile(){
 }
 $('callsign').value=profile.name;
 $('callsign').addEventListener('input',e=>{const v=e.target.value.replace(/[^\w \-.]/g,'').slice(0,14);profile.name=v||'Recruit';player.name=profile.name;saveProfile();});
-$('mapPick').addEventListener('click',e=>{const b=e.target.closest('[data-map]');if(!b||isClient())return;profile.map=b.dataset.map;saveProfile();MAP=MAPS[profile.map];renderProfile();resetMatch(false);if(isHost()){netRoster();renderMP();}});
+function selectMap(k){if(isClient()||!MAPS[k])return;profile.map=k;saveProfile();MAP=MAPS[k];renderProfile();resetMatch(false);if(isHost()){netRoster();renderMP();renderMPPill();}}
+$('mapPick').addEventListener('click',e=>{const b=e.target.closest('[data-map]');if(b)selectMap(b.dataset.map);});
 $('zdiffPick').addEventListener('click',e=>{const b=e.target.closest('[data-zd]');if(!b||isClient())return;profile.zdiff=b.dataset.zd;saveProfile();renderProfile();if(isZ()&&state==='menu')zReset();if(isHost()){netRoster();renderMP();}});
 
 /* ---------- settings ---------- */
@@ -3037,14 +3075,14 @@ function hostRecv(c,d){
   if(!d||!d.t)return;
   if(d.t==='hello'){
     if(NET.conns.has(c))return;
-    if(NET.conns.size+1>=(isZ()?4:12)){try{c.send({t:'full'});}catch(e){}setTimeout(()=>c.close(),400);return;}
+    if(NET.conns.size+1>=(isZ()?4:NET.teamUp?6:12)){try{c.send({t:'full'});}catch(e){}setTimeout(()=>c.close(),400);return;}
     const nid='P'+(NET.next++),team=isZ()||NET.teamUp?'blue':(teamCount('red')<teamCount('blue')?'red':'blue');
     let nm=String(d.name||'Friend').replace(/[^\w \-.]/g,'').trim().slice(0,12)||'Friend';
     // nobody in the room shares a name, so kills and messages never mix people up
     const taken=k=>[profile.name].concat(ents.map(x=>x.name)).some(x=>nameKey(x)===nameKey(k));
     if(taken(nm)){let i=2;while(taken(nm+' '+i))i++;nm=nm+' '+i;}
     const e=makeEnt(nm,team,false);
-    Object.assign(e,{remote:true,conn:c,nid,inMatch:true,alive:false,maxHp:100,ready:false});e.mesh.visible=false;friendTag(e);
+    Object.assign(e,{remote:true,conn:c,nid,inMatch:true,alive:false,maxHp:100,ready:false,lv:Math.max(1,Math.min(99,d.lv|0))});e.mesh.visible=false;friendTag(e);
     NET.conns.set(c,e);NET.remotes.set(nid,e);
     netFitBots();
     c.send({t:'welcome',name:e.name,nid,team,map:MAP.key,playing:state==='play',changes:[...NET.blk].map(([k,v])=>k.split(',').map(Number).concat(v)),teamUp:NET.teamUp,host:profile.name});
@@ -3076,8 +3114,10 @@ function hostDrop(c){
   netFitBots();netRoster();toast(e.name+' left the room');renderMP();renderMPPill();
 }
 function netRoster(){
-  const list=[{nid:'P0',name:profile.name,team:player.team,rd:1}].concat([...NET.remotes.values()].map(e=>({nid:e.nid,name:e.name,team:e.team,rd:e.ready?1:0})));
-  NET.roster=list;netBroadcast({t:'roster',list,map:MAP.key,zd:profile.zdiff||'medium',teamUp:NET.teamUp});
+  const list=[{nid:'P0',name:profile.name,team:player.team,rd:1,lv:levelInfo(profile.xp).level}].concat([...NET.remotes.values()].map(e=>({nid:e.nid,name:e.name,team:e.team,rd:e.ready?1:0,lv:e.lv||1})));
+  const bl=t=>bots.filter(b=>b.team===t&&b.inMatch!==false&&(!isZ()||ZALLY.includes(b.name))).map(b=>b.name);
+  NET.roster=list;NET.botsList={blue:bl('blue'),red:bl('red')};
+  netBroadcast({t:'roster',list,map:MAP.key,zd:profile.zdiff||'medium',teamUp:NET.teamUp,bots:NET.botsList});
 }
 function hostSnap(){
   const E=[];
@@ -3105,7 +3145,7 @@ function hostTick(dt){
 }
 function hostSetTeam(e,team){
   if(e.team===team)return;
-  const n=makeEnt(e.name,team,false);Object.assign(n,{remote:true,conn:e.conn,nid:e.nid,inMatch:true,alive:false,maxHp:e.maxHp,kills:e.kills,deaths:e.deaths,ready:e.ready});n.mesh.visible=false;friendTag(n);
+  const n=makeEnt(e.name,team,false);Object.assign(n,{remote:true,conn:e.conn,nid:e.nid,inMatch:true,alive:false,maxHp:e.maxHp,kills:e.kills,deaths:e.deaths,ready:e.ready,lv:e.lv});n.mesh.visible=false;friendTag(n);
   scene.remove(e.mesh);const i=ents.indexOf(e);if(i>=0)ents.splice(i,1);NET.conns.set(e.conn,n);NET.remotes.set(e.nid,n);
 }
 /* ---- joining ---- */
@@ -3121,7 +3161,7 @@ function mpJoin(code){
     const c=peer.connect(roomId(code),{reliable:true});NET.host=c;
     clearTimeout(to);to=setTimeout(()=>{if(NET.mode==='client'||NET.peer!==peer)return;try{c.close();}catch(e){}
       if(tries<4)attempt();else{mpLeave(true);mpErr('The room did not answer. Your friend must keep the game open on screen (not in WhatsApp or another app). If you are both on mobile data, try Wi-Fi on one phone, then try again.');}},12000);
-    c.on('open',()=>c.send({t:'hello',name:profile.name}));
+    c.on('open',()=>c.send({t:'hello',name:profile.name,lv:levelInfo(profile.xp).level}));
     c.on('data',d=>{clearTimeout(to);if(NET.host===c)clientRecv(d);});
     c.on('close',()=>{if(NET.host===c&&NET.mode==='client')mpLost();});
   };
@@ -3136,7 +3176,7 @@ function clientRecv(d){
   if(d.t==='full'){mpLeave(true);mpErr('That room is full.');return;}
   if(d.t==='welcome'){NET.myName=d.name||profile.name;player.name=NET.myName;NET.mode='client';NET.nid=d.nid;player.nid=d.nid;player.team=d.team;NET.teamUp=d.teamUp;NET.mapKey=d.map;NET.pendingBlk=d.changes;NET.hostName=d.host;NET.status='';
     renderMP();renderMPPill();if(d.playing)clientStart(d.map);return;}
-  if(d.t==='roster'){netApplyRoster(d.list);if(d.map){NET.mapKey=d.map;NET.zdiff=d.zd||'medium';NET.teamUpC=d.teamUp!==false;if(state==='menu'&&MAPS[d.map]&&MAP!==MAPS[d.map]){MAP=MAPS[d.map];resetMatch(false);}renderProfile();}renderMP();renderMPPill();return;}
+  if(d.t==='roster'){netApplyRoster(d.list);NET.botsList=d.bots||null;if(d.map){NET.mapKey=d.map;NET.zdiff=d.zd||'medium';NET.teamUpC=d.teamUp!==false;if(state==='menu'&&MAPS[d.map]&&MAP!==MAPS[d.map]){MAP=MAPS[d.map];resetMatch(false);}renderProfile();}renderMP();renderMPPill();return;}
   if(d.t==='start'){NET.pendingBlk=[];NET.ready=false;if(d.zd)NET.zdiff=d.zd;clientStart(d.map);return;}
   if(d.t==='snap'){if(state==='play')clientSnap(d);return;}
   if(d.t==='die'){clientDie(d);return;}
@@ -3290,35 +3330,69 @@ function renderMPPill(){
   const rem=[...NET.remotes.values()],r=rem.filter(e=>e.ready).length;
   $('play').disabled=false;$('play').textContent=!rem.length?'Deploy':r===rem.length?'Start match':`Ready ${r+1}/${rem.length+1}`;
 }
+const MODES=[
+  {id:'tdm',name:'Team Deathmatch',maps:['junk','cabin']},
+  {id:'knife',name:'Knives Only',maps:['knife']},
+  {id:'sniper',name:'Snipers Only',maps:['canyon']},
+  {id:'solid',name:'Indestructible',maps:['plant']},
+  {id:'zombie',name:'Zombies',maps:['zombie']}];
+const modeOf=k=>MODES.find(m=>m.maps.includes(k))||MODES[0];
+const hexCss=n=>'#'+n.toString(16).padStart(6,'0');
+function lobSlot(o){
+  // o: {name, team, lv, tag, me, friend, bot, ready, host, swap, empty}
+  if(o.empty)return `<div class="slot empty"><i class="av">+</i><div class="sn"><b>Open slot</b><small>Waiting for a friend</small></div></div>`;
+  const col=o.team==='red'?'var(--red)':o.team==='zombie'?'var(--green)':'var(--blue)';
+  const st=o.bot?'<span class="st bot">BOT</span>':o.host?'<span class="st host">♛ HOST</span>':o.ready?'<span class="st rd">READY</span>':'<span class="st nr">NOT READY</span>';
+  return `<div class="slot ${o.me?'me':''} ${o.bot?'bot':''} ${o.friend?'fr':''}"><i class="av" style="background:${o.bot?'rgba(255,255,255,.08)':col}">${o.bot?'⚙':esc(o.name.charAt(0).toUpperCase())}</i>
+    <div class="sn"><b>${o.friend?'★ ':''}${esc(o.name)}${o.me?' <em>(you)</em>':''}</b><small>${o.bot?'Fills the spot':'Level '+(o.lv||1)}</small></div>${st}${o.swap?`<button class="swap" data-swap="${o.swap}" title="Switch team">⇄</button>`:''}</div>`;
+}
 function renderMP(){
   const b=$('mpBody');let h='';
-  if(NET.status)h+=`<div class="note">${esc(NET.status)}</div>`;
+  $('mp').classList.toggle('inroom',!!NET.mode);
+  if(NET.status)h+=`<div class="note ca">${esc(NET.status)}</div>`;
   if(!NET.mode){
     if(!mpAvailable())h+=`<div class="note">Multiplayer works on the public link of the game, not inside Claude. Open it there:</div><div class="form"><textarea readonly rows="2" id="mpUrl">${esc(PUBLIC_URL)}</textarea></div>`;
-    h+=`<div class="note">Open a room and send friends the link or the code. You pick the map, your game runs the match, and bots fill any empty spots. Up to 12 players, or 4 in Zombies.</div>
-      <div class="row"><button class="btn cut" id="mpHost">Open a room</button></div>
-      <div class="lbl2" style="margin-top:14px">Join a friend</div>
-      <div class="form"><input id="mpCode" maxlength="6" placeholder="ROOM CODE" autocomplete="off" style="width:150px;text-transform:uppercase"><button class="btn sm cut" id="mpJoin">Join</button></div>`;
-  }else if(isHost()){
-    h+=`<div class="lbl2">Room code</div><div style="font-family:var(--f-pix);font-size:44px;letter-spacing:.12em;color:var(--amber)">${NET.code}</div>
-      <div class="form"><textarea readonly rows="2" id="mpUrl">${esc(inviteUrl())}</textarea><button class="btn sm cut" id="mpCopy">Copy invite</button></div>
-      <div class="note ca">After you send the invite, come straight back to this screen. The room only works while the game is open in front.</div>`;
-    {const rem=[...NET.remotes.values()],all=mpAllReady();
-      h+=`<div class="note">${esc(lineupText(NET.roster.length?NET.roster:[{team:player.team}],MAP.key,NET.teamUp))} · Map: <b>${esc(MAP.name)}</b>${isZ()?' · '+esc(zD().name):''}</div>`;
-      h+=`<div class="row"><button class="btn cut" id="mpStart" ${all?'':'disabled'}>${!rem.length?'Start alone':all?'Start match':'Waiting for Ready ('+rem.filter(e=>e.ready).length+'/'+rem.length+')'}</button></div>`;}
-    if(!isZ())h+=`<div class="row"><span class="lbl2">Teams</span><button class="chip ${NET.teamUp?'on':''}" data-team="1">Friends vs bots</button><button class="chip ${NET.teamUp?'':'on'}" data-team="0">Friends vs friends</button></div>`;
-    h+=`<div class="lbl2" style="margin-top:10px">Players</div><div class="ulist"><div class="urow on"><span>${esc(profile.name)} (you, host)</span><span><span class="cg">HOST</span> · <span class="${player.team==='blue'?'cb':'cr'}">${player.team.toUpperCase()}</span></span></div>`+
-      [...NET.remotes.values()].map(e=>`<div class="urow"><span>★ ${esc(e.name)}</span><span><span class="${e.ready?'cg':'ca'}">${e.ready?'READY':'NOT READY'}</span> · <span class="${e.team==='blue'?'cb':'cr'}">${e.team.toUpperCase()}</span></span></div>`).join('')+`</div>
-      <div class="note">Pick a map in the menu. When every friend has pressed Ready, start the match. Bots fill the empty spots so you never wait for a full room. Friends who join later drop straight into the match. Keep the game open in front: if your screen locks, the match pauses for everyone.</div>
-      <div class="row"><button class="btn ghost cut" id="mpLeave">Close the room</button></div>`;
-  }else{
-    const mk=MAPS[NET.mapKey]||MAP,zd=ZDIFF[NET.zdiff]||ZDIFF.medium;
-    h+=`<div class="note">You are in ${esc(NET.hostName||'your friend')}'s room <b class="ca">${NET.code}</b>. Map: <b>${esc(mk.name)}</b>${mk.mode==='zombie'?' · '+esc(zd.name)+' · '+zd.rounds+' rounds':''}. ${state==='play'?'The match is on.':NET.ready?'You are ready. Waiting for the host to start…':'Press Ready when you are set.'}</div>
-      <div class="note">${esc(lineupText(NET.roster,NET.mapKey,NET.teamUpC))}</div>
-      ${state==='play'?'':`<div class="row"><button class="btn cut ${NET.ready?'ghost':''}" id="mpReady">${NET.ready?'Ready ✓ · tap to cancel':'Ready'}</button></div>`}
-      <div class="ulist">${NET.roster.map(r=>`<div class="urow ${r.nid===NET.nid?'on':''}"><span>${r.nid===NET.nid?esc(r.name)+' (you)':'★ '+esc(r.name)+(r.nid==='P0'?' (host)':'')}</span><span><span class="${r.nid==='P0'?'cg':r.rd?'cg':'ca'}">${r.nid==='P0'?'HOST':r.rd?'READY':'NOT READY'}</span> · <span class="${r.team==='blue'?'cb':'cr'}">${r.team.toUpperCase()}</span></span></div>`).join('')}</div>
-      <div class="row"><button class="btn ghost cut" id="mpLeave">Leave the room</button></div>`;
+    h+=`<div class="lobStart">
+      <div class="lobCard"><div class="lbl2">Host</div><h3>Open a room</h3><p>You pick the mode and the map, friends join with a code, bots fill every empty spot.</p><button class="btn cut" id="mpHost">Open a room</button></div>
+      <div class="lobCard"><div class="lbl2">Join</div><h3>Join a friend</h3><p>Type the 5-letter code your friend sent, or tap their invite link.</p>
+        <div class="form"><input id="mpCode" maxlength="6" placeholder="ROOM CODE" autocomplete="off" style="width:140px;text-transform:uppercase;font-family:var(--f-hud);font-size:22px;letter-spacing:.12em"><button class="btn sm cut" id="mpJoin">Join</button></div></div>
+    </div>`;
+    if(NET.err)h+=`<div class="err" style="margin-top:8px">${esc(NET.err)}</div>`;
+    b.innerHTML=h;return;
   }
+  const host=isHost(),mk=host?MAP.key:(NET.mapKey||MAP.key),M=MAPS[mk]||MAP,zm=M.mode==='zombie',mode=modeOf(mk);
+  const zdKey=host?(profile.zdiff||'medium'):(NET.zdiff||'medium'),teamUp=host?NET.teamUp:NET.teamUpC;
+  const roster=host?[{nid:'P0',name:profile.name,team:player.team,rd:1,lv:levelInfo(profile.xp).level}].concat([...NET.remotes.values()].map(e=>({nid:e.nid,name:e.name,team:e.team,rd:e.ready?1:0,lv:e.lv||1}))):NET.roster;
+  const bl=host?{blue:bots.filter(x=>x.team==='blue'&&x.inMatch!==false&&(!zm||ZALLY.includes(x.name))).map(x=>x.name),red:bots.filter(x=>x.team==='red'&&x.inMatch!==false&&!zm).map(x=>x.name)}:(NET.botsList||{blue:[],red:[]});
+  const others=roster.filter(r=>r.nid!=='P0'),readyN=others.filter(r=>r.rd).length,allReady=readyN===others.length;
+  const dis=host?'':'disabled';
+  // top bar: room code and invite
+  h+=`<div class="lobTop"><div class="lobCode"><span class="lbl2">Room</span><b>${esc(NET.code)}</b></div>
+    <div class="lobInv"><button class="btn sm cut" id="mpCopy">Copy invite</button><span class="note">${host?'Send the invite, then come straight back here.':'In '+esc(NET.hostName||'your friend')+"'s room"}</span></div>
+    <div class="lobCount"><b>${roster.length}</b>/${zm?4:teamUp?6:12}<span>players</span></div></div>`;
+  h+=`<textarea readonly rows="1" id="mpUrl" class="lobUrl">${esc(inviteUrl())}</textarea>`;
+  // left: mode, map, rules
+  h+=`<div class="lobMain"><div class="lobCfg">
+    <div class="lbl2">Mode</div><div class="lobChips">${MODES.map(m=>`<button class="chip ${m.id===mode.id?'on':''}" data-mode="${m.id}" ${dis}>${m.name}</button>`).join('')}</div>
+    <div class="lbl2">Map</div><div class="lobMaps">${mode.maps.map(k=>{const X=MAPS[k];return `<button class="mapc ${k===mk?'on':''}" data-lmap="${k}" ${dis} style="background:linear-gradient(160deg,${hexCss(X.sky)} 0%,${hexCss(X.hemi[1])} 100%)"><b>${esc(X.name)}</b><small>${esc(X.tag||'6 v 6')}</small></button>`;}).join('')}</div>`;
+  if(zm)h+=`<div class="lbl2">Difficulty</div><div class="lobChips">${Object.entries(ZDIFF).map(([k,v])=>`<button class="chip ${k===zdKey?'on':''}" data-lzd="${k}" ${dis}>${v.name} · ${v.rounds}</button>`).join('')}</div>`;
+  else h+=`<div class="lbl2">Teams</div><div class="lobChips"><button class="chip ${teamUp?'on':''}" data-team="1" ${dis}>Friends vs bots</button><button class="chip ${teamUp?'':'on'}" data-team="0" ${dis}>Friends vs friends</button></div>`;
+  h+=`</div><div class="lobTeams ${zm?'one':''}">`;
+  // right: the slots
+  const side=(team,label,cls,n)=>{
+    const hum=zm?roster:roster.filter(r=>r.team===team),botN=zm?bl.blue:bl[team];const rows=[];
+    for(const r of hum.slice(0,n))rows.push(lobSlot({name:r.name,team:zm?'blue':team,lv:r.lv,me:r.nid===(host?'P0':NET.nid),friend:r.nid!==(host?'P0':NET.nid),host:r.nid==='P0',ready:!!r.rd,swap:host&&!zm&&!teamUp?r.nid:null}));
+    for(const nm of botN.slice(0,n-rows.length))rows.push(lobSlot({name:nm,team:zm?'blue':team,bot:true}));
+    const bc=rows.length-Math.min(hum.length,n);
+    while(rows.length<n)rows.push(lobSlot({empty:true}));
+    return `<div class="lobSide ${cls}"><div class="lobSideH"><span>${label}</span><small>${hum.length} player${hum.length===1?'':'s'} · ${bc} bot${bc===1?'':'s'}</small></div>${rows.join('')}</div>`;};
+  h+=zm?side('blue','SURVIVORS','zs',4)+`<div class="lobZ"><b>🧟 ${esc(ZDIFF[zdKey].name)}</b><span>Hold the house for ${ZDIFF[zdKey].rounds} rounds</span></div>`:side('blue','BLUE TEAM','bs',6)+side('red','RED TEAM','rs',6);
+  h+=`</div></div>`;
+  // bottom bar
+  const msg=host?(others.length?(allReady?'Everyone is ready':`Waiting for ${others.length-readyN} player${others.length-readyN===1?'':'s'} to ready up`):'Invite friends, or start now with bots'):
+    (state==='play'?'The match is on':NET.ready?'You are ready. Waiting for the host…':'Press Ready when you are set');
+  h+=`<div class="lobBar"><button class="btn sm ghost cut" id="mpLeave">${host?'Close room':'Leave'}</button><span class="lobMsg ${allReady&&others.length?'cg':''}">${esc(msg)}</span>`+
+    (host?`<button class="btn cut" id="mpStart" ${allReady?'':'disabled'}>${others.length?'Start match':'Start'}</button>`:(state==='play'?'':`<button class="btn cut ${NET.ready?'ghost':''}" id="mpReady">${NET.ready?'Ready ✓':'Ready'}</button>`))+`</div>`;
   if(NET.err)h+=`<div class="err" style="margin-top:8px">${esc(NET.err)}</div>`;
   b.innerHTML=h;
 }
@@ -3329,6 +3403,13 @@ $('mpBody').addEventListener('click',e=>{
   if(t.id==='mpHost')mpHost();
   if(t.id==='mpJoin')mpJoin($('mpCode').value);
   if(t.id==='mpReady'){$('play').click();}
+  if(t.dataset.mode&&isHost()){const m=MODES.find(x=>x.id===t.dataset.mode);if(m&&!m.maps.includes(MAP.key))selectMap(m.maps[0]);}
+  if(t.dataset.lmap&&isHost())selectMap(t.dataset.lmap);
+  if(t.dataset.lzd&&isHost()){profile.zdiff=t.dataset.lzd;saveProfile();renderProfile();if(isZ()&&state==='menu')zReset();netRoster();renderMP();}
+  if(t.dataset.swap&&isHost()){const id=t.dataset.swap;
+    if(id==='P0'){player.team=player.team==='blue'?'red':'blue';}
+    else{const e=NET.remotes.get(id);if(e)hostSetTeam(e,e.team==='blue'?'red':'blue');}
+    netFitBots();netRoster();renderMP();}
   if(t.id==='mpStart'){if(mpAllReady()){$('mp').hidden=true;startMatch();}}
   if(t.id==='mpLeave'){if(isHost())netBroadcast({t:'bye'});mpLeave(false);}
   if(t.id==='mpCopy'){const text=`Join my BLOCKFIRE room! Code ${NET.code}: ${inviteUrl()}`;
