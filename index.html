@@ -100,7 +100,7 @@ body.touch #gas .gl{top:24%;font-size:15px}body.touch #gas small{font-size:11px}
 #squad .sq{display:grid;grid-template-columns:1fr 54px;align-items:center;gap:8px;margin:2px 0}
 #squad .sq b{display:block;height:5px;background:rgba(255,255,255,.15)}#squad .sq b i{display:block;height:100%;background:var(--green)}
 #squad .sq.dead{opacity:.45}#squad .sq .fr{color:#ffd34a}
-body.touch #squad{top:calc(var(--st) + 84px);right:calc(var(--sr) + 12px);font-size:12px;min-width:112px;padding:4px 8px 2px}body.touch #squad .sq{grid-template-columns:1fr 38px}
+body.touch #squad{top:calc(var(--st) + 128px);right:calc(var(--sr) + 12px);font-size:12px;min-width:112px;padding:4px 8px 2px}body.touch #squad .sq{grid-template-columns:1fr 38px}
 
 #hpbox{position:absolute;left:calc(var(--sl) + 16px);bottom:calc(var(--sb) + 14px);background:var(--panel);padding:6px 14px 4px;display:grid;grid-template-columns:auto auto;align-items:end;column-gap:10px}
 #hpbox .lbl{font-size:18px;color:var(--dim);letter-spacing:.1em}
@@ -142,7 +142,7 @@ body.touch #squad{top:calc(var(--st) + 84px);right:calc(var(--sr) + 12px);font-s
 .tb[data-b=mine]{right:calc(var(--sr) + 264px);bottom:calc(var(--sb) + 64px);width:52px;height:52px;font-size:16px;border-color:rgba(111,208,140,.7)}
 .tb[data-b=sprint]{right:calc(var(--sr) + 206px);bottom:calc(var(--sb) + 10px);width:62px;height:46px;border-radius:10px;font-size:17px}
 .tb[data-b=board]{left:calc(var(--sl) + 10px);top:calc(var(--st) + 8px);width:56px;height:30px;border-radius:6px;font-size:15px}
-#wpills{position:absolute;right:calc(var(--sr) + 116px);bottom:calc(var(--sb) + 168px);display:flex;gap:6px}
+#wpills{position:absolute;right:calc(var(--sr) + 12px);top:calc(var(--st) + 88px);display:flex;gap:6px}
 #wpills div{font-family:var(--f-hud);font-size:16px;padding:6px 10px 3px;background:rgba(11,15,20,.55);border:2px solid rgba(238,242,244,.3);border-radius:6px;white-space:nowrap}
 #wpills div.on{border-color:var(--amber);color:var(--amber)}
 body.touch #radar{width:84px;height:84px;left:calc(var(--sl) + 10px);top:calc(var(--st) + 44px)}
@@ -178,7 +178,6 @@ body.touch #score .tm{font-size:30px;min-width:48px}
   .tb[data-b=nade]{right:calc(var(--sr) + 184px);bottom:calc(var(--sb) + 64px);width:48px;height:48px;font-size:15px}
   .tb[data-b=aim]{right:calc(var(--sr) + 34px);bottom:calc(var(--sb) + 118px)}
   .tb[data-b=mine]{right:calc(var(--sr) + 238px);bottom:calc(var(--sb) + 64px);width:48px;height:48px;font-size:15px}
-  #wpills{right:calc(var(--sr) + 100px);bottom:calc(var(--sb) + 146px)}
   #wpills div{font-size:14px;padding:4px 8px 2px}
   .tb[data-b=board]{width:52px;height:30px}
 }
@@ -340,11 +339,11 @@ body.touch .ctrl.desk{display:none} body:not(.touch) .ctrl.mob{display:none}
 <div id="touch" hidden>
   <div id="joy"><div id="knob"></div></div>
   <div class="tb" data-b="board">TAB</div>
+  <div id="wpills"><div data-b="w0">KV-47</div><div data-b="w1">MK-4</div></div>
   <div class="tb" data-b="act" hidden>BUY</div>
   <div class="cl" id="clL"><div class="tb" data-b="fire2">FIRE</div></div>
   <div class="cl" id="clR">
     <div class="tb" data-b="sprint">SPRINT</div>
-    <div id="wpills"><div data-b="w0">KV-47</div><div data-b="w1">MK-4</div></div>
     <div class="tb" data-b="fire">FIRE</div>
     <div class="tb" data-b="jump">JUMP</div>
     <div class="tb" data-b="reload">RLD</div>
