@@ -516,8 +516,27 @@ function readUsers(){
 function fillProfile(p,name){const base=makeProfile(name);const out=Object.assign(base,p||{});out.stats=Object.assign(newStats(),out.stats||{});out.attOwn=out.attOwn||{};if(!out.attOwn.m4a1)out.attOwn.m4a1=['holo'];return out;}
 function loadProfile(){
   USERS=readUsers();
-  if(!USERS.cur||!USERS.users[USERS.cur]){const n='Player';USERS.users[n]=USERS.users[n]||{pin:'',p:makeProfile(n)};USERS.cur=n;}
+  if(!USERS.cur||!USERS.users[USERS.cur]){const n='Player';USERS.users[n]=USERS.users[n]||{pin:'',guest:true,p:makeProfile(n)};USERS.cur=n;}
   profile=fillProfile(USERS.users[USERS.cur].p,USERS.cur);
+}
+// the user everyone starts as before making an account; its progress must never be left behind
+const isGuest=n=>{const u=USERS.users[n];return !!u&&(u.guest||(n==='Player'&&!u.pin));};
+const hasProgress=p=>!!p&&((p.xp||0)>0||((p.stats&&p.stats.matches)||0)>0||(p.gp||0)!==1500||(p.owned||[]).length>2);
+// fold profile b into profile a: currencies and stats add up, unlocks join, bests keep the higher one
+function mergeProfiles(a,b){
+  const o=fillProfile(a,a.name),p=fillProfile(b,b.name),uni=(x,y)=>[...new Set((x||[]).concat(y||[]))];
+  o.gp=Math.max(o.gp,p.gp,o.gp+p.gp-1500);o.xp+=p.xp;
+  o.owned=uni(o.owned,p.owned);o.camos=uni(o.camos,p.camos);o.equipOwn=uni(o.equipOwn,p.equipOwn);
+  for(const g in p.attOwn)o.attOwn[g]=uni(o.attOwn[g],p.attOwn[g]);
+  for(const g in p.att)if(!o.att[g])o.att[g]=p.att[g];
+  o.nadeLvl=Math.max(o.nadeLvl,p.nadeLvl);o.mineLvl=Math.max(o.mineLvl||0,p.mineLvl||0);o.best=Math.max(o.best||0,p.best||0);
+  const A=o.stats,B=p.stats;
+  for(const k in B){if(typeof B[k]==='number')A[k]=(k==='bestStreak'||k==='zbest')?Math.max(A[k]||0,B[k]):(A[k]||0)+B[k];}
+  for(const w in B.weap)A.weap[w]=(A.weap[w]||0)+B.weap[w];
+  for(const m in B.maps){const x=A.maps[m]=A.maps[m]||{};for(const k in B.maps[m])x[k]=(x[k]||0)+B.maps[m][k];}
+  o.history=(o.history||[]).concat(p.history||[]).slice(0,15);
+  o.created=Math.min(o.created||Date.now(),p.created||Date.now());
+  return o;
 }
 function saveProfile(){if(!USERS)return;USERS.users[USERS.cur].p=profile;try{localStorage.setItem('blockfire.users',JSON.stringify(USERS));}catch(e){}}
 loadProfile();
@@ -2574,9 +2593,12 @@ function renderAcct(){
     h+=profile.history.length?`<table class="hist"><tr><th>Date</th><th>Map</th><th>Result</th><th>K / D</th><th>GP</th></tr>${profile.history.map(r=>`<tr><td>${esc(r.t)}</td><td>${esc(r.map)}</td><td class="${r.res==='Win'?'cg':r.res==='Loss'?'cr':''}">${r.res}</td><td>${r.k} / ${r.d}</td><td>+${r.gp}</td></tr>`).join('')}</table>`:'<div class="note">Your last 15 matches will be listed here.</div>';
   }else if(acTab==='users'){
     h+=`<div class="note">Each user keeps their own GP, rank, weapons and stats on this device. Add a PIN to stop others switching to your user.</div><div class="ulist">`;
-    for(const n of Object.keys(USERS.users)){const u=USERS.users[n],li2=levelInfo((u.p&&u.p.xp)||0);
-      h+=`<div class="urow ${n===USERS.cur?'on':''}"><span style="font-family:var(--f-hud);font-size:20px">${esc(n)} <span class="prank">Lv ${li2.level}${u.pin?' · PIN':''}</span></span>${n===USERS.cur?'<span class="ca" style="font-family:var(--f-hud)">ACTIVE</span>':`<span class="form" style="margin:0">${u.pin?`<input data-pinfor="${esc(n)}" inputmode="numeric" maxlength="4" placeholder="PIN" style="width:70px">`:''}<button class="btn sm ghost cut" data-switch="${esc(n)}">Switch</button></span>`}</div>`;}
-    h+=`</div><div class="lbl2">Create a user</div><div class="form"><input id="nuName" maxlength="14" placeholder="Username" autocomplete="off"><input id="nuPin" maxlength="4" inputmode="numeric" placeholder="PIN (optional)" style="width:140px"><button class="btn sm cut" id="nuMake">Create</button></div>`;
+    for(const n of Object.keys(USERS.users)){const u=USERS.users[n],li2=levelInfo((u.p&&u.p.xp)||0),gp=((u.p&&u.p.gp)||0).toLocaleString();
+      const canMerge=n!==USERS.cur&&isGuest(n)&&hasProgress(u.p);
+      h+=`<div class="urow ${n===USERS.cur?'on':''}"><span style="font-family:var(--f-hud);font-size:20px">${esc(n)} <span class="prank">Lv ${li2.level} · ${gp} GP${u.pin?' · PIN':''}${isGuest(n)?' · guest':''}</span></span>${n===USERS.cur?'<span class="ca" style="font-family:var(--f-hud)">ACTIVE</span>':`<span class="form" style="margin:0">${canMerge?`<button class="btn sm cut" data-merge="${esc(n)}">Move progress to ${esc(USERS.cur)}</button>`:''}${u.pin?`<input data-pinfor="${esc(n)}" inputmode="numeric" maxlength="4" placeholder="PIN" style="width:70px">`:''}<button class="btn sm ghost cut" data-switch="${esc(n)}">Switch</button></span>`}</div>`;}
+    const carry=isGuest(USERS.cur)&&hasProgress(profile);
+    h+=`</div><div class="lbl2">Create a user</div><div class="form"><input id="nuName" maxlength="14" placeholder="Username" autocomplete="off"><input id="nuPin" maxlength="4" inputmode="numeric" placeholder="PIN (optional)" style="width:140px"><button class="btn sm cut" id="nuMake">Create</button></div>`+
+      (carry?`<label class="note" style="display:flex;gap:8px;align-items:center;cursor:pointer"><input type="checkbox" id="nuCarry" checked style="width:20px;height:20px"> Keep what you played as a guest (Lv ${levelInfo(profile.xp).level}, ${profile.gp.toLocaleString()} GP, ${ST().matches} matches) in the new user</label>`:'');
   }else{
     h+=`<div class="note">Your progress is saved in this browser automatically. To move it to another phone or browser, copy this code there and load it.</div>
       <div class="form"><textarea id="saveOut" rows="4" readonly></textarea><button class="btn sm cut" id="saveCopy">Copy code</button></div>
@@ -2600,7 +2622,19 @@ $('acBody').addEventListener('click',e=>{
   if(b.id==='nuMake'){const n=$('nuName').value.replace(/[^\w \-.]/g,'').trim().slice(0,14),pin=$('nuPin').value.replace(/\D/g,'').slice(0,4);
     if(!n){acMsg='!Type a username first.';renderAcct();return;}
     if(USERS.users[n]){acMsg='!That username already exists on this device.';renderAcct();return;}
+    const carry=$('nuCarry')&&$('nuCarry').checked&&isGuest(USERS.cur);
+    if(carry){
+      // the guest becomes the new user, so nothing played before signing up is lost
+      saveProfile();const old=USERS.cur,p=USERS.users[old].p;if(!p.name||p.name==='Player')p.name=n;
+      USERS.users[n]={pin,p};delete USERS.users[old];USERS.cur=n;
+      try{localStorage.setItem('blockfire.users',JSON.stringify(USERS));}catch(e){}
+      loadProfile();player.name=profile.name;$('callsign').value=profile.name;renderProfile();
+      acMsg=`Created ${n} with everything you played so far.`;renderAcct();return;}
     saveProfile();USERS.users[n]={pin,p:makeProfile(n)};switchUser(n);acMsg=`Created ${n}. You start with 1,500 GP.`;renderAcct();}
+  if(b.dataset.merge){const n=b.dataset.merge,u=USERS.users[n];if(!u||!isGuest(n))return;
+    saveProfile();const into=USERS.cur;USERS.users[into].p=mergeProfiles(USERS.users[into].p,u.p);delete USERS.users[n];
+    try{localStorage.setItem('blockfire.users',JSON.stringify(USERS));}catch(e){}
+    loadProfile();renderProfile();acMsg=`Moved ${n}'s progress into ${into}.`;renderAcct();}
   if(b.id==='saveCopy'){const t=$('saveOut');t.select();if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t.value).then(()=>{acMsg='Save code copied.';renderAcct();},()=>{});}
   if(b.id==='saveLoad'){
     try{const o=JSON.parse(decodeURIComponent(escape(atob($('saveIn').value.trim()))));if(!o||!o.p||typeof o.p.xp!=='number')throw 0;
