@@ -2973,7 +2973,10 @@ function netOut(e){if(isClient())NET.q.push(e);}
 function netBlk(x,y,z,id){if(isHost()&&state==='play'){NET.blk.set(x+','+y+','+z,id);netEv(['x',x,y,z,id]);}}
 function netSendTo(e,msg){if(e&&e.conn&&e.conn.open)try{e.conn.send(msg);}catch(err){}}
 function netBroadcast(msg){for(const c of NET.conns.keys())if(c.open)try{c.send(msg);}catch(err){}}
-function peerOpts(){const o={debug:0};let ps=null;try{ps=localStorage.getItem('blockfire.ps');}catch(e){}if(ps){const [h,p]=ps.split(':');o.host=h;o.port=+p||9000;o.path='/';o.secure=false;}return o;}
+// STUN finds a direct path between phones; TURN relays the game when a mobile network blocks direct connections
+const ICE=[{urls:['stun:stun.l.google.com:19302','stun:stun1.l.google.com:19302','stun:stun2.l.google.com:19302']},{urls:'stun:stun.cloudflare.com:3478'},
+  {urls:['turn:openrelay.metered.ca:80','turn:openrelay.metered.ca:443','turn:openrelay.metered.ca:443?transport=tcp'],username:'openrelayproject',credential:'openrelayproject'}];
+function peerOpts(){const o={debug:0,config:{iceServers:ICE}};let ps=null;try{ps=localStorage.getItem('blockfire.ps');}catch(e){}if(ps){const [h,p]=ps.split(':');o.host=h;o.port=+p||9000;o.path='/';o.secure=false;}return o;}
 const roomId=c=>'blockfire-r1-'+c.toLowerCase();
 const mpAvailable=()=>typeof window.Peer==='function'&&typeof window.RTCPeerConnection==='function'&&!/claude|anthropic/i.test(location.hostname);
 const inviteUrl=()=>PUBLIC_URL+'#room-'+NET.code;
@@ -3014,16 +3017,22 @@ function netFitBots(){
       if(!on&&b.inMatch!==false){b.inMatch=false;b.alive=false;b.mesh.visible=false;}}}
 }
 /* ---- hosting ---- */
-function mpHost(){
+function mpHost(code,tries){
   if(!mpAvailable())return mpErr('Multiplayer needs the public link of the game. Open it from GitHub and try again.');
-  mpLeave(true);NET.err='';NET.status='Opening a room…';renderMP();
-  const code=Array.from({length:5},()=>'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[(Math.random()*32)|0]).join('');
+  if(!code){mpLeave(true);NET.err='';NET.status='Opening a room…';renderMP();code=Array.from({length:5},()=>'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[(Math.random()*32)|0]).join('');}
   const peer=new Peer(roomId(code),peerOpts());NET.peer=peer;
-  peer.on('open',()=>{NET.mode='host';NET.code=code;NET.nid='P0';player.nid='P0';NET.status='';NET.blk.clear();renderMP();renderMPPill();});
+  peer.on('open',()=>{if(NET.peer!==peer)return;NET.mode='host';NET.code=code;NET.nid='P0';player.nid='P0';NET.status='';if(!tries)NET.blk.clear();renderMP();renderMPPill();});
   peer.on('connection',c=>{c.on('data',d=>hostRecv(c,d));c.on('close',()=>hostDrop(c));c.on('error',()=>hostDrop(c));});
-  peer.on('error',e=>{if(e.type==='unavailable-id'){mpHost();return;}if(e.type==='peer-unavailable')return;if(!NET.mode)mpErr(netErrText(e));});
-  peer.on('disconnected',()=>{try{peer.reconnect();}catch(e){}});
+  peer.on('error',e=>{if(NET.peer!==peer)return;
+    if(e.type==='unavailable-id'){
+      // the old connection for this code has not timed out yet: keep the same code and try again, so the invite stays valid
+      if(NET.mode==='host'||tries){if((tries||0)<12){try{peer.destroy();}catch(err){}setTimeout(()=>{if(NET.peer===peer)mpHost(code,(tries||0)+1);},5000);}return;}
+      mpHost();return;}
+    if(e.type==='peer-unavailable')return;if(!NET.mode)mpErr(netErrText(e));});
+  peer.on('disconnected',()=>{if(NET.peer===peer&&!peer.destroyed)setTimeout(()=>{try{if(NET.peer===peer&&peer.disconnected&&!peer.destroyed)peer.reconnect();}catch(err){}},500);});
 }
+// coming back from WhatsApp or another app: get the room back online straight away
+document.addEventListener('visibilitychange',()=>{if(document.hidden||!NET.peer)return;const p=NET.peer;try{if(p.disconnected&&!p.destroyed)p.reconnect();}catch(e){}});
 function hostRecv(c,d){
   if(!d||!d.t)return;
   if(d.t==='hello'){
@@ -3105,15 +3114,22 @@ function mpJoin(code){
   if(code.length<4)return mpErr('Type the 5-letter room code.');
   if(!mpAvailable())return mpErr('Multiplayer needs the public link of the game. Open it from GitHub and try again.');
   mpLeave(true);NET.err='';NET.status='Connecting to room '+code+'…';NET.code=code;renderMP();
-  const peer=new Peer(peerOpts());NET.peer=peer;
-  peer.on('open',()=>{
+  const peer=new Peer(peerOpts());NET.peer=peer;let tries=0,to=0;
+  const attempt=()=>{
+    if(NET.peer!==peer||NET.mode==='client')return;tries++;
+    if(tries>1){NET.status=`Still reaching room ${code}… (try ${tries} of 4). Ask your friend to keep the game open on screen.`;renderMP();}
     const c=peer.connect(roomId(code),{reliable:true});NET.host=c;
-    const to=setTimeout(()=>{if(NET.mode!=='client'&&NET.peer===peer){mpLeave(true);mpErr('The room did not answer. Check the code and that your friend still has the game open.');}},15000);
+    clearTimeout(to);to=setTimeout(()=>{if(NET.mode==='client'||NET.peer!==peer)return;try{c.close();}catch(e){}
+      if(tries<4)attempt();else{mpLeave(true);mpErr('The room did not answer. Your friend must keep the game open on screen (not in WhatsApp or another app). If you are both on mobile data, try Wi-Fi on one phone, then try again.');}},12000);
     c.on('open',()=>c.send({t:'hello',name:profile.name}));
-    c.on('data',d=>{clearTimeout(to);clientRecv(d);});
-    c.on('close',()=>{if(NET.host===c)mpLost();});
-  });
-  peer.on('error',e=>{if(NET.peer===peer){mpLeave(true);mpErr(netErrText(e));}});
+    c.on('data',d=>{clearTimeout(to);if(NET.host===c)clientRecv(d);});
+    c.on('close',()=>{if(NET.host===c&&NET.mode==='client')mpLost();});
+  };
+  peer.on('open',attempt);
+  peer.on('error',e=>{if(NET.peer!==peer)return;
+    // the host's phone may be switching back from another app: wait and retry instead of failing at once
+    if(e.type==='peer-unavailable'&&tries<4){clearTimeout(to);NET.status=`Room ${code} is not online yet… (try ${tries} of 4). Ask your friend to open the game.`;renderMP();to=setTimeout(attempt,4000);return;}
+    mpLeave(true);mpErr(netErrText(e));});
 }
 function clientRecv(d){
   if(!d||!d.t)return;
@@ -3285,7 +3301,8 @@ function renderMP(){
       <div class="form"><input id="mpCode" maxlength="6" placeholder="ROOM CODE" autocomplete="off" style="width:150px;text-transform:uppercase"><button class="btn sm cut" id="mpJoin">Join</button></div>`;
   }else if(isHost()){
     h+=`<div class="lbl2">Room code</div><div style="font-family:var(--f-pix);font-size:44px;letter-spacing:.12em;color:var(--amber)">${NET.code}</div>
-      <div class="form"><textarea readonly rows="2" id="mpUrl">${esc(inviteUrl())}</textarea><button class="btn sm cut" id="mpCopy">Copy invite</button></div>`;
+      <div class="form"><textarea readonly rows="2" id="mpUrl">${esc(inviteUrl())}</textarea><button class="btn sm cut" id="mpCopy">Copy invite</button></div>
+      <div class="note ca">After you send the invite, come straight back to this screen. The room only works while the game is open in front.</div>`;
     {const rem=[...NET.remotes.values()],all=mpAllReady();
       h+=`<div class="note">${esc(lineupText(NET.roster.length?NET.roster:[{team:player.team}],MAP.key,NET.teamUp))} · Map: <b>${esc(MAP.name)}</b>${isZ()?' · '+esc(zD().name):''}</div>`;
       h+=`<div class="row"><button class="btn cut" id="mpStart" ${all?'':'disabled'}>${!rem.length?'Start alone':all?'Start match':'Waiting for Ready ('+rem.filter(e=>e.ready).length+'/'+rem.length+')'}</button></div>`;}
@@ -3315,8 +3332,8 @@ $('mpBody').addEventListener('click',e=>{
   if(t.id==='mpStart'){if(mpAllReady()){$('mp').hidden=true;startMatch();}}
   if(t.id==='mpLeave'){if(isHost())netBroadcast({t:'bye'});mpLeave(false);}
   if(t.id==='mpCopy'){const text=`Join my BLOCKFIRE room! Code ${NET.code}: ${inviteUrl()}`;
-    if(navigator.share){navigator.share({text}).catch(()=>{});}
-    else if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(text).then(()=>toast('Invite copied'),()=>{$('mpUrl').select();});else $('mpUrl').select();}
+    const fallback=()=>{if(navigator.share)navigator.share({text}).catch(()=>{});else $('mpUrl').select();};
+    if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(text).then(()=>toast('Invite copied. Paste it to your friend, then come straight back here'),fallback);else fallback();}
   if(t.dataset.team!==undefined){NET.teamUp=t.dataset.team==='1';player.team='blue';let i=0;for(const r of [...NET.remotes.values()])hostSetTeam(r,NET.teamUp?'blue':(i++%2===0?'red':'blue'));netFitBots();netRoster();renderMP();renderMPPill();}
 });
 // a link with #room-CODE joins straight away
