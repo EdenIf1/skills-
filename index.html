@@ -3545,13 +3545,83 @@ function netFitBots(){
       if(on&&b.inMatch===false){b.inMatch=true;respawn(b);}
       if(!on&&b.inMatch!==false){b.inMatch=false;b.alive=false;b.mesh.visible=false;}}}
 }
+
+/* ---- backup route: when two phones cannot connect directly (mobile data, strict Wi-Fi), the game data goes through a
+   public message server (MQTT over a secure WebSocket). Works on any network that can open a web page. ---- */
+const MQ_BROKERS=['wss://broker.emqx.io:8084/mqtt','wss://broker.hivemq.com:8884/mqtt'];
+function mqBrokers(){try{const o=localStorage.getItem('blockfire.mq');if(o)return [o];}catch(e){}return MQ_BROKERS;}
+const mqEnc=new TextEncoder(),mqDec=new TextDecoder();
+function mqCat(...a){let n=0;for(const x of a)n+=x.length;const o=new Uint8Array(n);let i=0;for(const x of a){o.set(x,i);i+=x.length;}return o;}
+function mqStr(t){const b=mqEnc.encode(t);return mqCat([b.length>>8,b.length&255],b);}
+function mqPkt(type,body){const l=[];let n=body.length;do{let d=n%128;n=Math.floor(n/128);if(n>0)d|=128;l.push(d);}while(n>0);return mqCat([type],l,body);}
+// a tiny MQTT 3.1.1 client: connect, subscribe, publish (QoS 0), keep-alive
+function Mq(url,onMsg,onUp,onDown){
+  const m={url,up:false,dead:false,subs:new Set(),pid:1};let buf=new Uint8Array(0),ka=0,ws;
+  try{ws=new WebSocket(url,['mqtt']);}catch(e){m.dead=true;setTimeout(()=>onDown&&onDown(m),0);return m;}
+  ws.binaryType='arraybuffer';m.ws=ws;
+  ws.onopen=()=>{const id='bf'+Math.random().toString(36).slice(2,12);ws.send(mqPkt(0x10,mqCat(mqStr('MQTT'),[4,2,0,45],mqStr(id))));};
+  ws.onmessage=ev=>{buf=mqCat(buf,new Uint8Array(ev.data));
+    for(;;){if(buf.length<2)return;let len=0,mul=1,i=1,b;do{if(i>=buf.length)return;b=buf[i++];len+=(b&127)*mul;mul*=128;}while(b&128);
+      if(buf.length<i+len)return;const h0=buf[0],type=h0>>4,body=buf.slice(i,i+len);buf=buf.slice(i+len);
+      if(type===2){if(body[1]===0){m.up=true;for(const t of m.subs)m.sub(t,1);ka=setInterval(()=>{try{ws.send(new Uint8Array([0xC0,0]));}catch(e){}},25000);onUp&&onUp(m);}}
+      else if(type===3){const tl=(body[0]<<8)|body[1],topic=mqDec.decode(body.subarray(2,2+tl));let p=2+tl;if(((h0>>1)&3)>0)p+=2;try{onMsg(m,topic,mqDec.decode(body.subarray(p)));}catch(e){}}}};
+  const down=()=>{if(m.dead)return;m.dead=true;m.up=false;clearInterval(ka);onDown&&onDown(m);};
+  ws.onclose=down;ws.onerror=down;
+  m.sub=(t,again)=>{m.subs.add(t);if(!m.up)return;const id=m.pid++&65535||1;try{ws.send(mqPkt(0x82,mqCat([id>>8,id&255],mqStr(t),[0])));}catch(e){}};
+  m.pub=(t,text)=>{if(!m.up)return false;try{if(ws.bufferedAmount>262144)return false;ws.send(mqPkt(0x30,mqCat(mqStr(t),mqEnc.encode(text))));return true;}catch(e){return false;}};
+  m.close=()=>{m.dead=true;m.up=false;clearInterval(ka);try{ws.send(new Uint8Array([0xE0,0]));}catch(e){}try{ws.close();}catch(e){}};
+  return m;
+}
+const rlTopic=(code,x)=>'blockfire/r2/'+String(code).toLowerCase()+'/'+x;
+// a connection object that behaves like a PeerJS DataConnection, so the rest of the game does not care which route is used
+function rlConn(sendEnv){const L={};const c={open:false,relay:true,closed:false,
+  on(ev,fn){(L[ev]=L[ev]||[]).push(fn);return c;},
+  send(msg){if(c.open)sendEnv({k:'d',d:msg});},
+  close(){if(c.closed)return;try{sendEnv({k:'x'});}catch(e){}c._close();},
+  _emit(ev,a){for(const f of L[ev]||[])try{f(a);}catch(e){console.error(e);}},
+  _open(){if(c.open||c.closed)return;c.open=true;c._emit('open');},
+  _close(){if(c.closed)return;c.closed=true;c.open=false;if(c.onGone)c.onGone();c._emit('close');}};return c;}
+// host: listen for friends on the backup route as long as the room is open
+function rlHostStart(code){
+  if(NET.rlHost&&NET.rlHost.code===code)return;rlHostStop();
+  const H={code,mqs:[],conns:new Map(),stop:false};NET.rlHost=H;
+  const open=url=>{if(H.stop)return;const m=Mq(url,(m,topic,text)=>{let o;try{o=JSON.parse(text);}catch(e){return;}
+      const f=o&&o.f;if(typeof f!=='string'||!/^[a-z0-9]{6,16}$/.test(f))return;
+      let c=H.conns.get(f);
+      if(o.k==='o'){if(c&&!c.closed){m.pub(rlTopic(code,'c/'+f),JSON.stringify({k:'a'}));return;}
+        c=rlConn(env=>{m.pub(rlTopic(code,'c/'+f),JSON.stringify(env));});c.onGone=()=>{if(H.conns.get(f)===c)H.conns.delete(f);};
+        H.conns.set(f,c);hostAccept(c);m.pub(rlTopic(code,'c/'+f),JSON.stringify({k:'a'}));c._open();return;}
+      if(!c)return;
+      if(o.k==='d'){c.lastIn=now();c._emit('data',o.d);}else if(o.k==='x')c._close();},
+      m=>m.sub(rlTopic(code,'h')),
+      m=>{const i=H.mqs.indexOf(m);if(i>=0)H.mqs.splice(i,1);if(!H.stop)setTimeout(()=>open(url),3000);});
+    H.mqs.push(m);};
+  for(const u of mqBrokers())open(u);
+}
+function rlHostStop(){const H=NET.rlHost;if(!H)return;H.stop=true;for(const c of H.conns.values())try{c.close();}catch(e){}for(const m of H.mqs)try{m.close();}catch(e){}NET.rlHost=null;}
+// client: ask the host for a backup-route link; resolves to a connection object right away (it opens when the host answers)
+function rlConnect(code){
+  // one message server is used for the whole link: the first one that answers
+  const f=Math.random().toString(36).slice(2,12).padEnd(8,'x');let live=null,ask=0;const mqs=[];
+  const hello=()=>{if(live&&!c.open&&!c.closed)live.pub(rlTopic(code,'h'),JSON.stringify({f,k:'o'}));};
+  const c=rlConn(env=>{if(live){env.f=f;live.pub(rlTopic(code,'h'),JSON.stringify(env));}});
+  const gone=c._close;c._close=()=>{clearInterval(ask);gone();for(const m of mqs)try{m.close();}catch(e){}};
+  for(const u of mqBrokers()){const m=Mq(u,(m,topic,text)=>{if(m!==live)return;let o;try{o=JSON.parse(text);}catch(e){return;}
+      if(o.k==='a'){clearInterval(ask);c._open();}else if(o.k==='d'){c.lastIn=now();c._emit('data',o.d);}else if(o.k==='x')c._close();},
+    m=>{if(live||c.closed){if(m!==live)m.close();return;}live=m;for(const x of mqs)if(x!==m)try{x.close();}catch(e){}
+      m.sub(rlTopic(code,'c/'+f));setTimeout(hello,300);ask=setInterval(hello,1500);},
+    m=>{if(m===live&&!c.closed)c._close();});mqs.push(m);}
+  return c;
+}
+function forceRelay(){try{return localStorage.getItem('blockfire.forceRelay')==='1';}catch(e){return false;}}
 /* ---- hosting ---- */
+function hostAccept(c){c.lastIn=now();c.born=now();NET.pend.add(c);c.on('open',()=>attachU(c,d=>hostRecv(c,d)));c.on('data',d=>{c.lastIn=now();hostRecv(c,d);});c.on('close',()=>hostDrop(c));c.on('error',()=>hostDrop(c));}
 function mpHost(code,tries){
   if(!mpAvailable())return mpErr('Multiplayer needs the public link of the game. Open it from GitHub and try again.');
   if(!code){mpLeave(true);NET.err='';NET.status='Opening a room…';renderMP();code=Array.from({length:5},()=>'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[(Math.random()*32)|0]).join('');}
   const peer=new Peer(roomId(code),peerOpts());NET.peer=peer;if(tries&&NET.mode!=='host'){NET.status='Reopening your room '+code+'…';renderMP();renderMPPill();}
-  peer.on('open',()=>{if(NET.peer!==peer)return;NET.offline=false;const first=NET.mode!=='host';requestWake();NET.mode='host';NET.code=code;NET.nid='P0';player.nid='P0';NET.status='';if(first&&!tries)NET.blk.clear();ss('bf.host',code);renderMP();renderMPPill();});
-  peer.on('connection',c=>{c.lastIn=now();c.born=now();NET.pend.add(c);c.on('open',()=>attachU(c,d=>hostRecv(c,d)));c.on('data',d=>{c.lastIn=now();hostRecv(c,d);});c.on('close',()=>hostDrop(c));c.on('error',()=>hostDrop(c));});
+  peer.on('open',()=>{if(NET.peer!==peer)return;NET.offline=false;const first=NET.mode!=='host';requestWake();NET.mode='host';NET.code=code;NET.nid='P0';player.nid='P0';NET.status='';if(first&&!tries)NET.blk.clear();ss('bf.host',code);rlHostStart(code);renderMP();renderMPPill();});
+  peer.on('connection',hostAccept);
   peer.on('error',e=>{if(NET.peer!==peer)return;
     if(e.type==='unavailable-id'){
       // the server still remembers our old connection: keep the room (and every friend in it) and try again shortly
@@ -3677,21 +3747,33 @@ function mpJoin(code,rejoin){
   code=String(code||'').trim().toUpperCase().replace(/[^A-Z0-9]/g,'');
   if(code.length<4)return mpErr('Type the 5-letter room code.');
   if(!mpAvailable())return mpErr('Multiplayer needs the public link of the game. Open it from GitHub and try again.');
-  if(rejoin)netDropTransport();else{mpLeave(true);NET.err='';}
+  if(rejoin)netDropTransport();else{mpLeave(true);NET.err='';NET.viaRelay=false;}
   NET.code=code;NET.retryCode=code;NET.status=rejoin?'Reconnecting to room '+code+'…':'Step 1 of 3 · Connecting to the game server…';renderMP();
   const peer=new Peer(peerOpts());NET.peer=peer;let tries=0,to=0;const t0=now(),LIMIT=rejoin?28000:90000;
   const give=(msg)=>{clearTimeout(to);if(NET.peer!==peer)return;if(rejoin){mpLost('Could not get back into the room. The host may have closed it.');return;}mpLeave(true);mpErr(msg);};
+  let direct=0,viaRelay=0;
+  const bind=c=>{
+    c.on('open',()=>{if(NET.host!==c)return;NET.status='Step 3 of 3 · Joining '+code+'…';renderMP();attachU(c,d=>{NET.lastIn=now();if(NET.host===c)clientRecv(d);});
+      c.send({t:'hello',v:PROTO,sid:mySid(),name:profile.name,lv:levelInfo(profile.xp).level,sk:profile.skin||'std',ar:armorBits()});});
+    c.on('data',d=>{NET.lastIn=now();if(NET.host!==c)return;if(d&&d.t==='welcome'){c.joined=true;clearTimeout(to);if(c.relay&&!NET.viaRelay)toast('Connected through the backup route');NET.viaRelay=!!c.relay;}clientRecv(d);});
+    c.on('close',()=>{if(NET.host!==c)return;if(NET.mode==='client'&&!NET.leaving)clientReconnect();});};
+  // the direct link did not open: go through the backup route (and keep alternating until the time is up)
+  const attemptRelay=()=>{
+    if(NET.peer!==peer||NET.mode==='client'&&!rejoin)return;viaRelay++;tries++;
+    NET.status=(rejoin?'Reconnecting':'Step 2 of 3 · Connecting to room '+code)+' through the backup route…';renderMP();
+    const c=rlConnect(code);NET.host=c;c.lastIn=now();bind(c);
+    clearTimeout(to);to=setTimeout(()=>{if(NET.peer!==peer||NET.host!==c||c.joined)return;try{c.close();}catch(e){}
+      if(now()-t0<LIMIT)(forceRelay()||viaRelay<2?attemptRelay:attempt)();else give('The room did not answer. Your friend must keep the game open on screen (not in WhatsApp or another app), then press Try again.');},12000);
+  };
   const attempt=()=>{
-    if(NET.peer!==peer||NET.mode==='client'&&!rejoin)return;tries++;
+    if(NET.peer!==peer||NET.mode==='client'&&!rejoin)return;
+    if(forceRelay()||rejoin&&NET.viaRelay)return attemptRelay();tries++;direct++;
     NET.status=(rejoin?'Reconnecting':'Step 2 of 3 · Looking for room '+code)+(tries>1?` · try ${tries}`:'')+'…';renderMP();
     const c=peer.connect(roomId(code),{reliable:true,metadata:{sid:mySid()}});NET.host=c;c.lastIn=now();
     clearTimeout(to);to=setTimeout(()=>{if(NET.peer!==peer||NET.host!==c||c.joined)return;try{c.close();}catch(e){}
-      if(now()-t0<LIMIT)attempt();else give(c.iceFailed?'Your phone and your friend\'s phone could not connect. This happens on some mobile networks: put one phone on Wi-Fi and press Try again.':'The room did not answer. Your friend must keep the game open on screen (not in WhatsApp or another app). If you are both on mobile data, try Wi-Fi on one phone, then press Try again.');},10000);
-    c.on('iceStateChanged',st=>{if(NET.host!==c||c.joined)return;if(st==='failed'){c.iceFailed=true;NET.status='Your phones could not reach each other directly, trying again…';renderMP();}});
-    c.on('open',()=>{if(NET.host!==c)return;NET.status='Step 3 of 3 · Joining '+code+'…';renderMP();attachU(c,d=>{NET.lastIn=now();if(NET.host===c)clientRecv(d);});
-      c.send({t:'hello',v:PROTO,sid:mySid(),name:profile.name,lv:levelInfo(profile.xp).level,sk:profile.skin||'std',ar:armorBits()});});
-    c.on('data',d=>{NET.lastIn=now();if(NET.host!==c)return;if(d&&d.t==='welcome'){c.joined=true;clearTimeout(to);}clientRecv(d);});
-    c.on('close',()=>{if(NET.host!==c)return;if(NET.mode==='client'&&!NET.leaving)clientReconnect();});
+      if(now()-t0<LIMIT)attemptRelay();else give(c.iceFailed?'Your phone and your friend\'s phone could not connect. This happens on some mobile networks: put one phone on Wi-Fi and press Try again.':'The room did not answer. Your friend must keep the game open on screen (not in WhatsApp or another app). If you are both on mobile data, try Wi-Fi on one phone, then press Try again.');},10000);
+    c.on('iceStateChanged',st=>{if(NET.host!==c||c.joined)return;if(st==='failed'){c.iceFailed=true;clearTimeout(to);try{c.close();}catch(e){}NET.status='Your phones could not reach each other directly, using the backup route…';renderMP();attemptRelay();}});
+    bind(c);
   };
   peer.once('open',attempt);
   setTimeout(()=>{if(NET.peer===peer&&!peer.open&&!(NET.host&&NET.host.joined))give('Could not reach the game server. Check your internet connection, then press Try again.');},15000);
@@ -3709,7 +3791,7 @@ function clientReconnect(){
   NET.reconnecting=true;NET.lastIn=now();$('netBanner').hidden=false;$('netBanner').textContent='Connection lost · reconnecting…';
   mpJoin(NET.code,true);
 }
-function netDropTransport(){const p=NET.peer;NET.peer=null;NET.host=null;try{if(p)p.destroy();}catch(e){}}
+function netDropTransport(){const p=NET.peer,h=NET.host;NET.peer=null;NET.host=null;try{if(h&&h.relay)h.close();}catch(e){}try{if(p)p.destroy();}catch(e){}}
 function clientRecv(d){
   if(!d||!d.t)return;
   if(d.t==='po'){NET.ping=Math.round(now()-d.ts);return;}
@@ -3884,6 +3966,10 @@ function iceProbe(servers,want,ms){return new Promise(res=>{let pc;try{pc=new RT
   let done=false;const fin2=v=>{if(done)return;done=true;try{pc.close();}catch(e){}res(v);};
   pc.onicecandidate=e=>{if(e.candidate&&e.candidate.candidate.includes(' typ '+want+' '))fin2(true);if(!e.candidate)fin2(false);};
   pc.createDataChannel('t');pc.createOffer().then(o=>pc.setLocalDescription(o)).catch(()=>fin2(false));setTimeout(()=>fin2(false),ms);});}
+function rlProbe(){return new Promise(res=>{const t='diag/'+Math.random().toString(36).slice(2,10);let n=0,ok=false;const ms=[];
+  const done=v=>{if(ok)return;if(v){ok=true;res(true);}else if(++n<mqBrokers().length)return;else res(false);for(const m of ms)try{m.close();}catch(e){}};
+  for(const u of mqBrokers()){const m=Mq(u,(m,topic,text)=>{if(text==='ping'){done(true);for(const x of ms)try{x.close();}catch(e){}}},m=>{m.sub(rlTopic('probe',t));setTimeout(()=>m.pub(rlTopic('probe',t),'ping'),400);},()=>done(false));ms.push(m);setTimeout(()=>{try{m.close();}catch(e){}},9000);}
+  setTimeout(()=>{if(!ok){ok=true;res(false);}},9500);});}
 async function netDiag(){
   await fetchIce();try{if(NET.peer&&NET.peer.options&&NET.peer.options.config)NET.peer.options.config.iceServers=iceDyn||ICE;}catch(e){}const relays=(iceDyn||ICE).slice(2),rName=r=>{const u=[].concat(r.urls)[0]||'';return 'Relay · '+u.replace(/^turns?:/,'').split(/[:?]/)[0];};
   NET.diag=[['Game server','checking…'],['Direct connection (STUN)','checking…']].concat(relays.map(r=>[rName(r),'checking…']));renderMP();
@@ -3891,7 +3977,8 @@ async function netDiag(){
     p.on('open',()=>{clearTimeout(t);try{p.destroy();}catch(e){}res(true);});p.on('error',()=>{clearTimeout(t);try{p.destroy();}catch(e){}res(false);});});
   NET.diag[0][1]=srv?'ok':'failed';renderMP();
   const st=await iceProbe(ICE.slice(0,2),'srflx',6000);NET.diag[1][1]=st?'ok':'failed';renderMP();
-  const rs=await Promise.all(relays.map((r,i)=>iceProbe([r],'relay',9000).then(v=>{NET.diag[2+i][1]=v?'ok':'failed';renderMP();return v;})));const tu=rs.some(Boolean);
+  NET.diag.splice(2,0,['Backup route','checking…']);const bk=rlProbe().then(v=>{NET.diag[2][1]=v?'ok':'failed';renderMP();return v;});
+  const rs=await Promise.all(relays.map((r,i)=>iceProbe([r],'relay',9000).then(v=>{NET.diag[3+i][1]=v?'ok':'failed';renderMP();return v;})));const tu=rs.some(Boolean)||await bk;
   NET.diag.push(['Result',!srv?'No internet or the game server is down. Try again in a minute.':st&&tu?'Everything looks good.':st?'Should work on Wi-Fi. On some mobile networks the relay is needed and it is not reachable right now.':tu?'Works through the relay only. Expect a bit more delay.':'Your network blocks game connections. Try another Wi-Fi or mobile data.']);
   renderMP();
 }
@@ -3900,7 +3987,7 @@ function mpLeave(silent){
   const wasClient=isClient();
   // say goodbye properly so the other side frees the slot at once
   NET.leaving=true;try{if(isClient()&&NET.host&&NET.host.open)NET.host.send({t:'bye'});if(isHost())netBroadcast({t:'bye'});}catch(e){}
-  const old=NET.peer;setTimeout(()=>{try{if(old)old.destroy();}catch(e){}},150);
+  const old=NET.peer,oh=NET.host;setTimeout(()=>{try{if(old)old.destroy();}catch(e){}try{if(oh&&oh.relay)oh.close();}catch(e){}},150);rlHostStop();
   ss('bf.room',null);ss('bf.host',null);$('netBanner').hidden=true;
   for(const e of NET.remotes.values()){scene.remove(e.mesh);const i=ents.indexOf(e);if(i>=0)ents.splice(i,1);}
   NET.remotes.clear();NET.conns.clear();
