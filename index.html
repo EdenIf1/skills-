@@ -3505,7 +3505,8 @@ fetchIce();
 function peerOpts(){const o={debug:0,config:{iceServers:iceDyn||ICE}};let ps=null;try{ps=localStorage.getItem('blockfire.ps');}catch(e){}if(ps){const [h,p]=ps.split(':');o.host=h;o.port=+p||9000;o.path='/';o.secure=false;}return o;}
 const roomId=c=>'blockfire-r1-'+c.toLowerCase();
 const mpAvailable=()=>typeof window.Peer==='function'&&typeof window.RTCPeerConnection==='function'&&!/claude|anthropic/i.test(location.hostname);
-const inviteUrl=()=>PUBLIC_URL+'#room-'+NET.code;
+// friends get the exact page (and version) the host is on
+const inviteUrl=()=>(/^https?:$/.test(location.protocol)&&!inFrame&&!/^(127\.|localhost)/.test(location.hostname)?location.origin+location.pathname:PUBLIC_URL)+'#room-'+NET.code;
 function findNid(nid){if(!nid)return null;if(nid[0]==='B')return bots[+nid.slice(1)]||null;if(nid[0]==='Z')return zombies.find(z=>z.nid===nid)||null;if(nid===NET.nid)return player;if(nid==='P0'&&isHost())return player;return NET.remotes.get(nid)||null;}
 const teamCount=t=>ents.filter(e=>(e.isPlayer||e.remote)&&e.team===t).length;
 const mpAllReady=()=>[...NET.remotes.values()].every(e=>e.ready||e.away);
