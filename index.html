@@ -38,7 +38,8 @@ body{font-family:var(--f-body);touch-action:none;user-select:none;-webkit-user-s
 #radar{position:absolute;left:calc(var(--sl) + 14px);top:calc(var(--st) + 10px);width:132px;height:132px;border-radius:50%;background:rgba(11,15,20,.55);border:2px solid rgba(238,242,244,.25)}
 #uavTag{position:absolute;left:calc(var(--sl) + 14px);top:calc(var(--st) + 146px);width:132px;text-align:center;font-size:16px;letter-spacing:.14em;color:var(--amber)}
 
-#feed{position:absolute;top:calc(var(--st) + 10px);right:calc(var(--sr) + 14px);display:flex;flex-direction:column;align-items:flex-end;gap:3px;font-size:19px;max-width:46vw}
+#feed{position:absolute;top:calc(var(--st) + 172px);left:calc(var(--sl) + 14px);display:flex;flex-direction:column;align-items:flex-start;gap:3px;font-size:17px;max-width:40vw}
+#feed div:nth-child(n+5){display:none}
 #feed div{background:var(--panel);padding:1px 10px 0;white-space:nowrap;transition:opacity .4s}
 #feed em{font-style:normal;color:var(--dim);margin:0 6px;font-size:16px}
 #feed .hs{color:var(--amber);margin-right:6px;font-size:15px}
@@ -49,7 +50,12 @@ body{font-family:var(--f-body);touch-action:none;user-select:none;-webkit-user-s
 #cross .t,#cross .b{width:2px;height:9px;left:-1px}
 #cross .l,#cross .r{height:2px;width:9px;top:-1px}
 #dot{position:absolute;left:50%;top:50%;width:4px;height:4px;margin:-2px 0 0 -2px;background:var(--red);border-radius:50%;box-shadow:0 0 3px #000}
-#scope{position:absolute;inset:0;background:radial-gradient(circle at center,transparent 0,transparent 34vmin,#000 34.4vmin)}
+#scope{position:absolute;inset:0;background:radial-gradient(circle at center,rgba(140,190,255,.05) 0,rgba(0,0,0,.2) 31vmin,#000 34.4vmin)}
+#scope .p{position:absolute;background:#000}
+#scope .l{left:calc(50% - 34vmin);top:50%;width:24vmin;height:4px;margin-top:-2px}
+#scope .r{right:calc(50% - 34vmin);top:50%;width:24vmin;height:4px;margin-top:-2px}
+#scope .b{bottom:calc(50% - 34vmin);left:50%;height:24vmin;width:4px;margin-left:-2px}
+#scope .cd{position:absolute;left:50%;top:50%;width:4px;height:4px;margin:-2px 0 0 -2px;background:#ff3b30;border-radius:50%;box-shadow:0 0 4px #ff3b30}
 #scope::before,#scope::after{content:"";position:absolute;left:50%;top:50%;background:#000}
 #scope::before{width:68vmin;height:1px;margin-left:-34vmin}
 #scope::after{height:68vmin;width:1px;margin-top:-34vmin}
@@ -116,9 +122,11 @@ body.touch #hp{font-size:32px} body.touch #hpbox .bar{width:90px}
 body.touch #ammo{top:calc(var(--st) + 8px);bottom:auto;right:calc(var(--sr) + 12px);padding:4px 10px 2px}
 body.touch #mag{font-size:32px}
 /* phones: keep the top strip compact so nothing reaches the thumb buttons */
-body.touch #feed{top:calc(var(--st) + 64px);right:auto;left:50%;transform:translateX(-50%);align-items:center;font-size:14px;max-width:56vw}
+body.touch #feed{top:calc(var(--st) + 150px);left:calc(var(--sl) + 10px);align-items:flex-start;font-size:13px;max-width:36vw;gap:2px}
+body.touch #feed div{padding:0 6px}
 body.touch #feed div:nth-child(n+4){display:none}
-body.touch #feed em{font-size:13px}
+body.touch #feed em{font-size:12px;margin:0 4px}
+body.touch #feed .hs{font-size:12px}
 body.touch #streak{display:none}
 body.touch #wname{font-size:14px}
 body.touch #res{font-size:17px}
@@ -232,7 +240,7 @@ body.touch .ctrl.desk{display:none} body:not(.touch) .ctrl.mob{display:none}
     <div class="tm r cut" id="sR">0</div>
   </div>
   <div id="feed"></div>
-  <div id="scope" hidden></div>
+  <div id="scope" hidden><i class="p l"></i><i class="p r"></i><i class="p b"></i><b class="cd"></b></div>
   <div id="cross"><i class="t"></i><i class="b"></i><i class="l"></i><i class="r"></i></div>
   <div id="dot" hidden></div>
   <div id="hitm"></div>
@@ -1018,6 +1026,12 @@ const GM={
   dot:new THREE.MeshBasicMaterial({color:0xff2a2a}),
   edge:Ph({color:0xd8dde2,shininess:140,specular:0xffffff})
 };
+GM.holo=(()=>{const c=document.createElement('canvas');c.width=c.height=128;const g=c.getContext('2d');
+  g.fillStyle='rgba(150,200,255,.06)';g.fillRect(0,0,128,128);
+  g.strokeStyle='rgba(255,55,45,.95)';g.lineWidth=3;g.beginPath();g.arc(64,64,40,0,Math.PI*2);g.stroke();
+  g.fillStyle='#ff372d';g.beginPath();g.arc(64,64,4,0,Math.PI*2);g.fill();
+  for(const [x,y,w,h] of[[62,12,4,12],[62,104,4,12],[12,62,12,4],[104,62,12,4]])g.fillRect(x,y,w,h);
+  return new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(c),transparent:true,depthWrite:false,side:THREE.DoubleSide,fog:false});})();
 const flashMat=new THREE.MeshBasicMaterial({color:0xffd27a});
 function nameSprite(name,color){
   const c=document.createElement('canvas');c.width=256;c.height=64;
@@ -1134,7 +1148,8 @@ function buildGun(model,cm,bot){
   if(model==='m4'){
     bx(.05,.075,.2,B,0,-.035,.02);bx(.054,.05,.27,B,0,.025,-.015);
     bx(.028,.012,.27,GM.met,0,.056,-.015);for(let i=0;i<9;i++)bx(.034,.006,.01,GM.met,0,.064,.11-i*.03);
-    bx(.03,.02,.04,GM.met,0,.07,.02);cy(.022,.022,.075,GM.met,0,.095,.02,14);cy(.019,.019,.004,GM.lens,0,.095,-.0175,14);bx(.004,.004,.002,GM.dot,0,.095,-.012);
+    bx(.05,.012,.07,GM.met,0,.066,.02);bx(.004,.046,.06,GM.met,.026,.093,.02);bx(.004,.046,.06,GM.met,-.026,.093,.02);bx(.056,.005,.07,GM.met,0,.118,.02);bx(.01,.01,.02,GM.poly,.032,.076,.04);
+    {const hp=new THREE.Mesh(new THREE.PlaneGeometry(.048,.046),GM.holo);hp.position.set(0,.094,.005);hp.renderOrder=5;g.add(hp);}
     bx(.062,.062,.21,GM.poly,0,.015,-.255);for(let i=0;i<4;i++)bx(.064,.012,.02,GM.met,0,.03,-.19-i*.04);bx(.028,.01,.21,GM.met,0,.051,-.255);
     bx(.03,.02,.02,GM.met,0,.035,-.35);bx(.012,.05,.012,GM.met,0,.062,-.35);
     cy(.011,.011,.2,GM.barrel,0,.015,-.46);cy(.016,.014,.05,GM.met,0,.015,-.585);
@@ -1142,24 +1157,24 @@ function buildGun(model,cm,bot){
     bx(.036,.095,.045,GM.poly,0,-.105,.08,-.32);bx(.008,.008,.06,GM.met,0,-.08,.035);bx(.005,.02,.006,GM.met,0,-.065,.035);
     bx(.04,.012,.02,GM.met,0,.045,.135);bx(.004,.022,.05,GM.port,.028,.025,0);
     cy(.016,.016,.14,GM.met,0,.005,.2);bx(.044,.07,.12,GM.poly,0,-.005,.29);bx(.046,.11,.025,GM.poly,0,-.02,.36);
-    ud={hip:[.21,-.21,-.5],ads:[0,-.095,-.4],muzzle:-.61,grip:[0,-.1,.08],fore:[0,-.02,-.27]};
+    ud={hip:[.21,-.21,-.5],ads:[0,-.094,-.38],muzzle:-.61,grip:[0,-.1,.08],fore:[0,-.02,-.27]};
   }else if(model==='ak'){
-    bx(.05,.072,.32,B,0,0,0);bx(.044,.022,.29,B,0,.046,.005);bx(.03,.018,.05,GM.met,0,.06,-.13);
+    bx(.05,.072,.32,B,0,0,0);bx(.044,.022,.29,B,0,.046,.005);bx(.03,.008,.05,GM.met,0,.054,-.13);bx(.01,.014,.012,GM.met,.01,.064,-.11);bx(.01,.014,.012,GM.met,-.01,.064,-.11);
     bx(.06,.052,.2,GM.wood,0,-.005,-.26);bx(.042,.03,.17,GM.wood,0,.045,-.245);cy(.011,.011,.1,GM.met,0,.045,-.385);bx(.03,.05,.03,GM.met,0,.03,-.44);
-    cy(.011,.011,.3,GM.barrel,0,.008,-.5);bx(.026,.04,.03,GM.met,0,.03,-.6);bx(.006,.03,.006,GM.met,0,.06,-.6);cy(.015,.015,.045,GM.met,0,.008,-.665);
+    cy(.011,.011,.3,GM.barrel,0,.008,-.5);bx(.026,.04,.03,GM.met,0,.03,-.6);bx(.004,.03,.004,GM.met,0,.058,-.6);bx(.004,.03,.02,GM.met,.012,.058,-.6);bx(.004,.03,.02,GM.met,-.012,.058,-.6);cy(.015,.015,.045,GM.met,0,.008,-.665);
     bx(.03,.06,.075,GM.bake,0,-.06,-.075,.05);bx(.03,.06,.075,GM.bake,0,-.115,-.065,.22);bx(.03,.06,.072,GM.bake,0,-.165,-.045,.4);bx(.03,.055,.07,GM.bake,0,-.205,-.015,.6);
     bx(.034,.09,.045,GM.wood,0,-.085,.11,-.35);bx(.008,.008,.07,GM.met,0,-.05,.045);
     bx(.04,.055,.14,GM.wood,0,-.015,.23,.1);bx(.044,.1,.1,GM.wood,0,-.04,.33,.05);bx(.046,.105,.012,GM.met,0,-.04,.385);
     bx(.03,.012,.02,GM.met,.035,.02,-.02);bx(.004,.02,.06,GM.port,.026,.02,.02);
-    ud={hip:[.21,-.2,-.5],ads:[0,-.071,-.42],muzzle:-.69,grip:[0,-.085,.11],fore:[0,-.02,-.26]};
+    ud={hip:[.21,-.2,-.5],ads:[0,-.07,-.42],muzzle:-.69,grip:[0,-.085,.11],fore:[0,-.02,-.26]};
   }else if(model==='smg'){
-    bx(.048,.06,.3,B,0,0,0);cy(.026,.026,.3,B,0,.02,0,12);bx(.03,.03,.03,GM.met,0,.06,.1);bx(.03,.035,.025,GM.met,0,.06,-.2);bx(.005,.02,.005,GM.met,0,.07,-.2);
+    bx(.048,.06,.3,B,0,0,0);cy(.026,.026,.3,B,0,.02,0,12);bx(.03,.01,.03,GM.met,0,.058,.1);bx(.03,.008,.012,GM.met,0,.085,.1);bx(.03,.008,.012,GM.met,0,.065,.1);bx(.008,.028,.012,GM.met,.011,.075,.1);bx(.008,.028,.012,GM.met,-.011,.075,.1);bx(.03,.035,.025,GM.met,0,.06,-.2);bx(.005,.02,.005,GM.met,0,.07,-.2);
     bx(.058,.055,.13,GM.poly,0,-.012,-.21);cy(.01,.01,.08,GM.barrel,0,.015,-.31);cy(.015,.015,.03,GM.met,0,.015,-.36);
     cy(.012,.012,.08,GM.met,0,.04,-.22);bx(.005,.012,.03,GM.met,-.03,.04,-.2);
     bx(.026,.07,.05,GM.met,0,-.08,-.04,.1);bx(.026,.07,.05,GM.met,0,-.145,-.025,.3);bx(.026,.05,.048,GM.met,0,-.195,0,.5);
     bx(.034,.09,.045,GM.poly,0,-.08,.1,-.25);bx(.04,.03,.09,GM.poly,0,-.045,.08);
     cy(.005,.005,.17,GM.met,.018,0,.24);cy(.005,.005,.17,GM.met,-.018,0,.24);bx(.05,.08,.02,GM.poly,0,-.01,.33);
-    ud={hip:[.19,-.19,-.46],ads:[0,-.077,-.38],muzzle:-.38,grip:[0,-.08,.1],fore:[0,-.03,-.21]};
+    ud={hip:[.19,-.19,-.46],ads:[0,-.075,-.38],muzzle:-.38,grip:[0,-.08,.1],fore:[0,-.03,-.21]};
   }else if(model==='shotgun'){
     bx(.05,.075,.26,B,0,0,0);cy(.016,.016,.5,GM.barrel,0,.02,-.38);cy(.015,.015,.42,GM.met,0,-.02,-.34);
     bx(.04,.025,.3,GM.met,0,.04,-.33);for(let i=0;i<6;i++)bx(.042,.008,.012,GM.port,0,.05,-.21-i*.045);
@@ -1681,7 +1696,7 @@ function refreshHUD(dt){
   const gap=5+sp*520;
   const cr=$('cross');cr.style.opacity=adsK>.6||!player.alive?'0':'1';
   cr.children[0].style.top=(-gap-9)+'px';cr.children[1].style.top=gap+'px';cr.children[2].style.left=(-gap-9)+'px';cr.children[3].style.left=gap+'px';
-  $('dot').hidden=!(adsK>.6&&player.alive&&w.kind!=='sniper');
+  $('dot').hidden=!(adsK>.6&&player.alive&&w.kind!=='sniper'&&w.model!=='m4');
   if(hitT>0){hitT-=dt;$('hitm').style.opacity=String(Math.min(1,hitT*8));}else $('hitm').style.opacity='0';
   vigT=Math.max(0,vigT-dt*.9);
   const low=player.alive&&player.hp<35?.45:0;$('vig').style.opacity=String(Math.max(vigT,low));
