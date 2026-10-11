@@ -238,7 +238,8 @@ html,body{overscroll-behavior:none}
 .avBig{width:56px;height:56px;border-radius:14px;display:grid;place-items:center;font:600 34px var(--f-hud);color:#fff;box-shadow:inset 0 -6px 0 rgba(0,0,0,.25)}
 .authName{font:600 30px var(--f-hud);letter-spacing:.04em;line-height:1;color:var(--ink);word-break:break-all}
 .authMeta{font:500 13px var(--f-body);color:var(--dim)}
-.syncPill{display:inline-flex;align-items:center;gap:7px;font:500 12.5px var(--f-body);padding:4px 10px;border-radius:999px;background:rgba(255,255,255,.06);border:1px solid var(--line);color:var(--ink);max-width:100%}
+.syncPill{display:inline-flex;align-items:center;gap:7px;font:500 12.5px var(--f-body);padding:4px 10px;border-radius:999px;background:rgba(255,255,255,.06);border:1px solid var(--line);color:var(--ink);max-width:100%;box-sizing:border-box;min-width:0}
+.syncPill span{min-width:0}
 .syncPill i{width:8px;height:8px;border-radius:50%;flex:none;background:#8a939c}.syncPill.ok i{background:#6fd08c;box-shadow:0 0 6px #6fd08c}.syncPill.warn i{background:#f3b54a}.syncPill span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .perks{list-style:none;margin:6px 0 0;padding:0;display:flex;flex-direction:column;gap:5px;font:500 13px var(--f-body);color:var(--dim)}.perks li::before{content:'✓';color:#6fd08c;margin-right:7px;font-weight:700}
 .authCard{background:rgba(9,12,16,.6);border:1px solid var(--line);padding:16px 18px;display:flex;flex-direction:column;gap:10px}
@@ -954,7 +955,7 @@ const ST=()=>profile.stats;
 const CLOUD_CFG={url:'https://qnhogbwnumvounwpusmc.supabase.co',key:'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFuaG9nYndudW12b3Vud3B1c21jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE2NzYyNzQsImV4cCI6MjEwNzI1MjI3NH0.8c16Bx4eagKtW8Usp0bRXNmxXRW0I3zZ_jjpZJy6kyI'}; // Supabase project URL + its public (anon) key
 function cloudCfg(){let o=null;try{o=JSON.parse(localStorage.getItem('blockfire.cloudcfg')||'null');}catch(e){}return o&&o.url?o:CLOUD_CFG;}
 // inside the Claude app the game runs in a closed sandbox that cannot reach the save server: accounts live in the full game
-const IN_CLAUDE=(()=>{try{return /claude|anthropic/i.test(location.hostname)||localStorage.getItem('blockfire.fakeclaude')==='1';}catch(e){return false;}})();
+const IN_CLAUDE=(()=>{try{if(window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform())return false;return /claude|anthropic/i.test(location.hostname)||localStorage.getItem('blockfire.fakeclaude')==='1';}catch(e){return false;}})();
 const cloudOn=()=>!IN_CLAUDE&&!!cloudCfg().url;
 let CS=null;try{CS=JSON.parse(localStorage.getItem('blockfire.cloud')||'null');}catch(e){}
 const cloudKeep=()=>{try{if(CS)localStorage.setItem('blockfire.cloud',JSON.stringify(CS));else localStorage.removeItem('blockfire.cloud');}catch(e){}};
@@ -3930,8 +3931,9 @@ function leaveMatch(){
 for(const id of['boardLeave','pauseLeave']){$(id).addEventListener('click',e=>{e.stopPropagation();leaveMatch();});$(id).addEventListener('touchend',e=>{e.stopPropagation();e.preventDefault();leaveMatch();},{passive:false});}
 $('setClose').addEventListener('click',()=>{$('settings').hidden=true;});
 // privacy policy and terms live next to the game (and on the public site when playing inside Claude)
-const legalUrl=f=>(/^https?:$/.test(location.protocol)&&!inFrame?'':PUBLIC_URL.replace(/[^/]*$/,''))+f;
-function renderLegal(){const h=`<a href="${legalUrl('privacy.html')}" target="_blank" rel="noopener">Privacy policy</a><a href="${legalUrl('terms.html')}" target="_blank" rel="noopener">Terms of use</a><a href="${legalUrl('support.html')}" target="_blank" rel="noopener">Support</a><a href="${legalUrl('licenses.html')}" target="_blank" rel="noopener">Licenses</a><span>Version ${APP_VERSION}</span>`;for(const id of ['legal','legal2'])if($(id))$(id).innerHTML=h;}
+const legalUrl=f=>(CAP||/^https?:$/.test(location.protocol)&&!inFrame?'':PUBLIC_URL.replace(/[^/]*$/,''))+f;
+const LT=CAP?'':'target="_blank" rel="noopener"';
+function renderLegal(){const h=`<a href="${legalUrl('privacy.html')}" ${LT}>Privacy policy</a><a href="${legalUrl('terms.html')}" ${LT}>Terms of use</a><a href="${legalUrl('support.html')}" ${LT}>Support</a><a href="${legalUrl('licenses.html')}" ${LT}>Licenses</a><span>Version ${APP_VERSION}</span>`;for(const id of ['legal','legal2'])if($(id))$(id).innerHTML=h;}
 renderLegal();
 $('openHelp').addEventListener('click',()=>{$('hpMsgOut').textContent='';$('help').hidden=false;});
 $('helpClose').addEventListener('click',()=>{$('help').hidden=true;});
@@ -3962,7 +3964,7 @@ function renderAcct(){
     :`<div class="dangerZ"><button class="linkBtn dz" id="clDel">Delete account…</button></div>`;
   if(acTab==='cloud'){
     const named=CS&&!CS.guest&&cloudMine(),guest=CS&&CS.guest&&cloudMine(),nm=named||guest?CS.name:USERS.cur;
-    const st=!cloudOn()?['off','Offline only']:cloudErr?['warn',cloudErr]:named||guest?(cloudLast?['ok','Saved to the cloud · '+new Date(cloudLast).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})]:['ok','Connecting…']):['off','Not signed in · saved on this device only'];
+    const st=!cloudOn()?['off','Offline only']:cloudErr?['warn',cloudErr]:named||guest?(cloudLast?['ok','Saved online · '+new Date(cloudLast).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})]:['ok','Connecting…']):['off','Not signed in · saved on this device only'];
     const sk=CHARS[profile.skin]||CHARS.std,col=sk.camo?`rgb(${sk.camo[0]})`:'#3b5d82';
     const side=`<div class="authSide"><div class="avBig" style="background:${col}">${esc((nm||'?').charAt(0).toUpperCase())}</div>
       <div class="authName">${esc(nm||'Player')}</div><div class="authMeta">Level ${li.level} · ${esc(li.rank)}${guest?' · Guest':named?' · Online account':''}</div>
@@ -3977,7 +3979,7 @@ function renderAcct(){
         ${field('clPass','Password',`<span class="pwWrap"><input id="clPass" name="password" type="password" maxlength="64" autocomplete="${up?'new-password':'current-password'}" placeholder="${up?'6+ characters':'Your password'}"><button type="button" class="eye" id="clEye">Show</button></span>`)}
         <button type="submit" class="btn cut authGo" id="${up?'clSignup':'clLogin'}">${up?(guest?'Save my account':'Create account'):'Sign in'}</button>
         ${guest?`<button type="button" class="linkBtn" data-am="${up?'in':'up'}">${up?'I already have an account · Sign in':'New here? Save this progress as a new account'}</button>`:''}
-        <div class="authFine">🔒 Encrypted connection · we never store your password on the phone · <a href="terms.html" target="_blank" rel="noopener">Terms</a> · <a href="privacy.html" target="_blank" rel="noopener">Privacy</a></div></form>`;};
+        <div class="authFine">🔒 Encrypted connection · we never store your password on the phone · <a href="${legalUrl('terms.html')}" ${LT}>Terms</a> · <a href="${legalUrl('privacy.html')}" ${LT}>Privacy</a></div></form>`;};
     let card='';
     if(IN_CLAUDE)card=`<div class="authCard"><div class="authH">Sign in on the full game</div><div class="authSub">This preview runs inside the Claude app, which keeps it in a closed box with no access to the save server. Open the full game to create your account or sign in: from then on everything saves online by itself.</div><a class="btn cut authGo" id="acFull" style="display:block;box-sizing:border-box;width:100%;text-align:center;text-decoration:none" href="${PUBLIC_URL}" target="_blank" rel="noopener">Open the full game ↗</a><div class="authFine">Progress in this preview stays on this device only.</div></div>`;
     else if(!cloudOn())card=`<div class="authCard"><div class="authH">Online accounts are off</div><div class="authSub">Progress stays on this device. Move it with a save code from the More tab.</div></div>`;
