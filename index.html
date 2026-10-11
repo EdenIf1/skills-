@@ -3549,7 +3549,7 @@ function netFitBots(){
 
 /* ---- backup route: when two phones cannot connect directly (mobile data, strict Wi-Fi), the game data goes through a
    public message server (MQTT over a secure WebSocket). Works on any network that can open a web page. ---- */
-const MQ_BROKERS=['wss://broker.emqx.io:8084/mqtt','wss://broker.hivemq.com:8884/mqtt'];
+const MQ_BROKERS=['wss://broker.emqx.io:8084/mqtt','wss://broker.hivemq.com:8884/mqtt','wss://test.mosquitto.org:8081/mqtt'];
 function mqBrokers(){try{const o=localStorage.getItem('blockfire.mq');if(o)return [o];}catch(e){}return MQ_BROKERS;}
 const mqEnc=new TextEncoder(),mqDec=new TextDecoder();
 function mqCat(...a){let n=0;for(const x of a)n+=x.length;const o=new Uint8Array(n);let i=0;for(const x of a){o.set(x,i);i+=x.length;}return o;}
