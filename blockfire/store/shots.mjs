@@ -26,7 +26,7 @@ await ev(`(()=>{player.spawnProt=999;player.hp=100;for(const b of bots)if(b.team
   const e=bots.filter(b=>b.team==='red'&&b.alive).slice(0,4);const D=Math.min(bl-2,16);
   e.forEach((b,i)=>{const d=D*(.55+.15*i),s=(i%2?1:-1)*(1+i*.8);b.x=player.x+dx*d+rx*s;b.z=player.z+dz*d+rz*s;const g=SY[Math.floor(b.x)+W*Math.floor(b.z)];if(g>=0)b.y=g;b.path=null;b.target=player;b.alive=true;b.mesh.visible=true;b.spawnProt=99;b.yaw=Math.atan2(-(player.x-b.x),-(player.z-b.z));b.mesh.position.set(b.x,b.y,b.z);});
   window.__lane=[by,bl];})();1`);
-await p.waitForTimeout(1200);await hideToasts();await cap('6 V 6 BLOCK WARFARE','Team up with bots or friends · five maps · killstreaks');await shot('1-battle');
+await p.waitForTimeout(1200);await hideToasts();await cap('BLOCK WAR, 6V6 TO 12V12','Team up with bots or friends · ten maps · 20 guns');await shot('1-battle');
 // 2 building
 await ev("(()=>{buildLeft=60;const by=player.yaw,dx=-Math.sin(by),dz=-Math.cos(by),rx=Math.cos(by),rz=-Math.sin(by),y=Math.floor(player.y);for(let s=-2;s<=2;s++)for(let dy=0;dy<2;dy++){const x=Math.floor(player.x+dx*3.6+rx*s),z=Math.floor(player.z+dz*3.6+rz*s);if(!getV(x,y+dy,z))hostPlace(player,x,y+dy,z,dy?'brick':'concrete');}player.yaw=by+.5;player.pitch=-.22;worldDirty=true;buildHeld=true;})();1");
 await p.waitForTimeout(1200);await cap('BUILD COVER MID-FIGHT','Dirt, glass, brick, concrete, steel · everything you build can be blown up');await shot('2-build');await ev('buildHeld=false;1');
@@ -45,7 +45,7 @@ await p.evaluate(()=>{document.getElementById('openCrate').click();});await p.wa
 await cap('SIX RARITIES OF LOOT','Camos, skins, blocks, titles, kill effects · odds always shown');await shot('5-crates');await ev("rollReward=window.__oldRoll;1");await p.evaluate(()=>document.getElementById('crateClose').click());
 // 6 character
 await p.evaluate(()=>{document.getElementById('openChar').click();document.querySelector('[data-ct=skins]').click();});await p.waitForTimeout(1800);
-await cap('MAKE IT YOURS','Skins, armor, titles, banners and loadouts');await shot('6-character');await p.evaluate(()=>{const c=document.getElementById('charClose')||document.querySelector('#char .btn');c&&c.click();});
+await cap('MAKE IT YOURS','Skins, gear with shields, titles and loadouts');await shot('6-character');await p.evaluate(()=>{const c=document.getElementById('charClose')||document.querySelector('#char .btn');c&&c.click();});
 // 7 home
 await ev("selectMap('junk');1");
 await p.evaluate(()=>{document.querySelectorAll('.overlay').forEach(o=>{if(o.id!=='menu')o.hidden=true;});});await p.waitForTimeout(1500);

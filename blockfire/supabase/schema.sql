@@ -78,3 +78,69 @@ begin
 end $$;
 create trigger client_errors_guard before insert on public.client_errors for each row execute function public.client_errors_guard();
 revoke all on function public.client_errors_guard() from public, anon, authenticated;
+
+-- ===== admin (the game owner) =====
+-- one admin; everything the admin can do is checked here, not in the game
+create table public.admins (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  one boolean not null default true unique check (one),
+  created_at timestamptz not null default now());
+alter table public.admins enable row level security;
+alter table public.admins force row level security;
+revoke all on public.admins from anon, authenticated;
+
+-- the one-time admin code, stored only as a SHA-256 hash; service role only.
+-- Insert your own hash by hand in the SQL editor; never commit it:
+--   insert into public.admin_claim(code_hash) values ('<sha256 of your code>');
+create table public.admin_claim (code_hash text primary key check (code_hash ~ '^[0-9a-f]{64}$'));
+alter table public.admin_claim enable row level security;
+alter table public.admin_claim force row level security;
+revoke all on public.admin_claim from anon, authenticated;
+
+create or replace function public.is_admin() returns boolean language sql stable security definer set search_path = '' as $$
+  select exists(select 1 from public.admins where user_id = (select auth.uid()))
+$$;
+revoke all on function public.is_admin() from public, anon;
+grant execute on function public.is_admin() to authenticated;
+
+-- remote game settings: only the admin may change them, and only with sane values
+grant update (value) on public.app_config to authenticated;
+create policy "admin changes config" on public.app_config for update to authenticated
+  using ((select public.is_admin())) with check ((select public.is_admin()));
+create or replace function public.app_config_guard() returns trigger language plpgsql set search_path = '' as $$
+begin
+  if new.key <> old.key then raise exception 'config key cannot change'; end if;
+  if new.key in ('min_version','latest_version') then
+    if jsonb_typeof(new.value) <> 'string' or (new.value #>> '{}') !~ '^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$' then raise exception 'version must look like 1.2.3'; end if;
+  elsif new.key in ('motd','maintenance','store_url') then
+    if jsonb_typeof(new.value) <> 'string' or char_length(new.value #>> '{}') > 300 then raise exception 'text up to 300 characters'; end if;
+  elsif new.key = 'features' then
+    if jsonb_typeof(new.value) <> 'object' or exists(select 1 from jsonb_each(new.value) e where jsonb_typeof(e.value) <> 'boolean') then raise exception 'features are on/off switches'; end if;
+  end if;
+  new.updated_at := now();
+  return new;
+end $$;
+create trigger app_config_guard before update on public.app_config for each row execute function public.app_config_guard();
+revoke all on function public.app_config_guard() from public, anon, authenticated;
+
+-- player messages and crash reports: only the admin can read and clear them
+grant select, delete on public.support_messages to authenticated;
+create policy "admin reads messages" on public.support_messages for select to authenticated using ((select public.is_admin()));
+create policy "admin clears messages" on public.support_messages for delete to authenticated using ((select public.is_admin()));
+grant select, delete on public.client_errors to authenticated;
+create policy "admin reads errors" on public.client_errors for select to authenticated using ((select public.is_admin()));
+create policy "admin clears errors" on public.client_errors for delete to authenticated using ((select public.is_admin()));
+
+-- ===== "remember this phone" =====
+-- a random key per device, stored only as a SHA-256 hash; service role only (edge function "device")
+create table public.device_keys (
+  id bigint generated always as identity primary key,
+  user_id uuid not null references auth.users(id) on delete cascade,
+  key_hash text not null unique check (key_hash ~ '^[0-9a-f]{64}$'),
+  label text check (char_length(label) <= 60),
+  created_at timestamptz not null default now(),
+  last_used_at timestamptz not null default now());
+create index device_keys_user on public.device_keys(user_id);
+alter table public.device_keys enable row level security;
+alter table public.device_keys force row level security;
+revoke all on public.device_keys from anon, authenticated;

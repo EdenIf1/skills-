@@ -1,7 +1,7 @@
 import { chromium } from 'playwright';import fs from 'fs';
 const b=await chromium.launch({executablePath:'/opt/pw-browsers/chromium',args:['--use-gl=swiftshader','--enable-unsafe-swiftshader']});
 const ctx=await b.newContext({viewport:{width:900,height:500}});await ctx.addInitScript(()=>{localStorage.setItem('blockfire.cloudcfg',JSON.stringify({url:'',key:''}));});
-const p=await ctx.newPage();p.on('pageerror',e=>console.log('ERR',e.message));await p.goto('http://127.0.0.1:8765/index.html');await p.waitForTimeout(2500);
+const p=await ctx.newPage();p.on('pageerror',e=>console.log('ERR',e.message));await p.goto('http://127.0.0.1:8766/index.html');await p.waitForTimeout(2500);
 await p.evaluate(()=>document.fonts.load('700 190px Silkscreen'));await p.waitForTimeout(300);
 const out=await p.evaluate(()=>window.__bf.ev(`(()=>{
   const res={};
@@ -9,7 +9,13 @@ const out=await p.evaluate(()=>window.__bf.ev(`(()=>{
   const scene3=()=>{const sc=new THREE.Scene();sc.add(new THREE.HemisphereLight(0xffffff,0x303846,.85));const d=new THREE.DirectionalLight(0xfff0d8,.6);d.position.set(-2,5,2.5);sc.add(d);const d2=new THREE.DirectionalLight(0x9fc4ff,.35);d2.position.set(-4,1,-2);sc.add(d2);return sc;};
   function iconArt(S,noBg){
     const sc=scene3(),cam=new THREE.PerspectiveCamera(30,1,.1,100);
-    const cube=new THREE.Mesh(new THREE.BoxGeometry(1,1,1),MATS[B.CRATE]);cube.rotation.set(.5,.785,0);cube.position.set(.18,.32,-.2);cube.scale.setScalar(.95);sc.add(cube);
+    // a blocky soldier: square head, helmet, visor; the brand's face
+    const SM=skinMats('std','blue'),hd=new THREE.Group();hd.rotation.set(.12,.5,0);hd.position.set(.22,.38,-.3);sc.add(hd);
+    const head=new THREE.Mesh(new THREE.BoxGeometry(1,1,1),SM.head);hd.add(head);
+    const helm=new THREE.Mesh(new THREE.BoxGeometry(1.14,.36,1.14),armorMat);helm.position.y=.5;hd.add(helm);
+    const brim=new THREE.Mesh(new THREE.BoxGeometry(1.14,.1,.3),armorMat2);brim.position.set(0,.34,-.55);hd.add(brim);
+    const body=new THREE.Mesh(new THREE.BoxGeometry(1.05,.75,.6),SM.body);body.position.set(0,-.9,0);hd.add(body);
+    const cube=new THREE.Mesh(new THREE.BoxGeometry(1,1,1),MATS[B.CRATE]);cube.rotation.set(.5,.785,0);cube.position.set(-1.05,-.75,-1.4);cube.scale.setScalar(.7);sc.add(cube);
     const g=buildGun('ak',camoMat('none'),true,{optic:'holo'});g.scale.setScalar(1.55);g.rotation.set(.1,-Math.PI/2+.38,.42);g.position.set(-.24,-.4,.9);sc.add(g);
     cam.position.set(0,.1,4.75);cam.lookAt(0,-.02,0);R.setSize(S,S,false);R.render(sc,cam);
     sc.updateMatrixWorld(true);const bb=new THREE.Box3().setFromObject(g);
@@ -29,7 +35,7 @@ const out=await p.evaluate(()=>window.__bf.ev(`(()=>{
   const S=2732,sv=document.createElement('canvas');sv.width=sv.height=S;const c=sv.getContext('2d');c.fillStyle='#0b0f15';c.fillRect(0,0,S,S);
   const gl=c.createRadialGradient(S/2,S/2,0,S/2,S/2,S*.45);gl.addColorStop(0,'rgba(51,70,95,.9)');gl.addColorStop(1,'rgba(11,15,21,0)');c.fillStyle=gl;c.fillRect(0,0,S,S);
   const small=iconArt(1000,true);c.drawImage(small,S/2-500,S/2-640,1000,1000);
-  c.font='700 170px Silkscreen';c.textBaseline='middle';const w1=c.measureText('BLOCK').width,w2=c.measureText('FIRE').width,x0=S/2-(w1+w2)/2;c.fillStyle='#eef2f4';c.fillText('BLOCK',x0,S/2+440);c.fillStyle='#f3b54a';c.fillText('FIRE',x0+w1,S/2+440);
+  c.font='700 170px Silkscreen';c.textBaseline='middle';const w1=c.measureText('CUBE').width,w2=c.measureText('FRONT').width,x0=S/2-(w1+w2)/2;c.fillStyle='#eef2f4';c.fillText('CUBE',x0,S/2+440);c.fillStyle='#f3b54a';c.fillText('FRONT',x0+w1,S/2+440);
   res.splash=sv.toDataURL('image/png');return res;})()`));
 for(const [k,v] of Object.entries(out)){fs.writeFileSync(`../art/${k}.png`,Buffer.from(v.split(',')[1],'base64'));}
 console.log('ok');await b.close();

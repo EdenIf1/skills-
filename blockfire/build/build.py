@@ -22,9 +22,9 @@ meta='''<meta charset="utf-8">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Blockfire">
+<meta name="apple-mobile-web-app-title" content="Cubefront">
 <meta name="format-detection" content="telephone=no">
-<meta name="description" content="Blocky 6v6 shooter: build cover, team up with friends, five maps, zombies, crates and a full store.">
+<meta name="description" content="Blocky team shooter: build cover, team up with friends, 12v12 Warzone, zombies, crates and a full store.">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
