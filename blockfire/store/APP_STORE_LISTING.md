@@ -1,0 +1,100 @@
+# Blockfire · App Store Connect listing
+
+Everything to paste into App Store Connect, field by field. Lengths are within Apple's limits.
+
+## App information
+| Field | Value |
+|---|---|
+| Name (30) | Blockfire: Block Shooter |
+| Subtitle (30) | Build cover. Win the fight. |
+| Bundle ID | com.edenif1.blockfire |
+| SKU | blockfire-ios-001 |
+| Primary category | Games · Action |
+| Secondary category | Games · Arcade |
+| Content rights | Contains no third-party content (all art and code are original or open source; see licenses.html) |
+| Price | Free · no in-app purchases |
+| Devices | iPhone only, landscape |
+
+## URLs
+| Field | Value |
+|---|---|
+| Privacy policy | https://edenif1.github.io/skills-/privacy.html (or the raw.githack.com link until GitHub Pages is on) |
+| Support URL | https://edenif1.github.io/skills-/support.html |
+| Marketing URL | https://edenif1.github.io/skills-/ |
+
+## Promotional text (170)
+New: build your own cover mid-fight with dirt, glass, brick, concrete and steel blocks. Plus a bigger store with 3D previews and six rarities of crate loot.
+
+## Description (4000)
+Blockfire is a fast, blocky first-person shooter you can jump into in seconds. No sign-up needed: play as a guest and your progress is saved online from the very first match.
+
+BUILD COVER MID-FIGHT
+Pinned down? Throw up a wall. Place dirt, wood, glass, sandbags, brick, concrete or steel blocks wherever you aim. Every block you build can be shot or blown up, even on the Indestructible map, so the battlefield keeps changing.
+
+6 V 6 BLOCK WARFARE
+Team Deathmatch, Knives Only, Snipers Only and Indestructible modes across five hand-built maps. Bots fill every empty spot, so a match is always ready.
+
+PLAY WITH FRIENDS
+Open a room, send the invite link, and play together in seconds. Your friends join your team or balanced teams, with bots topping up the rest.
+
+HOLD THE HOUSE
+Team up against waves of zombies. Board the windows, buy weapons off the walls, grab the gas mask upstairs and survive four difficulty levels.
+
+A FULL ARMORY
+Rifles, SMGs, shotguns, an LMG, a sniper rifle, a magnum and a rocket launcher. Fit scopes, grips and extended mags, and see every attachment and camo in a live 3D preview before you buy.
+
+LOOT WITH SIX RARITIES
+Open supply crates for camos, character skins, building blocks, titles, banners and kill effects, from Common to Mythic. Odds are always shown, duplicates turn into GP, and a pity counter guarantees an Epic or better within 30 crates.
+
+MAKE IT YOURS
+Skins, armor, titles, banners and loadouts. Level up, earn GP, finish daily challenges and climb the leaderboards.
+
+Built for iPhone: smooth touch controls with a second fire button, aim assist, haptics, and full offline single-player.
+
+## Keywords (100)
+block,shooter,fps,pixel,voxel,multiplayer,zombies,build,sniper,cubes,friends,battle,arena,offline
+
+## What's new (version 1.0.0)
+First release on the App Store. Building, a new store with 3D previews, six-rarity crates, online accounts and much more.
+
+## Age rating answers (expect 12+)
+| Question | Answer |
+|---|---|
+| Cartoon or fantasy violence | Frequent/Intense (blocky characters, guns, explosions) |
+| Realistic violence | None |
+| Prolonged graphic or sadistic violence | None |
+| Profanity or crude humor | None |
+| Mature/suggestive themes | None |
+| Horror/fear themes | Infrequent/Mild (zombies) |
+| Medical, alcohol, tobacco, drugs | None |
+| Simulated gambling | None (crates give only in-game items for in-game GP, no real money) |
+| Sexual content or nudity | None |
+| Contests | None |
+| Unrestricted web access | No |
+| User-generated content / chat | Usernames are visible to other players; there is no chat. Players can report from Settings → Help |
+| Loot boxes / random items (if asked) | Yes: crates with in-game currency only, odds shown in the game |
+
+## App Privacy (nutrition label)
+Data used to track you: **None**. Data linked to you:
+| Data type | Purpose |
+|---|---|
+| Identifiers → User ID | App functionality |
+| User content → Gameplay content | App functionality |
+| User content → Customer support | App functionality |
+| Diagnostics → Crash data | App functionality |
+Not collected: contact info (unless the player types an email in Help), location, contacts, health, financial, browsing, search, purchases, usage data for analytics, advertising data.
+
+## Export compliance
+Uses only standard encryption (HTTPS, WebRTC DTLS). `ITSAppUsesNonExemptEncryption = NO` is already set in Info.plist, so no questions appear on upload.
+
+## App Review notes (paste and fill in)
+Blockfire works without an account: a guest account is created automatically on first launch and progress is saved online.
+To test a full account: open Profile (top right) → Account → "Save my account", or log in with the test account below.
+Test account: username ______ · password ______   (create it in the game first; do not commit it to the repository)
+Multiplayer: tap "Invite friends", then open the invite link on a second device, or press Play for a match with bots.
+Account deletion: Profile → Account → Delete account (type DELETE).
+Building: in any mode except Zombies, hold BUILD and release to place a block.
+
+## Screenshots (iPhone 6.9", 2868 × 1320, landscape)
+In `store/screenshots/`, upload in this order: 1-battle, 2-build, 3-zombies, 4-store, 5-crates, 6-character, 7-home.
+App icon: `store/AppIcon-1024.png` (already inside the Xcode project).

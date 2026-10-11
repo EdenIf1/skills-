@@ -1,0 +1,19 @@
+{
+  "appId": "com.edenif1.blockfire",
+  "appName": "Blockfire",
+  "webDir": "www",
+  "backgroundColor": "#0b0f15",
+  "ios": {
+    "contentInset": "never",
+    "backgroundColor": "#0b0f15",
+    "scrollEnabled": false,
+    "allowsLinkPreview": false,
+    "preferredContentMode": "mobile",
+    "webContentsDebuggingEnabled": false
+  },
+  "plugins": {
+    "SplashScreen": { "launchShowDuration": 900, "launchAutoHide": true, "backgroundColor": "#0b0f15", "showSpinner": false, "iosSpinnerStyle": "small" },
+    "StatusBar": { "overlaysWebView": true, "style": "DARK" },
+    "CapacitorUpdater": { "autoUpdate": false, "resetWhenUpdate": true, "appReadyTimeout": 15000 }
+  }
+}
