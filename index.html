@@ -2,20 +2,19 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <meta name="theme-color" content="#0d1116">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Blockfire">
-<meta name="description" content="Blocky 6v6 shooter with bots, five maps, a shop and killstreaks. Plays in the browser.">
+<meta name="format-detection" content="telephone=no">
+<meta name="description" content="Blocky 6v6 shooter: build cover, team up with friends, five maps, zombies, crates and a full store.">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <title>Blockfire</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Teko:wght@400;500;600&family=Silkscreen:wght@400;700&family=Chakra+Petch:wght@400;600&display=swap">
+<link rel="stylesheet" href="fonts.css">
 <style>
 /* Layout: full-bleed 3D canvas; HUD pinned to the corners inside the safe areas; menus are panels floating over a live bot match */
 :root{
@@ -122,6 +121,13 @@ body.touch #squad{top:calc(var(--st) + 160px);right:calc(var(--sr) + 12px);font-
 #res{font-size:24px;color:var(--dim);margin-left:4px;font-variant-numeric:tabular-nums}
 #mag.low{color:var(--red)}
 #nades{font-size:16px;letter-spacing:.1em;color:var(--amber)}
+#blocksHud{font-size:15px;letter-spacing:.08em;color:#b9e6c4}
+body.touch #blocksHud{display:none}
+.tb[data-b=bsel]{background-size:78%;background-position:center;background-repeat:no-repeat;image-rendering:pixelated}
+.tb[data-b=build].empty{opacity:.45}
+.tb[data-b=build]{right:calc(var(--sr) + 236px);bottom:calc(var(--sb) + 126px);width:58px;height:44px;border-radius:9px;font-size:16px;border-color:rgba(111,208,140,.8);background:rgba(111,208,140,.2)}
+.tb[data-b=build].on{background:rgba(111,208,140,.55)}
+.tb[data-b=bsel]{right:calc(var(--sr) + 300px);bottom:calc(var(--sb) + 130px);width:40px;height:36px;border-radius:8px;font-size:18px}
 #reloadTxt{font-size:18px;color:var(--amber);letter-spacing:.15em}
 #streak{display:flex;gap:4px;justify-content:flex-end;margin-top:3px}
 #streak span{font-size:14px;letter-spacing:.08em;padding:1px 6px 0;border:1px solid var(--line);color:var(--dim)}
@@ -189,6 +195,8 @@ body.touch #score .tm{font-size:30px;min-width:48px}
   .tb[data-b=nade]{right:calc(var(--sr) + 184px);bottom:calc(var(--sb) + 64px);width:48px;height:48px;font-size:15px}
   .tb[data-b=aim]{right:calc(var(--sr) + 34px);bottom:calc(var(--sb) + 118px)}
   .tb[data-b=mine]{right:calc(var(--sr) + 238px);bottom:calc(var(--sb) + 64px);width:48px;height:48px;font-size:15px}
+  .tb[data-b=build]{right:calc(var(--sr) + 212px);bottom:calc(var(--sb) + 118px);width:54px;height:40px;font-size:15px}
+  .tb[data-b=bsel]{right:calc(var(--sr) + 272px);bottom:calc(var(--sb) + 122px);width:36px;height:34px;font-size:16px}
   #wpills div{font-size:14px;padding:4px 8px 2px}
   .tb[data-b=board]{width:52px;height:30px}
 }
@@ -382,6 +390,25 @@ body.touch .ctrl.desk{display:none} body:not(.touch) .ctrl.mob{display:none}
 .stat b i{display:block;height:100%;background:var(--ink)}
 .item .price{font-size:20px;color:var(--green)}
 .sw{height:22px;border:1px solid var(--line)}
+.legal{margin-top:12px;font-family:var(--f-body);font-size:12px;color:var(--dim);display:flex;gap:6px 14px;flex-wrap:wrap}.legal a{color:var(--dim)}
+.helpForm{display:flex;flex-direction:column;gap:8px;margin-top:10px}.helpForm select,.helpForm textarea,.helpForm input{font-size:16px;width:100%;box-sizing:border-box}
+#updReq{z-index:80}#help{z-index:60}
+.hMotd{position:absolute;left:50%;transform:translateX(-50%);top:calc(var(--st) + 56px);z-index:3;background:rgba(243,181,74,.16);border:1px solid rgba(243,181,74,.6);color:var(--ink);font-family:var(--f-body);font-size:13px;padding:6px 12px;max-width:min(560px,90vw);text-align:center}
+.cloudDanger{margin-top:10px;border-top:1px solid var(--line);padding-top:8px}.btn.danger{background:rgba(239,90,79,.25);border-color:rgba(239,90,79,.8);color:#ffd0cc}
+
+#shop .sheet{width:min(1040px,100%);background:#10151c;border:1px solid var(--line)}
+.shopBody{display:grid;grid-template-columns:minmax(230px,34%) 1fr;gap:12px;align-items:start;margin-top:8px}
+.shopBody.noPv{grid-template-columns:1fr}.shopBody.noPv .shopPv{display:none}
+.shopPv{position:sticky;top:0;background:radial-gradient(ellipse at 50% 40%,rgba(90,110,130,.35),rgba(0,0,0,.45));border:1px solid var(--line);padding:6px;z-index:2}
+#shopCv{display:block;width:100%;aspect-ratio:480/260;height:auto}
+.pvInfo{font-size:16px;letter-spacing:.05em;text-align:center;min-height:22px;color:var(--ink)}.pvInfo small{display:block;font-family:var(--f-body);font-size:12px;color:var(--dim);letter-spacing:0}
+.item .thumb{display:block;width:100%;height:78px;object-fit:contain;background:radial-gradient(ellipse at 50% 55%,rgba(255,255,255,.08),rgba(0,0,0,0) 70%);image-rendering:auto}
+.item .thumb.px{image-rendering:pixelated}
+.item[data-pv]{cursor:pointer}.item.pv{outline:2px solid rgba(91,156,240,.85);outline-offset:-2px}
+.tierline{height:3px;margin:-10px -12px 2px}
+@media (max-width:700px){.shopBody{grid-template-columns:1fr}.shopPv{position:relative}#shopCv{max-height:150px;margin:0 auto;width:auto;max-width:100%}}
+@media (max-height:500px){#shop .sheet{padding:10px 14px}.shopBody{grid-template-columns:minmax(200px,32%) 1fr}.item .thumb{height:62px}.item h3{font-size:20px}}
+
 .lobStart{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .lobCard{background:rgba(0,0,0,.32);border:1px solid var(--line);padding:14px 16px}
 .lobCard h3{font-family:var(--f-hud);font-size:30px;margin:2px 0 0;letter-spacing:.04em}.lobCard p{font-family:var(--f-body);font-size:13px;color:var(--dim);margin:4px 0 12px}
@@ -422,6 +449,17 @@ body.touch .ctrl.desk{display:none} body:not(.touch) .ctrl.mob{display:none}
 .shopHead{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
 #crate .sheet{text-align:center}
 .reelWrap{position:relative;overflow:hidden;height:96px;margin:14px 0;border:1px solid var(--line);background:rgba(0,0,0,.35)}
+
+#reel div{flex:0 0 120px;height:92px;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:3px;font-size:14px}
+#reel div span{line-height:1.05}#reel div img{width:96px;height:42px;object-fit:contain;image-rendering:auto}
+#reel div.r0{border-color:#59606a}#reel div.r1{border-color:#6fd08c;color:#c8f0d4}#reel div.r2{border-color:#5b9cf0;color:#cfe0ff}#reel div.r3{border-color:#b96cf0;color:#ecd4ff;background:rgba(185,108,240,.1)}#reel div.r4{border-color:#f3b54a;color:#f3b54a;background:rgba(243,181,74,.12)}#reel div.r5{border-color:#ff4d6d;color:#ff9ab0;background:linear-gradient(135deg,rgba(255,77,109,.2),rgba(91,156,240,.2))}
+.reelWrap{height:110px}
+.rcard{display:block;width:84px;height:30px;border:1px solid rgba(255,255,255,.2)}.rfx{display:flex;gap:4px}.rfx b{width:12px;height:12px;border-radius:50%}
+.rtitle{font-style:normal;font-family:var(--f-hud);font-size:15px;color:#fff}.rcoin{font-style:normal;display:grid;place-items:center;width:38px;height:38px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff0b0,#d4a537 60%,#7a5a10);color:#3a2a00;font-size:13px;font-family:var(--f-hud)}.rcoin.xp{background:radial-gradient(circle at 35% 35%,#d4ecff,#5b9cf0 60%,#1d3f6a);color:#06182e}
+@media (max-height:500px){#crate .sheet{padding:8px 14px}#crate h2{font-size:20px;margin:0}#crate .sheet>div:nth-of-type(1){display:none}.reelWrap{height:100px;margin:6px 0}#reel div{height:84px}#crateWin{font-size:18px}#crate .row{margin-top:4px!important}.odds{margin-top:2px;font-size:12px}}
+.odds{display:flex;flex-wrap:wrap;gap:6px 12px;justify-content:center;font-size:14px;margin-top:8px}
+#crateWin small{display:block;font-size:14px;color:var(--dim)}.rtier{display:block;font-size:14px;letter-spacing:.18em;text-transform:uppercase}
+.reelWrap{height:110px}
 .reelWrap::after{content:"";position:absolute;left:50%;top:0;bottom:0;width:3px;margin-left:-1.5px;background:var(--amber);box-shadow:0 0 8px var(--amber)}
 #reel{position:absolute;left:0;top:0;display:flex;gap:6px;padding:8px 0;will-change:transform}
 #reel div{box-sizing:border-box;flex:0 0 110px;height:78px;display:grid;place-items:center;text-align:center;font-size:18px;line-height:1;border:1px solid var(--line);background:rgba(255,255,255,.04);padding:4px}
@@ -460,6 +498,7 @@ body.touch .ctrl.desk{display:none} body:not(.touch) .ctrl.mob{display:none}
     <div id="wname">KV-47</div>
     <div><span id="mag">30</span><span id="res">/ 120</span></div>
     <div id="nades">GRENADES ◆</div>
+    <div id="blocksHud" hidden></div>
     <div id="reloadTxt" hidden>RELOADING</div>
     <div id="streak"><span data-k="3">UAV 3</span><span data-k="5">AIR 5</span><span data-k="15">NUKE 15</span></div>
   </div>
@@ -489,6 +528,8 @@ body.touch .ctrl.desk{display:none} body:not(.touch) .ctrl.mob{display:none}
     <div class="tb" data-b="aim">AIM</div>
     <div class="tb" data-b="nade">NADE</div>
     <div class="tb" data-b="mine">MINE</div>
+    <div class="tb" data-b="build">BUILD</div>
+    <div class="tb" data-b="bsel">▣</div>
   </div>
 </div>
 
@@ -511,6 +552,7 @@ body.touch .ctrl.desk{display:none} body:not(.touch) .ctrl.mob{display:none}
       <div class="hCard" id="hCard"><div class="badge" id="pLvl">1</div><div class="hcTxt"><b id="hName">Player</b><span id="pRank">Trainee</span><span id="hSave" class="hSave" hidden></span><span id="pXp" hidden></span><div class="xpbar"><b id="pXpBar" style="width:0"></b></div></div></div>
     </div>
   </header>
+  <div class="hMotd" id="hMotd" hidden></div>
   <main class="hMain">
     <section class="hLeft">
       <p class="eyebrow">Choose a mode</p>
@@ -552,15 +594,18 @@ body.touch .ctrl.desk{display:none} body:not(.touch) .ctrl.mob{display:none}
       <button class="chip" data-tab="att">Attachments</button>
       <button class="chip" data-tab="gear">Equipment</button>
       <button class="chip" data-tab="camo">Camos</button>
+      <button class="chip" data-tab="blocks">Blocks</button>
     </div>
-    <div class="grid" id="shopGrid"></div>
+    <div class="shopBody" id="shopBody"><div class="shopPv" id="shopPv"><canvas id="shopCv" width="480" height="260"></canvas><div class="pvInfo" id="pvInfo"></div></div>
+    <div class="grid" id="shopGrid"></div></div>
   </div>
 </div>
 
 <div id="crate" class="overlay" hidden>
   <div class="sheet cut">
     <h2>SUPPLY CRATE</h2>
-    <div style="font-family:var(--f-body);font-size:13px;color:var(--dim)">GP drops often. Character skins and camos are rarer. Weapons are very rare. One free crate every day.</div>
+    <div style="font-family:var(--f-body);font-size:13px;color:var(--dim)">Six rarities, from Common to Mythic. Duplicates turn into GP. One free crate every day.</div>
+    <div class="odds" id="crateOdds"></div><div id="cratePity" class="note"></div>
     <div class="reelWrap"><div id="reel"></div></div>
     <div id="crateWin">&nbsp;</div>
     <div class="row" style="justify-content:center;margin-top:10px">
@@ -583,7 +628,7 @@ body.touch .ctrl.desk{display:none} body:not(.touch) .ctrl.mob{display:none}
       <div class="charPrev"><canvas id="charCv" width="320" height="400"></canvas>
         <div class="charName"><input id="callsign" maxlength="14" autocomplete="off" spellcheck="false" aria-label="Callsign"><small id="charSub"></small></div></div>
       <div class="charRight"><div class="tabs" id="charTabs">
-        <button class="chip on" data-ct="bag">Loadout</button><button class="chip" data-ct="skins">Skins</button><button class="chip" data-ct="armor">Armor</button><button class="chip" data-ct="gear">Equipment</button></div>
+        <button class="chip on" data-ct="bag">Loadout</button><button class="chip" data-ct="skins">Skins</button><button class="chip" data-ct="armor">Armor</button><button class="chip" data-ct="gear">Equipment</button><button class="chip" data-ct="style">Style</button></div>
         <div id="charBody"></div></div>
     </div>
   </div>
@@ -607,12 +652,37 @@ body.touch .ctrl.desk{display:none} body:not(.touch) .ctrl.mob{display:none}
       <b>1 / 2 · Q · R · G · F</b><span>Pick or swap weapon, reload, grenade, place a mine</span>
       <b>E · X</b><span>Pick up a weapon (buy in Zombies), throw your weapon away</span>
       <b>Tab · Esc</b><span>Scoreboard, pause</span>
+      <b>B · V</b><span>Hold B to see where a block goes, let go to build. V picks the block type</span>
     </div>
     <div class="ctrl mob">
       <b>Left side</b><span>Stick to move (push it all the way up to run). TAB in the top-left corner opens the scoreboard.</span>
       <b>Two triggers</b><span>A small FIRE next to the stick lets you shoot with your left thumb while your right thumb aims.</span>
       <b>Right side</b><span>FIRE, JUMP, SPRINT, RLD, AIM and NADE around your thumb. Tap a weapon name to switch, DROP to throw it. Drag any empty spot to look.</span>
+      <b>Building</b><span>Hold BUILD and drag to aim, let go to place the block. The small square next to it picks the block type.</span>
     </div>
+    <div class="row" style="margin-top:12px"><button class="btn sm cut" id="openHelp">Help &amp; feedback</button></div>
+    <div class="legal" id="legal"></div>
+  </div>
+</div>
+<div id="help" class="overlay" hidden>
+  <div class="sheet cut">
+    <div class="shopHead"><h2>HELP</h2><button class="btn sm ghost cut" id="helpClose">Close</button></div>
+    <div class="note">Found a bug, lost progress, or have an idea? Tell us here. We read every message.</div>
+    <div class="form helpForm">
+      <select id="hpTopic"><option value="bug">Something is broken</option><option value="account">My account or progress</option><option value="purchase">The store or crates</option><option value="report">Report a player</option><option value="idea">An idea</option><option value="other">Something else</option></select>
+      <textarea id="hpMsg" rows="5" maxlength="2000" placeholder="What happened? The more detail, the faster we can help."></textarea>
+      <input id="hpContact" maxlength="120" placeholder="Email or name to reply to (optional)" autocomplete="email">
+      <button class="btn cut" id="hpSend">Send</button>
+    </div>
+    <div id="hpMsgOut" class="note"></div>
+    <div class="legal" id="legal2"></div>
+  </div>
+</div>
+<div id="updReq" class="overlay" hidden>
+  <div class="sheet cut" style="text-align:center">
+    <h2>UPDATE NEEDED</h2>
+    <p class="note" id="updTxt">A new version of Blockfire is out. Update to keep playing online with everyone.</p>
+    <div class="row" style="justify-content:center"><button class="btn cut" id="updGo">Update now</button><button class="btn ghost cut" id="updLater">Play offline</button></div>
   </div>
 </div>
 <div id="acct" class="overlay" hidden>
@@ -679,7 +749,7 @@ function levelInfo(xp){let l=1,rest=xp;while(l<RANKS.length&&rest>=xpForLevel(l)
 const newStats=()=>({kills:0,deaths:0,heads:0,shots:0,hits:0,matches:0,wins:0,time:0,knife:0,boom:0,nukes:0,bestStreak:0,weap:{},maps:{}});
 const makeProfile=(name)=>({name:name||'Recruit',gp:1500,xp:0,owned:['ak47','m4a1'],slots:['ak47','m4a1'],camos:['none'],camo:'none',nadeLvl:1,map:'junk',daily:null,login:{last:'',streak:0},best:0,
   att:{},attOwn:{m4a1:['holo']},equip:'frag',equipOwn:['frag'],mineLvl:0,stats:newStats(),history:[],created:Date.now(),
-  skin:'std',skins:['std'],armorOwn:[],armor:{},fillBots:true,zdiff:'medium'});
+  skin:'std',skins:['std'],armorOwn:[],armor:{},fillBots:true,zdiff:'medium',v:2,blocks:['dirt'],block:'dirt',bagLvl:0,titles:['recruit'],title:'recruit',cards:['steel'],card:'steel',killfxs:[],killfx:'',pity:{e:0,l:0},crates:0});
 let profile,USERS;
 function readUsers(){
   let u=null;try{u=JSON.parse(localStorage.getItem('blockfire.users')||'null');}catch(e){}
@@ -688,6 +758,10 @@ function readUsers(){
     let old=null;try{old=JSON.parse(localStorage.getItem('blockfire.v1')||'null');}catch(e){}
     if(old){const n=(old.name||'Player').slice(0,14);u.users[n]={pin:'',p:old};u.cur=n;}
   }
+  // a damaged save never stops the game: keep only users that look like users
+  if(typeof u.users!=='object'||Array.isArray(u.users))u.users={};
+  for(const n of Object.keys(u.users)){const x=u.users[n];if(!x||typeof x!=='object'||Array.isArray(x)||(x.p!=null&&(typeof x.p!=='object'||Array.isArray(x.p))))delete u.users[n];else if(!x.p)x.p={};}
+  if(typeof u.cur!=='string')u.cur='';
   // older saves kept PINs as plain text: hash them in place
   for(const n in u.users){const x=u.users[n];if(x&&typeof x.pin==='string'&&x.pin)x.pin=makePin(x.pin);}
   return u;
@@ -703,9 +777,14 @@ function pinOk(u,pin){if(!u.pin)return true;if(typeof u.pin==='string')return u.
 // usernames are unique on this device whatever the capitals or spaces; "Player" stays the guest's name
 const nameKey=n=>String(n||'').toLowerCase().replace(/\s+/g,'');
 function nameTaken(n){const k=nameKey(n);return k==='player'||Object.keys(USERS.users).some(x=>nameKey(x)===k);}
-function fillProfile(p,name){const base=makeProfile(name);const out=Object.assign(base,p||{});out.stats=Object.assign(newStats(),out.stats||{});out.attOwn=out.attOwn||{};if(!out.attOwn.m4a1)out.attOwn.m4a1=['holo'];return out;}
+// every save carries a version; older saves are brought up to date here, and saves from a newer game keep their extra fields
+const SCHEMA=2;
+function migrateProfile(p){if(!p||typeof p!=='object')return {};const v=p.v|0;
+  if(v<2){if(!Array.isArray(p.blocks))p.blocks=['dirt'];if(!Array.isArray(p.titles))p.titles=['recruit'];if(!Array.isArray(p.cards))p.cards=['steel'];if(!Array.isArray(p.killfxs))p.killfxs=[];if(!p.pity)p.pity={e:0,l:0};}
+  if(v<SCHEMA)p.v=SCHEMA;return p;}
+function fillProfile(p,name){const base=makeProfile(name);const out=Object.assign(base,migrateProfile(p));out.stats=Object.assign(newStats(),out.stats||{});out.attOwn=out.attOwn||{};if(!out.attOwn.m4a1)out.attOwn.m4a1=['holo'];return out;}
 function loadProfile(){
-  USERS=readUsers();
+  if(!USERS)USERS=readUsers();
   if(!USERS.cur||!USERS.users[USERS.cur]){const n='Player';USERS.users[n]=USERS.users[n]||{pin:'',guest:true,p:makeProfile(n)};USERS.cur=n;}
   profile=fillProfile(USERS.users[USERS.cur].p,USERS.cur);
 }
@@ -855,6 +934,12 @@ async function cloudLogin(name,pass){
   const p=row.data&&typeof row.data.xp==='number'?fillProfile(row.data,CS.name):fillProfile(Object.assign({},profile),CS.name);
   const merged=!!(row.data&&isGuest(USERS.cur)&&hasProgress(USERS.users[USERS.cur].p));
   cloudAdopt(CS.name,p);CS.ver=row.updated_at||'';CS.dirty=merged||!row.data;cloudKeep();cloudReady=true;if(CS.dirty)await cloudPush();else cloudLast=Date.now();return cloudErr;}
+// delete the account on the server (App Store rule), then forget it on this device
+async function cloudDelete(){if(!CS)return 'You are not logged in.';if(!await cloudFresh())return 'No connection to the save server. Check your internet and try again.';
+  const r=await cloudReq('/functions/v1/delete-account',{method:'POST',body:{confirm:'DELETE'}});
+  if(!r.ok)return r.status?'The server could not delete the account (error '+r.status+'). Try again, or contact us from Help.':'No connection to the save server. Check your internet and try again.';
+  const n=CS.name;CS=null;cloudKeep();cloudReady=false;clearTimeout(cloudT);cloudT=0;
+  if(USERS.users[n])delete USERS.users[n];USERS.cur='';try{localStorage.setItem('blockfire.users',JSON.stringify(USERS));}catch(e){}loadProfile();afterSwitch();setTimeout(cloudSync,400);return '';}
 async function cloudLogout(){if(cloudMine()&&cloudReady)await cloudPush();const n=CS&&CS.name;CS=null;cloudKeep();cloudReady=false;
   // the account stays safe online; this device keeps nothing of it
   if(n&&USERS.users[n]){delete USERS.users[n];USERS.cur='';try{localStorage.setItem('blockfire.users',JSON.stringify(USERS));}catch(e){}loadProfile();afterSwitch();}}
@@ -867,6 +952,39 @@ async function cloudSync(){
   else if(row.updated_at!==CS.ver){if(await cloudResolve(row)==='push')cloudPush();else cloudLast=Date.now();}
   else{cloudLast=Date.now();if(CS.dirty)cloudPush();}
   if(!$('acct').hidden)renderAcct();renderHome();}
+/* ================= version, remote settings, crash reports ================= */
+const APP_VERSION='1.0.0';
+const verNum=v=>String(v||'0').split('.').slice(0,3).map(n=>parseInt(n)||0).reduce((a,n)=>a*1000+n,0);
+let RCFG={};try{RCFG=JSON.parse(localStorage.getItem('blockfire.rcfg')||'{}')||{};}catch(e){RCFG={};}
+const feat=k=>!(RCFG.features&&RCFG.features[k]===false);
+async function loadConfig(){if(!cloudOn())return;const r=await cloudReq('/rest/v1/app_config?select=key,value',{auth:false});if(!r.ok||!Array.isArray(r.j))return;
+  const o={};for(const x of r.j)if(x&&typeof x.key==='string')o[x.key]=x.value;RCFG=o;try{localStorage.setItem('blockfire.rcfg',JSON.stringify(o));}catch(e){}applyConfig();}
+let updSkipped=false;
+function applyConfig(){
+  const m=$('hMotd');if(m){const t=String(RCFG.maintenance||RCFG.motd||'').slice(0,200);m.hidden=!t;m.textContent=t;}
+  if(RCFG.min_version&&verNum(RCFG.min_version)>verNum(APP_VERSION)&&!updSkipped)$('updReq').hidden=false;
+  const oc=$('openCrate');if(oc)oc.hidden=!feat('crates');
+  if(typeof renderHome==='function'&&$('hParty'))try{renderHome();}catch(e){}}
+// one report per distinct problem, at most 20 a session
+const errSeen=new Set();let errN=0;
+function reportErr(where,e){try{const msg=String(e&&e.message||e||'?').slice(0,400),key=where+'|'+msg;if(errSeen.has(key)||errN>=20)return;errSeen.add(key);errN++;
+  (window.__bfErrs=window.__bfErrs||[]).push(where+': '+msg);
+  if(!cloudOn()||!navigator.onLine)return;
+  cloudReq('/rest/v1/client_errors',{method:'POST',auth:!!CS,headers:{Prefer:'return=minimal'},body:{app_version:APP_VERSION,message:msg,stack:String(e&&e.stack||'').slice(0,2000),where_:String(where).slice(0,60),device:navigator.userAgent.slice(0,160)}});}catch(x){}}
+addEventListener('error',ev=>reportErr('window',ev.error||ev.message));
+addEventListener('unhandledrejection',ev=>reportErr('promise',ev.reason));
+/* the iPhone app (Capacitor): live updates of the game files, haptics, app info */
+const CAP=window.Capacitor&&typeof window.Capacitor.isNativePlatform==='function'&&window.Capacitor.isNativePlatform()?window.Capacitor:null;
+const capPlug=n=>CAP&&CAP.Plugins&&CAP.Plugins[n]||null;
+const UPDATE_URL='https://raw.githubusercontent.com/EdenIf1/skills-/gh-pages/app/update.json';
+async function liveUpdate(){const U=capPlug('CapacitorUpdater');if(!U)return;try{await U.notifyAppReady();}catch(e){}
+  try{const r=await fetch(UPDATE_URL+'?t='+Date.now(),{cache:'no-store'});if(!r.ok)return;const m=await r.json();
+    if(!m||!m.version||!m.url||verNum(m.version)<=verNum(APP_VERSION))return;
+    const A=capPlug('App');if(m.minNative&&A){const info=await A.getInfo();if(verNum(m.minNative)>verNum(info.version))return;}
+    const b=await U.download({url:m.url,version:m.version,checksum:m.checksum||undefined});await U.next({id:b.id});toast('Update downloaded · it installs next time you open the game');}
+  catch(e){reportErr('update',e);}}
+function haptic(style){const H=capPlug('Haptics');if(!H||SET.haptics===false)return;try{H.impact({style:style||'LIGHT'});}catch(e){}}
+setTimeout(()=>{loadConfig();liveUpdate();},800);setInterval(()=>{if(!document.hidden)loadConfig();},10*60*1000);
 setTimeout(cloudSync,300);addEventListener('online',()=>{cloudSync();if(cloudReady)cloudQueue();});setInterval(()=>{if(!cloudReady)cloudSync();},60000);
 
 const SET_DEFAULT={sens:1,adsSens:1,invert:false,vol:.8,quality:'auto',fov:75,btnScale:1,btnAlpha:1,fps:false,aim:true};
@@ -1744,13 +1862,19 @@ const CAMOS={
   woodland:{name:'Woodland',tex:[[60,80,44],[90,104,60],[44,52,34],[110,90,60]],price:1200},
   urban:{name:'Urban',tex:[[70,72,76],[110,112,116],[40,42,46],[150,152,156]],price:1500},
   dragon:{name:'Dragon',tex:[[160,30,30],[200,50,40],[90,16,16],[240,120,40]],price:4000},
-  gold:{name:'Gold',color:0xd4a537,emissive:0x3a2a00,price:15000}
+  gold:{name:'Gold',color:0xd4a537,emissive:0x3a2a00,price:15000},
+  tiger:{name:'Tiger',tex:[[226,128,34],[30,24,20],[240,160,60],[200,100,24]],crate:1},
+  digital:{name:'Digital',tex:[[44,82,140],[70,120,190],[24,48,92],[120,170,230]],crate:1},
+  carbon:{name:'Carbon',tex:[[30,32,36],[52,55,60],[20,21,24],[74,78,84]],crate:1},
+  neon:{name:'Neon',tex:[[255,40,180],[30,240,255],[120,40,255],[20,20,40]],crate:1,emissive:0x220a2a},
+  lava:{name:'Lava',tex:[[255,90,20],[60,16,8],[255,180,40],[120,24,10]],crate:1,emissive:0x3a0c00},
+  diamond:{name:'Diamond',color:0x9fe8ff,emissive:0x0a2a3a,crate:1,shiny:1}
 };
 const camoMats={};
 function camoMat(id){
   if(camoMats[id])return camoMats[id];const c=CAMOS[id]||CAMOS.none;let m;
   if(c.tex)m=new THREE.MeshPhongMaterial({map:stex(g=>camo(g,c.tex)),shininess:25,specular:0x2a2a2a});
-  else if(id==='gold')m=new THREE.MeshPhongMaterial({color:c.color,shininess:110,specular:0xfff0b0});
+  else if(id==='gold'||c.shiny)m=new THREE.MeshPhongMaterial({color:c.color,shininess:120,specular:c.shiny?0xffffff:0xfff0b0});
   else m=GM.met;
   if(c.emissive)m.emissive=new THREE.Color(c.emissive);
   return camoMats[id]=m;
@@ -1800,12 +1924,12 @@ function respawn(e){
     for(const o of ents)if(o.alive&&o.team!==e.team&&o.inMatch!==false)md=Math.min(md,Math.hypot(o.x-c[0],o.z-c[2]));
     for(const o of ents)if(o.alive&&o!==e&&Math.hypot(o.x-c[0],o.z-c[2])<.8)md-=50;
     if(md>bd){bd=md;best=c;}}
-  e.x=best[0];e.y=best[1];e.z=best[2];e.vx=e.vy=e.vz=0;e.hp=e.maxHp||100;e.alive=true;e.spawnProt=1.5;e.smoothY=0;e.onGround=false;e.lastAttacker=null;e.streak=0;
+  e.x=best[0];e.y=best[1];e.z=best[2];e.vx=e.vy=e.vz=0;e.bl=64;e.hp=e.maxHp||100;e.alive=true;e.spawnProt=1.5;e.smoothY=0;e.onGround=false;e.lastAttacker=null;e.streak=0;
   e.yaw=Math.atan2(-(MAP.center[0]-e.x),-(MAP.center[2]-e.z));e.pitch=0;
   if(e.isPlayer){
     loadout=isZ()?Z.loadout.slice():MAP.mode==='knife'?['knife']:MAP.mode==='sniper'?['awm']:profile.slots.map(id=>WEAPONS[id]?id:'ak47');
     LW=loadout.map(effW);ammo=LW.map(w=>({mag:w.mag,reserve:w.reserve}));cur=0;nades=noNades()?0:profile.nadeLvl;minesLeft=noNades()?0:profile.mineLvl;reloadT=0;swapT=.35;bloom=0;recoilP=0;ads=false;
-    buildViewmodels();$('death').hidden=true;
+    buildViewmodels();$('death').hidden=true;buildLeft=bagSize();
   }else{
     e.mesh.visible=true;e.mesh.rotation.x=0;e.gun.visible=MAP.mode!=='knife';e.weapon=MAP.mode==='knife'?'Knife':MAP.mode==='sniper'?'Longbow .338':e.baseWeapon;e.meleeCD=0;e.mesh.position.set(e.x,e.y,e.z);e.path=null;e.target=null;e.seeing=false;e.lastSeenT=0;e.burst=0;e.fireCD=.3;e.deadT=0;
   }
@@ -1959,8 +2083,10 @@ function buildGun(model,cm,bot,att){
   g.userData=ud;return g;
 }
 let vmGuns=[];
+// free the GPU memory of an object we throw away: its geometry, and the texture of a label sprite (shared materials stay)
+function freeObj(o){if(!o)return;o.traverse(m=>{if(m.geometry&&m.geometry!==boxGeo)m.geometry.dispose();if(m.isSprite&&m.material){if(m.material.map)m.material.map.dispose();m.material.dispose();}});}
 function buildViewmodels(){
-  for(const g of vmGuns)VM.remove(g);
+  for(const g of vmGuns){VM.remove(g);freeObj(g);}
   vmGuns=loadout.map(id=>{const g=buildGun(WEAPONS[id].model,camoMat(profile.camo),false,attOf(id));VM.add(g);return g;});
   refreshPills();
 }
@@ -1972,7 +2098,8 @@ function teamCls(e){return e.team==='blue'?'cb':'cr';}
 function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]);}
 function addFeed(killer,victim,weapon,head){
   if(state!=='play')return;
-  netEv(['k',killer?killer.name:'',killer?killer.team:'',weapon,head?1:0,victim.name,victim.team]);
+  netEv(['k',killer?killer.name:'',killer?killer.team:'',weapon,head?1:0,victim.name,victim.team,r1(victim.x),r1(victim.y),r1(victim.z)]);
+  if(killer===player&&victim!==player&&!isClient())killFx(victim.x,victim.y,victim.z);
   const d=document.createElement('div');
   if(killer===player||victim===player)d.className='me';
   d.innerHTML=(killer&&killer!==victim?`<span class="${teamCls(killer)}">${esc(killer.name)}</span>`:'')+`<em>${esc(weapon)}</em>`+(head?'<span class="hs">HEADSHOT</span>':'')+`<span class="${teamCls(victim)}">${esc(victim.name)}</span>`;
@@ -1981,7 +2108,7 @@ function addFeed(killer,victim,weapon,head){
 }
 function showMsg(text,small,cls){const d=document.createElement('div');d.className='msg'+(small?' small':'')+(cls?' '+cls:'');d.textContent=text;msgsEl.appendChild(d);while(msgsEl.children.length>4)msgsEl.firstChild.remove();setTimeout(()=>d.remove(),1750);}
 let hitT=0,vigT=0,nukeT=0;
-function hitmarker(head){const h=$('hitm');h.className=head?'hs':'';hitT=.18;sfx.hit(head);}
+function hitmarker(head){const h=$('hitm');h.className=head?'hs':'';hitT=.18;sfx.hit(head);haptic(head?'MEDIUM':'LIGHT');}
 function toast(text){const d=document.createElement('div');d.className='toast cut';d.textContent=text;document.body.appendChild(d);setTimeout(()=>d.remove(),3200);}
 
 /* ================= combat ================= */
@@ -1996,7 +2123,7 @@ function damage(v,amt,att,head,weapon,kind){
   if(att&&att!==v&&att.team===v.team)return;
   v.hp-=amt;v.lastAttacker=att;v.lastHurt=0;
   if(v.remote&&state==='play')netSendTo(v,att&&att!==v?{t:'hurt',v:Math.round(amt),ax:r1(att.x),az:r1(att.z)}:{t:'hurt',v:Math.round(amt)});
-  if(v.isPlayer){vigT=Math.min(1,vigT+amt/45);sfx.hurt();if(att&&att!==v)showDmgDir(att.x,att.z);}
+  if(v.isPlayer){vigT=Math.min(1,vigT+amt/45);sfx.hurt();haptic('HEAVY');if(att&&att!==v)showDmgDir(att.x,att.z);}
   else if(att){v.lastSeen={x:att.x,z:att.z};v.lastSeenT=6;v.scanT=0;v.alertBy=att;}
   if(v.hp<=0)kill(v,att,head,weapon,kind);
 }
@@ -2161,11 +2288,12 @@ function explode(x,y,z,owner,o){
   const R=MAP.mode==='solid'||isZ()?0:o.r,cx=Math.floor(x),cy=Math.floor(y),cz=Math.floor(z),rr=Math.ceil(R)+1;
   for(let dx=-rr;dx<=rr;dx++)for(let dy=-rr;dy<=rr;dy++)for(let dz=-rr;dz<=rr;dz++){
     const bx=cx+dx,by=cy+dy,bz=cz+dz;if(by<=0||bx<1||bz<1||bx>=W-1||bz>=D-1)continue;
-    const id=getV(bx,by,bz);if(!id||id===B.BEDROCK)continue;
+    const id=getV(bx,by,bz);if(!id||id===B.BEDROCK||PB.has(VI(bx,by,bz)))continue;
     const d=Math.hypot(bx+.5-x,by+.5-y,bz+.5-z);
     if(R>0&&d<=(HARD[id]?R*.55:R)+rand()*.4){set(bx,by,bz,0);netBlk(bx,by,bz,0);if(rand()<.4)burst(bx+.5,by+.5,bz+.5,BCOL[id],2,6,.22,1.1);}
   }
   if(R>0)worldDirty=true;
+  if(!isZ()&&!isClient()&&PB.size){const rr2=o.r+1.3;for(const b of [...PB.values()]){const d=Math.hypot(b.x+.5-x,b.y+.5-y,b.z+.5-z);if(d<rr2)hitBlock(b.x,b.y,b.z,170*(o.r/2.7)*(1-d/rr2));}}
   burst(x,y,z,0x555a60,20,5,.35,1.4);burst(x,y,z,0xffa040,12,9,.18,.4);
   boomFlash(x,y+.2,z,o.r/2.7);
   sfx.explosion(o.weapon,volAt(x,y,z,1,120),distAt(x,y,z));
@@ -2224,6 +2352,65 @@ function findTarget(b){
 }
 function botMuzzle(b){const c=Math.cos(b.yaw),s=Math.sin(b.yaw),lx=.07,lz=-.93;return[b.x+lx*c+lz*s,b.y+1.25,b.z-lx*s+lz*c];}
 function breakAt(id,x,y,z){if(MAP.mode==='solid'||isZ()||isClient()){burst(x+.5,y+.5,z+.5,BCOL[id],3,3,.08,.5);return;}set(x,y,z,0);netBlk(x,y,z,0);worldDirty=true;burst(x+.5,y+.5,z+.5,BCOL[id],8,4,.1,.8);if(id===B.GLASS)sfx.glass(volAt(x,y,z,.5));}
+
+/* ================= building: players place blocks they bought in the store (not in Zombies) ================= */
+// hp: a rifle bullet does about 15-30 to a block, a frag about 130 up close
+const BUILD={
+  dirt:{id:B.DIRT,name:'Dirt',hp:60,price:0,tier:'common',desc:'Quick cover. Breaks fast.'},
+  plank:{id:B.PLANK,name:'Wood Planks',hp:95,price:800,tier:'common',desc:'Light and cheap.'},
+  glass:{id:B.GLASS,name:'Glass',hp:45,price:1200,tier:'rare',desc:'See through it. Fragile.'},
+  sand:{id:B.SAND,name:'Sandbags',hp:120,price:1800,tier:'rare',desc:'Soaks up bullets.'},
+  cobble:{id:B.COBBLE,name:'Cobblestone',hp:150,price:2600,tier:'rare',desc:'Solid stone wall.'},
+  brick:{id:B.BRICK,name:'Brick',hp:180,price:3600,tier:'epic',desc:'Strong and classic.'},
+  concrete:{id:B.CONCRETE,name:'Concrete',hp:250,price:5500,tier:'epic',desc:'Takes two grenades.'},
+  steel:{id:B.RUST,name:'Steel Plate',hp:360,price:9500,tier:'legendary',desc:'The toughest wall you can buy.'},
+  ice:{id:B.ICE,name:'Ice',hp:70,crate:1,tier:'epic',desc:'Crate only. See-through.'},
+  cargo:{id:B.CRED,name:'Cargo Red',hp:210,crate:1,tier:'legendary',desc:'Crate only. Container steel.'},
+  cargob:{id:B.CBLUE,name:'Cargo Blue',hp:210,crate:1,tier:'legendary',desc:'Crate only. Container steel.'},
+  gold:{id:B.CYELL,name:'Gold Crate',hp:300,crate:1,tier:'mythic',desc:'Crate only. Shines on the battlefield.'}};
+const BUILD_KEYS=Object.keys(BUILD);
+const BAG=[{n:20,price:0},{n:30,price:1500},{n:45,price:4000},{n:64,price:9000}];
+const bagSize=()=>BAG[clamp(profile.bagLvl|0,0,BAG.length-1)].n;
+const buildOn=()=>state==='play'&&!isZ()&&feat('building');
+const PB=new Map(); // placed blocks: VI index -> {x,y,z,hp,max}
+let buildLeft=0,buildCD=0,buildHeld=false;
+const curBlock=()=>BUILD[profile.block]&&(profile.blocks||[]).includes(profile.block)?profile.block:'dirt';
+function buildFree(x,y,z){
+  if(x<1||z<1||x>=W-1||z>=D-1||y<1||y>=H-3||getV(x,y,z)||PB.size>=700)return false;
+  for(const e of ents){if(!e.alive||e.inMatch===false)continue;
+    if(Math.abs(e.x-(x+.5))<.82&&Math.abs(e.z-(z+.5))<.82&&e.y<y+1&&e.y+1.85>y)return false;}
+  return true;}
+function buildTarget(){const v=camVectors(),o=camera.position,h=rayVoxel(o.x,o.y,o.z,v.f[0],v.f[1],v.f[2],5.5,false);
+  if(!h||(!h.nx&&!h.ny&&!h.nz))return null;const x=h.x+h.nx,y=h.y+h.ny,z=h.z+h.nz;return{x,y,z,ok:buildFree(x,y,z)};}
+function placeBlock(){
+  if(!buildOn()||!player.alive||buildCD>0)return;
+  if(buildLeft<=0){toast('Out of blocks · your bag refills when you respawn');return;}
+  const t=buildTarget();if(!t||!t.ok)return;
+  const type=curBlock();buildCD=.18;buildLeft--;
+  if(isClient())netOut(['pb',t.x,t.y,t.z,type]);else hostPlace(player,t.x,t.y,t.z,type);
+  sfx.wood(.3,0);
+}
+function hostPlace(e,x,y,z,type){const b=BUILD[type];if(!b||!buildFree(x,y,z))return false;
+  set(x,y,z,b.id);PB.set(VI(x,y,z),{x,y,z,hp:b.hp,max:b.hp});netBlk(x,y,z,b.id|256);worldDirty=true;
+  burst(x+.5,y+.5,z+.5,BCOL[b.id],4,2,.08,.4);if(e!==player)sfx.wood(volAt(x,y,z,.3),distAt(x,y,z));return true;}
+// a block a player built takes damage; the map's own blocks never do this way
+function hitBlock(x,y,z,dmg){const k=VI(x,y,z),b=PB.get(k);if(!b)return false;const id=getV(x,y,z);
+  burst(x+.5,y+.5,z+.5,BCOL[id],3,3,.08,.5);
+  if(isClient()){netOut(['bd',x,y,z,Math.round(dmg)]);return true;}
+  b.hp-=dmg;
+  if(b.hp<=0){PB.delete(k);set(x,y,z,0);netBlk(x,y,z,0);worldDirty=true;burst(x+.5,y+.5,z+.5,BCOL[id],10,4,.12,.9);
+    if(id===B.GLASS||id===B.ICE)sfx.glass(volAt(x,y,z,.5));else sfx.wood(volAt(x,y,z,.45),distAt(x,y,z));}
+  return true;}
+// a block change from the host: 256 marks a block a player built
+function blkApply(x,y,z,v){v=v|0;set(x,y,z,v&255);if(v&256)PB.set(VI(x,y,z),{x,y,z});else PB.delete(VI(x,y,z));}
+function cycleBlock(){const own=BUILD_KEYS.filter(k=>(profile.blocks||[]).includes(k));if(!own.length)return;
+  const i=own.indexOf(curBlock());profile.block=own[(i+1)%own.length];saveProfile();toast('Building with '+BUILD[profile.block].name);}
+// where the block will go while the build button is held
+const ghost=new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(1.02,1.02,1.02)),new THREE.LineBasicMaterial({color:0xffffff,transparent:true,opacity:.85,depthTest:false}));
+ghost.renderOrder=5;ghost.visible=false;scene.add(ghost);
+function buildTick(dt){if(buildCD>0)buildCD-=dt;
+  let t=null;if(buildHeld&&buildOn()&&player.alive&&buildLeft>0)t=buildTarget();
+  ghost.visible=!!t;if(t){ghost.position.set(t.x+.5,t.y+.5,t.z+.5);ghost.material.color.setHex(t.ok?0x7dffa0:0xff5a4f);}}
 function botShoot(b,t,dist){
   const snipe=MAP.mode==='sniper';
   const m=botMuzzle(b);b.firedT=1.2;
@@ -2236,7 +2423,8 @@ function botShoot(b,t,dist){
   let dx=ex-m[0],dy=ey-m[1],dz=ez-m[2],len=Math.hypot(dx,dy,dz);dx/=len;dy/=len;dz/=len;
   const wv=rayVoxel(m[0],m[1],m[2],dx,dy,dz,hit?len:len+25,false);
   if(wv&&(hit?wv.t<len-.3:true)){
-    if(BREAKABLE[wv.id])breakAt(wv.id,wv.x,wv.y,wv.z);
+    if(PB.has(VI(wv.x,wv.y,wv.z)))hitBlock(wv.x,wv.y,wv.z,11);
+    else if(BREAKABLE[wv.id])breakAt(wv.id,wv.x,wv.y,wv.z);
     else{const ix=m[0]+dx*wv.t,iy=m[1]+dy*wv.t,iz=m[2]+dz*wv.t;burst(ix,iy,iz,BCOL[wv.id],3,3,.08,.5);hit=false;ex=ix;ey=iy;ez=iz;}
   }else if(!hit){ex=m[0]+dx*(len+25);ey=m[1]+dy*(len+25);ez=m[2]+dz*(len+25);}
   netEv(['t',b.nid,r1(m[0]),r1(m[1]),r1(m[2]),r1(ex),r1(ey),r1(ez),snipe?'sniper':BOT_SND[b.weapon]||'m4']);
@@ -2546,7 +2734,7 @@ function labelSprite(text,color,w){
 }
 const chalkMat=new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.12,side:THREE.DoubleSide,depthWrite:false});
 function zBuildStations(){
-  for(const m of zMarks)scene.remove(m);zMarks=[];
+  for(const m of zMarks){scene.remove(m);freeObj(m);}zMarks=[];
   if(!isZ())return;const G=HOUSE.G;
   const mark=(o,x,y,z)=>{o.position.set(x,y,z);scene.add(o);zMarks.push(o);};
   for(const s of STATIONS){
@@ -2702,7 +2890,7 @@ function spawnDrop(w,x,y,z){
   while(drops.length>=14)removeDrop(drops[0]);
   return makeDrop(dropSeq++,w,x,y,z);
 }
-function removeDrop(d){const i=drops.indexOf(d);if(i>=0)drops.splice(i,1);scene.remove(d.m);if(pickTarget===d)pickTarget=null;}
+function removeDrop(d){const i=drops.indexOf(d);if(i>=0)drops.splice(i,1);scene.remove(d.m);freeObj(d.m);if(pickTarget===d)pickTarget=null;}
 function clearDrops(){while(drops.length)removeDrop(drops[0]);}
 function updateDrops(dt){
   for(let i=drops.length-1;i>=0;i--){const d=drops[i];d.m.rotation.y+=dt*.9;d.m.position.y=d.y+.16+Math.sin(performance.now()/400+d.id)*.04;
@@ -2793,7 +2981,8 @@ function fireBullet(w,sp,v,o,mw){
     let dmg=w.dmg*(bhead?w.head:1);if(bt>40&&w.kind!=='sniper')dmg*=.8;if(w.kind==='shotgun'&&bt>10)dmg*=Math.max(.2,1-(bt-10)/14);
     damage(best,dmg,player,bhead,w.name,w.kind);
   }else if(hv){
-    if(BREAKABLE[hv.id])breakAt(hv.id,hv.x,hv.y,hv.z);
+    if(PB.has(VI(hv.x,hv.y,hv.z)))hitBlock(hv.x,hv.y,hv.z,w.dmg*.6);
+    else if(BREAKABLE[hv.id])breakAt(hv.id,hv.x,hv.y,hv.z);
     else burst(hx+hv.nx*.05,hy+hv.ny*.05,hz+hv.nz*.05,BCOL[hv.id],w.pellets?2:5,3.5,.1,.6);
   }
   tracer(mw[0],mw[1],mw[2],hx,hy,hz);
@@ -2851,7 +3040,7 @@ function meleeAttack(){
     if(d<bd){bd=d;best=b;}
   }
   if(state==='play')ST().shots++;
-  if(!best)return;
+  if(!best){const o=camera.position,h=rayVoxel(o.x,o.y,o.z,v.f[0],v.f[1],v.f[2],2.4,false);if(h&&PB.has(VI(h.x,h.y,h.z)))hitBlock(h.x,h.y,h.z,40);return;}
   if(state==='play')ST().hits++;
   // a stab from behind is an instant kill
   const back=((player.x-best.x)*-Math.sin(best.yaw)+(player.z-best.z)*-Math.cos(best.yaw))<0;
@@ -2884,7 +3073,7 @@ function updatePlayer(dt){
   p.vx+=((fx*f+rx*s)*speed-p.vx)*k;p.vz+=((fz*f+rz*s)*speed-p.vz)*k;
   if((keys.Space||jumpHeld)&&p.onGround){p.vy=8.4;p.onGround=false;}
   physics(p,dt);
-  fireCD-=dt;if(swapT>0)swapT-=dt;
+  fireCD-=dt;if(swapT>0)swapT-=dt;buildTick(dt);
   if(reloadT>0){reloadT-=dt;if(reloadT<=0){reloadT=0;finishReload();}}
   bloom=Math.max(0,bloom-dt*.09);
   const rec=Math.min(recoilP,dt*(fireHeld?.04:.22));p.pitch-=rec;recoilP-=rec;
@@ -2969,6 +3158,9 @@ function refreshHUD(dt){
   const w=curW(),a=ammo[cur];
   setText('wname',w.name);setText('mag',w.kind==='knife'?'∞':String(a.mag));setText('res',w.kind==='knife'?'':'/ '+a.reserve);$('mag').classList.toggle('low',w.kind!=='knife'&&a.mag<=Math.ceil(w.mag*.2));
   setText('nades',EQUIP[profile.equip].short+' '+('◆'.repeat(nades)||'-')+(profile.mineLvl&&!noNades()?'  MINE '+('▲'.repeat(minesLeft)||'-'):''));
+  if(buildOn()){setText('blocksHud','▣ '+buildLeft+' '+BUILD[curBlock()].name.toUpperCase());
+    if(isTouch){const bt=tl.querySelector('[data-b=build]'),txt='BUILD '+buildLeft;if(bt.textContent!==txt)bt.textContent=txt;bt.classList.toggle('empty',buildLeft<=0);
+      const sl=tl.querySelector('[data-b=bsel]'),k=curBlock();if(sl.dataset.k!==k){sl.dataset.k=k;const u=blockThumb(BUILD[k].id);sl.textContent=u?'':'▣';sl.style.backgroundImage=u?`url(${u})`:'';}}}
   $('reloadTxt').hidden=!(reloadT>0);
   const hs=Math.hypot(player.vx,player.vz);
   const sp=w.kind==='shotgun'?w.spread:(w.spread+hs*w.move+(player.onGround?0:.05)+bloom);
@@ -3000,7 +3192,7 @@ $('board').addEventListener('touchend',closeBoard,{passive:false});
 /* ================= menu, shop, crates ================= */
 function renderProfile(){
   const li=levelInfo(profile.xp);
-  $('pLvl').textContent=li.level;$('pRank').textContent=li.rank;
+  $('pLvl').textContent=li.level;$('pRank').textContent=li.rank+(TITLES[profile.title]?' · '+TITLES[profile.title].n:'');$('hCard').style.backgroundImage=CARDS[profile.card]&&profile.card!=='steel'?cardCss(profile.card):'';
   $('pXp').textContent=`${li.into.toLocaleString()} / ${li.need.toLocaleString()} XP to next rank`;
   $('pXpBar').style.width=(100*li.into/li.need).toFixed(1)+'%';
   $('pGp').textContent=profile.gp.toLocaleString()+' GP';$('shopGp').textContent=profile.gp.toLocaleString()+' GP';
@@ -3108,12 +3300,27 @@ function leaveMatch(){
 }
 for(const id of['boardLeave','pauseLeave']){$(id).addEventListener('click',e=>{e.stopPropagation();leaveMatch();});$(id).addEventListener('touchend',e=>{e.stopPropagation();e.preventDefault();leaveMatch();},{passive:false});}
 $('setClose').addEventListener('click',()=>{$('settings').hidden=true;});
+// privacy policy and terms live next to the game (and on the public site when playing inside Claude)
+const legalUrl=f=>(/^https?:$/.test(location.protocol)&&!inFrame?'':PUBLIC_URL.replace(/[^/]*$/,''))+f;
+function renderLegal(){const h=`<a href="${legalUrl('privacy.html')}" target="_blank" rel="noopener">Privacy policy</a><a href="${legalUrl('terms.html')}" target="_blank" rel="noopener">Terms of use</a><a href="${legalUrl('support.html')}" target="_blank" rel="noopener">Support</a><a href="${legalUrl('licenses.html')}" target="_blank" rel="noopener">Licenses</a><span>Version ${APP_VERSION}</span>`;for(const id of ['legal','legal2'])if($(id))$(id).innerHTML=h;}
+renderLegal();
+$('openHelp').addEventListener('click',()=>{$('hpMsgOut').textContent='';$('help').hidden=false;});
+$('helpClose').addEventListener('click',()=>{$('help').hidden=true;});
+$('hpSend').addEventListener('click',async()=>{const msg=($('hpMsg').value||'').trim(),out=$('hpMsgOut'),btn=$('hpSend');
+  if(msg.length<5){out.textContent='Write a few words first.';return;}
+  if(!cloudOn()||!navigator.onLine){out.textContent='No internet right now. Try again when you are online.';return;}
+  btn.disabled=true;btn.textContent='Sending…';if(CS)await cloudFresh();
+  const r=await cloudReq('/rest/v1/support_messages',{method:'POST',auth:!!CS,headers:{Prefer:'return=minimal'},body:{player_name:String(profile.name).slice(0,20),topic:$('hpTopic').value,message:msg.slice(0,2000),contact:($('hpContact').value||'').trim().slice(0,120)||null,app_version:APP_VERSION,device:navigator.userAgent.slice(0,160)}});
+  btn.disabled=false;btn.textContent='Send';
+  if(r.ok){$('hpMsg').value='';out.textContent='Thanks! Your message was sent.';}else out.textContent=r.status?'Could not send right now (too many messages?). Try again in a while.':'No internet right now. Try again when you are online.';});
+$('updGo').addEventListener('click',()=>{const u=String(RCFG.store_url||'');if(CAP&&u)window.open(u,'_blank');else location.reload();});
+$('updLater').addEventListener('click',()=>{updSkipped=true;$('updReq').hidden=true;});
 $('setReset').addEventListener('click',()=>{SET=Object.assign({},SET_DEFAULT);saveSettings();applySettings();renderSettings();});
 applySettings();
 let fpsN=0,fpsT=0;
 
 /* ---------- accounts and stats ---------- */
-let acTab='cloud',acMsg='';
+let acTab='cloud',acMsg='',acDel=false;
 const fmtTime=s=>{s=Math.round(s);const h=Math.floor(s/3600),m=Math.floor(s%3600/60);return h?`${h}h ${m}m`:`${m}m`;};
 function renderAcct(){
   const S=ST(),li=levelInfo(profile.xp);
@@ -3121,13 +3328,16 @@ function renderAcct(){
   $('acSub').textContent=`Level ${li.level} · ${li.rank} · ${profile.gp.toLocaleString()} GP · callsign ${profile.name}`;
   for(const b of $('acTabs').children)b.classList.toggle('on',b.dataset.ac===acTab);
   let h='';
+  const delBox=()=>acDel?`<div class="cloudDanger"><div class="note">This deletes <b>${esc(CS.name)}</b> and all of its progress for good. It cannot be undone. Type DELETE to confirm.</div>
+      <div class="form"><input id="clDelTxt" maxlength="6" autocapitalize="characters" placeholder="DELETE"><button class="btn sm cut danger" id="clDelGo">Delete my account</button><button class="btn sm ghost cut" id="clDelNo">Keep it</button></div></div>`
+    :`<div class="cloudDanger"><button class="btn sm ghost cut" id="clDel">Delete account</button></div>`;
   if(acTab==='cloud'){
     if(!cloudOn())h+=`<div class="note">Online accounts are not switched on yet. Until then, progress stays in this browser only: use the same link every time, or move it with a save code.</div>`;
     else if(CS&&CS.guest&&cloudMine())h+=`<div class="cloudBox"><div class="lbl2">Guest account</div><div style="font-family:var(--f-hud);font-size:24px">${esc(CS.name)}</div>
       <div class="note cg">${cloudErr?esc(cloudErr):'✓ Your progress is saved online on this phone.'}</div>
       <div class="note">Create an account to pick your own name and password. You keep everything, and you can play on any phone.</div>
       <div class="form"><input id="clName" maxlength="14" placeholder="Pick a username" autocomplete="username" autocapitalize="off" spellcheck="false"><input id="clPass" type="password" maxlength="64" placeholder="Password (6+ characters)" autocomplete="new-password"></div>
-      <div class="row"><button class="btn sm cut" id="clSignup">Save my account</button><button class="btn sm ghost cut" id="clLogin">Log in to another account</button></div></div>`;
+      <div class="row"><button class="btn sm cut" id="clSignup">Save my account</button><button class="btn sm ghost cut" id="clLogin">Log in to another account</button></div>${delBox()}</div>`;
     else if(!CS)h+=`<div class="cloudBox"><div class="lbl2">Sign up or log in</div><div class="note">Your progress is saved online and comes back on any phone or link. Use the same username and password to log in anywhere.</div>
       <div class="form"><input id="clName" maxlength="14" placeholder="Username" autocomplete="username" autocapitalize="off" spellcheck="false" value="${esc(isGuest(USERS.cur)?'':USERS.cur)}"><input id="clPass" type="password" maxlength="64" placeholder="Password (6+ characters)" autocomplete="current-password"></div>
       <div class="row"><button class="btn sm cut" id="clSignup">Create account</button><button class="btn sm ghost cut" id="clLogin">Log in</button></div>
@@ -3135,7 +3345,7 @@ function renderAcct(){
     else h+=`<div class="cloudBox"><div class="lbl2">Online account</div><div style="font-family:var(--f-hud);font-size:24px">${esc(CS.name)}</div>
       <div class="note ${cloudErr?'ca':'cg'}">${cloudErr?esc(cloudErr):cloudMine()&&cloudLast?'✓ Saved online · '+new Date(cloudLast).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}):'Connecting to your account…'}</div>
       ${cloudMine()?'':'<div class="note">You switched to another user on this device. Switch back to your account user to keep saving online.</div>'}
-      <div class="row"><button class="btn sm ghost cut" id="clSaveNow">Save now</button><button class="btn sm ghost cut" id="clLogout">Log out</button></div></div>`;
+      <div class="row"><button class="btn sm ghost cut" id="clSaveNow">Save now</button><button class="btn sm ghost cut" id="clLogout">Log out</button></div>${delBox()}</div>`;
   }else if(acTab==='stats'){
     const kd=S.deaths?(S.kills/S.deaths).toFixed(2):S.kills.toFixed(2),acc=S.shots?Math.round(100*S.hits/S.shots):0,hs=S.kills?Math.round(100*S.heads/S.kills):0,wr=S.matches?Math.round(100*S.wins/S.matches):0;
     const t=(v,l)=>`<div class="tile"><b>${v}</b><span>${l}</span></div>`;
@@ -3207,6 +3417,10 @@ $('acBody').addEventListener('click',e=>{
     if(pw.length<6){acMsg='!The password needs at least 6 characters.';renderAcct();return;}
     b.disabled=true;b.textContent='Please wait…';
     (b.id==='clSignup'?cloudSignup(n,pw):cloudLogin(n,pw)).then(err=>{acMsg=err?'!'+err:(b.id==='clSignup'?`Account ${CS.name} created. Your progress is saved online.`:`Welcome back, ${CS.name}. Your progress is loaded.`);renderAcct();renderProfile();});return;}
+  if(b.id==='clDel'){acDel=true;renderAcct();return;}
+  if(b.id==='clDelNo'){acDel=false;renderAcct();return;}
+  if(b.id==='clDelGo'){if(($('clDelTxt').value||'').trim().toUpperCase()!=='DELETE'){acMsg='!Type DELETE to confirm.';renderAcct();return;}
+    b.disabled=true;b.textContent='Deleting…';cloudDelete().then(err=>{acDel=false;acMsg=err?'!'+err:'Your account and all of its progress were deleted.';renderAcct();renderProfile();});return;}
   if(b.id==='clLogout'){cloudLogout().then(()=>{acMsg='Logged out. Your progress is safe online.';renderAcct();renderProfile();});return;}
   if(b.id==='clSaveNow'){cloudPush().then(()=>{acMsg=cloudErr?'!'+cloudErr:'Saved online.';renderAcct();});return;}
   if(b.id==='saveCopy'){const t=$('saveOut');t.select();if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t.value).then(()=>{acMsg='Save code copied.';renderAcct();},()=>{});}
@@ -3220,52 +3434,138 @@ $('acBody').addEventListener('click',e=>{
 const pinLock={};
 let shopTab='guns',attGun='m4a1';
 function bar(label,v){return `<div class="stat"><span>${label}</span><b><i style="width:${v}%"></i></b></div>`;}
+/* ================= shop pictures: guns are photographed from their real 3D models; blocks are drawn as cubes ================= */
+let TH=null;const thumbCache=new Map();
+function thumbR(){if(TH!==null)return TH;
+  try{const c=document.createElement('canvas');c.width=360;c.height=180;const r=new THREE.WebGLRenderer({canvas:c,antialias:true,alpha:true,preserveDrawingBuffer:true});r.setPixelRatio(1);
+    const sc=new THREE.Scene();sc.add(new THREE.HemisphereLight(0xffffff,0x40404a,1.1));const dl=new THREE.DirectionalLight(0xfff2dd,.85);dl.position.set(1.5,3,4);sc.add(dl);
+    TH={r,c,sc,cam:new THREE.PerspectiveCamera(24,2,.05,60)};}catch(e){TH=false;}return TH;}
+function disposeObj(o){o.traverse(m=>{if(m.geometry&&m.geometry!==boxGeo)m.geometry.dispose();});}
+// frame an object and take a picture of it (yaw turns it for the live preview)
+function shoot3D(obj,w,h,yaw,lift){const T=thumbR();if(!T)return false;
+  const holder=new THREE.Group();holder.add(obj);T.sc.add(holder);
+  obj.position.set(0,0,0);holder.rotation.y=yaw||0;holder.updateMatrixWorld(true);
+  const box=new THREE.Box3().setFromObject(holder),sz=box.getSize(new THREE.Vector3()),c=box.getCenter(new THREE.Vector3());holder.position.sub(c);
+  T.r.setSize(w,h,false);T.cam.aspect=w/h;T.cam.updateProjectionMatrix();
+  const f=Math.tan(T.cam.fov*Math.PI/360),dist=Math.max(sz.y/(2*f),sz.x/(2*f*T.cam.aspect),.3)*1.18+sz.z*.5;
+  T.cam.position.set(0,dist*(lift||.16),dist);T.cam.lookAt(0,0,0);
+  try{T.r.render(T.sc,T.cam);}catch(e){}
+  T.sc.remove(holder);return true;}
+const gunModel=(id,camo,att)=>{const g=buildGun(WEAPONS[id].model,camoMat(camo||'none'),true,att);g.rotation.y=-Math.PI/2;return g;};
+function gunThumb(id,camo,att){const key='g|'+id+'|'+camo+'|'+JSON.stringify(att||{});if(thumbCache.has(key))return thumbCache.get(key);
+  let url='';try{const g=gunModel(id,camo,att);if(shoot3D(g,360,170,0))url=TH.c.toDataURL('image/png');disposeObj(g);}catch(e){url='';}
+  thumbCache.set(key,url);return url;}
+// a block as a little isometric cube, from its own textures
+function blockThumb(id){const key='b|'+id;if(thumbCache.has(key))return thumbCache.get(key);let url='';
+  try{const m=MATS[id],arr=Array.isArray(m)?m:[m,m,m,m,m,m],side=arr[0].map.image,top=arr[2].map.image,cv=document.createElement('canvas');cv.width=cv.height=96;
+    const g=cv.getContext('2d'),a=2.6,v=a*1.1;g.imageSmoothingEnabled=false;
+    const face=(img,t,shade)=>{g.setTransform(...t);g.drawImage(img,0,0,16,16);if(shade){g.fillStyle=`rgba(0,0,0,${shade})`;g.fillRect(0,0,16,16);}};
+    face(top,[a,a/2,-a,a/2,48,8],0);face(side,[a,a/2,0,v,48-16*a,8+8*a],.28);face(side,[a,-a/2,0,v,48,8+16*a],.12);
+    url=cv.toDataURL('image/png');}catch(e){url='';}
+  thumbCache.set(key,url);return url;}
+// flat drawings for gear
+function iconThumb(kind){const key='i|'+kind;if(thumbCache.has(key))return thumbCache.get(key);let url='';
+  try{const cv=document.createElement('canvas');cv.width=160;cv.height=96;const g=cv.getContext('2d');
+    const can=(x,y,col,band)=>{g.fillStyle=col;g.beginPath();g.roundRect?g.roundRect(x-14,y-26,28,52,7):g.rect(x-14,y-26,28,52);g.fill();g.fillStyle='rgba(0,0,0,.25)';g.fillRect(x+4,y-24,8,48);if(band){g.fillStyle=band;g.fillRect(x-14,y-6,28,8);}g.fillStyle='#3a3d42';g.fillRect(x-7,y-34,14,9);g.fillStyle='#c9ccd1';g.fillRect(x+4,y-38,4,22);};
+    const frag=(x,y,sc)=>{g.save();g.translate(x,y);g.scale(sc,sc);g.fillStyle='#4b5a35';g.beginPath();g.ellipse(0,6,18,22,0,0,7);g.fill();g.strokeStyle='rgba(0,0,0,.35)';g.lineWidth=2;for(let i=-12;i<=12;i+=8){g.beginPath();g.moveTo(-17,6+i);g.lineTo(17,6+i);g.stroke();}
+      g.fillStyle='#3a3d42';g.fillRect(-7,-22,14,9);g.fillStyle='#c9ccd1';g.fillRect(6,-26,4,24);g.beginPath();g.arc(-9,-22,5,0,7);g.strokeStyle='#c9ccd1';g.stroke();g.restore();};
+    if(kind==='frag')frag(80,52,1.2);
+    else if(kind==='fire'){can(80,54,'#a8331f','#e0a030');g.fillStyle='#ff9a2a';g.beginPath();g.moveTo(118,70);g.quadraticCurveTo(140,40,124,18);g.quadraticCurveTo(134,46,112,58);g.fill();}
+    else if(kind==='smoke'){can(80,54,'#8a9096','#d6dade');g.fillStyle='rgba(220,224,230,.65)';for(const [x,y,r] of [[116,40,14],[132,28,12],[104,24,10]]){g.beginPath();g.arc(x,y,r,0,7);g.fill();}}
+    else if(kind==='pouch'){frag(46,56,.8);frag(80,52,.9);frag(114,56,.8);}
+    else if(kind==='mine'){g.fillStyle='#55603e';g.beginPath();g.moveTo(34,36);g.quadraticCurveTo(80,22,126,36);g.lineTo(126,64);g.quadraticCurveTo(80,52,34,64);g.fill();g.fillStyle='#e8e2c8';g.font='bold 13px sans-serif';g.textAlign='center';g.fillText('FRONT',80,52);g.strokeStyle='#2c2f33';g.lineWidth=4;for(const x of [44,116]){g.beginPath();g.moveTo(x,62);g.lineTo(x-8,84);g.moveTo(x,62);g.lineTo(x+8,84);g.stroke();}g.fillStyle='#ff3b30';g.beginPath();g.arc(80,30,4,0,7);g.fill();}
+    else if(kind==='bag'){g.fillStyle='#6b4a2a';g.beginPath();g.moveTo(40,34);g.lineTo(120,34);g.lineTo(128,88);g.lineTo(32,88);g.fill();g.fillStyle='#4e3520';g.fillRect(40,30,80,10);
+      for(const [x,y,c] of [[52,10,'#7a563a'],[80,6,'#985040'],[108,12,'#989690']]){g.fillStyle=c;g.fillRect(x-12,y+6,24,22);g.fillStyle='rgba(255,255,255,.18)';g.fillRect(x-12,y+6,24,6);}
+      g.fillStyle='#b98a52';g.font='bold 15px sans-serif';g.textAlign='center';g.fillText('BLOCKS',80,68);}
+    url=cv.toDataURL('image/png');}catch(e){url='';}
+  thumbCache.set(key,url);return url;}
+const img=(u,px)=>u?`<img class="thumb${px?' px':''}" src="${u}" alt="">`:'';
+/* live preview at the top of the shop: see the gun with an attachment or camo before you pay */
+let shopPv=null,pvYaw=0,pvRun=false;
+function pvSet(o){shopPv=o;renderPvInfo();}
+function renderPvInfo(){const el=$('pvInfo');if(!el||!shopPv)return;let t='',sub='';
+  if(shopPv.gun){const w=WEAPONS[shopPv.gun];t=w.name;const bits=[];const a=shopPv.att||{};if(a.optic&&a.optic!=='iron')bits.push(ATT[a.optic].name);if(a.mag)bits.push('Extended Mag');if(a.grip)bits.push('Vertical Grip');if(shopPv.camo&&shopPv.camo!=='none')bits.push(CAMOS[shopPv.camo].name+' camo');sub=bits.length?'with '+bits.join(' · '):'Standard';if(shopPv.note)sub+=' · '+shopPv.note;}
+  else if(shopPv.block){const b=BUILD[shopPv.block];t=b.name;sub=`${b.hp} strength · ${b.desc}`;}
+  el.innerHTML=`${esc(t)}<small>${esc(sub)}</small>`;}
+let pvObj=null,pvKey='';
+function pvLoop(){if($('shop').hidden||!shopPv){pvRun=false;return;}requestAnimationFrame(pvLoop);
+  const cv=$('shopCv');if(!cv||cv.offsetParent===null)return;const T=thumbR();if(!T)return;pvYaw+=.012;
+  const key=JSON.stringify(shopPv);
+  if(key!==pvKey){if(pvObj)disposeObj(pvObj);pvObj=null;pvKey=key;
+    try{pvObj=shopPv.gun?gunModel(shopPv.gun,shopPv.camo,shopPv.att):new THREE.Mesh(boxGeo,MATS[BUILD[shopPv.block].id]);}catch(e){return;}}
+  const obj=pvObj;if(!obj)return;
+  if(shopPv.gun){obj.rotation.y=-Math.PI/2+Math.sin(pvYaw)*.55;obj.rotation.x=Math.sin(pvYaw*.7)*.06;}else{obj.rotation.y=pvYaw;obj.rotation.x=.45;}
+  shoot3D(obj,480,260,0,shopPv.gun?.14:.3);
+  const g=cv.getContext('2d');g.clearRect(0,0,cv.width,cv.height);g.drawImage(T.c,0,0,cv.width,cv.height);}
+function pvStart(){if(!pvRun){pvRun=true;requestAnimationFrame(pvLoop);}}
 function renderShop(){
   renderProfile();
-  let h='';
+  let h='';const dsc=t=>`<div style="font-family:var(--f-body);font-size:13px;color:var(--dim)">${t}</div>`,buyRow=(price,attr)=>`<div class="row" style="justify-content:space-between"><span class="price">${price.toLocaleString()} GP</span><button class="btn sm cut" ${attr} ${profile.gp<price?'disabled':''}>Buy</button></div>`;
+  const usePv=shopTab!=='gear';$('shopBody').classList.toggle('noPv',!usePv);
   if(shopTab==='guns'){
+    if(!shopPv||!shopPv.gun||shopPv.tab!=='guns')pvSet({tab:'guns',gun:profile.slots[0],camo:profile.camo,att:attOf(profile.slots[0])});
     for(const id of WORDER){const w=WEAPONS[id],own=profile.owned.includes(id),slot=profile.slots.indexOf(id);
-      h+=`<div class="item ${slot>=0?'eq':''}"><div class="ty">${w.kind==='rpg'?'launcher':w.kind}</div><h3>${w.name}</h3>
+      h+=`<div class="item ${slot>=0?'eq':''} ${shopPv.gun===id?'pv':''}" data-pv="gun:${id}">${img(gunThumb(id,own?profile.camo:'none',own?attOf(id):null))}<div class="ty">${w.kind==='rpg'?'launcher':w.kind}</div><h3>${w.name}</h3>
       ${bar('DAMAGE',w.stats[0])}${bar('FIRE RATE',w.stats[1])}${bar('RANGE',w.stats[2])}${bar('MOBILITY',w.stats[3])}
-      ${own?`<div class="row"><button class="btn sm ${slot===0?'':'ghost'} cut" data-eq="${id}" data-slot="0">Slot 1</button><button class="btn sm ${slot===1?'':'ghost'} cut" data-eq="${id}" data-slot="1">Slot 2</button></div>`
-           :`<div class="row" style="justify-content:space-between"><span class="price">${w.price.toLocaleString()} GP</span><button class="btn sm cut" data-buy="${id}" ${profile.gp<w.price?'disabled':''}>Buy</button></div>`}</div>`;}
+      ${own?`<div class="row"><button class="btn sm ${slot===0?'':'ghost'} cut" data-eq="${id}" data-slot="0">Slot 1</button><button class="btn sm ${slot===1?'':'ghost'} cut" data-eq="${id}" data-slot="1">Slot 2</button></div>`:buyRow(w.price,`data-buy="${id}"`)}</div>`;}
   }else if(shopTab==='att'){
     const guns=profile.owned.filter(id=>(ATT_OK[id]||[]).length);
     if(!guns.includes(attGun))attGun=guns[0];
+    const base=attOf(attGun),own=profile.attOwn[attGun]||[];
+    if(!shopPv||shopPv.tab!=='att'||shopPv.gun!==attGun)pvSet({tab:'att',gun:attGun,camo:profile.camo,att:base});
+    const tryAtt=k=>{const a=Object.assign({},base);if(k==='iron'||ATT[k].optic)a.optic=k;else a[k]=true;return a;};
     h+=`<div class="row" style="grid-column:1/-1">${guns.map(id=>`<button class="chip ${id===attGun?'on':''}" data-attgun="${id}">${WEAPONS[id].name}</button>`).join('')}</div>`;
-    const a=attOf(attGun),own=profile.attOwn[attGun]||[],dsc=t=>`<div style="font-family:var(--f-body);font-size:13px;color:var(--dim)">${t}</div>`;
-    h+=`<div class="item ${a.optic==='iron'?'eq':''}"><div class="ty">sight</div><h3>Iron sights</h3>${dsc('The weapon\'s built-in sights.')}<button class="btn sm ${a.optic==='iron'?'':'ghost'} cut" data-optic="iron">${a.optic==='iron'?'Equipped':'Equip'}</button></div>`;
-    for(const k of ATT_OK[attGun]){const at=ATT[k],has=own.includes(k),on=at.optic?a.optic===k:a[k];
-      h+=`<div class="item ${on?'eq':''}"><div class="ty">${at.optic?'sight':k==='mag'?'magazine':'underbarrel'}</div><h3>${at.name}</h3>${dsc(at.desc)}
-      ${has?`<button class="btn sm ${on?'':'ghost'} cut" ${at.optic?`data-optic="${k}"`:`data-toggle="${k}"`}>${on?(at.optic?'Equipped':'Remove'):'Equip'}</button>`
-           :`<div class="row" style="justify-content:space-between"><span class="price">${at.price.toLocaleString()} GP</span><button class="btn sm cut" data-buyatt="${k}" ${profile.gp<at.price?'disabled':''}>Buy</button></div>`}</div>`;}
+    h+=`<div class="item ${base.optic==='iron'?'eq':''} ${shopPv.k==='iron'?'pv':''}" data-pv="att:iron">${img(gunThumb(attGun,profile.camo,tryAtt('iron')))}<div class="ty">sight</div><h3>Iron sights</h3>${dsc('The weapon\'s built-in sights.')}<button class="btn sm ${base.optic==='iron'?'':'ghost'} cut" data-optic="iron">${base.optic==='iron'?'Equipped':'Equip'}</button></div>`;
+    for(const k of ATT_OK[attGun]){const at=ATT[k],has=own.includes(k),on=at.optic?base.optic===k:base[k];
+      h+=`<div class="item ${on?'eq':''} ${shopPv.k===k?'pv':''}" data-pv="att:${k}">${img(gunThumb(attGun,profile.camo,tryAtt(k)))}<div class="ty">${at.optic?'sight':k==='mag'?'magazine':'underbarrel'}</div><h3>${at.name}</h3>${dsc(at.desc)}
+      ${has?`<button class="btn sm ${on?'':'ghost'} cut" ${at.optic?`data-optic="${k}"`:`data-toggle="${k}"`}>${on?(at.optic?'Equipped':'Remove'):'Equip'}</button>`:buyRow(at.price,`data-buyatt="${k}"`)}</div>`;}
   }else if(shopTab==='gear'){
-    const lvl=profile.nadeLvl,price=600*lvl,dsc=t=>`<div style="font-family:var(--f-body);font-size:13px;color:var(--dim)">${t}</div>`;
+    const lvl=profile.nadeLvl,price=600*lvl;
     for(const k of Object.keys(EQUIP)){const e=EQUIP[k],has=profile.equipOwn.includes(k),on=profile.equip===k;
-      h+=`<div class="item ${on?'eq':''}"><div class="ty">grenade</div><h3>${e.name}</h3>${dsc(e.desc)}
-      ${has?`<button class="btn sm ${on?'':'ghost'} cut" data-equip="${k}">${on?'Equipped':'Equip'}</button>`:`<div class="row" style="justify-content:space-between"><span class="price">${e.price.toLocaleString()} GP</span><button class="btn sm cut" data-buyequip="${k}" ${profile.gp<e.price?'disabled':''}>Buy</button></div>`}</div>`;}
-    h+=`<div class="item"><div class="ty">capacity</div><h3>Grenade pouch</h3>${dsc(`You spawn with ${lvl} grenade${lvl>1?'s':''} of the equipped type. Each upgrade adds one more per life, up to 4.`)}
+      h+=`<div class="item ${on?'eq':''}">${img(iconThumb(k))}<div class="ty">grenade</div><h3>${e.name}</h3>${dsc(e.desc)}
+      ${has?`<button class="btn sm ${on?'':'ghost'} cut" data-equip="${k}">${on?'Equipped':'Equip'}</button>`:buyRow(e.price,`data-buyequip="${k}"`)}</div>`;}
+    h+=`<div class="item">${img(iconThumb('pouch'))}<div class="ty">capacity</div><h3>Grenade pouch</h3>${dsc(`You spawn with ${lvl} grenade${lvl>1?'s':''} of the equipped type. Each upgrade adds one more per life, up to 4.`)}
       ${lvl<4?`<div class="row" style="justify-content:space-between"><span class="price">${price.toLocaleString()} GP</span><button class="btn sm cut" data-nade="1" ${profile.gp<price?'disabled':''}>Upgrade to ${lvl+1}</button></div>`:'<div class="cg">Maxed out</div>'}</div>`;
     const ml=profile.mineLvl,mp=1500;
-    h+=`<div class="item ${ml?'eq':''}"><div class="ty">trap</div><h3>Claymore mines</h3>${dsc(ml?`You carry ${ml} mine${ml>1?'s':''} per life. Place with MINE (or F). They blow up when an enemy walks close.`:'Place a mine on the ground. It arms after a second and explodes when an enemy walks near it.')}
+    h+=`<div class="item ${ml?'eq':''}">${img(iconThumb('mine'))}<div class="ty">trap</div><h3>Claymore mines</h3>${dsc(ml?`You carry ${ml} mine${ml>1?'s':''} per life. Place with MINE (or F). They blow up when an enemy walks close.`:'Place a mine on the ground. It arms after a second and explodes when an enemy walks near it.')}
       ${ml<2?`<div class="row" style="justify-content:space-between"><span class="price">${mp.toLocaleString()} GP</span><button class="btn sm cut" data-mine="1" ${profile.gp<mp?'disabled':''}>${ml?'Carry 2':'Unlock'}</button></div>`:'<div class="cg">Maxed out</div>'}</div>`;
+  }else if(shopTab==='blocks'){
+    if(!shopPv||!shopPv.block)pvSet({tab:'blocks',block:curBlock()});
+    const bl=profile.bagLvl|0,nx=BAG[bl+1];
+    h+=`<div class="item" style="grid-column:1/-1"><div class="ty">how to build</div>${dsc('Hold BUILD (or B) to see where the block goes, let go to place it. ▣ (or V) picks the block type. Everything you build can be shot or blown up, even on the Indestructible map. No building in Zombies.')}</div>`;
+    h+=`<div class="item">${img(iconThumb('bag'))}<div class="ty">capacity</div><h3>Builder's bag</h3>${dsc(`You carry ${BAG[bl].n} blocks per life.`)}
+      ${nx?`<div class="row" style="justify-content:space-between"><span class="price">${nx.price.toLocaleString()} GP</span><button class="btn sm cut" data-bag="1" ${profile.gp<nx.price?'disabled':''}>Carry ${nx.n}</button></div>`:'<div class="cg">Maxed out</div>'}</div>`;
+    for(const k of BUILD_KEYS){const b=BUILD[k],has=(profile.blocks||[]).includes(k),on=curBlock()===k;if(b.crate&&!has&&b.tier==='mythic')continue;
+      h+=`<div class="item ${on?'eq':''} ${shopPv.block===k?'pv':''}" data-pv="blk:${k}">${img(blockThumb(b.id),1)}<div class="ty">${b.tier} block · ${b.hp} strength</div><h3>${b.name}</h3>${dsc(b.desc)}
+      ${has?`<button class="btn sm ${on?'':'ghost'} cut" data-useblk="${k}">${on?'Building with it':'Build with it'}</button>`:b.crate?'<div class="note">Found in crates</div>':buyRow(b.price,`data-buyblk="${k}"`)}</div>`;}
   }else{
-    for(const id in CAMOS){const c=CAMOS[id],own=profile.camos.includes(id);
-      const sw=c.tex?`background:linear-gradient(90deg,${c.tex.map(t=>`rgb(${t})`).join(',')})`:`background:#${c.color.toString(16).padStart(6,'0')}`;
-      h+=`<div class="item ${profile.camo===id?'eq':''}"><div class="ty">weapon camo</div><h3>${c.name}</h3><div class="sw" style="${sw}"></div>
-      ${own?`<button class="btn sm ${profile.camo===id?'':'ghost'} cut" data-camo="${id}">${profile.camo===id?'Equipped':'Equip'}</button>`
-           :`<div class="row" style="justify-content:space-between"><span class="price">${c.price.toLocaleString()} GP</span><button class="btn sm cut" data-buycamo="${id}" ${profile.gp<c.price?'disabled':''}>Buy</button></div>`}</div>`;}
+    if(!shopPv||shopPv.tab!=='camo')pvSet({tab:'camo',gun:profile.slots[0],camo:profile.camo,att:attOf(profile.slots[0])});
+    for(const id in CAMOS){const c=CAMOS[id],own=profile.camos.includes(id);if(c.crate&&!own&&id==='diamond')continue;
+      h+=`<div class="item ${profile.camo===id?'eq':''} ${shopPv.camo===id?'pv':''}" data-pv="camo:${id}">${img(gunThumb(profile.slots[0],id,attOf(profile.slots[0])))}<div class="ty">weapon camo</div><h3>${c.name}</h3>
+      ${own?`<button class="btn sm ${profile.camo===id?'':'ghost'} cut" data-camo="${id}">${profile.camo===id?'Equipped':'Equip'}</button>`:c.crate?'<div class="note">Found in crates</div>':buyRow(c.price,`data-buycamo="${id}"`)}</div>`;}
   }
   $('shopGrid').innerHTML=h;
   for(const b of $('shopTabs').children)b.classList.toggle('on',b.dataset.tab===shopTab);
+  renderPvInfo();if(usePv)pvStart();
 }
-$('shopTabs').addEventListener('click',e=>{const b=e.target.closest('[data-tab]');if(b){shopTab=b.dataset.tab;renderShop();}});
+$('shopTabs').addEventListener('click',e=>{const b=e.target.closest('[data-tab]');if(b){shopTab=b.dataset.tab;shopPv=null;renderShop();}});
 $('shopGrid').addEventListener('click',e=>{
+  // tapping a card shows it in the preview
+  const card=e.target.closest('[data-pv]');if(card&&!e.target.closest('button')){const [k,v]=card.dataset.pv.split(':');
+    if(k==='gun')pvSet({tab:'guns',gun:v,camo:profile.owned.includes(v)?profile.camo:'none',att:profile.owned.includes(v)?attOf(v):{}});
+    else if(k==='att'){const a=Object.assign({},attOf(attGun));if(v==='iron'||ATT[v].optic)a.optic=v;else a[v]=true;pvSet({tab:'att',gun:attGun,camo:profile.camo,att:a,k:v,note:v!=='iron'&&!(profile.attOwn[attGun]||[]).includes(v)?'preview':''});}
+    else if(k==='camo')pvSet({tab:'camo',gun:profile.slots[0],camo:v,att:attOf(profile.slots[0]),note:profile.camos.includes(v)?'':'preview'});
+    else if(k==='blk')pvSet({tab:'blocks',block:v});
+    for(const c of $('shopGrid').querySelectorAll('[data-pv]'))c.classList.toggle('pv',c===card);return;}
   const b=e.target.closest('button');if(!b||b.disabled)return;
+  if(b.dataset.attgun)shopPv=null;
+  if(b.dataset.bag){const nx=BAG[(profile.bagLvl|0)+1];if(nx&&profile.gp>=nx.price){profile.gp-=nx.price;profile.bagLvl=(profile.bagLvl|0)+1;toast(`Builder's bag: ${nx.n} blocks per life`);}}
+  if(b.dataset.buyblk){const k=b.dataset.buyblk,bk=BUILD[k];if(bk&&!bk.crate&&profile.gp>=bk.price&&!(profile.blocks||[]).includes(k)){profile.gp-=bk.price;(profile.blocks=profile.blocks||['dirt']).push(k);profile.block=k;toast(`${bk.name} unlocked`);}}
+  if(b.dataset.useblk){profile.block=b.dataset.useblk;}
   if(b.dataset.buy){const w=WEAPONS[b.dataset.buy];if(profile.gp>=w.price){profile.gp-=w.price;profile.owned.push(b.dataset.buy);toast(`${w.name} unlocked`);}}
   if(b.dataset.eq){const id=b.dataset.eq,s=+b.dataset.slot,o=1-s;if(profile.slots[o]===id)profile.slots[o]=profile.slots[s];profile.slots[s]=id;}
   if(b.dataset.nade){const price=600*profile.nadeLvl;if(profile.gp>=price&&profile.nadeLvl<4){profile.gp-=price;profile.nadeLvl++;}}
-  if(b.dataset.buycamo){const c=CAMOS[b.dataset.buycamo];if(profile.gp>=c.price){profile.gp-=c.price;profile.camos.push(b.dataset.buycamo);profile.camo=b.dataset.buycamo;}}
+  if(b.dataset.buycamo){const c=CAMOS[b.dataset.buycamo];if(c&&!c.crate&&profile.gp>=c.price){profile.gp-=c.price;profile.camos.push(b.dataset.buycamo);profile.camo=b.dataset.buycamo;}}
   if(b.dataset.camo)profile.camo=b.dataset.camo;
   if(b.dataset.attgun)attGun=b.dataset.attgun;
   if(b.dataset.buyatt){const k=b.dataset.buyatt,at=ATT[k];if(profile.gp>=at.price){profile.gp-=at.price;(profile.attOwn[attGun]=profile.attOwn[attGun]||[]).push(k);const cur2=profile.att[attGun]=Object.assign(attOf(attGun),profile.att[attGun]||{});if(at.optic)cur2.optic=k;else cur2[k]=true;toast(`${at.name} fitted to ${WEAPONS[attGun].name}`);}}
@@ -3341,6 +3641,18 @@ function renderChar(){
     for(const k in ARMOR){const a=ARMOR[k],own=(profile.armorOwn||[]).includes(k),on=own&&!!(profile.armor||{})[k];
       h+=`<div class="citem ${on?'eq':''}"><div class="ty">armor</div><h3>${a.name}</h3>${dsc(a.desc)}
         ${own?`<button class="btn sm ${on?'':'ghost'} cut" data-armor="${k}">${on?'Equipped · remove':'Equip'}</button>`:`<div class="row" style="justify-content:space-between"><span class="price">${a.price.toLocaleString()} GP</span><button class="btn sm cut" data-buyarmor="${k}" ${profile.gp<a.price?'disabled':''}>Buy</button></div>`}</div>`;}
+  }else if(charTab==='style'){
+    const sec=(t)=>`<div class="lbl2" style="grid-column:1/-1">${t}</div>`,rt=t=>`<div class="ty" style="color:${RAR[t].c}">${RAR[t].n}</div>`;
+    h+=sec('Title · shown under your name');
+    for(const k in TITLES){const T2=TITLES[k],own=(profile.titles||[]).includes(k),on=profile.title===k;if(!own&&T2.t>=4)continue;
+      h+=`<div class="citem ${on?'eq':''} ${own?'':'lock'}">${rt(T2.t)}<h3>“${esc(T2.n)}”</h3>${own?`<button class="btn sm ${on?'':'ghost'} cut" data-title="${k}">${on?'Equipped':'Equip'}</button>`:dsc('Find it in crates')}</div>`;}
+    h+=sec('Banner · the background of your player card');
+    for(const k in CARDS){const c=CARDS[k],own=(profile.cards||[]).includes(k),on=profile.card===k;if(!own&&c.t>=5)continue;
+      h+=`<div class="citem ${on?'eq':''} ${own?'':'lock'}">${rt(c.t)}<h3>${esc(c.n)}</h3><div class="sw2" style="background:${cardCss(k)}"></div>${own?`<button class="btn sm ${on?'':'ghost'} cut" data-card="${k}">${on?'Equipped':'Equip'}</button>`:dsc('Find it in crates')}</div>`;}
+    h+=sec('Kill effect · bursts when you take someone out');
+    h+=`<div class="citem ${!profile.killfx?'eq':''}"><div class="ty">default</div><h3>None</h3><button class="btn sm ${!profile.killfx?'':'ghost'} cut" data-kfx="">${!profile.killfx?'Equipped':'Equip'}</button></div>`;
+    for(const k in KILLFX){const f=KILLFX[k],own=(profile.killfxs||[]).includes(k),on=profile.killfx===k;if(!own&&f.t>=5)continue;
+      h+=`<div class="citem ${on?'eq':''} ${own?'':'lock'}">${rt(f.t)}<h3>${esc(f.n)}</h3><div class="sw2" style="background:linear-gradient(90deg,${f.c.map(c=>'#'+c.toString(16).padStart(6,'0')).join(',')})"></div>${own?`<button class="btn sm ${on?'':'ghost'} cut" data-kfx="${k}">${on?'Equipped':'Equip'}</button>`:dsc('Find it in crates')}</div>`;}
   }else{
     for(const k of profile.equipOwn){const e=EQUIP[k],on=profile.equip===k;h+=`<div class="citem ${on?'eq':''}"><div class="ty">grenade</div><h3>${e.name}</h3>${dsc(e.desc)}<button class="btn sm ${on?'':'ghost'} cut" data-cequip="${k}">${on?'Equipped':'Equip'}</button></div>`;}
     h+=`<div class="citem"><div class="ty">pouch</div><h3>${profile.nadeLvl} grenade${profile.nadeLvl>1?'s':''}</h3>${dsc('Upgrade the pouch in the Store.')}</div>`;
@@ -3357,6 +3669,9 @@ $('charBody').addEventListener('click',e=>{
   const b=e.target.closest('button');if(!b||b.disabled)return;
   if(b.dataset.cslot!==undefined){const id=b.dataset.w,s2=+b.dataset.cslot,o=1-s2;if(profile.slots[o]===id)profile.slots[o]=profile.slots[s2];profile.slots[s2]=id;}
   if(b.dataset.skin)profile.skin=b.dataset.skin;
+  if(b.dataset.title&&(profile.titles||[]).includes(b.dataset.title))profile.title=b.dataset.title;
+  if(b.dataset.card&&(profile.cards||[]).includes(b.dataset.card))profile.card=b.dataset.card;
+  if(b.dataset.kfx!==undefined&&(!b.dataset.kfx||(profile.killfxs||[]).includes(b.dataset.kfx)))profile.killfx=b.dataset.kfx;
   if(b.dataset.armor){profile.armor=profile.armor||{};profile.armor[b.dataset.armor]=!profile.armor[b.dataset.armor];}
   if(b.dataset.buyarmor){const k=b.dataset.buyarmor,a=ARMOR[k];if(profile.gp>=a.price&&!(profile.armorOwn||[]).includes(k)){profile.gp-=a.price;(profile.armorOwn=profile.armorOwn||[]).push(k);profile.armor=profile.armor||{};profile.armor[k]=true;toast(a.name+' equipped');}}
   if(b.dataset.cequip)profile.equip=b.dataset.cequip;
@@ -3397,49 +3712,89 @@ function renderLB(){
 }
 
 /* supply crate */
-function rollReward(){
-  const unW=WORDER.filter(id=>!profile.owned.includes(id)),unS=Object.keys(CHARS).filter(id=>id!=='std'&&id!=='gold'&&!(profile.skins||[]).includes(id)),unC=Object.keys(CAMOS).filter(id=>!profile.camos.includes(id)&&id!=='gold');
-  const r=rand(),pk=a=>a[(rand()*a.length)|0];
-  if(r<.30)return{kind:'gp',v:300,label:'300 GP',tier:0};
-  if(r<.55)return{kind:'gp',v:600,label:'600 GP',tier:0};
-  if(r<.67)return{kind:'gp',v:1200,label:'1,200 GP',tier:1};
-  if(r<.86&&unS.length){const id=pk(unS);return{kind:'skin',v:id,label:CHARS[id].name+' skin',tier:2};}
-  if(r<.945&&unC.length){const id=pk(unC);return{kind:'camo',v:id,label:CAMOS[id].name+' camo',tier:2};}
-  if(r<.98&&unW.length){const id=pk(unW);return{kind:'gun',v:id,label:WEAPONS[id].name,tier:3};}
-  if(r>=.995&&!(profile.skins||[]).includes('gold'))return{kind:'skin',v:'gold',label:'GOLD ELITE skin',tier:3};
-  if(r>=.99&&!profile.camos.includes('gold'))return{kind:'camo',v:'gold',label:'GOLD camo',tier:3};
-  return{kind:'gp',v:1500,label:'1,500 GP',tier:1};
-}
+/* ================= supply crates: six rarities, lots of prizes, a pity counter, and the odds shown ================= */
+const RAR=[{n:'Common',c:'#9aa3ad'},{n:'Uncommon',c:'#6fd08c'},{n:'Rare',c:'#5b9cf0'},{n:'Epic',c:'#b96cf0'},{n:'Legendary',c:'#f3b54a'},{n:'Mythic',c:'#ff4d6d'}];
+const ODDS=[62,22,10.5,4.2,1.1,.2]; // percent per crate
+const PITY_E=30,PITY_L=80; // an Epic or better at least every 30 crates, a Legendary or better at least every 80
+const DUPE_GP=[60,120,300,700,1800,5000];
+const TITLES={recruit:{n:'Recruit',t:0},grunt:{n:'Grunt',t:0},camper:{n:'Camper',t:0},lucky:{n:'Lucky Shot',t:0},builder:{n:'Builder',t:1},night:{n:'Night Owl',t:1},sharp:{n:'Sharpshooter',t:1},
+  demo:{n:'Demolisher',t:2},ghost:{n:'Ghost',t:2},hunter:{n:'Headhunter',t:2},architect:{n:'Architect',t:2},warlord:{n:'Warlord',t:3},fortress:{n:'Fortress',t:3},
+  legend:{n:'Legend',t:4},apex:{n:'Apex Predator',t:4},immortal:{n:'Immortal',t:5}};
+const CARDS={steel:{n:'Steel',t:0,g:['#3a4250','#232830']},sand:{n:'Sandstorm',t:0,g:['#8a6a40','#4a3620']},moss:{n:'Moss',t:0,g:['#3c5a34','#1e2c1a']},
+  ocean:{n:'Deep Ocean',t:1,g:['#1d4f7a','#0b1f33']},ember:{n:'Ember',t:1,g:['#8a2e14','#2a0e06']},aurora:{n:'Aurora',t:2,g:['#1fae8a','#3a2a8a']},toxic:{n:'Toxic',t:2,g:['#8acb1f','#1f3a0a']},
+  inferno:{n:'Inferno',t:3,g:['#ff5a1f','#5a0a1f']},galaxy:{n:'Galaxy',t:3,g:['#5a2acb','#0a0a2a','#cb2a8a']},royal:{n:'Royal',t:4,g:['#f3b54a','#6a3a0a','#fff0b0']},prism:{n:'Prism',t:5,g:['#ff4d6d','#f3b54a','#6fd08c','#5b9cf0','#b96cf0']}};
+const KILLFX={sparks:{n:'Sparks',t:1,c:[0xffd23a,0xffffff],k:14},confetti:{n:'Confetti',t:2,c:[0xff4d6d,0x6fd08c,0x5b9cf0,0xf3b54a],k:26},hearts:{n:'Love Taps',t:3,c:[0xff5a8a,0xff9ab8],k:22},
+  lightning:{n:'Lightning',t:3,c:[0x9fe8ff,0xffffff,0x5b9cf0],k:28},goldrush:{n:'Gold Rush',t:4,c:[0xffd23a,0xf3b54a,0xfff0b0],k:40},void:{n:'Void',t:4,c:[0x2a0a4a,0x8a2acb,0x000000],k:36},prism:{n:'Prism',t:5,c:[0xff4d6d,0xf3b54a,0x6fd08c,0x5b9cf0,0xb96cf0],k:56}};
+function cardCss(id){const c=CARDS[id]||CARDS.steel;return `linear-gradient(115deg,${c.g.join(',')})`;}
+// everything a crate can hold, by rarity; owned things turn into GP
+function cratePool(t){const own={camo:id=>profile.camos.includes(id),skin:id=>(profile.skins||[]).includes(id),gun:id=>profile.owned.includes(id),blk:id=>(profile.blocks||[]).includes(id),title:id=>(profile.titles||[]).includes(id),card:id=>(profile.cards||[]).includes(id),fx:id=>(profile.killfxs||[]).includes(id)};
+  const P=[],add=(kind,v,label,w)=>P.push({kind,v,label,tier:t,w:w||1,dupe:own[kind]?own[kind](v):false});
+  const gp=[[100,150,200],[400,600],[1200],[3000],[7000],[15000]][t];for(const v of gp)add('gp',v,v.toLocaleString()+' GP',t<2?2:1);
+  if(t<=1)add('xp',t?600:200,(t?600:200)+' XP',1);
+  for(const k in TITLES)if(TITLES[k].t===t)add('title',k,'Title: '+TITLES[k].n);
+  for(const k in CARDS)if(CARDS[k].t===t)add('card',k,CARDS[k].n+' banner');
+  for(const k in KILLFX)if(KILLFX[k].t===t)add('fx',k,KILLFX[k].n+' kill effect');
+  const bt={common:1,rare:2,epic:3,legendary:4,mythic:5};for(const k in BUILD){const b=BUILD[k];if(k!=='dirt'&&bt[b.tier]===t)add('blk',k,b.name+' blocks');}
+  if(t===1)['plank','glass'].forEach(k=>add('blk',k,BUILD[k].name+' blocks'));
+  if(t===2){['desert','arctic','woodland','urban'].forEach(k=>add('camo',k,CAMOS[k].name+' camo'));for(const k in CHARS)if(CHARS[k].tier===2)add('skin',k,CHARS[k].name+' skin');}
+  if(t===3){['dragon','tiger','digital'].forEach(k=>add('camo',k,CAMOS[k].name+' camo'));for(const k in CHARS)if(CHARS[k].tier===3)add('skin',k,CHARS[k].name+' skin');}
+  if(t===4){['carbon','neon','lava'].forEach(k=>add('camo',k,CAMOS[k].name+' camo'));for(const id of WORDER)if(WEAPONS[id].price>0)add('gun',id,WEAPONS[id].name);}
+  if(t===5){add('skin','gold','Gold Elite skin');add('camo','gold','Gold camo');add('camo','diamond','Diamond camo');}
+  return P;}
+function crateTier(pity){
+  if(pity&&profile.pity.l>=PITY_L-1)return rand()<ODDS[5]/(ODDS[4]+ODDS[5])?5:4;
+  if(pity&&profile.pity.e>=PITY_E-1){const top=ODDS[3]+ODDS[4]+ODDS[5];let r=rand()*top;for(let t=3;t<6;t++){r-=ODDS[t];if(r<=0)return t;}return 3;}
+  let r=rand()*100;for(let t=0;t<6;t++){r-=ODDS[t];if(r<=0)return t;}return 0;}
+function rollReward(pity){const t=crateTier(pity),P=cratePool(t);let tot=0;for(const p of P)tot+=p.w;let r=rand()*tot,it=P[0];for(const p of P){r-=p.w;if(r<=0){it=p;break;}}return Object.assign({},it);}
+function giveReward(w){
+  if(w.dupe&&w.kind!=='gp'&&w.kind!=='xp'){profile.gp+=DUPE_GP[w.tier];return `Duplicate · +${DUPE_GP[w.tier].toLocaleString()} GP`;}
+  const push=(k,v)=>{(profile[k]=profile[k]||[]).includes(v)||profile[k].push(v);};
+  if(w.kind==='gp')profile.gp+=w.v;else if(w.kind==='xp')profile.xp+=w.v;
+  else if(w.kind==='camo')push('camos',w.v);else if(w.kind==='skin')push('skins',w.v);else if(w.kind==='gun')push('owned',w.v);
+  else if(w.kind==='blk')push('blocks',w.v);else if(w.kind==='title')push('titles',w.v);else if(w.kind==='card')push('cards',w.v);else if(w.kind==='fx')push('killfxs',w.v);
+  return '';}
+// a picture for every prize
+function rewardPic(w){
+  if(w.kind==='gun')return gunThumb(w.v,'none',null);if(w.kind==='camo')return gunThumb('ak47',w.v,null);if(w.kind==='blk')return blockThumb(BUILD[w.v].id);
+  return '';}
+function rewardArt(w){const u=rewardPic(w);if(u)return `<img src="${u}" alt="">`;
+  if(w.kind==='card')return `<i class="rcard" style="background:${cardCss(w.v)}"></i>`;
+  if(w.kind==='skin'){const c=CHARS[w.v];return `<i class="rcard" style="background:linear-gradient(90deg,${(c.camo||[[60,80,110]]).map(t=>`rgb(${t})`).join(',')})"></i>`;}
+  if(w.kind==='fx'){const f=KILLFX[w.v];return `<i class="rfx">${f.c.slice(0,4).map(c=>`<b style="background:#${c.toString(16).padStart(6,'0')}"></b>`).join('')}</i>`;}
+  if(w.kind==='title')return `<i class="rtitle">“${esc(TITLES[w.v].n)}”</i>`;
+  if(w.kind==='xp')return `<i class="rcoin xp">XP</i>`;
+  return `<i class="rcoin">GP</i>`;}
+function killFx(x,y,z){const f=KILLFX[profile.killfx];if(!f||!(profile.killfxs||[]).includes(profile.killfx))return;
+  for(const c of f.c)burst(x,y+1,z,c,Math.ceil(f.k/f.c.length),5,.12,.9);}
 const CRATE_PRICE=900;
 let crateBusy=false;
-function renderCrateBtn(){const free=profile.daily&&profile.daily.freeCrate;const b=$('crateOpen');b.textContent=free?'Open free crate':`Open · ${CRATE_PRICE} GP`;b.disabled=crateBusy||(!free&&profile.gp<CRATE_PRICE);}
-$('openCrate').addEventListener('click',()=>{$('reel').innerHTML='';$('reel').style.transition='none';$('reel').style.transform='translateX(0)';$('crateWin').innerHTML='&nbsp;';renderCrateBtn();$('crate').hidden=false;});
+function renderPity(){const el=$('cratePity');if(!el)return;const P=profile.pity||{e:0,l:0};el.textContent=`Epic or better within ${PITY_E-P.e} · Legendary or better within ${PITY_L-P.l} crates`;}
+function renderCrateBtn(){renderPity();const free=profile.daily&&profile.daily.freeCrate;const b=$('crateOpen');b.textContent=free?'Open free crate':`Open · ${CRATE_PRICE} GP`;b.disabled=crateBusy||(!free&&profile.gp<CRATE_PRICE);}
+$('openCrate').addEventListener('click',()=>{$('crateOdds').innerHTML=RAR.map((r,i)=>`<span style="color:${r.c}">${r.n} ${ODDS[i]}%</span>`).join('');$('reel').innerHTML='';$('reel').style.transition='none';$('reel').style.transform='translateX(0)';$('crateWin').innerHTML='&nbsp;';renderCrateBtn();$('crate').hidden=false;});
 $('crateClose').addEventListener('click',()=>{if(crateBusy)return;$('crate').hidden=true;renderProfile();});
 $('crateOpen').addEventListener('click',()=>{
   const free=profile.daily&&profile.daily.freeCrate;if(crateBusy)return;
   if(free)profile.daily.freeCrate=false;else{if(profile.gp<CRATE_PRICE)return;profile.gp-=CRATE_PRICE;}
   initAudio();crateBusy=true;renderCrateBtn();
-  const win=rollReward(),N=40,WI=34,reel=$('reel');
-  const items=[];for(let i=0;i<N;i++)items.push(i===WI?win:rollReward());
-  reel.innerHTML=items.map(it=>`<div class="r${it.tier}">${esc(it.label)}</div>`).join('');
+  const win=rollReward(true),N=40,WI=34,reel=$('reel');
+  profile.crates=(profile.crates|0)+1;profile.pity=profile.pity||{e:0,l:0};profile.pity.e=win.tier>=3?0:profile.pity.e+1;profile.pity.l=win.tier>=4?0:profile.pity.l+1;
+  const items=[];for(let i=0;i<N;i++)items.push(i===WI?win:rollReward(false));
+  reel.innerHTML=items.map(it=>`<div class="r${it.tier}">${rewardArt(it)}<span>${esc(it.label)}</span></div>`).join('');
   reel.style.transition='none';reel.style.transform='translateX(0)';
   const wrapW=reel.parentElement.clientWidth,cell=reel.children[WI],off=cell.offsetLeft+cell.offsetWidth/2-wrapW/2+(rand()-.5)*cell.offsetWidth*.7;
   requestAnimationFrame(()=>requestAnimationFrame(()=>{reel.style.transition=reduceMotion?'transform .3s':'transform 4.2s cubic-bezier(.12,.75,.12,1)';reel.style.transform=`translateX(${-off}px)`;}));
   let ticks=0;const tk=setInterval(()=>{if(++ticks>28)clearInterval(tk);else sfx.tick();},130);
   setTimeout(()=>{
-    if(win.kind==='gp')profile.gp+=win.v;
-    if(win.kind==='camo'&&!profile.camos.includes(win.v))profile.camos.push(win.v);
-    if(win.kind==='skin'&&!(profile.skins||(profile.skins=['std'])).includes(win.v))profile.skins.push(win.v);
-    if(win.kind==='gun'&&!profile.owned.includes(win.v))profile.owned.push(win.v);
-    if(win.kind==='nade')profile.nadeLvl=Math.min(4,profile.nadeLvl+1);
-    saveProfile();sfx.ding();
-    $('crateWin').innerHTML=`You got <span class="${win.tier>=3?'ca':'cg'}">${esc(win.label)}</span>`;
+    const dupe=giveReward(win);saveProfile();sfx.ding();if(win.tier>=4)sfx.ding();
+    $('crateWin').innerHTML=`<span class="rtier" style="color:${RAR[win.tier].c}">${RAR[win.tier].n}</span> You got <span style="color:${RAR[win.tier].c}">${esc(win.label)}</span>${dupe?`<small>${esc(dupe)}</small>`:''}`;
+    renderPity();
     crateBusy=false;renderCrateBtn();
   },reduceMotion?400:4400);
 });
 
 /* ================= match flow ================= */
 function resetMatch(inMatch){
+  PB.clear();buildHeld=false;ghost.visible=false;
   genWorld();rebuildWorld();
   GOAL=MAP.goal;scores={blue:0,red:0};matchT=MAP.time;streakN=0;streakT=0;uavT=0;nukeT=0;
   match={gp:0,xp:0,heads:0,best:0,kills:0};
@@ -3465,7 +3820,7 @@ function startMatch(){
   resetMatch(true);setSprintLock(false);
   NET.q=[];NET.life=0;
   if(isHost()){for(const r of NET.remotes.values())r.ready=false;netRoster();netBroadcast({t:'start',map:MAP.key,zd:profile.zdiff||'medium'});renderMPPill();}
-  tl.querySelector('[data-b=nade]').hidden=noNades();tl.querySelector('[data-b=nade]').textContent=EQUIP[profile.equip].short;tl.querySelector('[data-b=mine]').hidden=noNades()||!profile.mineLvl;tl.querySelector('[data-b=reload]').hidden=MAP.mode==='knife';tl.querySelector('[data-b=aim]').hidden=MAP.mode==='knife';tl.querySelector('[data-b=drop]').hidden=!dropsOn();$('wpills').hidden=loadout.length<2;$('nades').hidden=noNades();
+  tl.querySelector('[data-b=nade]').hidden=noNades();tl.querySelector('[data-b=nade]').textContent=EQUIP[profile.equip].short;tl.querySelector('[data-b=mine]').hidden=noNades()||!profile.mineLvl;tl.querySelector('[data-b=reload]').hidden=MAP.mode==='knife';tl.querySelector('[data-b=aim]').hidden=MAP.mode==='knife';tl.querySelector('[data-b=drop]').hidden=!dropsOn();tl.querySelector('[data-b=build]').hidden=isZ();tl.querySelector('[data-b=bsel]').hidden=isZ();$('blocksHud').hidden=isZ();$('wpills').hidden=loadout.length<2;$('nades').hidden=noNades();
   tryLock();
   if(navigator.wakeLock&&navigator.wakeLock.request)navigator.wakeLock.request('screen').catch(()=>{});
 }
@@ -3554,8 +3909,10 @@ addEventListener('keydown',e=>{
   if(e.code==='Digit1')swapTo(0);if(e.code==='Digit2')swapTo(1);if(e.code==='KeyQ')swapTo(cur===0?1:0);
   if(e.code==='KeyG'&&!e.repeat)playerNade();
   if(e.code==='KeyF'&&!e.repeat)placeMine();
+  if(e.code==='KeyB'&&!e.repeat&&state==='play')buildHeld=true;
+  if(e.code==='KeyV'&&!e.repeat&&state==='play'&&!isZ())cycleBlock();
 });
-addEventListener('keyup',e=>{keys[e.code]=false;if(e.code==='KeyE')zActHeld=false;});
+addEventListener('keyup',e=>{keys[e.code]=false;if(e.code==='KeyB'&&buildHeld){buildHeld=false;placeBlock();}if(e.code==='KeyE')zActHeld=false;});
 addEventListener('blur',()=>{for(const k in keys)keys[k]=false;fireHeld=false;});
 
 /* ================= input: touch ================= */
@@ -3581,6 +3938,9 @@ tl.addEventListener('touchstart',e=>{
       if(b==='act'){if(!isZ()){pickUp();continue;}zActHeld=true;touch.actId=t.identifier;zAct();continue;}
       if(b==='drop'){throwWeapon();continue;}
       if(b==='w0'||b==='w1'){swapTo(+b[1]);continue;}
+      // hold to see where the block goes (drag to aim), let go to build
+      if(b==='build'){btn.classList.add('on');buildHeld=true;touch.buildId=t.identifier;continue;}
+      if(b==='bsel'){cycleBlock();continue;}
       btn.classList.add('on');setTimeout(()=>btn.classList.remove('on'),140);
       if(b==='reload')startReload();else if(b==='nade')playerNade();else if(b==='mine')placeMine();else if(b==='board')toggleBoard();
       continue;
@@ -3600,7 +3960,7 @@ tl.addEventListener('touchmove',e=>{
       if(l>max){dx*=max/l;dy*=max/l;}
       touch.mx=dx/max;touch.my=dy/max;touch.sprint=touch.my<-.92;
       knob.style.transform=`translate(${dx}px,${dy}px)`;
-    }else if(id===touch.lookId||id===touch.fireId){
+    }else if(id===touch.lookId||id===touch.fireId||id===touch.buildId){
       const dx=t.clientX-lp[0],dy=t.clientY-lp[1],s=.0058*aaK*SET.sens*(1-adsK*(curW().kind==='sniper'?.75:.5))*(1+adsK*(SET.adsSens-1));
       player.yaw-=dx*s;player.pitch=clamp(player.pitch-dy*s*(SET.invert?-1:1),-1.5,1.5);lookDX+=dx;lookDY+=dy;
     }
@@ -3616,6 +3976,7 @@ function touchEnd(e){
     if(id===touch.fireId){touch.fireId=null;if(touch.fire2Id===null)fireHeld=false;tl.querySelector('[data-b=fire]').classList.remove('on');}
     if(id===touch.fire2Id){touch.fire2Id=null;if(touch.fireId===null)fireHeld=false;tl.querySelector('[data-b=fire2]').classList.remove('on');}
     if(id===touch.actId){touch.actId=null;zActHeld=false;}
+    if(id===touch.buildId){touch.buildId=null;tl.querySelector('[data-b=build]').classList.remove('on');if(buildHeld){buildHeld=false;placeBlock();}}
     if(id===touch.jumpId){touch.jumpId=null;jumpHeld=false;tl.querySelector('[data-b=jump]').classList.remove('on');}
   }
 }
@@ -3668,7 +4029,7 @@ function fetchIce(){let u=TURN_API;try{u=localStorage.getItem('blockfire.turn')|
 fetchIce();
 function peerOpts(){const o={debug:0,config:{iceServers:iceDyn||ICE}};let ps=null;try{ps=localStorage.getItem('blockfire.ps');}catch(e){}if(ps){const [h,p]=ps.split(':');o.host=h;o.port=+p||9000;o.path='/';o.secure=false;}return o;}
 const roomId=c=>'blockfire-r1-'+c.toLowerCase();
-const mpAvailable=()=>typeof window.Peer==='function'&&typeof window.RTCPeerConnection==='function'&&!/claude|anthropic/i.test(location.hostname);
+const mpAvailable=()=>feat('multiplayer')&&typeof window.Peer==='function'&&typeof window.RTCPeerConnection==='function'&&!/claude|anthropic/i.test(location.hostname);
 // friends get the exact page (and version) the host is on
 const inviteUrl=()=>(/^https?:$/.test(location.protocol)&&!inFrame&&!/^(127\.|localhost)/.test(location.hostname)?location.origin+location.pathname:PUBLIC_URL)+'#room-'+NET.code;
 function findNid(nid){if(!nid)return null;if(nid[0]==='B')return bots[+nid.slice(1)]||null;if(nid[0]==='Z')return zombies.find(z=>z.nid===nid)||null;if(nid===NET.nid)return player;if(nid==='P0'&&isHost())return player;return NET.remotes.get(nid)||null;}
@@ -3854,6 +4215,8 @@ function hostClientEv(e,ev){
   else if(k==='k'){if((ev[1]==='air'&&(e.streak|0)>=5)||(ev[1]==='nuke'&&(e.streak|0)>=15)||ev[1]==='uav')killstreak(ev[1],e);}
   else if(k==='pk'){const d=drops.find(x=>x.id===ev[1]);if(d&&e.alive&&Math.hypot(d.x-e.x,d.z-e.z)<3.2){removeDrop(d);if(ev[2]&&ev[2]!=='knife')spawnDrop(ev[2],d.x,d.y,d.z);netSendTo(e,{t:'pk',w:d.w});}}
   else if(k==='dw'){if(e.alive&&WEAPONS[ev[1]])spawnDrop(ev[1],ev[2],ev[3],ev[4]);}
+  else if(k==='pb'){if(isZ()||!e.alive||now()-(e.lastPb||0)<110||(e.bl|0)<=0)return;const x=ev[1]|0,y=ev[2]|0,z=ev[3]|0;if(Math.hypot(x+.5-e.x,y+.5-e.y-1.5,z+.5-e.z)>7.5)return;e.lastPb=now();if(hostPlace(e,x,y,z,String(ev[4])))e.bl--;}
+  else if(k==='bd'){if(!e.alive||now()-(e.lastBd||0)<35)return;e.lastBd=now();const x=ev[1]|0,y=ev[2]|0,z=ev[3]|0;if(Math.hypot(x-e.x,z-e.z)>160)return;hitBlock(x,y,z,fin(ev[4],0,0,150));}
   else if(k==='fl'){flameFX(ev[1],ev[2],ev[3],ev[4],ev[5],ev[6],10);if(rand()<.4)sfx.crackle(volAt(ev[1],ev[2],ev[3],.5,40),distAt(ev[1],ev[2],ev[3]));e.firedT=1.2;netEv(['fl',e.nid].concat(ev.slice(1)));}
 }
 // a dropped link is not a goodbye: keep the player's slot for 30 s so they can come back
@@ -3996,7 +4359,7 @@ function clientStart(map){
   startMatch(true);
   for(const b of bots){b.inMatch=false;b.alive=false;b.mesh.visible=false;}
   for(const e of NET.remotes.values()){e.inMatch=true;e.alive=false;e.mesh.visible=false;e.tx=undefined;}
-  for(const c of NET.pendingBlk||[])set(c[0],c[1],c[2],c[3]);
+  for(const c of NET.pendingBlk||[])blkApply(c[0],c[1],c[2],c[3]);
   NET.pendingBlk=[];worldDirty=true;
 }
 const zPuppetMesh=new Map();
@@ -4026,11 +4389,11 @@ function clientSnap(d){
 function clientEvent(ev){
   const k=ev[0];
   if(k==='t'){if(ev[1]===NET.nid)return;tracer(ev[2],ev[3],ev[4],ev[5],ev[6],ev[7],[1,.8,.5]);sfx.gun(ev[8],volAt(ev[2],ev[3],ev[4],.38,85),distAt(ev[2],ev[3],ev[4]));}
-  else if(k==='x'){set(ev[1],ev[2],ev[3],ev[4]);worldDirty=true;}
+  else if(k==='x'){blkApply(ev[1],ev[2],ev[3],ev[4]);worldDirty=true;}
   else if(k==='b'){explodeFX(ev[1],ev[2],ev[3],ev[4],ev[5]);}
   else if(k==='f'){igniteFire(ev[1],ev[2],ev[3],null);}
   else if(k==='s'){popSmoke(ev[1],ev[2],ev[3]);}
-  else if(k==='k'){const kk=ev[1]===player.name?player:{name:ev[1],team:ev[2]},vv=ev[5]===player.name?player:{name:ev[5],team:ev[6]};addFeed(ev[1]?kk:null,vv,ev[3],!!ev[4]);}
+  else if(k==='k'){const kk=ev[1]===player.name?player:{name:ev[1],team:ev[2]},vv=ev[5]===player.name?player:{name:ev[5],team:ev[6]};addFeed(ev[1]?kk:null,vv,ev[3],!!ev[4]);if(kk===player&&vv!==player&&Number.isFinite(ev[7]))killFx(ev[7],ev[8],ev[9]);}
   else if(k==='m'){showMsg(ev[1],!!ev[2],ev[3]||'');}
   else if(k==='n'){nukeT=1.6;sfx.explosion('Tactical Nuke',1,0);shake=1;}
   else if(k==='j'){sfx.jet();}
@@ -4137,14 +4500,14 @@ function rlProbe(){return new Promise(res=>{const t='diag/'+Math.random().toStri
   setTimeout(()=>{if(!ok){ok=true;res(false);}},9500);});}
 async function netDiag(){
   await fetchIce();try{if(NET.peer&&NET.peer.options&&NET.peer.options.config)NET.peer.options.config.iceServers=iceDyn||ICE;}catch(e){}const relays=(iceDyn||ICE).slice(2),rName=r=>{const u=[].concat(r.urls)[0]||'';return 'Relay · '+u.replace(/^turns?:/,'').split(/[:?]/)[0];};
-  NET.diag=[['Game server','checking…'],['Direct connection (STUN)','checking…']].concat(relays.map(r=>[rName(r),'checking…']));renderMP();
+  const DG=NET.diag=[['Game server','checking…'],['Direct connection (STUN)','checking…']].concat(relays.map(r=>[rName(r),'checking…']));renderMP();
   const srv=await new Promise(res=>{let p;try{p=new Peer(peerOpts());}catch(e){res(false);return;}const t=setTimeout(()=>{try{p.destroy();}catch(e){}res(false);},9000);
     p.on('open',()=>{clearTimeout(t);try{p.destroy();}catch(e){}res(true);});p.on('error',()=>{clearTimeout(t);try{p.destroy();}catch(e){}res(false);});});
-  NET.diag[0][1]=srv?'ok':'failed';renderMP();
-  const st=await iceProbe(ICE.slice(0,2),'srflx',6000);NET.diag[1][1]=st?'ok':'failed';renderMP();
-  NET.diag.splice(2,0,['Backup route','checking…']);const bk=rlProbe().then(v=>{NET.diag[2][1]=v?'ok':'failed';renderMP();return v;});
-  const rs=await Promise.all(relays.map((r,i)=>iceProbe([r],'relay',9000).then(v=>{NET.diag[3+i][1]=v?'ok':'failed';renderMP();return v;})));const tu=rs.some(Boolean)||await bk;
-  NET.diag.push(['Result',!srv?'No internet or the game server is down. Try again in a minute.':st&&tu?'Everything looks good.':st?'Should work on Wi-Fi. On some mobile networks the relay is needed and it is not reachable right now.':tu?'Works through the relay only. Expect a bit more delay.':'Your network blocks game connections. Try another Wi-Fi or mobile data.']);
+  DG[0][1]=srv?'ok':'failed';renderMP();
+  const st=await iceProbe(ICE.slice(0,2),'srflx',6000);DG[1][1]=st?'ok':'failed';renderMP();
+  DG.splice(2,0,['Backup route','checking…']);const bk=rlProbe().then(v=>{DG[2][1]=v?'ok':'failed';renderMP();return v;});
+  const rs=await Promise.all(relays.map((r,i)=>iceProbe([r],'relay',9000).then(v=>{DG[3+i][1]=v?'ok':'failed';renderMP();return v;})));const tu=rs.some(Boolean)||await bk;
+  DG.push(['Result',!srv?'No internet or the game server is down. Try again in a minute.':st&&tu?'Everything looks good.':st?'Should work on Wi-Fi. On some mobile networks the relay is needed and it is not reachable right now.':tu?'Works through the relay only. Expect a bit more delay.':'Your network blocks game connections. Try another Wi-Fi or mobile data.']);
   renderMP();
 }
 /* ---- leaving ---- */
@@ -4283,19 +4646,27 @@ function menuCam(dt){
 
 /* ================= main loop ================= */
 let last=performance.now(),menuT=0;
+// a problem that repeats every frame sends you safely back to the menu instead of freezing the game
+let frameErrs=0,glLost=false;
+function safeExit(){try{if(NET.mode)mpLeave(false);}catch(e){}state='menu';paused=false;fireHeld=false;ads=false;
+  ['hud','touch','end','board','pause','death','scope'].forEach(id=>{try{$(id).hidden=true;}catch(e){}});
+  try{resetMatch(false);}catch(e){}try{renderProfile();}catch(e){}$('menu').hidden=false;toast('Something went wrong in that match. You are back in the menu.');}
+// phones can drop the 3D context when the app goes to the background: wait for it to come back, then redraw the world
+canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();glLost=true;},false);
+canvas.addEventListener('webglcontextrestored',()=>{glLost=false;worldDirty=true;},false);
 let frameN=0;const noRender=(()=>{try{return localStorage.getItem('blockfire.norender')==='1';}catch(e){return false;}})();
 function frame(now){frameN++;
   requestAnimationFrame(frame);
   const rdt=(now-last)/1000,dt=Math.min(.05,rdt);last=now;
   if(SET.fps){fpsN++;fpsT+=rdt;if(fpsT>=.5){$('fps').textContent=Math.round(fpsN/fpsT)+' FPS';fpsN=0;fpsT=0;}}
-  if(!(document.hidden&&bgWorker))step(dt,now);
+  try{if(!(document.hidden&&bgWorker))step(dt,now);frameErrs=0;}catch(e){frameErrs++;reportErr('step',e);if(errN<=20)setTimeout(()=>{throw e;});if(frameErrs===20&&state!=='menu')safeExit();}
   document.body.classList.toggle('playing',state==='play');
   if(flameSndT>0&&state==='play'){flameSndT-=dt;if(!flameSnd&&AC){flameSnd=sfx.loop(650);}if(flameSnd)flameSnd.g.gain.value=.5;}
   else if(flameSnd){sfx.stopLoop(flameSnd);flameSnd=null;}
-  if(noRender)return;
-  renderer.clear();
+  if(noRender||glLost)return;
+  try{renderer.clear();
   renderer.render(scene,camera);
-  if(state==='play'){renderer.clearDepth();renderer.render(gunScene,gunCam);}
+  if(state==='play'){renderer.clearDepth();renderer.render(gunScene,gunCam);}}catch(e){reportErr('render',e);}
 }
 function step(dt,now){
   if(isClient()){stepClient(dt,now);return;}
