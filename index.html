@@ -97,6 +97,9 @@ body.touch #zprompt{bottom:calc(var(--sb) + 148px);font-size:15px}
 body.touch #gas .gl{top:24%;font-size:15px}body.touch #gas small{font-size:11px}
 #netBanner{position:absolute;left:50%;top:38%;transform:translateX(-50%);background:rgba(8,11,15,.86);border:1px solid var(--amber);color:var(--amber);font-size:22px;letter-spacing:.06em;padding:6px 18px 2px;white-space:nowrap;z-index:5}
 .diag{margin-top:8px;border:1px solid var(--line);background:rgba(0,0,0,.3);padding:6px 10px;font-family:var(--f-hud);font-size:17px}.diag div{display:flex;justify-content:space-between;gap:10px}
+.cloudBox{border:1px solid var(--line);background:rgba(0,0,0,.25);padding:10px 12px;margin-bottom:10px}.cloudBox .form{margin:8px 0}.cloudBox .form input{font-size:16px}
+.hSignup{width:100%;margin:6px 0;font-size:15px}
+.hSave{display:block;font-size:13px;color:var(--amber);letter-spacing:.04em}
 .relayBox{margin-top:8px;border:1px solid var(--line);background:rgba(0,0,0,.25);padding:8px 10px}.relayBox .note{margin:2px 0 6px}.relayBox input{font-size:16px}
 .slot .pg{font-size:13px;margin-right:6px;letter-spacing:.04em}
 #squad{position:absolute;right:calc(var(--sr) + 16px);top:calc(var(--st) + 10px);background:var(--panel);padding:6px 10px 4px;min-width:150px;font-size:16px;line-height:1.1}
@@ -505,7 +508,7 @@ body.touch .ctrl.desk{display:none} body:not(.touch) .ctrl.mob{display:none}
       <span class="hNet" id="hNet"><i></i><span>Online</span></span>
       <span class="gp" id="pGp">0 GP</span>
       <button class="hIcon" id="openSet" title="Settings" aria-label="Settings">⚙</button>
-      <div class="hCard" id="hCard"><div class="badge" id="pLvl">1</div><div class="hcTxt"><b id="hName">Player</b><span id="pRank">Trainee</span><span id="pXp" hidden></span><div class="xpbar"><b id="pXpBar" style="width:0"></b></div></div></div>
+      <div class="hCard" id="hCard"><div class="badge" id="pLvl">1</div><div class="hcTxt"><b id="hName">Player</b><span id="pRank">Trainee</span><span id="hSave" class="hSave" hidden></span><span id="pXp" hidden></span><div class="xpbar"><b id="pXpBar" style="width:0"></b></div></div></div>
     </div>
   </header>
   <main class="hMain">
@@ -617,7 +620,8 @@ body.touch .ctrl.desk{display:none} body:not(.touch) .ctrl.mob{display:none}
     <div class="shopHead"><h2 id="acName">PLAYER</h2><button class="btn sm ghost cut" id="acClose">Close</button></div>
     <div class="prank" id="acSub"></div>
     <div class="tabs" id="acTabs">
-      <button class="chip on" data-ac="stats">Stats</button>
+      <button class="chip on" data-ac="cloud">Account</button>
+      <button class="chip" data-ac="stats">Stats</button>
       <button class="chip" data-ac="history">Matches</button>
       <button class="chip" data-ac="users">Users</button>
       <button class="chip" data-ac="save">Save code</button>
@@ -726,10 +730,101 @@ function mergeProfiles(a,b){
   o.created=Math.min(o.created||Date.now(),p.created||Date.now());
   return o;
 }
-function saveProfile(){if(!USERS||!USERS.users[USERS.cur])return;USERS.users[USERS.cur].p=profile;try{localStorage.setItem('blockfire.users',JSON.stringify(USERS));}catch(e){}}
+function saveProfile(){if(!USERS||!USERS.users[USERS.cur])return;profile.savedAt=Date.now();USERS.users[USERS.cur].p=profile;try{localStorage.setItem('blockfire.users',JSON.stringify(USERS));}catch(e){}cloudDirty();}
 loadProfile();
 try{localStorage.setItem('blockfire.users',JSON.stringify(USERS));}catch(e){}
 const ST=()=>profile.stats;
+/* ---- online accounts: sign up once; progress lives in the database and comes back on any phone or link ---- */
+const CLOUD_CFG={url:'',key:''}; // Supabase project URL + its public (anon) key
+function cloudCfg(){let o=null;try{o=JSON.parse(localStorage.getItem('blockfire.cloudcfg')||'null');}catch(e){}return o&&o.url?o:CLOUD_CFG;}
+const cloudOn=()=>!!cloudCfg().url;
+let CS=null;try{CS=JSON.parse(localStorage.getItem('blockfire.cloud')||'null');}catch(e){}
+const cloudKeep=()=>{try{if(CS)localStorage.setItem('blockfire.cloud',JSON.stringify(CS));else localStorage.removeItem('blockfire.cloud');}catch(e){}};
+const cloudEmail=n=>nameKey(n).replace(/[^a-z0-9._-]/g,'_')+'@players.blockfire.game';
+async function cloudReq(path,opt={}){const c=cloudCfg();const h={apikey:c.key,'Content-Type':'application/json',Authorization:'Bearer '+(opt.auth!==false&&CS&&CS.at?CS.at:c.key)};Object.assign(h,opt.headers||{});
+  const ctl=new AbortController(),t=setTimeout(()=>ctl.abort(),12000);
+  try{const r=await fetch(c.url.replace(/\/$/,'')+path,{method:opt.method||'GET',headers:h,body:opt.body?JSON.stringify(opt.body):undefined,signal:ctl.signal,keepalive:!!opt.keepalive});
+    const txt=await r.text();let j=null;try{j=txt?JSON.parse(txt):null;}catch(e){}return{ok:r.ok,status:r.status,j};}
+  catch(e){return{ok:false,status:0,j:null};}finally{clearTimeout(t);}}
+function cloudSession(j,name){if(!j||!j.access_token)return false;const keep=CS&&CS.uid===(j.user&&j.user.id)?CS:{};CS={at:j.access_token,rt:j.refresh_token,exp:Date.now()+((j.expires_in||3600)-60)*1000,uid:(j.user&&j.user.id)||keep.uid,name,ver:keep.ver||'',dirty:!!keep.dirty};cloudKeep();return true;}
+async function cloudFresh(){if(!CS)return false;if(Date.now()<CS.exp)return true;
+  const r=await cloudReq('/auth/v1/token?grant_type=refresh_token',{method:'POST',auth:false,body:{refresh_token:CS.rt}});
+  if(r.ok&&cloudSession(r.j,CS.name))return true;if(r.status===400||r.status===401){cloudErr='Your login expired. Log in again.';}return false;}
+function authErr(r){const m=String((r.j&&(r.j.msg||r.j.error_description||r.j.message||r.j.error_code||r.j.error))||'');
+  if(!r.status)return 'No connection to the save server. Check your internet and try again.';
+  if(/already|exists/i.test(m))return 'That username is taken. Pick another one, or log in if it is yours.';
+  if(/invalid|credentials|grant/i.test(m))return 'Wrong username or password.';
+  if(/password/i.test(m))return 'The password needs at least 6 characters.';
+  if(/rate|too many/i.test(m)||r.status===429)return 'Too many tries. Wait a minute and try again.';
+  return m||('The save server answered with error '+r.status+'.');}
+async function cloudPull(){if(!await cloudFresh())return null;const r=await cloudReq('/rest/v1/players?id=eq.'+encodeURIComponent(CS.uid)+'&select=name,data,updated_at');return r.ok&&Array.isArray(r.j)?(r.j[0]||{}):null;}
+let cloudT=0,cloudBusy=false,cloudLast=0,cloudErr='',cloudReady=false;
+const cloudMine=()=>!!(CS&&cloudOn()&&USERS&&USERS.cur===CS.name);
+// every save names the version it was based on; if another phone saved in between, nothing is overwritten blindly
+const NOINT='Not saved online yet: no internet. It saves as soon as you are back online.';
+function cloudDirty(){if(!cloudMine())return;if(!CS.dirty){CS.dirty=true;cloudKeep();}cloudQueue();}
+function cloudTake(row){USERS.users[USERS.cur].p=fillProfile(row.data,USERS.cur);try{localStorage.setItem('blockfire.users',JSON.stringify(USERS));}catch(e){}loadProfile();afterSwitch();CS.ver=row.updated_at;CS.dirty=false;cloudKeep();if(!$('acct').hidden)renderAcct();}
+// the database changed since this phone last synced: keep this phone's play only if it got further
+async function cloudResolve(row){
+  const c=row&&row.data&&typeof row.data.xp==='number'?row.data:null;if(!c){CS.ver='';return 'push';}
+  if(!CS.dirty||(c.xp||0)>=(profile.xp||0)){cloudTake(row);if(CS.dirty===false&&state==='menu')toast('Loaded your latest progress');return 'took';}
+  CS.ver=row.updated_at;cloudKeep();return 'push';}
+async function cloudPush(keepalive,depth){clearTimeout(cloudT);cloudT=0;if(!cloudMine()||!cloudReady)return;if(cloudBusy&&!depth){cloudQueue();return;}cloudBusy=true;
+  try{if(!await cloudFresh()){if(!cloudErr)cloudErr=NOINT;return;}
+    const now2=new Date().toISOString(),body={id:CS.uid,name:CS.name,data:profile,updated_at:now2};let r;
+    if(!CS.ver)r=await cloudReq('/rest/v1/players',{method:'POST',keepalive,headers:{Prefer:'resolution=merge-duplicates,return=representation'},body});
+    else r=await cloudReq('/rest/v1/players?id=eq.'+encodeURIComponent(CS.uid)+'&updated_at=eq.'+encodeURIComponent(CS.ver),{method:'PATCH',keepalive,headers:{Prefer:'return=representation'},body:{data:profile,updated_at:now2,name:CS.name}});
+    if(!r.ok){cloudErr=r.status?'The save server refused the save (error '+r.status+').':NOINT;return;}
+    if(Array.isArray(r.j)&&r.j.length){CS.ver=r.j[0].updated_at||now2;CS.dirty=false;cloudKeep();cloudLast=Date.now();cloudErr='';return;}
+    // nothing matched: another phone saved first
+    if((depth|0)>1)return;const row=await cloudPull();if(row===null)return;
+    if(await cloudResolve(row)==='push'){cloudBusy=false;return cloudPush(keepalive,(depth|0)+1);}
+    cloudLast=Date.now();cloudErr='';}
+  finally{if(!depth)cloudBusy=false;}}
+function cloudQueue(){if(!cloudMine()||cloudT)return;cloudT=setTimeout(()=>cloudPush(),3000);}
+document.addEventListener('visibilitychange',()=>{if(!cloudMine()||!cloudReady)return;if(document.hidden){if(CS.dirty)cloudPush(true);}else cloudCheck();});
+// coming back to the game: pick up what another phone saved meanwhile
+async function cloudCheck(){if(!cloudMine()||!cloudReady||cloudBusy||state==='play')return;const row=await cloudPull();if(!row||!cloudMine())return;
+  if(row.updated_at&&row.updated_at!==CS.ver){if(await cloudResolve(row)==='push')cloudPush();}}
+setInterval(()=>{if(!document.hidden)cloudCheck();},45000);
+function afterSwitch(){player.name=profile.name;$('callsign').value=profile.name;MAP=MAPS[profile.map]||MAPS.junk;renderProfile();resetMatch(false);}
+// put an account's progress on this device as the current user
+function cloudAdopt(name,p,fresh){
+  saveProfile();const cur=USERS.cur,mine=USERS.users[cur];
+  // a guest's play on this device is folded into the account, so nothing is lost
+  if(!fresh&&cur!==name&&isGuest(cur)&&hasProgress(mine.p)){p=mergeProfiles(p,mine.p);delete USERS.users[cur];}
+  else if(cur!==name&&isGuest(cur))delete USERS.users[cur];
+  USERS.users[name]={pin:'',cloud:true,p};USERS.cur=name;
+  try{localStorage.setItem('blockfire.users',JSON.stringify(USERS));}catch(e){}loadProfile();afterSwitch();}
+const nameOk=n=>{n=String(n||'').replace(/[^\w \-.]/g,'').trim().slice(0,14);return n.length>=2&&nameKey(n)!=='player'?n:'';};
+async function cloudSignup(name,pass){
+  const r=await cloudReq('/auth/v1/signup',{method:'POST',auth:false,body:{email:cloudEmail(name),password:pass,data:{name}}});
+  if(!r.ok)return authErr(r);
+  if(!cloudSession(r.j,name))return 'The account was made, but the database still asks for email confirmation. In Supabase turn off "Confirm email" (Authentication → Sign In / Providers → Email), then log in.';
+  const p=fillProfile(Object.assign({},profile),name);if(!p.name||p.name==='Player')p.name=name;
+  cloudAdopt(name,p,true);CS.ver='';CS.dirty=true;cloudReady=true;await cloudPush();return cloudErr;}
+async function cloudLogin(name,pass){
+  const r=await cloudReq('/auth/v1/token?grant_type=password',{method:'POST',auth:false,body:{email:cloudEmail(name),password:pass}});
+  if(!r.ok)return authErr(r);
+  const row=await cloudPull(r.j&&cloudSession(r.j,name));
+  if(row===null){CS=null;cloudKeep();return 'Logged in, but your progress could not be loaded. Try again in a moment.';}
+  if(row.name)CS.name=row.name,cloudKeep();
+  const p=row.data&&typeof row.data.xp==='number'?fillProfile(row.data,CS.name):fillProfile(Object.assign({},profile),CS.name);
+  const merged=!!(row.data&&isGuest(USERS.cur)&&hasProgress(USERS.users[USERS.cur].p));
+  cloudAdopt(CS.name,p);CS.ver=row.updated_at||'';CS.dirty=merged||!row.data;cloudKeep();cloudReady=true;if(CS.dirty)await cloudPush();else cloudLast=Date.now();return cloudErr;}
+async function cloudLogout(){if(cloudMine()&&cloudReady)await cloudPush();const n=CS&&CS.name;CS=null;cloudKeep();cloudReady=false;
+  // the account stays safe online; this device keeps nothing of it
+  if(n&&USERS.users[n]){delete USERS.users[n];USERS.cur='';try{localStorage.setItem('blockfire.users',JSON.stringify(USERS));}catch(e){}loadProfile();afterSwitch();}}
+// opening the game: if the database moved on (another phone), take it unless this phone got further; then saving starts
+async function cloudSync(){
+  if(cloudReady||!cloudMine())return;const row=await cloudPull();if(row===null||!cloudMine())return;
+  cloudReady=true;
+  if(!row.updated_at){CS.ver='';CS.dirty=true;cloudPush();}
+  else if(row.updated_at!==CS.ver){if(await cloudResolve(row)==='push')cloudPush();else cloudLast=Date.now();}
+  else{cloudLast=Date.now();if(CS.dirty)cloudPush();}
+  if(!$('acct').hidden)renderAcct();renderHome();}
+setTimeout(cloudSync,300);addEventListener('online',()=>{cloudSync();if(cloudReady)cloudQueue();});setInterval(()=>{if(!cloudReady)cloudSync();},60000);
+
 const SET_DEFAULT={sens:1,adsSens:1,invert:false,vol:.8,quality:'auto',fov:75,btnScale:1,btnAlpha:1,fps:false,aim:true};
 let SET=Object.assign({},SET_DEFAULT);
 try{Object.assign(SET,JSON.parse(localStorage.getItem('blockfire.settings')||'{}'));}catch(e){}
@@ -2888,11 +2983,13 @@ function renderHome(){
   const M=MAPS[mk]||MAP,zm=M.mode==='zombie',DF=ZDIFF[isClient()?(NET.zdiff||'medium'):(profile.zdiff||'medium')]||ZDIFF.medium;
   $('hSelMap').textContent=M.name+(zm?' · '+DF.name:'');
   $('hName').textContent=profile.name;
+  {const hs=$('hSave');const show=cloudOn()&&!CS;hs.hidden=!(show||cloudMine());hs.textContent=show?'☁ Sign up to save your progress':'☁ Saved online';}
   const net=$('hNet');net.classList.toggle('off',!navigator.onLine);net.querySelector('span').textContent=NET.mode?`Room ${NET.code}`:navigator.onLine?'Online':'Offline';
   $('play').textContent=NET.mode?'Lobby':'Play';
   // party: you and the friends in your room
   const me=`<div class="pm"><i style="background:${player.team==='red'?'var(--red)':'var(--blue)'}">${esc((profile.name||'?').charAt(0).toUpperCase())}</i><b>${esc(profile.name)} <span class="prank">Lv ${levelInfo(profile.xp).level}</span></b><small class="ca">${isClient()?(NET.ready?'READY':'IN ROOM'):NET.mode?'♛ HOST':'YOU'}</small></div>`;
   let h=`<h4><span>Party${NET.mode?' · '+esc(NET.code):''}</span>${NET.mode?'<a id="hOpenLobby">Lobby ›</a>':''}</h4>`+me;
+  if(cloudOn()&&!CS)h+=`<button class="btn sm cut hSignup" id="hSignup">☁ Sign up · keep your progress safe</button>`;
   if(NET.mode){for(const r of NET.roster||[]){if(r.nid===(isHost()?'P0':NET.nid))continue;h+=`<div class="pm"><i style="background:${r.team==='red'?'var(--red)':'var(--blue)'}">${esc(r.name.charAt(0).toUpperCase())}</i><b style="color:#ffd34a">★ ${esc(r.name)}</b><small class="${r.nid==='P0'||r.rd?'cg':'ca'}">${r.nid==='P0'?'HOST':r.rd?'READY':'NOT READY'}</small></div>`;}
     h+=`<div class="hJoin"><button class="btn sm cut" id="openMP" style="flex:1">Open lobby</button><button class="btn sm ghost cut" id="hLeave">${isHost()?'Close room':'Leave room'}</button></div>`;}
   else if(NET.status&&NET.peer)h+=`<div class="note ca">${esc(NET.status)}</div><div class="hJoin"><button class="btn sm cut" id="openMP" style="flex:1">Open lobby</button><button class="btn sm ghost cut" id="hLeave">Stop</button></div>`;
@@ -2909,6 +3006,7 @@ $('hModes').addEventListener('click',e=>{const b=e.target.closest('[data-hmode]'
 $('hParty').addEventListener('click',e=>{const t=e.target.closest('button,a');if(!t)return;
   if(t.id==='hInvite'){openLobby();mpHost();}
   if(t.id==='openMP'||t.id==='hOpenLobby')openLobby();
+  if(t.id==='hSignup'){acTab='cloud';acMsg='';renderAcct();$('acct').hidden=false;}
   if(t.id==='hLeave'){mpLeave(false);renderHome();}
   if(t.id==='hJoinBtn'){const c=$('hCode').value;openLobby();mpJoin(c);}});
 $('hLB').addEventListener('click',e=>{if(e.target.closest('[data-open=lb]'))openLB();});
@@ -2971,7 +3069,7 @@ applySettings();
 let fpsN=0,fpsT=0;
 
 /* ---------- accounts and stats ---------- */
-let acTab='stats',acMsg='';
+let acTab='cloud',acMsg='';
 const fmtTime=s=>{s=Math.round(s);const h=Math.floor(s/3600),m=Math.floor(s%3600/60);return h?`${h}h ${m}m`:`${m}m`;};
 function renderAcct(){
   const S=ST(),li=levelInfo(profile.xp);
@@ -2979,7 +3077,17 @@ function renderAcct(){
   $('acSub').textContent=`Level ${li.level} · ${li.rank} · ${profile.gp.toLocaleString()} GP · callsign ${profile.name}`;
   for(const b of $('acTabs').children)b.classList.toggle('on',b.dataset.ac===acTab);
   let h='';
-  if(acTab==='stats'){
+  if(acTab==='cloud'){
+    if(!cloudOn())h+=`<div class="note">Online accounts are not switched on yet. Until then, progress stays in this browser only: use the same link every time, or move it with a save code.</div>`;
+    else if(!CS)h+=`<div class="cloudBox"><div class="lbl2">Sign up or log in</div><div class="note">Your progress is saved online and comes back on any phone or link. Use the same username and password to log in anywhere.</div>
+      <div class="form"><input id="clName" maxlength="14" placeholder="Username" autocomplete="username" autocapitalize="off" spellcheck="false" value="${esc(isGuest(USERS.cur)?'':USERS.cur)}"><input id="clPass" type="password" maxlength="64" placeholder="Password (6+ characters)" autocomplete="current-password"></div>
+      <div class="row"><button class="btn sm cut" id="clSignup">Create account</button><button class="btn sm ghost cut" id="clLogin">Log in</button></div>
+      ${hasProgress(profile)?`<div class="note">What you played so far (Lv ${levelInfo(profile.xp).level}, ${profile.gp.toLocaleString()} GP) goes into the account.</div>`:''}</div>`;
+    else h+=`<div class="cloudBox"><div class="lbl2">Online account</div><div style="font-family:var(--f-hud);font-size:24px">${esc(CS.name)}</div>
+      <div class="note ${cloudErr?'ca':'cg'}">${cloudErr?esc(cloudErr):cloudMine()&&cloudLast?'✓ Saved online · '+new Date(cloudLast).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}):'Connecting to your account…'}</div>
+      ${cloudMine()?'':'<div class="note">You switched to another user on this device. Switch back to your account user to keep saving online.</div>'}
+      <div class="row"><button class="btn sm ghost cut" id="clSaveNow">Save now</button><button class="btn sm ghost cut" id="clLogout">Log out</button></div></div>`;
+  }else if(acTab==='stats'){
     const kd=S.deaths?(S.kills/S.deaths).toFixed(2):S.kills.toFixed(2),acc=S.shots?Math.round(100*S.hits/S.shots):0,hs=S.kills?Math.round(100*S.heads/S.kills):0,wr=S.matches?Math.round(100*S.wins/S.matches):0;
     const t=(v,l)=>`<div class="tile"><b>${v}</b><span>${l}</span></div>`;
     h+=`<div class="tiles">${t(S.kills,'Kills')}${t(S.deaths,'Deaths')}${t(kd,'K/D')}${t(acc+'%','Accuracy')}${t(S.heads,'Headshots')}${t(hs+'%','Headshot rate')}${t(S.matches,'Matches')}${t(wr+'%','Win rate')}${t(S.bestStreak,'Best streak')}${t(S.knife,'Knife kills')}${t(S.boom,'Explosive kills')}${t(S.nukes,'Nukes')}${t(S.zbest||0,'Best zombie round')}${t(S.zkills||0,'Zombie kills')}${t(fmtTime(S.time),'Time played')}</div>`;
@@ -3045,6 +3153,13 @@ $('acBody').addEventListener('click',e=>{
     saveProfile();const into=USERS.cur;USERS.users[into].p=mergeProfiles(USERS.users[into].p,u.p);delete USERS.users[n];
     try{localStorage.setItem('blockfire.users',JSON.stringify(USERS));}catch(e){}
     loadProfile();renderProfile();acMsg=`Moved ${n}'s progress into ${into}.`;renderAcct();}
+  if(b.id==='clSignup'||b.id==='clLogin'){const n=nameOk($('clName').value),pw=$('clPass').value||'';
+    if(!n){acMsg='!Pick a username with 2 to 14 letters (not "Player").';renderAcct();return;}
+    if(pw.length<6){acMsg='!The password needs at least 6 characters.';renderAcct();return;}
+    b.disabled=true;b.textContent='Please wait…';
+    (b.id==='clSignup'?cloudSignup(n,pw):cloudLogin(n,pw)).then(err=>{acMsg=err?'!'+err:(b.id==='clSignup'?`Account ${CS.name} created. Your progress is saved online.`:`Welcome back, ${CS.name}. Your progress is loaded.`);renderAcct();renderProfile();});return;}
+  if(b.id==='clLogout'){cloudLogout().then(()=>{acMsg='Logged out. Your progress is safe online.';renderAcct();renderProfile();});return;}
+  if(b.id==='clSaveNow'){cloudPush().then(()=>{acMsg=cloudErr?'!'+cloudErr:'Saved online.';renderAcct();});return;}
   if(b.id==='saveCopy'){const t=$('saveOut');t.select();if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t.value).then(()=>{acMsg='Save code copied.';renderAcct();},()=>{});}
   if(b.id==='saveLoad'){
     try{const o=JSON.parse(decodeURIComponent(escape(atob($('saveIn').value.trim()))));if(!o||!o.p||typeof o.p.xp!=='number')throw 0;
