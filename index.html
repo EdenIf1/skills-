@@ -746,10 +746,19 @@ async function cloudReq(path,opt={}){const c=cloudCfg();const h={apikey:c.key,'C
   try{const r=await fetch(c.url.replace(/\/$/,'')+path,{method:opt.method||'GET',headers:h,body:opt.body?JSON.stringify(opt.body):undefined,signal:ctl.signal,keepalive:!!opt.keepalive});
     const txt=await r.text();let j=null;try{j=txt?JSON.parse(txt):null;}catch(e){}return{ok:r.ok,status:r.status,j};}
   catch(e){return{ok:false,status:0,j:null};}finally{clearTimeout(t);}}
-function cloudSession(j,name){if(!j||!j.access_token)return false;const keep=CS&&CS.uid===(j.user&&j.user.id)?CS:{};CS={at:j.access_token,rt:j.refresh_token,exp:Date.now()+((j.expires_in||3600)-60)*1000,uid:(j.user&&j.user.id)||keep.uid,name,ver:keep.ver||'',dirty:!!keep.dirty};cloudKeep();return true;}
+function cloudSession(j,name){if(!j||!j.access_token)return false;const keep=CS&&CS.uid===(j.user&&j.user.id)?CS:{};CS={at:j.access_token,rt:j.refresh_token,exp:Date.now()+((j.expires_in||3600)-60)*1000,uid:(j.user&&j.user.id)||keep.uid,name,ver:keep.ver||'',dirty:!!keep.dirty,guest:!!keep.guest,gpw:keep.gpw||'',seen:Date.now()};cloudKeep();return true;}
 async function cloudFresh(){if(!CS)return false;if(Date.now()<CS.exp)return true;
   const r=await cloudReq('/auth/v1/token?grant_type=refresh_token',{method:'POST',auth:false,body:{refresh_token:CS.rt}});
-  if(r.ok&&cloudSession(r.j,CS.name))return true;if(r.status===400||r.status===401){cloudErr='Your login expired. Log in again.';}return false;}
+  if(r.ok&&cloudSession(r.j,CS.name))return true;
+  if(r.status===400||r.status===401){
+    if(CS.guest&&CS.gpw){const t=await cloudReq('/auth/v1/token?grant_type=password',{method:'POST',auth:false,body:{email:cloudEmail(CS.name),password:CS.gpw}});if(t.ok&&cloudSession(t.j,CS.name))return true;}
+    cloudErr='Your login expired. Log in again.';}
+  return false;}
+// a long time without playing: a registered player logs in again (guests keep their own key on this phone)
+const IDLE_MS=90*864e5;
+if(CS&&!CS.guest&&CS.seen&&Date.now()-CS.seen>IDLE_MS){const n=CS.name;CS=null;try{localStorage.removeItem('blockfire.cloud');}catch(e){}
+  if(USERS.users[n]){delete USERS.users[n];USERS.cur='';try{localStorage.setItem('blockfire.users',JSON.stringify(USERS));}catch(e){}loadProfile();}}
+else if(CS){CS.seen=Date.now();try{localStorage.setItem('blockfire.cloud',JSON.stringify(CS));}catch(e){}}
 function authErr(r){const m=String((r.j&&(r.j.msg||r.j.error_description||r.j.message||r.j.error_code||r.j.error))||'');
   if(!r.status)return 'No connection to the save server. Check your internet and try again.';
   if(/already|exists/i.test(m))return 'That username is taken. Pick another one, or log in if it is yours.';
@@ -797,7 +806,34 @@ function cloudAdopt(name,p,fresh){
   USERS.users[name]={pin:'',cloud:true,p};USERS.cur=name;
   try{localStorage.setItem('blockfire.users',JSON.stringify(USERS));}catch(e){}loadProfile();afterSwitch();}
 const nameOk=n=>{n=String(n||'').replace(/[^\w \-.]/g,'').trim().slice(0,14);return n.length>=2&&nameKey(n)!=='player'?n:'';};
+// first time here: an account with a temporary name is made on the server, so progress is saved online right away
+let guestBusy=false;
+async function cloudGuest(){
+  if(guestBusy||CS||!cloudOn()||!isGuest(USERS.cur))return false;guestBusy=true;
+  try{const r=await cloudReq('/functions/v1/guest',{method:'POST',auth:false,body:{}});if(!r.ok||!r.j||!r.j.name)return false;
+    const {name,password}=r.j;
+    const t=await cloudReq('/auth/v1/token?grant_type=password',{method:'POST',auth:false,body:{email:cloudEmail(name),password}});
+    if(!t.ok||!cloudSession(t.j,name))return false;CS.guest=true;CS.gpw=password;CS.ver='';CS.dirty=true;cloudKeep();
+    const p=fillProfile(Object.assign({},profile),name);if(!p.name||p.name==='Player')p.name=name;
+    cloudAdopt(name,p,true);USERS.users[name].guest=true;try{localStorage.setItem('blockfire.users',JSON.stringify(USERS));}catch(e){}
+    cloudReady=true;await cloudPush();renderHome();return true;}
+  finally{guestBusy=false;}}
+// a guest picks a real name and password: same account, same progress
+async function cloudClaim(name,pass){
+  if(!await cloudFresh())return 'No connection to the save server. Check your internet and try again.';
+  const r=await cloudReq('/functions/v1/claim',{method:'POST',body:{name,password:pass}});
+  if(!r.ok){const e=r.j&&r.j.error;
+    if(!r.status)return 'No connection to the save server. Check your internet and try again.';
+    if(e==='taken')return 'That username is taken. Pick another one.';
+    if(e==='bad_name')return 'Usernames are 2 to 14 letters, numbers, spaces, dots or dashes (not "Player" or "Guest…").';
+    if(e==='bad_password')return 'The password needs 6 to 72 characters.';
+    return 'The save server answered with error '+r.status+'.';}
+  const old=CS.name;saveProfile();const u=USERS.users[old];delete USERS.users[old];
+  if(!profile.name||profile.name===old)profile.name=name;u.p=profile;u.guest=false;USERS.users[name]=u;USERS.cur=name;
+  CS.name=name;CS.guest=false;CS.gpw='';CS.dirty=true;cloudKeep();
+  try{localStorage.setItem('blockfire.users',JSON.stringify(USERS));}catch(e){}loadProfile();afterSwitch();await cloudPush();return cloudErr;}
 async function cloudSignup(name,pass){
+  if(CS&&CS.guest&&cloudMine())return cloudClaim(name,pass);
   // the server makes the account (already confirmed), then we log straight in
   const r=await cloudReq('/functions/v1/signup',{method:'POST',auth:false,body:{name,password:pass}});
   if(!r.ok){const e=r.j&&r.j.error;
@@ -824,6 +860,7 @@ async function cloudLogout(){if(cloudMine()&&cloudReady)await cloudPush();const 
   if(n&&USERS.users[n]){delete USERS.users[n];USERS.cur='';try{localStorage.setItem('blockfire.users',JSON.stringify(USERS));}catch(e){}loadProfile();afterSwitch();}}
 // opening the game: if the database moved on (another phone), take it unless this phone got further; then saving starts
 async function cloudSync(){
+  if(!CS&&cloudOn()&&isGuest(USERS.cur)){await cloudGuest();return;}
   if(cloudReady||!cloudMine())return;const row=await cloudPull();if(row===null||!cloudMine())return;
   cloudReady=true;
   if(!row.updated_at){CS.ver='';CS.dirty=true;cloudPush();}
@@ -2990,13 +3027,13 @@ function renderHome(){
   const M=MAPS[mk]||MAP,zm=M.mode==='zombie',DF=ZDIFF[isClient()?(NET.zdiff||'medium'):(profile.zdiff||'medium')]||ZDIFF.medium;
   $('hSelMap').textContent=M.name+(zm?' · '+DF.name:'');
   $('hName').textContent=profile.name;
-  {const hs=$('hSave');const show=cloudOn()&&!CS;hs.hidden=!(show||cloudMine());hs.textContent=show?'☁ Sign up to save your progress':'☁ Saved online';}
+  {const hs=$('hSave');const show=cloudOn()&&!CS;hs.hidden=!(show||cloudMine());hs.textContent=show?'☁ Sign up to save your progress':CS&&CS.guest?'☁ Guest · saved online':'☁ Saved online';}
   const net=$('hNet');net.classList.toggle('off',!navigator.onLine);net.querySelector('span').textContent=NET.mode?`Room ${NET.code}`:navigator.onLine?'Online':'Offline';
   $('play').textContent=NET.mode?'Lobby':'Play';
   // party: you and the friends in your room
   const me=`<div class="pm"><i style="background:${player.team==='red'?'var(--red)':'var(--blue)'}">${esc((profile.name||'?').charAt(0).toUpperCase())}</i><b>${esc(profile.name)} <span class="prank">Lv ${levelInfo(profile.xp).level}</span></b><small class="ca">${isClient()?(NET.ready?'READY':'IN ROOM'):NET.mode?'♛ HOST':'YOU'}</small></div>`;
   let h=`<h4><span>Party${NET.mode?' · '+esc(NET.code):''}</span>${NET.mode?'<a id="hOpenLobby">Lobby ›</a>':''}</h4>`+me;
-  if(cloudOn()&&!CS)h+=`<button class="btn sm cut hSignup" id="hSignup">☁ Sign up · keep your progress safe</button>`;
+  if(cloudOn()&&(!CS||CS.guest))h+=`<button class="btn sm cut hSignup" id="hSignup">${CS&&CS.guest?'☁ Create account · pick your name':'☁ Sign up · keep your progress safe'}</button>`;
   if(NET.mode){for(const r of NET.roster||[]){if(r.nid===(isHost()?'P0':NET.nid))continue;h+=`<div class="pm"><i style="background:${r.team==='red'?'var(--red)':'var(--blue)'}">${esc(r.name.charAt(0).toUpperCase())}</i><b style="color:#ffd34a">★ ${esc(r.name)}</b><small class="${r.nid==='P0'||r.rd?'cg':'ca'}">${r.nid==='P0'?'HOST':r.rd?'READY':'NOT READY'}</small></div>`;}
     h+=`<div class="hJoin"><button class="btn sm cut" id="openMP" style="flex:1">Open lobby</button><button class="btn sm ghost cut" id="hLeave">${isHost()?'Close room':'Leave room'}</button></div>`;}
   else if(NET.status&&NET.peer)h+=`<div class="note ca">${esc(NET.status)}</div><div class="hJoin"><button class="btn sm cut" id="openMP" style="flex:1">Open lobby</button><button class="btn sm ghost cut" id="hLeave">Stop</button></div>`;
@@ -3086,6 +3123,11 @@ function renderAcct(){
   let h='';
   if(acTab==='cloud'){
     if(!cloudOn())h+=`<div class="note">Online accounts are not switched on yet. Until then, progress stays in this browser only: use the same link every time, or move it with a save code.</div>`;
+    else if(CS&&CS.guest&&cloudMine())h+=`<div class="cloudBox"><div class="lbl2">Guest account</div><div style="font-family:var(--f-hud);font-size:24px">${esc(CS.name)}</div>
+      <div class="note cg">${cloudErr?esc(cloudErr):'✓ Your progress is saved online on this phone.'}</div>
+      <div class="note">Create an account to pick your own name and password. You keep everything, and you can play on any phone.</div>
+      <div class="form"><input id="clName" maxlength="14" placeholder="Pick a username" autocomplete="username" autocapitalize="off" spellcheck="false"><input id="clPass" type="password" maxlength="64" placeholder="Password (6+ characters)" autocomplete="new-password"></div>
+      <div class="row"><button class="btn sm cut" id="clSignup">Save my account</button><button class="btn sm ghost cut" id="clLogin">Log in to another account</button></div></div>`;
     else if(!CS)h+=`<div class="cloudBox"><div class="lbl2">Sign up or log in</div><div class="note">Your progress is saved online and comes back on any phone or link. Use the same username and password to log in anywhere.</div>
       <div class="form"><input id="clName" maxlength="14" placeholder="Username" autocomplete="username" autocapitalize="off" spellcheck="false" value="${esc(isGuest(USERS.cur)?'':USERS.cur)}"><input id="clPass" type="password" maxlength="64" placeholder="Password (6+ characters)" autocomplete="current-password"></div>
       <div class="row"><button class="btn sm cut" id="clSignup">Create account</button><button class="btn sm ghost cut" id="clLogin">Log in</button></div>
