@@ -735,7 +735,7 @@ loadProfile();
 try{localStorage.setItem('blockfire.users',JSON.stringify(USERS));}catch(e){}
 const ST=()=>profile.stats;
 /* ---- online accounts: sign up once; progress lives in the database and comes back on any phone or link ---- */
-const CLOUD_CFG={url:'',key:''}; // Supabase project URL + its public (anon) key
+const CLOUD_CFG={url:'https://qnhogbwnumvounwpusmc.supabase.co',key:'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFuaG9nYndudW12b3Vud3B1c21jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE2NzYyNzQsImV4cCI6MjEwNzI1MjI3NH0.8c16Bx4eagKtW8Usp0bRXNmxXRW0I3zZ_jjpZJy6kyI'}; // Supabase project URL + its public (anon) key
 function cloudCfg(){let o=null;try{o=JSON.parse(localStorage.getItem('blockfire.cloudcfg')||'null');}catch(e){}return o&&o.url?o:CLOUD_CFG;}
 const cloudOn=()=>!!cloudCfg().url;
 let CS=null;try{CS=JSON.parse(localStorage.getItem('blockfire.cloud')||'null');}catch(e){}
@@ -798,11 +798,18 @@ function cloudAdopt(name,p,fresh){
   try{localStorage.setItem('blockfire.users',JSON.stringify(USERS));}catch(e){}loadProfile();afterSwitch();}
 const nameOk=n=>{n=String(n||'').replace(/[^\w \-.]/g,'').trim().slice(0,14);return n.length>=2&&nameKey(n)!=='player'?n:'';};
 async function cloudSignup(name,pass){
-  const r=await cloudReq('/auth/v1/signup',{method:'POST',auth:false,body:{email:cloudEmail(name),password:pass,data:{name}}});
-  if(!r.ok)return authErr(r);
-  if(!cloudSession(r.j,name))return 'The account was made, but the database still asks for email confirmation. In Supabase turn off "Confirm email" (Authentication → Sign In / Providers → Email), then log in.';
+  // the server makes the account (already confirmed), then we log straight in
+  const r=await cloudReq('/functions/v1/signup',{method:'POST',auth:false,body:{name,password:pass}});
+  if(!r.ok){const e=r.j&&r.j.error;
+    if(!r.status)return 'No connection to the save server. Check your internet and try again.';
+    if(e==='taken')return 'That username is taken. Pick another one, or log in if it is yours.';
+    if(e==='bad_name')return 'Usernames are 2 to 14 letters, numbers, spaces, dots or dashes (not "Player").';
+    if(e==='bad_password')return 'The password needs 6 to 72 characters.';
+    return authErr(r);}
+  const t=await cloudReq('/auth/v1/token?grant_type=password',{method:'POST',auth:false,body:{email:cloudEmail(name),password:pass}});
+  if(!t.ok||!cloudSession(t.j,name))return 'Your account was made, but logging in failed. Press Log in.';
   const p=fillProfile(Object.assign({},profile),name);if(!p.name||p.name==='Player')p.name=name;
-  cloudAdopt(name,p,true);CS.ver='';CS.dirty=true;cloudReady=true;await cloudPush();return cloudErr;}
+  cloudAdopt(name,p,true);CS.ver='';CS.dirty=true;cloudKeep();cloudReady=true;await cloudPush();return cloudErr;}
 async function cloudLogin(name,pass){
   const r=await cloudReq('/auth/v1/token?grant_type=password',{method:'POST',auth:false,body:{email:cloudEmail(name),password:pass}});
   if(!r.ok)return authErr(r);
