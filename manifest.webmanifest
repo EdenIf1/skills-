@@ -1,7 +1,7 @@
 {
-  "name": "Blockfire",
-  "short_name": "Blockfire",
-  "description": "Blocky 6v6 shooter with bots, zombies and multiplayer rooms.",
+  "name": "Cubefront",
+  "short_name": "Cubefront",
+  "description": "Blocky team shooter with bots, zombies, 12v12 battles and multiplayer rooms.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "fullscreen",
