@@ -742,6 +742,10 @@ function readUsers(){
     let old=null;try{old=JSON.parse(localStorage.getItem('blockfire.v1')||'null');}catch(e){}
     if(old){const n=(old.name||'Player').slice(0,14);u.users[n]={pin:'',p:old};u.cur=n;}
   }
+  // a damaged save never stops the game: keep only users that look like users
+  if(typeof u.users!=='object'||Array.isArray(u.users))u.users={};
+  for(const n of Object.keys(u.users)){const x=u.users[n];if(!x||typeof x!=='object'||Array.isArray(x)||(x.p!=null&&(typeof x.p!=='object'||Array.isArray(x.p))))delete u.users[n];else if(!x.p)x.p={};}
+  if(typeof u.cur!=='string')u.cur='';
   // older saves kept PINs as plain text: hash them in place
   for(const n in u.users){const x=u.users[n];if(x&&typeof x.pin==='string'&&x.pin)x.pin=makePin(x.pin);}
   return u;
@@ -764,7 +768,7 @@ function migrateProfile(p){if(!p||typeof p!=='object')return {};const v=p.v|0;
   if(v<SCHEMA)p.v=SCHEMA;return p;}
 function fillProfile(p,name){const base=makeProfile(name);const out=Object.assign(base,migrateProfile(p));out.stats=Object.assign(newStats(),out.stats||{});out.attOwn=out.attOwn||{};if(!out.attOwn.m4a1)out.attOwn.m4a1=['holo'];return out;}
 function loadProfile(){
-  USERS=readUsers();
+  if(!USERS)USERS=readUsers();
   if(!USERS.cur||!USERS.users[USERS.cur]){const n='Player';USERS.users[n]=USERS.users[n]||{pin:'',guest:true,p:makeProfile(n)};USERS.cur=n;}
   profile=fillProfile(USERS.users[USERS.cur].p,USERS.cur);
 }
@@ -2063,8 +2067,10 @@ function buildGun(model,cm,bot,att){
   g.userData=ud;return g;
 }
 let vmGuns=[];
+// free the GPU memory of an object we throw away: its geometry, and the texture of a label sprite (shared materials stay)
+function freeObj(o){if(!o)return;o.traverse(m=>{if(m.geometry&&m.geometry!==boxGeo)m.geometry.dispose();if(m.isSprite&&m.material){if(m.material.map)m.material.map.dispose();m.material.dispose();}});}
 function buildViewmodels(){
-  for(const g of vmGuns)VM.remove(g);
+  for(const g of vmGuns){VM.remove(g);freeObj(g);}
   vmGuns=loadout.map(id=>{const g=buildGun(WEAPONS[id].model,camoMat(profile.camo),false,attOf(id));VM.add(g);return g;});
   refreshPills();
 }
@@ -2712,7 +2718,7 @@ function labelSprite(text,color,w){
 }
 const chalkMat=new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.12,side:THREE.DoubleSide,depthWrite:false});
 function zBuildStations(){
-  for(const m of zMarks)scene.remove(m);zMarks=[];
+  for(const m of zMarks){scene.remove(m);freeObj(m);}zMarks=[];
   if(!isZ())return;const G=HOUSE.G;
   const mark=(o,x,y,z)=>{o.position.set(x,y,z);scene.add(o);zMarks.push(o);};
   for(const s of STATIONS){
@@ -2868,7 +2874,7 @@ function spawnDrop(w,x,y,z){
   while(drops.length>=14)removeDrop(drops[0]);
   return makeDrop(dropSeq++,w,x,y,z);
 }
-function removeDrop(d){const i=drops.indexOf(d);if(i>=0)drops.splice(i,1);scene.remove(d.m);if(pickTarget===d)pickTarget=null;}
+function removeDrop(d){const i=drops.indexOf(d);if(i>=0)drops.splice(i,1);scene.remove(d.m);freeObj(d.m);if(pickTarget===d)pickTarget=null;}
 function clearDrops(){while(drops.length)removeDrop(drops[0]);}
 function updateDrops(dt){
   for(let i=drops.length-1;i>=0;i--){const d=drops[i];d.m.rotation.y+=dt*.9;d.m.position.y=d.y+.16+Math.sin(performance.now()/400+d.id)*.04;
@@ -4478,14 +4484,14 @@ function rlProbe(){return new Promise(res=>{const t='diag/'+Math.random().toStri
   setTimeout(()=>{if(!ok){ok=true;res(false);}},9500);});}
 async function netDiag(){
   await fetchIce();try{if(NET.peer&&NET.peer.options&&NET.peer.options.config)NET.peer.options.config.iceServers=iceDyn||ICE;}catch(e){}const relays=(iceDyn||ICE).slice(2),rName=r=>{const u=[].concat(r.urls)[0]||'';return 'Relay · '+u.replace(/^turns?:/,'').split(/[:?]/)[0];};
-  NET.diag=[['Game server','checking…'],['Direct connection (STUN)','checking…']].concat(relays.map(r=>[rName(r),'checking…']));renderMP();
+  const DG=NET.diag=[['Game server','checking…'],['Direct connection (STUN)','checking…']].concat(relays.map(r=>[rName(r),'checking…']));renderMP();
   const srv=await new Promise(res=>{let p;try{p=new Peer(peerOpts());}catch(e){res(false);return;}const t=setTimeout(()=>{try{p.destroy();}catch(e){}res(false);},9000);
     p.on('open',()=>{clearTimeout(t);try{p.destroy();}catch(e){}res(true);});p.on('error',()=>{clearTimeout(t);try{p.destroy();}catch(e){}res(false);});});
-  NET.diag[0][1]=srv?'ok':'failed';renderMP();
-  const st=await iceProbe(ICE.slice(0,2),'srflx',6000);NET.diag[1][1]=st?'ok':'failed';renderMP();
-  NET.diag.splice(2,0,['Backup route','checking…']);const bk=rlProbe().then(v=>{NET.diag[2][1]=v?'ok':'failed';renderMP();return v;});
-  const rs=await Promise.all(relays.map((r,i)=>iceProbe([r],'relay',9000).then(v=>{NET.diag[3+i][1]=v?'ok':'failed';renderMP();return v;})));const tu=rs.some(Boolean)||await bk;
-  NET.diag.push(['Result',!srv?'No internet or the game server is down. Try again in a minute.':st&&tu?'Everything looks good.':st?'Should work on Wi-Fi. On some mobile networks the relay is needed and it is not reachable right now.':tu?'Works through the relay only. Expect a bit more delay.':'Your network blocks game connections. Try another Wi-Fi or mobile data.']);
+  DG[0][1]=srv?'ok':'failed';renderMP();
+  const st=await iceProbe(ICE.slice(0,2),'srflx',6000);DG[1][1]=st?'ok':'failed';renderMP();
+  DG.splice(2,0,['Backup route','checking…']);const bk=rlProbe().then(v=>{DG[2][1]=v?'ok':'failed';renderMP();return v;});
+  const rs=await Promise.all(relays.map((r,i)=>iceProbe([r],'relay',9000).then(v=>{DG[3+i][1]=v?'ok':'failed';renderMP();return v;})));const tu=rs.some(Boolean)||await bk;
+  DG.push(['Result',!srv?'No internet or the game server is down. Try again in a minute.':st&&tu?'Everything looks good.':st?'Should work on Wi-Fi. On some mobile networks the relay is needed and it is not reachable right now.':tu?'Works through the relay only. Expect a bit more delay.':'Your network blocks game connections. Try another Wi-Fi or mobile data.']);
   renderMP();
 }
 /* ---- leaving ---- */
