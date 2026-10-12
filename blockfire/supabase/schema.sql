@@ -240,3 +240,19 @@ begin
 end $$;
 revoke all on function public.invite_send(text, text, text) from public, anon;
 grant execute on function public.invite_send(text, text, text) to authenticated;
+
+-- ===== room list: how far the match is (0..100), so late joiners only get in before half time =====
+alter table public.rooms add column if not exists progress int not null default 0 check (progress between 0 and 100);
+grant select (progress) on public.rooms to anon, authenticated;
+create or replace function public.room_upsert2(p_code text, p_host_name text, p_mode text, p_map text, p_players int, p_max int, p_locked boolean, p_state text, p_proto int, p_progress int)
+returns void language plpgsql security definer set search_path = '' as $$
+declare me uuid := auth.uid();
+begin
+  if me is null then raise exception 'sign in first'; end if;
+  insert into public.rooms(code, host_uid, host_name, mode, map, players, max, locked, state, proto, progress)
+  values (upper(p_code), me, p_host_name, p_mode, p_map, p_players, p_max, coalesce(p_locked,false), p_state, p_proto, greatest(0, least(100, coalesce(p_progress,0))))
+  on conflict (host_uid) do update set code = excluded.code, host_name = excluded.host_name, mode = excluded.mode, map = excluded.map,
+    players = excluded.players, max = excluded.max, locked = excluded.locked, state = excluded.state, proto = excluded.proto, progress = excluded.progress;
+end $$;
+revoke all on function public.room_upsert2(text,text,text,text,int,int,boolean,text,int,int) from public, anon;
+grant execute on function public.room_upsert2(text,text,text,text,int,int,boolean,text,int,int) to authenticated;
