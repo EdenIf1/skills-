@@ -1490,7 +1490,7 @@ async function adminClaim(code){if(!CS||CS.guest)return 'Sign in to your own acc
   if(r.ok){CS.admin=true;cloudKeep();return '';}const e=r.j&&r.j.error;
   return !r.status?'No connection to the server.':e==='code'?'That code is not right.':e==='taken'?'This game already has its admin.':e==='guest'?'Guest accounts cannot be admins. Create your account first.':'The server said no (error '+r.status+').';}
 /* ================= version, remote settings, crash reports ================= */
-const APP_VERSION='1.0.0',BUILD_ID='1b5a2ec';
+const APP_VERSION='1.0.0',BUILD_ID='13700bb';
 const verNum=v=>String(v||'0').split('.').slice(0,3).map(n=>parseInt(n)||0).reduce((a,n)=>a*1000+n,0);
 let RCFG={};try{RCFG=JSON.parse(localStorage.getItem('blockfire.rcfg')||'{}')||{};}catch(e){RCFG={};}
 const feat=k=>!(RCFG.features&&RCFG.features[k]===false);
@@ -4045,6 +4045,8 @@ function findTarget(b){
   for(const e of (isZ()?zombies:ents)){
     if(!e.alive||e.team===b.team||e.inMatch===false)continue;
     const dx=e.x-b.x,dz=e.z-b.z,d=Math.hypot(dx,dz);if(d>(MM()==='sniper'?75:50))continue;if(xmHidden(b,e,d))continue;
+    // a bot running for the flag or a point only fights what is close; the rest it runs past
+    if(b.objRun&&XM.on&&d>14&&!(XM.flags&&XM.flags[b.team]&&XM.flags[b.team].by===e))continue;
     if((dx*fx+dz*fz)/(d||1)<.2&&d>7&&e!==b.alertBy)continue;
     const dd=e.king?d*.45:d;if(dd<bd&&canSee(b,e)){bd=dd;best=e;}
   }
@@ -7310,7 +7312,7 @@ function xmStop(){
   for(const o of XM.meshes)scene.remove(o);XM.meshes.length=0;
   for(const e of ents){xmTint(e,false);xmProp(e,false);if(e.xmTeam0&&e.xmTeam0!==e.team)e.team=e.xmTeam0;delete e.xmTeam0;
     e.xmOut=false;e.knifeOnly=false;e.xmPassive=false;e.spd=1;e.gg=0;e.lives=0;e.atSpot=false;e.xmSpot=null;delete e.xmKnifed;delete e.frz;delete e.propC;e.objRun=false;if(e.gun&&!e.isPlayer)e.gun.visible=MM()!=='knife';}
-  XM.on=false;XM.rule='';XM.ffa=false;XM.own=false;XM.win=null;XM.flags=null;XM.pts=null;XM.hp=null;XM.ring=null;XM.phase=0;
+  XM.on=false;XM.rule='';XM.ffa=false;XM.own=false;XM.win=null;XM.flags=null;XM.lanes=null;XM.pts=null;XM.hp=null;XM.ring=null;XM.phase=0;
   const h=$('xmHud');if(h){h.hidden=true;h.innerHTML='';}}
 
 function xmStart(){xmStop();const r=RULE();if(!XRULES.includes(r)||isZ())return;
@@ -7330,7 +7332,7 @@ function xmStart(){xmStop();const r=RULE();if(!XRULES.includes(r)||isZ())return;
   }else{
     if(r==='inf')player.team='blue';
   }
-  if(r==='ctf'&&host){XM.flags={};for(const t of ['blue','red']){const s=MAP.spawn[t],b=(s&&xmOpenSpot((s[0]+s[1])/2,(s[2]+s[3])/2))||xmBase(t);XM.flags[t]={st:'home',by:null,x:b[0],y:b[1],z:b[2],hx:b[0],hy:b[1],hz:b[2],t:0};}}
+  if(r==='ctf'&&host){XM.flags={};for(const t of ['blue','red']){const s=MAP.spawn[t],sx=s?(s[0]+s[1])/2:0,sz=s?(s[2]+s[3])/2:0,b=(s&&xmOpenSpot(sx+(MAP.center[0]-sx)*.2,sz+(MAP.center[2]-sz)*.2))||xmBase(t);XM.flags[t]={st:'home',by:null,x:b[0],y:b[1],z:b[2],hx:b[0],hy:b[1],hz:b[2],t:0};}}
   if((r==='dom'||r==='hp')&&host){const a=xmBase('blue'),b=xmBase('red'),P=[];
     for(const f of r==='dom'?[.22,.5,.78]:[.3,.5,.7,.5]){const g=xmGround(a[0]+(b[0]-a[0])*f+(r==='hp'&&f===.5&&P.length?((rand()<.5?-1:1)*W*.18):0),a[2]+(b[2]-a[2])*f+(r==='hp'&&f===.5&&P.length?((rand()<.5?-1:1)*D*.18):0));if(g)P.push(g);}
     if(r==='dom')XM.pts=P.map((p,i)=>({n:'ABC'[i],x:p[0],y:p[1],z:p[2],own:'',cap:0,by:''}));
@@ -7453,7 +7455,13 @@ function xmRing(dt){const R=XM.ring;R.t+=dt;const grace=30,shrink=300;R.r=R.t<gr
 // bots: where to go when there is no one to shoot
 function xmGoal(b){if(!XM.on)return null;const r=XM.rule;
   if(r==='ctf'&&XM.flags){const mine=XM.flags[b.team],their=XM.flags[otherTeam(b.team)];if(!mine||!their)return null;
-    if(their.by===b)return [mine.hx,mine.hz];if(mine.st!=='home')return [mine.x,mine.z];return [their.x,their.z];}
+    if(their.by===b)return [mine.hx,mine.hz];if(mine.st!=='home')return [mine.x,mine.z];
+    // runners split over three routes (left, middle, right) so they flank instead of meeting head-on in the middle
+    const lane=b.lane!==undefined?b.lane:(b.lane=[-1,1,0][(b.name.length+b.name.charCodeAt(0))%3]);
+    if(lane&&their.st==='home'){const mx=(mine.hx+their.hx)/2,mz=(mine.hz+their.hz)/2,dx=their.hx-mine.hx,dz=their.hz-mine.hz,l=Math.hypot(dx,dz)||1;
+      const key=MAP.key+lane+b.team;if(!XM.lanes)XM.lanes={};if(!XM.lanes[key])XM.lanes[key]=xmGround(mx-dz/l*W*.3*lane,mz+dx/l*W*.3*lane)||[mx,0,mz];const wp=XM.lanes[key];
+      if(Math.hypot(b.x-their.x,b.z-their.z)>Math.hypot(wp[0]-their.x,wp[2]-their.z)+4)return [wp[0],wp[2]];}
+    return [their.x,their.z];}
   if(r==='dom'&&XM.pts){const L=XM.pts.filter(p=>p.own!==b.team);const P=(L.length?L:XM.pts).slice().sort((p,q)=>Math.hypot(p.x-b.x,p.z-b.z)-Math.hypot(q.x-b.x,q.z-b.z));const p=P[(b.name.length+((XM.t/20)|0))%Math.min(2,P.length)]||P[0];return [p.x,p.z];}
   if(r==='hp'&&XM.hp)return [XM.hp.x+(rand()-.5)*3,XM.hp.z+(rand()-.5)*3];
   if(r==='br'&&XM.ring&&Math.hypot(b.x-XM.ring.x,b.z-XM.ring.z)>XM.ring.r*.7)return [XM.ring.x,XM.ring.z];
