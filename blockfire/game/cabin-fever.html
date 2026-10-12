@@ -2194,6 +2194,7 @@ function genSafehouse(){
 /* ================= the big maps (96 x 96): Old Town, Rail Yard, Outpost, Farm, Giant House ================= */
 // a building of 4-block storeys (3 air + floor); windows all round, doors, stairs inside that swap sides each floor,
 // and a walkable roof with a low wall when roofUp is set. Coordinates are for one half; X/Z turn them for the other.
+let PERCHES=[];
 function bld(X,Z,x0,z0,x1,z1,G,fl,wall,o){o=o||{};const bx=(a,y,b,c,y2,d,id)=>box(X(a),y,Z(b),X(c),y2,Z(d),id);
   bx(x0,G+1,z0,x1,G+4*fl,z1,wall);
   for(let f=0;f<fl;f++){const b=G+4*f;bx(x0+1,b+1,z0+1,x1-1,b+3,z1-1,0);bx(x0+1,b+4,z0+1,x1-1,b+4,z1-1,f===fl-1?(o.roof||B.PLANK):(o.slab||B.PLANK));
@@ -2201,8 +2202,13 @@ function bld(X,Z,x0,z0,x1,z1,G,fl,wall,o){o=o||{};const bx=(a,y,b,c,y2,d,id)=>bo
     for(let z=z0+2;z<=z1-2;z+=3){set(X(x0),b+2,Z(z),B.GLASS);set(X(x1),b+2,Z(z),B.GLASS);}}
   const top=o.roofUp?fl:fl-1;
   for(let f=0;f<top;f++){const b=G+4*f,east=f%2===1;
-    for(let k=0;k<4;k++){const z=east?z1-1-k:z0+1+k,xa=east?x1-2:x0+1;bx(xa,b+1,z,xa+1,b+1+k,z,o.stair||B.PLANK);if(k>0&&k<3)bx(xa,b+4,z,xa+1,b+4,z,0);}
+    for(let k=0;k<4;k++){const z=east?z1-1-k:z0+1+k,xa=east?x1-2:x0+1;bx(xa,b+1,z,xa+1,b+1+k,z,o.stair||B.PLANK);if(k<3)bx(xa,b+4,z,xa+1,b+4,z,0);}
     if(f===fl-1){/* roof hatch */}}
+  if(top>=1&&!o.noPerch){const cx=v=>X(0)===0?v:W-v,cz=v=>Z(0)===0?v:D-v,P=(x,y,z)=>[cx(x),y,cz(z)];
+    const wp=[P(x0+3.5,G+1,z0+1.5)];for(let k=0;k<4;k++)wp.push(P(x0+2,G+2+k,z0+1.5+k));wp.push(P(x0+2,G+5,z0+5.5));
+    const bcx=(x0+x1+1)/2,bcz=(z0+z1+1)/2,lx=W/2-bcx,lz=D/2-bcz;let dx,dz;
+    if(Math.abs(lz)>=Math.abs(lx)){dx=bcx;dz=lz>0?z1-.5:z0+1.5;}else{dz=bcz;dx=lx>0?x1-.5:x0+1.5;}
+    PERCHES.push({wp,dest:P(dx,G+5,dz)});}
   if(o.roofUp){const y=G+4*fl+1;bx(x0,y,z0,x1,y,z0,wall);bx(x0,y,z1,x1,y,z1,wall);bx(x0,y,z0,x0,y,z1,wall);bx(x1,y,z0,x1,y,z1,wall);}
   for(const [s,p,w] of (o.doors||[])){const ww=(w||2)-1,h=G+(o.doorH||2);
     if(s==='s')bx(p,G+1,z0,p+ww,h,z0,0);else if(s==='n')bx(p,G+1,z1,p+ww,h,z1,0);else if(s==='w')bx(x0,G+1,p,x0,h,p+ww,0);else bx(x1,G+1,p,x1,h,p+ww,0);}}
@@ -2724,7 +2730,8 @@ function animTick(dt){if(!ANIM.list.length)return;const t=animClock();
     const gy=sy>=0?sy:(a.y==null?5:a.y);a.y=a.y==null?gy:a.y+(gy-a.y)*Math.min(1,dt*8);a.x=p.x;a.z=p.z;
     a.yaw=a.yaw==null?p.yaw:turnTo(a.yaw,p.yaw,3.5*dt);if(p.mv)a.ph+=dt*a.T.spd*5.5;
     a.g.position.set(a.x,a.y+(a.T.hop&&p.mv?Math.abs(Math.sin(a.ph*1.6))*.08:0),a.z);a.g.rotation.y=a.yaw;
-    for(let k=0;k<a.legs.length;k++)a.legs[k].rotation.x=p.mv?Math.sin(a.ph+(k===1||k===2?Math.PI:0))*.45:0;
+    const afar=camera.position.distanceToSquared(a.g.position)>900;if(afar!==a.far){a.far=afar;for(const l of a.legs)l.layers.set(afar?1:0);}
+    if(!afar)for(let k=0;k<a.legs.length;k++)a.legs[k].rotation.x=p.mv?Math.sin(a.ph+(k===1||k===2?Math.PI:0))*.45:0;
     if(!p.mv&&a.t!=='chicken')a.body.rotation.x=0;}}
 // the closest animal a bullet hits before maxT
 function animalRay(ox,oy,oz,dx,dy,dz,maxT){let best=null,bt=maxT;
@@ -2741,7 +2748,7 @@ let POIC={a:null,p:null};
 function poiList(){if(MAP.poi&&MAP.poi.length)return MAP.poi;const a=reachMap();if(POIC.a===a&&POIC.p)return POIC.p;const p=[];
   for(let z=5;z<D-3;z+=8)for(let x=5;x<W-3;x+=8){let f=-1;for(let r=0;r<3&&f<0;r++)for(let dz=-r;dz<=r&&f<0;dz++)for(let dx=-r;dx<=r;dx++){const c=(x+dx)+W*(z+dz);if(a[c]){f=c;break;}}if(f>=0)p.push([f%W,(f/W)|0]);}
   POIC={a,p:p.length?p:[[MAP.center[0]|0,MAP.center[2]|0]]};return POIC.p;}
-function genWorld(){W=D=MAP.size||64;vox.fill(0);VEH=[];MAP.gen();animSpawn();mapFxBuild();if(MAP.light){hemi.intensity=MAP.light[0];sun.intensity=MAP.light[1];}
+function genWorld(){W=D=MAP.size||64;vox.fill(0);VEH=[];PERCHES=[];MAP.gen();animSpawn();mapFxBuild();if(MAP.light){hemi.intensity=MAP.light[0];sun.intensity=MAP.light[1];}
   hemi.intensity=MAP.light?MAP.light[0]:MAP.night?.42:.88;sun.intensity=MAP.light?MAP.light[1]:MAP.night?.16:.5;
   for(const l of[houseLight,yardLight,topLight]){if(MAP.night&&!l.parent)scene.add(l);if(!MAP.night&&l.parent)scene.remove(l);}scene.background.setHex(MAP.sky);scene.fog.color.setHex(MAP.sky);scene.fog.near=MAP.fog[0];scene.fog.far=MAP.fog[1];hemi.color.setHex(MAP.hemi[0]);hemi.groundColor.setHex(MAP.hemi[1]);setWeather(MAP.weather);}
 
@@ -3325,7 +3332,7 @@ function respawn(e){
     LW=loadout.map(effW);ammo=LW.map(w=>({mag:w.mag,reserve:MM()==='boom'&&w.kind==='rpg'?8:w.reserve}));cur=0;nades=noNades()?0:MM()==='boom'?3:profile.nadeLvl;minesLeft=noNades()?0:profile.mineLvl;reloadT=0;swapT=.35;bloom=0;recoilP=0;ads=false;
     buildViewmodels();$('death').hidden=true;buildLeft=bagSize();blindT=0;
   }else{
-    e.mesh.visible=true;e.mesh.rotation.x=0;e.gun.visible=MM()!=='knife';e.weapon=MM()==='knife'?'Knife':MM()==='sniper'?'Longbow .338':MM()==='boom'?'Viper RL':e.baseWeapon;e.meleeCD=0;e.mesh.position.set(e.x,e.y,e.z);e.path=null;e.target=null;e.seeing=false;e.lastSeenT=0;e.burst=0;e.fireCD=.3;e.deadT=0;
+    e.mesh.visible=true;e.mesh.rotation.x=0;e.gun.visible=MM()!=='knife';e.weapon=MM()==='knife'?'Knife':MM()==='sniper'?'Longbow .338':MM()==='boom'?'Viper RL':e.baseWeapon;e.meleeCD=0;e.mesh.position.set(e.x,e.y,e.z);e.path=null;e.target=null;e.seeing=false;e.lastSeenT=0;e.burst=0;e.fireCD=.3;e.deadT=0;if(!e.remote)perchPick(e);
   }
   xmAfterRespawn(e);
 }
@@ -4007,6 +4014,7 @@ function bfs(s,g){
 }
 function planPath(b){
   let gx,gz;
+  if(b.perch&&b.pph===0){const w=b.perch.wp[0],s=nearestValid(Math.floor(b.x),Math.floor(b.z)),g=nearestValid(Math.floor(w[0]),Math.floor(w[2]));b.repathT=3;b.path=s>=0&&g>=0?bfs(s,g):null;b.pathI=1;if(!b.path)b.perch=null;return;}
   const og=rsGoal(b);
   if(og&&(b.objRun||!(b.lastSeenT>0&&b.lastSeen&&rand()<.35))){gx=Math.floor(og[0]);gz=Math.floor(og[1]);}
   else if(b.lastSeenT>0&&b.lastSeen){gx=Math.floor(b.lastSeen.x);gz=Math.floor(b.lastSeen.z);}
@@ -4133,6 +4141,24 @@ function botShoot(b,t,dist){if(!xmBotShoot(b))return;const BD=botD();
 function botRocket(b,t,dist){const m=botMuzzle(b),BD=botD();b.firedT=1.2;const err=(1.6+dist*.05+Math.hypot(t.vx,t.vz)*.25)/((b.skill||1)*BD.aim);
   const tx=t.x+(rand()-.5)*err,ty=t.y+.2,tz=t.z+(rand()-.5)*err;let dx=tx-m[0],dy=ty-m[1],dz=tz-m[2];const l=Math.hypot(dx,dy,dz)||1;
   b.flash.visible=true;b.flashT=.05;fireRocket(b,m[0],m[1],m[2],dx/l,dy/l,dz/l);sfx.rpg(volAt(m[0],m[1],m[2],.5,85),distAt(m[0],m[1],m[2]));}
+// a bot's climb to a window: walk to the foot of the stairs, hop up the steps, hold the lookout for a while
+function perchStep(b,dt){const P=b.perch;b.ptime=(b.ptime||0)+dt;if(b.ptime>50&&b.pph<2){b.perch=null;return null;}
+  if(b.pph===0){const w=P.wp[0];if(Math.hypot(b.x-w[0],b.z-w[2])<.8&&Math.abs(b.y-w[1])<1.3){b.pph=1;b.pi=1;b.path=null;}return null;}
+  const pts=P.wp.concat([P.dest]);
+  if(b.pph===1){const w=pts[b.pi],dx=w[0]-b.x,dz=w[2]-b.z,d=Math.hypot(dx,dz);
+    if(d<.45&&b.y>w[1]-.6){if(b.pi>=pts.length-1){b.pph=2;b.pholdT=25+rand()*25;b.vx=b.vz=0;return [0,0];}b.pi++;}
+    if(w[1]>b.y+.4&&b.onGround&&d<1.5)b.vy=JUMP_V*.8;
+    if(b.y<P.wp[0][1]+.5&&b.pi>2){b.pph=0;b.path=null;return null;}
+    return [dx/(d||1),dz/(d||1)];}
+  b.pholdT-=dt;if(b.pholdT<=0||b.y<P.dest[1]-1.5){b.perch=null;b.path=null;return null;}
+  if(!b.target){const c=MAP.center;b.yaw=turnTo(b.yaw,Math.atan2(-(c[0]-b.x),-(c[2]-b.z)),2*dt);}
+  return [0,0];}
+// when a bot comes back, sometimes it takes a free lookout on its own half of the map
+function perchPick(b){b.perch=null;if(!PERCHES.length||isZ()||b.objRun||b.knifeOnly||MM()==='knife'||MM()==='boom'||state!=='play'||rand()>.45)return;
+  const mine=bots.filter(x=>x!==b&&x.perch&&x.team===b.team).length;if(mine>=Math.max(1,teamSize()>>2))return;
+  const side=MAP.spawn[b.team]?(MAP.spawn[b.team][2]+MAP.spawn[b.team][3])/2<D/2:true;
+  const L=PERCHES.filter(p=>(p.dest[2]<D/2)===side&&!bots.some(x=>x.perch===p)&&reachable(p.wp[0][0],p.wp[0][2]));if(!L.length)return;
+  b.perch=L[(rand()*L.length)|0];b.pph=0;b.pi=0;b.ptime=0;}
 function updateBot(b,dt){
   if(b.inMatch===false)return;
   if(!b.alive){
@@ -4203,6 +4229,7 @@ function updateBot(b,dt){
     }
     b.pitch*=.9;
   }
+  if(b.perch){const pm=perchStep(b,dt);if(pm){mx=pm[0];mz=pm[1];}}
   const ml=Math.hypot(mx,mz);
   if(ml>0){mx/=ml;mz/=ml;if(faceYaw===null)faceYaw=Math.atan2(-mx,-mz);}
   if(faceYaw!==null)b.yaw=turnTo(b.yaw,faceYaw,(b.seeing?7:6)*dt);
@@ -7213,7 +7240,7 @@ function safeExit(){try{if(NET.mode)mpLeave(false);}catch(e){}state='menu';pause
 // phones can drop the 3D context when the app goes to the background: wait for it to come back, then redraw the world
 canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();glLost=true;},false);
 canvas.addEventListener('webglcontextrestored',()=>{glLost=false;worldDirty=true;},false);
-let frameN=0;const noRender=(()=>{try{return localStorage.getItem('blockfire.norender')==='1';}catch(e){return false;}})();
+const DQ={t:0,n:0,good:0};let frameN=0;const noRender=(()=>{try{return localStorage.getItem('blockfire.norender')==='1';}catch(e){return false;}})();
 function frame(now){frameN++;animCamos(now);
   requestAnimationFrame(frame);
   const rdt=(now-last)/1000,dt=Math.min(.05,rdt);last=now;
@@ -7227,6 +7254,8 @@ function frame(now){frameN++;animCamos(now);
   if(state!=='play'&&!$('spec').hidden){$('spec').hidden=true;document.body.classList.remove('ghost');if(specT&&specT.mesh)specT.mesh.visible=!!specT.alive;specT=null;specWait=0;}
   if(flameSndT>0&&state==='play'){flameSndT-=dt;if(!flameSnd&&AC){flameSnd=sfx.loop(650);}if(flameSnd)flameSnd.g.gain.value=.5;}
   else if(flameSnd){sfx.stopLoop(flameSnd);flameSnd=null;}
+  if(state==='play'&&SET.quality==='auto'&&!document.hidden){DQ.t+=rdt;DQ.n++;if(DQ.t>=2){const fps=DQ.n/DQ.t;DQ.t=0;DQ.n=0;const base=qualityRatio();let pr=renderer.getPixelRatio();
+    if(fps<45&&pr>.62){pr=Math.max(.6,pr-.15);DQ.good=0;renderer.setPixelRatio(pr);}else if(fps>57&&pr<base){if(++DQ.good>=3){pr=Math.min(base,pr+.1);DQ.good=0;renderer.setPixelRatio(pr);}}else DQ.good=0;}}
   if(noRender||glLost)return;
   try{renderer.clear();
   if(window.__cam){const q=window.__cam;camera.position.set(q[0],q[1],q[2]);camera.lookAt(q[3],q[4],q[5]);}
@@ -7639,9 +7668,18 @@ function tipStart(){TIP.next=40;TIP.was=true;setTimeout(()=>{if(state==='play')s
 // keeps every soldier's colours right for the mode, and shows the blue spawn-protection bubble
 const PROT_GEO=new THREE.SphereGeometry(1.15,16,12),PROT_MAT=new THREE.MeshBasicMaterial({color:0x4aa8ff,transparent:true,opacity:.28,depthWrite:false,blending:THREE.AdditiveBlending});
 const isProt=e=>e.alive&&(isClient()&&e!==player?!!e.sprot:e.spawnProt>0);
+const LOD_D=20,LODG={};
+function lodGeo(t){if(LODG[t])return LODG[t];const T=TEAMS[t]||TEAMS.blue,c=a=>(a[0]<<16)|(a[1]<<8)|a[2];
+  return LODG[t]=amerge([[.24,.75,.24,-.125,.375,0,c(T.pants[0])],[.24,.75,.24,.125,.375,0,c(T.pants[0])],[.5,.75,.28,0,1.125,0,c(T.camo[0])],
+    [.22,.22,.7,-.3,1.4,-.25,c(T.camo[1])],[.22,.22,.7,.3,1.4,-.25,c(T.camo[1])],[.5,.5,.5,0,1.75,0,c(T.helm)],[.12,.14,.8,.08,1.38,-.55,0x222428]]);}
+function lodDetail(e,on){e.mesh.traverse(o=>{if(o===e.lod||o===e.sprite||o===e.prot)return;if(o.isMesh)o.layers.set(on?0:1);});}
+function lodTick(e){const far=e.mesh.visible&&!e.king&&!(e.ksv>1.05)&&camera.position.distanceToSquared(e.mesh.position)>LOD_D*LOD_D;
+  if(far!==!!e.lodOn||(far&&(frameN%30===0))){if(far&&!e.lod){e.lod=new THREE.Mesh(lodGeo(lookTeam(e)),AMAT);e.mesh.add(e.lod);}
+    e.lodOn=far;if(e.lod)e.lod.visible=far;lodDetail(e,!far);}}
 function lookTick(dt){const ffa=state==='play'&&XFFA.includes(RULE());
   for(const e of ents){if(e===player||!e.mesh)continue;const want=(ffa?'ffa':'t')+lookTeam(e);
-    if(e.lookKey!==want){e.lookKey=want;try{applyLook(e,e.sk||'std',e.ar||0);}catch(x){}if(e.sprite&&e.sprite.userData.recolor)e.sprite.userData.recolor(TEAMS[lookTeam(e)].tag);}
+    lodTick(e);
+    if(e.lookKey!==want){e.lookKey=want;try{applyLook(e,e.sk||'std',e.ar||0);}catch(x){}if(e.lod)e.lod.geometry=lodGeo(lookTeam(e));if(e.sprite&&e.sprite.userData.recolor)e.sprite.userData.recolor(TEAMS[lookTeam(e)].tag);}
     const pr=isProt(e)&&e.mesh.visible;if(pr&&!e.prot){e.prot=new THREE.Mesh(PROT_GEO,PROT_MAT);e.prot.position.y=1.05;e.mesh.add(e.prot);}if(e.prot){e.prot.visible=pr;if(pr)e.prot.scale.setScalar(1+Math.sin(performance.now()/120)*.04);}}
   const me=state==='play'&&player.alive&&player.spawnProt>0;const t=$('protTag');if(t&&t.hidden===me)t.hidden=!me;}
 function kgAnim(dt){if(!KG.on&&!player.king)return;
