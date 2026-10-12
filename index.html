@@ -1352,7 +1352,7 @@ async function adminClaim(code){if(!CS||CS.guest)return 'Sign in to your own acc
   if(r.ok){CS.admin=true;cloudKeep();return '';}const e=r.j&&r.j.error;
   return !r.status?'No connection to the server.':e==='code'?'That code is not right.':e==='taken'?'This game already has its admin.':e==='guest'?'Guest accounts cannot be admins. Create your account first.':'The server said no (error '+r.status+').';}
 /* ================= version, remote settings, crash reports ================= */
-const APP_VERSION='1.0.0',BUILD_ID='cfdb211';
+const APP_VERSION='1.0.0',BUILD_ID='efa534f';
 const verNum=v=>String(v||'0').split('.').slice(0,3).map(n=>parseInt(n)||0).reduce((a,n)=>a*1000+n,0);
 let RCFG={};try{RCFG=JSON.parse(localStorage.getItem('blockfire.rcfg')||'{}')||{};}catch(e){RCFG={};}
 const feat=k=>!(RCFG.features&&RCFG.features[k]===false);
@@ -1730,7 +1730,8 @@ const mirror=(f,S)=>{S=S||W-1;f(x=>x,z=>z);f(x=>S-x,z=>S-z);};
 
 /* --- Throne Hall: two castles with a throne each, a wide royal courtyard in between (built for giant kings) --- */
 function oak(x,y,z,h){for(let k=0;k<h;k++)set(x,y+k,z,B.LOG);for(let dy=h-2;dy<=h+1;dy++){const r=dy>h?1:2;for(let dx=-r;dx<=r;dx++)for(let dz=-r;dz<=r;dz++)if(Math.abs(dx)+Math.abs(dz)<=r+1&&!(dx===0&&dz===0&&dy<h))set(x+dx,y+dy,z+dz,B.LEAF);}}
-function genThrone(){const G=4,r=rng(4242);ground(G,B.GRASS,B.DIRT);
+let THRONE_PADS=[];
+function genThrone(){const G=4,r=rng(4242);THRONE_PADS=[];ground(G,B.GRASS,B.DIRT);
   // royal road and courtyard
   for(let z=6;z<58;z++)for(let x=26;x<38;x++)set(x,G,z,B.COBBLE);
   for(let z=22;z<42;z++)for(let x=14;x<50;x++){const d=Math.hypot((x-31.5)/18,(z-31.5)/10);if(d<1)set(x,G,z,(x+z)%2?B.STONE:B.COBBLE);}
@@ -1751,6 +1752,9 @@ function genThrone(){const G=4,r=rng(4242);ground(G,B.GRASS,B.DIRT);
     box(X(18),G+1,Z(8),X(22),G+3,Z(11),B.PLANK);box(X(19),G+1,Z(9),X(21),G+2,Z(10),0);set(X(20),G+1,Z(8),0);set(X(20),G+2,Z(8),0);box(X(18),G+4,Z(8),X(22),G+4,Z(11),B.ROOF);
     box(X(41),G+1,Z(8),X(45),G+3,Z(11),B.PLANK);box(X(42),G+1,Z(9),X(44),G+2,Z(10),0);set(X(43),G+1,Z(8),0);set(X(43),G+2,Z(8),0);box(X(41),G+4,Z(8),X(45),G+4,Z(11),B.ROOF);
     for(const [cx,cz] of [[24,9],[39,9],[24,6],[39,6]])set(X(cx),G+1,Z(cz),B.CRATE);
+    box(X(27),G+1,Z(7),X(36),G+1,Z(12),B.QUARTZ);for(const [cx,cz] of [[27,7],[36,7],[27,12],[36,12]])set(X(cx),G+1,Z(cz),B.CYELL);
+    for(let z=Math.min(Z(7),Z(12))+1;z<Math.max(Z(7),Z(12));z++)for(let x=Math.min(X(30),X(33));x<=Math.max(X(30),X(33));x++)set(x,G+1,z,B.CRED);
+    THRONE_PADS.push([(X(31)+X(32))/2+.5,G+2,(Z(9)+Z(10))/2+.5]);
     // outside the walls: cover in the courtyard and gardens on the flanks
     for(const [cx,cz] of [[20,18],[43,18],[26,24],[37,24]]){box(X(cx),G+1,Z(cz),X(cx+1),G+2,Z(cz),B.COBBLE);}
     for(const [cx,cz] of [[23,27],[40,27]])box(X(cx),G+1,Z(cz),X(cx),G+6,Z(cz),B.QUARTZ);
@@ -5811,7 +5815,7 @@ function clientRecv(d){
   if(d.t==='die'){clientDie(d);return;}
   if(d.t==='hurt'){vigT=Math.min(1,vigT+d.v/45);sfx.hurt();if(d.ax!==undefined)showDmgDir(d.ax,d.az);return;}
   if(d.t==='kg'){KG.on=true;$('kgHud').hidden=false;const me=nidOf(player),k=(player.team==='blue'?d.b:d.r)[0];player.king=k===me;player.ks=player.king?KS:1;kgView(d);return;}
-  if(d.t==='king'){if(d.on){player.king=true;player.ks=KS;player.maxHp=KHP;player.hp=KHP;player.shield=0;player.maxSh=0;}else{player.king=false;player.ks=1;applyGear(true);player.hp=Math.min(player.hp,player.maxHp);}return;}
+  if(d.t==='king'){if(d.on&&isFinite(d.x)){player.x=+d.x;player.y=+d.y;player.z=+d.z;player.vx=player.vy=player.vz=0;player.smoothY=0;}if(d.on){player.king=true;player.ks=KS;player.maxHp=KHP;player.hp=KHP;player.shield=0;player.maxSh=0;}else{player.king=false;player.ks=1;applyGear(true);player.hp=Math.min(player.hp,player.maxHp);}return;}
   if(d.t==='kc'){player.streak=(player.streak||0)+1;onMyKill(d.v,!!d.h,d.w,d.k);return;}
   if(d.t==='cash'){Z.money+=d.v;if(d.kill&&state==='play'){Z.kills++;match.kills++;if(d.h)match.heads++;const S=ST();S.kills++;S.zkills=(S.zkills||0)+1;if(d.h)S.heads++;S.weap[d.w]=(S.weap[d.w]||0)+1;chProgress('kills',1);if(d.h){chProgress('heads',1);showMsg('HEADSHOT',true);}}return;}
   if(d.t==='pk'){if(state==='play'&&player.alive){giveWeapon(d.w);sfx.reload();showMsg('PICKED UP '+WEAPONS[d.w].name.toUpperCase(),true);}return;}
@@ -6230,14 +6234,25 @@ function kgSet(e,on){if(!e)return;const was=!!e.king;e.king=!!on;e.ks=on?KS:1;
     if(e.remote&&was!==!!on)netSendTo(e,{t:'king',on:on?1:0});}
   if(on&&!was&&e.alive){burst(e.x,e.y+1.5,e.z,0xffd34a,40,7,.25,1.2);burst(e.x,e.y+.3,e.z,0xffffff,20,4,.2,.8);}}
 function kgStart(){KG.on=RULE()==='king'&&!isZ();for(const e of ents)if(e.king||e.ks)kgSet(e,false);player.king=false;player.ks=1;
-  KG.cd={blue:null,red:null};KG.kg={blue:'',red:''};$('kgHud').hidden=!KG.on;$('kgCd').hidden=true;
+  KG.cd={blue:null,red:null};KG.kg={blue:'',red:''};KG.pads={};$('kgHud').hidden=!KG.on;$('kgCd').hidden=true;
   if(!KG.on||isClient())return;
   GOAL=Math.max(1,Math.max(teamN('blue'),teamN('red')));$('goalTxt').textContent=`Kill ${GOAL} kings`;
   for(const tm of ['blue','red']){KG.t[tm]={k:null,wait:0,cand:null,cd:0};const c=kgPick(tm);if(c)kgCrown(c,true);}
   KG.sendT=0;}
 function kgPick(tm,not){const L=ents.filter(e=>e.team===tm&&e.inMatch!==false&&e.alive&&!e.king&&e!==not&&!(e.remote&&e.away));
   if(!L.length)return null;const hum=L.filter(e=>e.isPlayer||e.remote);return (hum.length&&rand()<.5?hum:L)[(rand()*(hum.length&&rand()<.5?hum.length:L.length))|0]||L[0];}
-function kgCrown(e,first){const T=KG.t[e.team];T.k=e;T.cand=null;kgSet(e,true);
+function kgPad(tm){KG.pads=KG.pads||{};if(KG.pads[tm])return KG.pads[tm];let p=null;
+  if(MAP.key==='throne'&&THRONE_PADS.length===2){const c=MAP.spawn[tm],cz=(c[2]+c[3])/2;p=THRONE_PADS.slice().sort((a,b)=>Math.abs(a[2]-cz)-Math.abs(b[2]-cz))[0];}
+  if(!p){const [x0,x1,z0,z1]=MAP.spawn[tm],cx=(x0+x1)/2,cz=(z0+z1)/2;let bd=1e9;
+    for(let z=Math.max(2,z0-6);z<=Math.min(D-3,z1+6);z++)for(let x=Math.max(2,x0-6);x<=Math.min(W-3,x1+6);x++){const s=SY[x+W*z];if(s<0)continue;let ok=true;
+      for(let dz=-1;dz<=1&&ok;dz++)for(let dx=-1;dx<=1&&ok;dx++){if(SY[x+dx+W*(z+dz)]!==s){ok=false;break;}for(let y=s;y<H;y++)if(vox[VI(x+dx,y,z+dz)]){ok=false;break;}}
+      if(!ok)continue;const d=Math.hypot(x-cx,z-cz);if(d<bd){bd=d;p=[x+.5,s,z+.5];}}}
+  if(!p){const c=spawnCandidates(tm)[0];p=c||[MAP.center[0],MAP.center[1],MAP.center[2]];}
+  return KG.pads[tm]=p;}
+function kgCrown(e,first){const T=KG.t[e.team];T.k=e;T.cand=null;
+  // every new king starts the reign on the team's stage: flat ground, open sky
+  const pd=kgPad(e.team);e.x=pd[0];e.y=pd[1];e.z=pd[2];e.vx=e.vy=e.vz=0;e.smoothY=0;e.onGround=false;if(e.mesh)e.mesh.position.set(e.x,e.y,e.z);if(!e.isPlayer&&!e.remote){e.path=null;}
+  kgSet(e,true);e.spawnProt=2;if(e.remote)netSendTo(e,{t:'king',on:1,x:r2(pd[0]),y:r2(pd[1]),z:r2(pd[2])});
   const tn=e.team==='blue'?'BLUE':'RED';
   if(e!==player)showMsg(`${e.name.toUpperCase()} IS THE ${tn} KING`,false,'gp');
   netEv(['m',`${e.name.toUpperCase()} IS THE ${tn} KING`,0,'gp']);if(e===player)sfx.ding();}
