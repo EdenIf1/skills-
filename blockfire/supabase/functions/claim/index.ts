@@ -7,6 +7,17 @@ const CORS = {
 const out = (status: number, body: unknown) =>
   new Response(JSON.stringify(body), { status, headers: { ...CORS, 'Content-Type': 'application/json' } });
 
+// names other players can see: refuse slurs, swearing and hate words, also written with numbers or symbols (same list as the game)
+const BADSUB = ['fuck','fuk','shit','cunt','nigg','nigr','faggot','bitch','whore','slut','porn','penis','vagina','pussy','hitler','nazi','retard','twat','wank','jizz','rapist','molest','pedophil','kkk','asshole','bastard','motherf','dildo','boob','tits','sharmuta','benzona','kusemek','kusemak','kusomo'];
+const BADWORD = ['fag','rape','cock','dick','anal','cum','sex','ass','zona','kus','homo','isis'];
+const LEET: Record<string, string> = { '0': 'o', '1': 'i', '3': 'e', '4': 'a', '5': 's', '7': 't', '@': 'a', '$': 's', '!': 'i', '|': 'i' };
+const nameBad = (n: string) => {
+  const s = n.toLowerCase().replace(/[013457@$!|]/g, (c) => LEET[c]);
+  const flat = s.replace(/[^a-z]/g, '');
+  if (BADSUB.some((w) => flat.includes(w))) return true;
+  return s.split(/[^a-z]+/).concat([flat]).some((t) => BADWORD.includes(t));
+};
+
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS });
   if (req.method !== 'POST') return out(405, { error: 'method' });
@@ -23,7 +34,7 @@ Deno.serve(async (req: Request) => {
   const name = String(body.name ?? '').trim();
   const password = String(body.password ?? '');
   const key = name.toLowerCase().replace(/\s+/g, '');
-  if (!/^[A-Za-z0-9_ .-]{2,14}$/.test(name) || key === 'player' || key.startsWith('guest')) return out(400, { error: 'bad_name' });
+  if (!/^[A-Za-z0-9_ .-]{2,14}$/.test(name) || key === 'player' || key.startsWith('guest') || nameBad(name)) return out(400, { error: 'bad_name' });
   if (password.length < 6 || password.length > 72) return out(400, { error: 'bad_password' });
   const email = key.replace(/[^a-z0-9._-]/g, '_') + '@players.blockfire.game';
   const adm = { apikey: service, Authorization: 'Bearer ' + service, 'Content-Type': 'application/json' };

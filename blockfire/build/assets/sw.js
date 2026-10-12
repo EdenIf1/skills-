@@ -1,4 +1,4 @@
-// Offline cache for Blockfire. The page is fetched network-first so updates arrive;
+// Offline cache for Cubefront. The page is fetched network-first so updates arrive;
 // the game's own files (engine, icons, fonts) are served from cache first.
 // Requests to other sites (the save server, relays, updates) are never cached: progress must always be live.
 const CACHE='blockfire-__BUILD__';

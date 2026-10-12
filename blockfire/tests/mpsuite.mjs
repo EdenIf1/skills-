@@ -249,11 +249,17 @@ S(5, 'Leave then rejoin with same name', 120000, async t => {
   await join(t, C, code);
   await readyAll(t, H, [C]); await startAll(t, H, [C], 'junk');
   const ents0 = await t.ev(H, 'ents.length');
+  await t.ev(H, 'NET.rejoinMs=4000;1');   // the real cooldown is 60 s; shortened for the test
   await C.evaluate(() => window.__bf.net.leave());
   t.note('hostDropMs', await t.until(H, 'NET.remotes.size===0', 10000, 'host removes leaver'));
   t.check(await t.ev(C, "NET.mode===null&&state==='menu'"), 'leaver not back in menu');
   t.check(await t.ev(H, "!ents.some(e=>e.name==='Rejoiner')"), 'ghost entity left on host');
-  await sleep(500);
+  t.check(await t.ev(H, "[...document.querySelectorAll('#feed .sys')].some(d=>/Rejoiner left the game/.test(d.textContent))"), 'host feed missing "Rejoiner left the game"');
+  // an instant rejoin is refused with a countdown
+  await C.evaluate(c => window.__bf.net.join(c), code);
+  await t.until(C, "/join it again in/.test(NET.err||'')", 10000, 'cooldown message');
+  t.check(await t.ev(H, 'NET.remotes.size===0'), 'cooldown rejoin got in');
+  await sleep(4300);
   t.note('rejoinMs', await join(t, C, code));
   await t.until(C, "state==='play'", 10000, 'rejoiner in match');
   await t.until(H, "[...NET.remotes.values()].some(e=>e.alive)", 8000, 'host sees rejoiner alive');

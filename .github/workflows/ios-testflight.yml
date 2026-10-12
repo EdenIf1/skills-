@@ -14,7 +14,8 @@ on:
 concurrency: { group: ios-testflight, cancel-in-progress: false }
 jobs:
   build:
-    runs-on: macos-15
+    # Apple only accepts uploads built with Xcode 26 or later (since 28 April 2026)
+    runs-on: macos-26
     timeout-minutes: 60
     defaults: { run: { working-directory: blockfire/app } }
     env:
@@ -23,6 +24,15 @@ jobs:
       ISSUER: ${{ secrets.ASC_ISSUER_ID }}
     steps:
       - uses: actions/checkout@v4
+      - name: Use the newest released Xcode 26 (a beta Xcode cannot upload to the App Store)
+        working-directory: .
+        run: |
+          X=$(ls -d /Applications/Xcode_26*.app 2>/dev/null | grep -v -i beta | sort -V | tail -1)
+          [ -n "$X" ] || { echo "::error::No Xcode 26 or later on this runner"; exit 1; }
+          sudo xcode-select -s "$X/Contents/Developer"
+          xcodebuild -version
+          V=$(xcodebuild -version | head -1 | awk '{print $2}' | cut -d. -f1)
+          [ "$V" -ge 26 ] || { echo "::error::Apple needs Xcode 26 or later, got $V"; exit 1; }
       - uses: actions/setup-node@v4
         with: { node-version: 22, cache: npm, cache-dependency-path: blockfire/app/package-lock.json }
       - name: Check the secrets are set
