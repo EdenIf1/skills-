@@ -508,6 +508,7 @@ body.touch .ctrl.desk{display:none} body:not(.touch) .ctrl.mob{display:none}
 @keyframes eFade{from{opacity:0}to{opacity:1}}
 @keyframes eRise{from{transform:scaleY(0)}to{transform:none}}
 #end.rm *{animation:none!important}
+#end.t1 #endSub{display:none}#end.t2 .rewards span:nth-child(n+3):not(.ca){display:none}#end.t3 .eGo{display:none}#end.t4 .rewards .ca:nth-child(n+2){display:none}
 .rewards{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:20px;margin:6px 0 12px}
 .rewards b{color:var(--green);font-weight:500}
 #pause .sheet{text-align:center}
@@ -547,7 +548,10 @@ body.touch .ctrl.desk{display:none} body:not(.touch) .ctrl.mob{display:none}
   #end #endBody,#end .ePod{grid-column:2;grid-row:1 / span 10;align-self:stretch;gap:10px;margin:0;min-height:0;overflow:hidden}#end .ePod{height:auto;min-height:150px;gap:8px}
   #end .big{font-size:clamp(26px,5vw,38px)}#end .sub{font-size:16px;margin:2px 0 6px}
   #end .rewards{font-size:15px;gap:2px 12px;margin:2px 0 6px}
-  #end .row{margin-top:6px!important;display:grid;grid-template-columns:1fr 1fr;gap:5px}#end .row .btn{padding:5px 8px;font-size:16px;min-width:0}#end .row .btn:first-child{grid-column:1/-1}#end .row .btn[hidden]{display:none}
+  #end .row{margin-top:6px!important;display:grid;grid-template-columns:repeat(6,1fr);gap:5px}#end .row .btn{padding:clamp(3px,1.2vh,6px) 6px;font-size:clamp(13px,4.2vh,16px);min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;grid-column:span 2}
+  #end .row .btn:nth-child(-n+2){grid-column:span 3}#end .eBtns.noLob #again{grid-column:span 6}#end .row .btn[hidden]{display:none}
+  #end .eGo{font-size:clamp(14px,5.5vh,28px)}#end .big{font-size:clamp(22px,9vh,38px)!important}#end .eWin{font-size:clamp(14px,5.6vh,26px)}#end .sub{font-size:clamp(12px,4.2vh,16px);margin:1px 0 3px}
+  #end .rewards{font-size:clamp(12px,4vh,15px)}
   #end .teams caption{font-size:16px}#end .teams table{font-size:14px}#end .teams th{font-size:11px}#end .teams td{padding:0 3px;line-height:1.25}
   #shareMsg{font-size:13px}
   /* scoreboard during a match */
@@ -1437,7 +1441,7 @@ async function adminClaim(code){if(!CS||CS.guest)return 'Sign in to your own acc
   if(r.ok){CS.admin=true;cloudKeep();return '';}const e=r.j&&r.j.error;
   return !r.status?'No connection to the server.':e==='code'?'That code is not right.':e==='taken'?'This game already has its admin.':e==='guest'?'Guest accounts cannot be admins. Create your account first.':'The server said no (error '+r.status+').';}
 /* ================= version, remote settings, crash reports ================= */
-const APP_VERSION='1.0.0',BUILD_ID='0783a23';
+const APP_VERSION='1.0.0',BUILD_ID='50c8248';
 const verNum=v=>String(v||'0').split('.').slice(0,3).map(n=>parseInt(n)||0).reduce((a,n)=>a*1000+n,0);
 let RCFG={};try{RCFG=JSON.parse(localStorage.getItem('blockfire.rcfg')||'{}')||{};}catch(e){RCFG={};}
 const feat=k=>!(RCFG.features&&RCFG.features[k]===false);
@@ -4041,7 +4045,7 @@ function zGameOver(win){
   lastResult={zombie:true,won:!!win,diff:DF.name,round:Z.round,k:player.kills,d:player.deaths,map:'Zombies',rank:after.rank};
   $('again').textContent=isHost()?'Rematch · lobby':isClient()?"I'm ready · again":'Play again';
   endShow(win?'THE SURVIVORS HELD THE HOUSE':'THE ZOMBIES TOOK THE HOUSE',win?'cg':'cr');
-  $('end').hidden=false;
+  $('end').hidden=false;endFit();
   for(const e of ents)e.inMatch=false;
   while(pendingToasts.length)toast(pendingToasts.shift());
 }
@@ -4489,10 +4493,15 @@ function endShow(win,cls){
   const me=list.indexOf(player);
   $('endPod').innerHTML=col(top[1],1)+col(top[0],0)+col(top[2],2)+(me>2?`<div class="eMe">You: #${me+1} of ${list.length}</div>`:'');
   $('endPod').hidden=false;$('endBody').hidden=true;$('endBoardBtn').textContent='Scoreboard';
-  $('toLobby').hidden=isHost();
+  $('toLobby').hidden=isHost();document.querySelector('#end .eBtns').classList.toggle('noLob',isHost());
   const e=$('end');e.classList.remove('play');e.classList.toggle('rm',reduceMotion);void e.offsetWidth;e.classList.add('play');
   setTimeout(()=>{if(state==='end')say('Game over');},150);
 }
+// on a very short screen drop the least important lines until the buttons fit
+function endFit(){const e=$('end');e.classList.remove('t1','t2','t3','t4');const sh=e.querySelector('.sheet');
+  const over=()=>{const r=e.querySelector('.eBtns').getBoundingClientRect(),s=sh.getBoundingClientRect();return r.bottom>Math.min(innerHeight,s.bottom)+1||sh.scrollHeight>sh.clientHeight+1;};
+  for(const c of['t1','t2','t3','t4']){if(!over())break;e.classList.add(c);}}
+addEventListener('resize',()=>{if(!$('end').hidden)endFit();});
 $('endBoardBtn').addEventListener('click',()=>{const show=$('endBody').hidden;$('endBody').hidden=!show;$('endPod').hidden=show;$('endBoardBtn').textContent=show?'Podium':'Scoreboard';});
 $('toLobby').addEventListener('click',()=>{backToMenu();openLobby(!NET.mode);});
 function toggleBoard(show){const b=$('board');const s=show===undefined?b.hidden:show;if(s)renderBoard($('boardBody'));b.hidden=!s;}
@@ -5543,7 +5552,7 @@ function endMatch(byNuke){roomRegSoon();
     else if(draw)w=`BLUE ${scores.blue} – ${scores.red} RED`;
     else{const wt=xr&&XM.win&&XM.win.team?XM.win.team:scores.blue>scores.red?'blue':'red';w=`${tw(wt)} · ${scores.blue} – ${scores.red}`;c=wt==='blue'?'cb':'cr';}
     endShow(w,c);}
-  $('end').hidden=false;
+  $('end').hidden=false;endFit();
   for(const e of ents)e.inMatch=false;
   while(pendingToasts.length)toast(pendingToasts.shift());
 }
