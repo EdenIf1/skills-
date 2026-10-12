@@ -1434,7 +1434,7 @@ async function adminClaim(code){if(!CS||CS.guest)return 'Sign in to your own acc
   if(r.ok){CS.admin=true;cloudKeep();return '';}const e=r.j&&r.j.error;
   return !r.status?'No connection to the server.':e==='code'?'That code is not right.':e==='taken'?'This game already has its admin.':e==='guest'?'Guest accounts cannot be admins. Create your account first.':'The server said no (error '+r.status+').';}
 /* ================= version, remote settings, crash reports ================= */
-const APP_VERSION='1.0.0',BUILD_ID='b8549dc';
+const APP_VERSION='1.0.0',BUILD_ID='7a57fac';
 const verNum=v=>String(v||'0').split('.').slice(0,3).map(n=>parseInt(n)||0).reduce((a,n)=>a*1000+n,0);
 let RCFG={};try{RCFG=JSON.parse(localStorage.getItem('blockfire.rcfg')||'{}')||{};}catch(e){RCFG={};}
 const feat=k=>!(RCFG.features&&RCFG.features[k]===false);
@@ -2299,23 +2299,34 @@ function initAudio(){
   }catch(e){AC=null;}
 }
 // per-sound output: loudness, distance muffling, and how much of it echoes
+// Every sound is a few short-lived audio nodes. Safari on iPhone keeps nodes alive while they are still
+// connected, so each sound unplugs its nodes when it ends; otherwise a long minigun burst piles up thousands
+// of them and the page runs out of memory. AUD.live counts the nodes still connected.
+const AUD={live:0,tok:8,tokT:0};
+const unplug=ns=>{for(const n of ns){if(n._u)continue;n._u=1;AUD.live--;try{n.disconnect();}catch(e){}}};
 function bus(vol,dist,rev){
   const g=AC.createGain();g.gain.value=vol;
   const f=AC.createBiquadFilter();f.type='lowpass';f.frequency.value=clamp(16000*Math.pow(1-clamp(dist/90,0,.95),2),700,16000);
-  g.connect(f);f.connect(master);
-  if(rev&&verbIn){const s=AC.createGain();s.gain.value=rev*(.6+clamp(dist/60,0,1)*.6);f.connect(s);s.connect(verbIn);}
+  g.connect(f);f.connect(master);g._k=[g,f];g._n=0;
+  if(rev&&verbIn){const s=AC.createGain();s.gain.value=rev*(.6+clamp(dist/60,0,1)*.6);f.connect(s);s.connect(verbIn);g._k.push(s);}
+  AUD.live+=g._k.length;
+  // a bus nobody plays through (or whose sounds never report ending) still goes after 8 s
+  setTimeout(()=>{if(g._k){unplug(g._k);g._k=null;}},8000);
   return g;
 }
+// a sound's own nodes go when it ends; the bus goes with the last sound on it
+function sEnd(src,ns,out){AUD.live+=ns.length;if(out&&out._k)out._n++;
+  src.onended=()=>{unplug(ns);if(out&&out._k&&--out._n<=0){unplug(out._k);out._k=null;}};}
 function sNoise(t,dur,f0,f1,vol,type,out,q){
   const s=AC.createBufferSource();s.buffer=noiseBuf;s.playbackRate.value=.85+Math.random()*.3;
   const f=AC.createBiquadFilter();f.type=type||'lowpass';if(q)f.Q.value=q;f.frequency.setValueAtTime(f0,t);f.frequency.exponentialRampToValueAtTime(Math.max(20,f1),t+dur);
   const g=AC.createGain();g.gain.setValueAtTime(.0001,t);g.gain.linearRampToValueAtTime(vol,t+.004);g.gain.exponentialRampToValueAtTime(.001,t+dur);
-  s.connect(f);f.connect(g);g.connect(out||master);s.start(t,Math.random()*.5);s.stop(t+dur+.05);
+  s.connect(f);f.connect(g);g.connect(out||master);sEnd(s,[s,f,g],out);s.start(t,Math.random()*.5);s.stop(t+dur+.05);
 }
 function sTone(t,dur,f0,f1,vol,type,out){
   const o=AC.createOscillator();o.type=type||'sine';o.frequency.setValueAtTime(f0,t);o.frequency.exponentialRampToValueAtTime(Math.max(10,f1),t+dur);
   const g=AC.createGain();g.gain.setValueAtTime(.0001,t);g.gain.linearRampToValueAtTime(vol,t+.003);g.gain.exponentialRampToValueAtTime(.001,t+dur);
-  o.connect(g);g.connect(out||master);o.start(t);o.stop(t+dur+.05);
+  o.connect(g);g.connect(out||master);sEnd(o,[o,g],out);o.start(t);o.stop(t+dur+.05);
 }
 function mech(t,o,v){sNoise(t,.04,2600,1400,v*.5,'bandpass',o,3);sTone(t,.03,1100,700,v*.25,'square',o);}
 /* gun voices: c = muzzle blast noise [start Hz, end Hz, length], b = low body thump, snap = supersonic crack, rev = echo */
@@ -2344,14 +2355,15 @@ const GUN={
 const BOT_SND={'King Minigun':'goliath','KV-47':'ak','MK-4':'m4','PX-9':'smg','Raptor AR':'scar','Talon AR':'talon','Striker AR':'striker','B7 Bullpup':'aug','Hornet SMG':'hornet','Vandal SMG':'supp','Longbow .338':'sniper'};
 const distAt=(x,y,z)=>Math.hypot(x-camera.position.x,y-camera.position.y,z-camera.position.z);
 const sfx={
-  gun(key,vol,dist){if(!AC||vol<.02)return;const P=GUN[key]||GUN.m4,t=AC.currentTime,o=bus(vol,dist||0,P.rev);
+  gun(key,vol,dist){if(!AC||vol<.02)return;{const n=AC.currentTime;AUD.tok=Math.min(8,AUD.tok+(n-AUD.tokT)*30);AUD.tokT=n;if(AUD.tok<1&&vol<.8)return;AUD.tok=Math.max(0,AUD.tok-1);}
+    const P=GUN[key]||GUN.m4,t=AC.currentTime,o=bus(vol,dist||0,P.rev);
     sNoise(t,.018,9000,6000,P.snap,'highpass',o);sNoise(t,P.c[2],P.c[0],P.c[1],P.cv,'lowpass',o);sTone(t,P.b[2],P.b[0],P.b[1],P.bv,'triangle',o);
     if(P.after==='pump'){mech(t+.36,o,.55);mech(t+.5,o,.5);}
     if(P.after==='bolt'){mech(t+.6,o,.45);mech(t+.78,o,.4);mech(t+.96,o,.45);}},
   rpg(vol,dist){if(!AC||vol<.02)return;const t=AC.currentTime,o=bus(vol,dist||0,.5);
     sTone(t,.25,90,35,1.1,'sine',o);sNoise(t,.3,900,200,1,'lowpass',o);sNoise(t,.9,400,2600,.7,'bandpass',o,1.2);},
   loop(freq){if(!AC)return null;const s=AC.createBufferSource();s.buffer=noiseBuf;s.loop=true;const f=AC.createBiquadFilter();f.type='bandpass';f.frequency.value=freq;f.Q.value=.8;
-    const g=AC.createGain();g.gain.value=0;s.connect(f);f.connect(g);g.connect(master);s.start();return{s,g};},
+    const g=AC.createGain();g.gain.value=0;s.connect(f);f.connect(g);g.connect(master);sEnd(s,[s,f,g]);s.start();return{s,g};},
   stopLoop(l){if(l){try{l.g.gain.value=0;l.s.stop();}catch(e){}}},
   explosion(kind,vol,dist){if(!AC||vol<.02)return;const t=AC.currentTime;
     const big=kind==='Viper RL'?1.2:kind==='Airstrike'?1.5:kind==='Tactical Nuke'?2.4:kind==='Claymore'?.9:kind==='Flashbang'?.55:kind==='Impact Grenade'?.85:1,o=bus(vol,dist||0,.6+.2*big);
@@ -2367,9 +2379,9 @@ const sfx={
     const s=AC.createBufferSource();s.buffer=noiseBuf;const f=AC.createBiquadFilter();f.type='lowpass';const g=AC.createGain();
     f.frequency.setValueAtTime(400,t);f.frequency.linearRampToValueAtTime(3200,t+1.3);f.frequency.linearRampToValueAtTime(500,t+2.8);
     g.gain.setValueAtTime(.0001,t);g.gain.linearRampToValueAtTime(1,t+1.3);g.gain.linearRampToValueAtTime(.0001,t+2.9);
-    s.connect(f);f.connect(g);g.connect(o);s.start(t);s.stop(t+3);
+    s.connect(f);f.connect(g);g.connect(o);sEnd(s,[s,f,g],o);s.start(t);s.stop(t+3);
     const os=AC.createOscillator();os.type='sawtooth';const og=AC.createGain();os.frequency.setValueAtTime(130,t);os.frequency.linearRampToValueAtTime(70,t+2.8);
-    og.gain.setValueAtTime(.0001,t);og.gain.linearRampToValueAtTime(.12,t+1.3);og.gain.linearRampToValueAtTime(.0001,t+2.9);os.connect(og);og.connect(o);os.start(t);os.stop(t+3);},
+    og.gain.setValueAtTime(.0001,t);og.gain.linearRampToValueAtTime(.12,t+1.3);og.gain.linearRampToValueAtTime(.0001,t+2.9);os.connect(og);og.connect(o);sEnd(os,[os,og],o);os.start(t);os.stop(t+3);},
   whistle(vol,dist){if(!AC||vol<.02)return;const t=AC.currentTime;sTone(t,.85,2300,450,.22,'sine',bus(vol,dist||0,.2));},
   clink(vol){if(!AC||vol<.02)return;const t=AC.currentTime;sTone(t,.06,2600,2200,vol*.5,'triangle');sNoise(t,.04,4000,2000,vol*.3,'bandpass',master,4);},
   mineArm(){if(!AC)return;const t=AC.currentTime;mech(t,master,.5);sTone(t+.12,.07,2200,2200,.12,'square');sTone(t+.3,.07,2200,2200,.12,'square');},
