@@ -23,7 +23,7 @@ Everything to paste into App Store Connect, field by field. Lengths are within A
 | Marketing URL | https://edenif1.github.io/skills-/ |
 
 ## Promotional text (170)
-New: rent any gun or skin for a day to try it, sell what you own, Search & Destroy, Elimination Pro and a lobby of open rooms.
+9 party modes: Gun Game, Capture the Flag, Infected, Battle Royale and more. Plus Kill the King, zombie hounds and a live lobby of open rooms.
 
 ## Description (4000)
 Cubefront is a fast, blocky first-person shooter you can jump into in seconds. No sign-up needed: play as a guest and your progress is saved online from the very first match.
@@ -32,16 +32,19 @@ BUILD COVER MID-FIGHT
 Pinned down? Throw up a wall. Place dirt, wood, glass, sandbags, brick, concrete or steel blocks wherever you aim. Every block you build can be shot or blown up, even on the Indestructible map, so the battlefield keeps changing.
 
 6V6 AND 12V12 BLOCK WAR
-Elimination, Elimination Pro (one life a round), Search & Destroy (plant or defuse the bomb at site A or B), Knives Only, Snipers Only, Indestructible and the giant 12v12 Warzone across ten hand-built maps: frozen pines with slippery ice, a glass city, a lava forge, a harbor with deep water and more. Bots fill every empty spot and even play the bomb, so a match is always ready.
+Elimination, Elimination Pro (one life a round), Search & Destroy (plant or defuse the bomb at site A or B), Kill the King (one giant king a side), Knives Only, Snipers Only, Indestructible and the giant 12v12 Frontline across eleven hand-built maps: frozen pines with slippery ice, a glass city, a lava forge, a harbor with deep water, a throne hall and more. Bots fill every empty spot at the difficulty you pick (easy, medium or hard), so a match is always ready.
+
+9 PARTY MODES
+Gun Game, Capture the Flag, Domination, Free-for-All, Infected, Hardpoint, Battle Royale, One in the Chamber and Build Battle. Every match ends on a Game Over screen with the winners' podium, and when you are out you watch your teammates live until the next round.
 
 PLAY WITH FRIENDS
 Open a room and it shows up in the Rooms lobby for everyone, or lock it with a password for friends only. Join any open room in one tap, see who left and take their spot. Bots top up the rest.
 
 HOLD THE HOUSE
-Team up against waves of zombies. Board the windows, buy weapons off the walls, grab the gas mask upstairs and survive four difficulty levels.
+Team up against waves of zombies in a three-storey safehouse. Board the windows, buy weapons off the walls, hit the mystery box, grab the gas mask upstairs, see your teammates' health at a glance, and hold out against brutes, venom spitters and packs of exploding hounds across four difficulty levels.
 
 A FULL ARMORY
-20 guns that unlock as you level up: rifles, SMGs, shotguns, LMGs, snipers, pistols and a rocket launcher, each with its own sound. Five grenade types, three knives and an airstrike you can call in. Fit scopes, grips and extended mags, and see every attachment and camo in a live 3D preview before you buy.
+20 guns that unlock as you level up: rifles, SMGs, shotguns, LMGs, snipers, pistols and a rocket launcher, each with its own sound. Five grenade types, three knives, an airstrike you aim from a tablet and a nuclear strike for a 15-kill streak. Find the secret weapons stash hidden somewhere on every map. Fit scopes, grips and extended mags, and see every attachment and camo in a live 3D preview before you buy.
 
 RENT IT OR OWN IT
 Not sure about a gun? Rent it for 1 day, 3 days, a week, a month or 90 days, or buy it forever. Skins, gear, camos and attachments work the same way. Changed your mind? Sell anything you own forever back for 70% of what you paid. One item is 25% off every day.
@@ -58,10 +61,10 @@ Skins, camos, hit-effect colors, titles, banners and loadouts. Move every touch 
 Built for iPhone: smooth touch controls with a second fire button, aim assist, haptics, and full offline single-player.
 
 ## Keywords (100)
-block,shooter,fps,pixel,voxel,multiplayer,zombies,build,sniper,cubes,friends,battle,arena,offline
+block,shooter,fps,pixel,voxel,multiplayer,zombies,build,sniper,cubes,friends,battle royale,arena
 
 ## What's new (version 1.0.0)
-First release on the App Store. Rent or buy every item (1 day to forever) and sell what you own, Search & Destroy, Elimination Pro, a lobby of open rooms, ten maps including 12v12 Warzone, 20 guns, gear with shields, a daily gift calendar, building, six-rarity crates, online accounts and much more.
+First release on the App Store: 9 party modes, Kill the King, Search & Destroy, Zombies with hounds and a three-storey safehouse, a live lobby of open rooms, eleven maps including 12v12 Frontline, 20 guns, bot difficulty, a secret weapons stash, gear with shields, a daily gift calendar, building, six-rarity crates, online accounts and much more.
 
 ## Age rating answers (Apple's 2025 questionnaire; expect 13+)
 | Question | Answer |
@@ -77,10 +80,10 @@ First release on the App Store. Rent or buy every item (1 day to forever) and se
 | Sexual content or nudity | None |
 | Contests | None |
 | Unrestricted web access | No |
-| User-generated content / chat | Usernames are visible to other players in rooms; there is no chat. Offensive usernames are refused (game and server), every player in a room has ⚑ Report, the host has ✕ Remove, and Settings → Help has "Report a player" |
+| User-generated content / chat | Usernames are visible to other players in rooms; there is no chat. Offensive usernames are refused (game and server), every player in a room has ⚑ Report and ⊘ Block (blocked players are refused from your rooms and their rooms are hidden; Settings → Blocked players), the host has ✕ Remove, and Settings → Help has "Report a player" |
 | Loot boxes / random items (if asked) | Yes: crates with in-game currency only, odds shown in the game |
 | In-app controls (parental controls, age assurance) | None |
-| Capabilities: account creation / multiplayer with others | Yes (username + password accounts; invite-only multiplayer rooms) |
+| Capabilities: account creation / multiplayer with others | Yes (username + password accounts; public and password-locked multiplayer rooms) |
 | Messaging and chat | No |
 | Advertising | No |
 | Violent themes | Yes: cartoon shooting with blocky characters and zombies |
@@ -94,7 +97,9 @@ Data used to track you: **None**. Data linked to you:
 | User content → Gameplay content | App functionality |
 | User content → Customer support | App functionality |
 | Diagnostics → Crash data | App functionality |
-Not collected: contact info (unless the player types an email in Help), location, contacts, health, financial, browsing, search, purchases, usage data for analytics, advertising data.
+| Diagnostics → Other diagnostic data (device model in crash reports) | App functionality |
+| Contact info → Email address (only if the player types one in Help) | App functionality |
+Not collected: location, contacts, health, financial, browsing, search, purchases, usage data for analytics, advertising data.
 
 ## Export compliance
 Uses only standard encryption (HTTPS, WebRTC DTLS). `ITSAppUsesNonExemptEncryption = NO` is already set in Info.plist, so no questions appear on upload.
@@ -103,8 +108,8 @@ Uses only standard encryption (HTTPS, WebRTC DTLS). `ITSAppUsesNonExemptEncrypti
 Cubefront works without an account: a guest account is created automatically on first launch and progress is saved online.
 To test a full account: tap the player name (top right) → Account → "Create account", or "Sign in" with the test account below.
 Test account: username ______ · password ______   (create it in the game first; do not commit it to the repository)
-Multiplayer: tap "Invite friends" on one device; on a second device open Lobby → Rooms and tap Join (or type the room code). Or press Play for a match with bots. Search & Destroy: hold E / the PLANT button inside a site to plant, DEFUSE next to the bomb to defuse.
-Safety: offensive usernames are refused; in a room, ⚑ reports a player to us and the host's ✕ removes a player. Reports also go through Settings → Help & feedback → "Report a player".
+Multiplayer: tap "Invite friends" on one device; on a second device open Lobby → Rooms and tap Join (or type the room code). Or press Play for a match with bots. Search & Destroy: hold E / the PLANT button inside a site to plant, DEFUSE next to the bomb to defuse. Party modes: Home → ★ Party modes.
+Safety: offensive usernames are refused; in a room, ⚑ reports a player to us, ⊘ blocks a player (Settings → Blocked players to undo) and the host's ✕ removes a player. Reports also go through Settings → Help & feedback → "Report a player".
 Account deletion: player name → Account → Delete account (type DELETE).
 Building: in any mode except Zombies, tap BUILD to see where the block goes, then tap BUILD again to place it.
 Everything in the game is earned with in-game GP; there are no real-money purchases.

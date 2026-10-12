@@ -12,8 +12,24 @@
     "webContentsDebuggingEnabled": false
   },
   "plugins": {
-    "SplashScreen": { "launchShowDuration": 900, "launchAutoHide": true, "backgroundColor": "#0b0f15", "showSpinner": false, "iosSpinnerStyle": "small" },
-    "StatusBar": { "overlaysWebView": true, "style": "DARK" },
-    "CapacitorUpdater": { "autoUpdate": false, "resetWhenUpdate": true, "appReadyTimeout": 15000 }
+    "SplashScreen": {
+      "launchShowDuration": 900,
+      "launchAutoHide": true,
+      "backgroundColor": "#0b0f15",
+      "showSpinner": false,
+      "iosSpinnerStyle": "small"
+    },
+    "StatusBar": {
+      "overlaysWebView": true,
+      "style": "DARK"
+    },
+    "CapacitorUpdater": {
+      "autoUpdate": false,
+      "resetWhenUpdate": true,
+      "appReadyTimeout": 15000,
+      "statsUrl": "",
+      "channelUrl": "",
+      "updateUrl": ""
+    }
   }
 }

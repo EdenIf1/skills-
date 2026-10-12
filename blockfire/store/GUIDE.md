@@ -34,7 +34,7 @@
 ## Online: rooms, modes and load
 - **Rooms lobby:** every open room is listed under Lobby → Rooms for all players. The host can hide it ("Listed in Rooms") or lock it with a password. The password is checked only on the host's phone and never stored on the server.
 - **When someone leaves:** everyone sees a small "X left the game" line, the slot opens for another player, and the leaver can rejoin that room only after one minute.
-- **Combat Arms style modes:** Elimination (regular, with respawns), Elimination Pro (one life per round, first to 5) and Search & Destroy (bomb, sites A/B, sides switch at halftime).
+- **Round modes:** Elimination (regular, with respawns), Elimination Pro (one life per round, first to 5) and Search & Destroy (bomb, sites A/B, sides switch at halftime).
 - **Load and 10,000 users:** full details in store/CAPACITY.md. In short: the database handles it. The bottleneck is the free public multiplayer matchmaking server, and the admin panel can switch to your own server without a store update.
 
 ## Economy and store
@@ -47,6 +47,7 @@
 ## Player safety (Apple guideline 1.2)
 - Offensive usernames are refused, in the game and on the server.
 - In a room: ⚑ reports a player (the report lands in the admin panel, Messages tab), and the host's ✕ removes a player who then cannot rejoin.
+- ⊘ Block: anyone can block a player. A host refuses blocked players, a guest leaves a room with a blocked player in it, and rooms hosted by blocked players are hidden. Settings → Blocked players lists them and can unblock.
 - **Your commitment:** the terms say reports are reviewed within 24 hours. Apple expects you to keep that, so check the admin panel once a day.
 
 ## Before you submit
