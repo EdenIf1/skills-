@@ -5169,7 +5169,7 @@ addEventListener('online',()=>renderHome());addEventListener('offline',()=>rende
 $('callsign').value=profile.name;
 $('callsign').addEventListener('input',e=>{const v=e.target.value.replace(/[^\w \-.]/g,'').slice(0,14);profile.name=v||'Recruit';player.name=profile.name;saveProfile();$('hName').textContent=profile.name;});
 function selectMap(k){if(isClient()||!MAPS[k])return;profile.map=k;saveProfile();MAP=MAPS[k];renderProfile();resetMatch(false);if(isHost()){netRoster();renderMP();renderMPPill();}}
-{const NEWM=['moon','forest','city','code','town','rail','outpost','farm','house'];$('mapPick').innerHTML=NEWM.concat(Object.keys(MAPS).filter(k=>!NEWM.includes(k))).map(k=>`<button class="chip" data-map="${k}">${esc(MAPS[k].name)}${NEWM.includes(k)?'<i class="hNew">NEW</i>':''}</button>`).join('');}
+{const NEWM=['moon','forest','city','code','town','rail','outpost','farm','house'];$('mapPick').innerHTML=NEWM.concat(Object.keys(MAPS).filter(k=>!NEWM.includes(k))).map(k=>`<button class="chip" data-map="${k}">${esc(MAPS[k].name)}</button>`).join('');}
 $('mapPick').addEventListener('click',e=>{const b=e.target.closest('[data-map]');if(b)selectMap(b.dataset.map);});
 $('zdiffPick').addEventListener('click',e=>{const b=e.target.closest('[data-zd]');if(!b||isClient())return;profile.zdiff=b.dataset.zd;saveProfile();renderProfile();if(isZ()&&state==='menu')zReset();if(isHost()){netRoster();renderMP();}});
 
