@@ -35,6 +35,7 @@ if out.endswith('.html'):
     page,d=out,os.path.dirname(out)
 else:
     os.makedirs(out,exist_ok=True);page,d=os.path.join(out,'index.html'),out
+html=html.replace('__BUILD_ID__',os.environ.get('BUILD','dev')[:7])
 open(page,'w').write(html)
 for f in ['three.min.js','peerjs.min.js','manifest.webmanifest','icon-192.png','icon-512.png','icon-maskable.png','apple-touch-icon.png','fonts.css']:
     shutil.copy(os.path.join(A,f),d)
