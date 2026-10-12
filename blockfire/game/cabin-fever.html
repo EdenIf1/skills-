@@ -2216,7 +2216,7 @@ const GUN={
   goliath:{c:[2500,170,.21],b:[82,28,.19],cv:1.12,bv:1.35,snap:.55,rev:.48},   // big slow thump
   hawk:{c:[4700,150,.62],b:[72,22,.46],cv:1.42,bv:1.62,snap:.95,rev:.95,after:'bolt'}
 };
-const BOT_SND={'KV-47':'ak','MK-4':'m4','PX-9':'smg','Raptor AR':'scar','Talon AR':'talon','Striker AR':'striker','B7 Bullpup':'aug','Hornet SMG':'hornet','Vandal SMG':'supp','Longbow .338':'sniper'};
+const BOT_SND={'King Minigun':'goliath','KV-47':'ak','MK-4':'m4','PX-9':'smg','Raptor AR':'scar','Talon AR':'talon','Striker AR':'striker','B7 Bullpup':'aug','Hornet SMG':'hornet','Vandal SMG':'supp','Longbow .338':'sniper'};
 const distAt=(x,y,z)=>Math.hypot(x-camera.position.x,y-camera.position.y,z-camera.position.z);
 const sfx={
   gun(key,vol,dist){if(!AC||vol<.02)return;const P=GUN[key]||GUN.m4,t=AC.currentTime,o=bus(vol,dist||0,P.rev);
@@ -2527,6 +2527,7 @@ const WEAPONS={
   karambit:{req:18,name:'Karambit',desc:'Very quick slashes and you run faster with it out.',kind:'knife',model:'knife',auto:true,mag:1,reserve:0,rate:.3,dmg:50,head:1,spread:0,move:0,bloom:0,recoil:0,reload:1,adsFov:75,price:6500,speed:1.22,range:2.1,stats:[52,92,3,100],extra:'karambit'}
 };
 // the Store lists guns in the order they open up
+WEAPONS.minigun={req:99,snd:'goliath',name:'King Minigun',kind:'lmg',model:'lmg',auto:true,mag:240,reserve:960,rate:.05,dmg:24,head:1.8,spread:.03,move:.012,bloom:.002,recoil:.008,reload:3.6,adsFov:54,price:0,speed:.9,stats:[70,98,58,30],finish:0xc9a227,vs:[1.15,1.15,1.15]};
 const WORDER=['ak47','p9','m4a1','mp5','spas','deagle','hornet','falcon','m249','raptor','awm','vandal','thunder','talon','hammer','hawk','goliath','striker','b7','rpg'];
 const KNIVES=['knife','machete','karambit'];
 const isKnife=id=>!!WEAPONS[id]&&WEAPONS[id].kind==='knife';
@@ -2620,7 +2621,7 @@ function respawn(e){
   e.x=best[0];e.y=best[1];e.z=best[2];e.vx=e.vy=e.vz=0;e.bl=64;e.hp=e.maxHp||100;e.shield=e.maxSh||0;e.alive=true;e.spawnProt=1.5;e.smoothY=0;e.onGround=false;e.lastAttacker=null;e.streak=0;
   e.yaw=Math.atan2(-(MAP.center[0]-e.x),-(MAP.center[2]-e.z));e.pitch=0;
   if(e.isPlayer){
-    loadout=isZ()?Z.loadout.slice():MAP.mode==='knife'?[myKnife()]:MAP.mode==='sniper'?['awm']:profile.slots.map(id=>WEAPONS[id]?id:'ak47');
+    player.kingArmed=false;loadout=playerLoadout();
     LW=loadout.map(effW);ammo=LW.map(w=>({mag:w.mag,reserve:w.reserve}));cur=0;nades=noNades()?0:profile.nadeLvl;minesLeft=noNades()?0:profile.mineLvl;reloadT=0;swapT=.35;bloom=0;recoilP=0;ads=false;
     buildViewmodels();$('death').hidden=true;buildLeft=bagSize();blindT=0;
   }else{
@@ -2630,6 +2631,7 @@ function respawn(e){
 
 /* ================= player weapon state & viewmodels ================= */
 const noNades=()=>MAP.mode==='knife'||MAP.mode==='sniper';
+const noBreak=()=>MAP.mode==='solid'||isZ()||RULE()==='king';
 let swingT=0,scopedView=false;
 let loadout=profile.slots.slice(),ammo=[],cur=0,nades=1,reloadT=0,swapT=0,fireCD=0,bloom=0,recoilP=0,ads=false,adsK=0;
 let fireHeld=false,firedThisPress=false,shake=0;
@@ -2907,7 +2909,7 @@ function nukeBombMesh(){const g=new THREE.Group(),M=c=>new THREE.MeshLambertMate
   const box=new THREE.Mesh(new THREE.BoxGeometry(1.4,1.4,.1),new THREE.MeshBasicMaterial({color:0x1a1a1a}));box.position.set(0,-.2,1.12);g.add(box);
   return g;}
 // the same seed gives the same ruins on every device in the room
-function nukeWorld(seed){const R=rng(seed),burn=[],keep=MAP.mode==='solid';
+function nukeWorld(seed){const R=rng(seed),burn=[],keep=MAP.mode==='solid'||RULE()==='king';
   for(let y=1;y<H;y++)for(let z=0;z<D;z++)for(let x=0;x<W;x++){const i=VI(x,y,z),v=vox[i];
     if(v===B.LEAF){vox[i]=0;if(R()<.06)burn.push([x,y,z]);}else if(v===B.LOG&&R()<.5)burn.push([x,y,z]);}
   if(!keep){
@@ -3063,7 +3065,7 @@ function kill(v,att,head,weapon,kind){
     $('death').querySelector('.t').innerHTML=isZ()?'Your team has to finish the round. You come back when it ends.':RS.on?'Out for this round. You are back when the next round starts.':'Redeploying in <span id="dT">4</span>';
     if(att&&att!==v)v.deathLook=att;
   }
-  if(state==='play'&&!isClient()&&dropsOn()){const dw=v.isPlayer?curW().id:v.remote?v.wpId:BOTW[v.weapon];spawnDrop(dw,v.x,v.y,v.z);}
+  if(state==='play'&&!isClient()&&dropsOn()){const dw=v.isPlayer?curW().id:v.remote?v.wpId:BOTW[v.weapon];if(dw!=='minigun'&&!(dw==='rpg'&&RULE()==='king'))spawnDrop(dw,v.x,v.y,v.z);}
   if(state==='play'&&v===player){const S=ST();S.deaths++;const m=S.maps[MAP.name]=S.maps[MAP.name]||{};m.d=(m.d||0)+1;}
   if(att===player&&counted&&state==='play')onMyKill(v.name,head,weapon,kind);
 }
@@ -3224,7 +3226,7 @@ function updateProjs(dt){
 function explode(x,y,z,owner,o){
   netEv(['b',r1(x),r1(y),r1(z),o.r,o.weapon]);
   if(!(owner&&owner.zombie))for(const zb of zombies){if(!zb.alive)continue;const d=Math.hypot(zb.x-x,zb.y+1-y,zb.z-z);if(d<o.dr)zHurt(zb,o.dmg*(1-d/o.dr),owner,false,o.weapon,'boom');}
-  const R=MAP.mode==='solid'||isZ()?0:o.r,cx=Math.floor(x),cy=Math.floor(y),cz=Math.floor(z),rr=Math.ceil(R)+1;
+  const R=noBreak()?0:o.r,cx=Math.floor(x),cy=Math.floor(y),cz=Math.floor(z),rr=Math.ceil(R)+1;
   for(let dx=-rr;dx<=rr;dx++)for(let dy=-rr;dy<=rr;dy++)for(let dz=-rr;dz<=rr;dz++){
     const bx=cx+dx,by=cy+dy,bz=cz+dz;if(by<=0||bx<1||bz<1||bx>=W-1||bz>=D-1)continue;
     const id=getV(bx,by,bz);if(!id||id===B.BEDROCK||LIQ[id]||PB.has(VI(bx,by,bz)))continue;
@@ -3293,7 +3295,7 @@ function findTarget(b){
   return best;
 }
 function botMuzzle(b){const c=Math.cos(b.yaw),s=Math.sin(b.yaw),lx=.07,lz=-.93;return[b.x+lx*c+lz*s,b.y+1.25,b.z-lx*s+lz*c];}
-function breakAt(id,x,y,z){if(MAP.mode==='solid'||isZ()||isClient()){burst(x+.5,y+.5,z+.5,BCOL[id],3,3,.08,.5);return;}set(x,y,z,0);netBlk(x,y,z,0);worldDirty=true;burst(x+.5,y+.5,z+.5,BCOL[id],8,4,.1,.8);if(id===B.GLASS)sfx.glass(volAt(x,y,z,.5));}
+function breakAt(id,x,y,z){if(noBreak()||isClient()){burst(x+.5,y+.5,z+.5,BCOL[id],3,3,.08,.5);return;}set(x,y,z,0);netBlk(x,y,z,0);worldDirty=true;burst(x+.5,y+.5,z+.5,BCOL[id],8,4,.1,.8);if(id===B.GLASS)sfx.glass(volAt(x,y,z,.5));}
 
 /* ================= building: players place blocks they bought in the store (not in Zombies) ================= */
 // hp: a rifle bullet does about 15-30 to a block, a frag about 130 up close
@@ -3423,8 +3425,8 @@ function updateBot(b,dt){
     }else if(b.reactT<=0&&Math.abs(angDiff(b.yaw,want))<.3){
       b.fireCD-=dt;
       if(b.fireCD<=0){
-        if(b.burst<=0){b.burst=4+((rand()*5)|0);b.fireCD=.3+rand()*.45;}
-        else{b.burst--;b.fireCD=.105;botShoot(b,t,Math.hypot(dx,t.y-b.y,dz));}
+        if(b.burst<=0){b.burst=(b.king?16:4)+((rand()*5)|0);b.fireCD=.3+rand()*.45;}
+        else{b.burst--;b.fireCD=b.king?.05:.105;botShoot(b,t,Math.hypot(dx,t.y-b.y,dz));}
       }
     }
     if(!noNades()&&b.nadeCD<=0&&dist>9&&dist<24&&rand()<dt*.3){
@@ -5189,7 +5191,7 @@ function startMatch(){
   resetMatch(true);setSprintLock(false);
   NET.q=[];NET.life=0;
   if(isHost()){for(const r of NET.remotes.values())r.ready=false;netRoster();netBroadcast({t:'start',map:MAP.key,zd:profile.zdiff||'medium',goal:GOAL,rule:profile.rule||'tdm'});renderMPPill();if(RS.on)rsSync();}
-  tl.querySelector('[data-b=nade]').hidden=noNades();tl.querySelector('[data-b=nade]').textContent=EQUIP[profile.equip].short;tl.querySelector('[data-b=mine]').hidden=noNades()||!profile.mineLvl;tl.querySelector('[data-b=reload]').hidden=MAP.mode==='knife';tl.querySelector('[data-b=aim]').hidden=MAP.mode==='knife';tl.querySelector('[data-b=drop]').hidden=!dropsOn();tl.querySelector('[data-b=build]').hidden=isZ();tl.querySelector('[data-b=bsel]').hidden=isZ();$('blocksHud').hidden=isZ();$('wpills').hidden=loadout.length<2;$('nades').hidden=noNades();
+  tl.querySelector('[data-b=nade]').hidden=noNades()||!!player.kingArmed;tl.querySelector('[data-b=nade]').textContent=EQUIP[profile.equip].short;tl.querySelector('[data-b=mine]').hidden=noNades()||!profile.mineLvl||!!player.kingArmed;tl.querySelector('[data-b=reload]').hidden=MAP.mode==='knife';tl.querySelector('[data-b=aim]').hidden=MAP.mode==='knife';tl.querySelector('[data-b=drop]').hidden=!dropsOn();tl.querySelector('[data-b=build]').hidden=isZ();tl.querySelector('[data-b=bsel]').hidden=isZ();$('blocksHud').hidden=isZ();$('wpills').hidden=loadout.length<2;$('nades').hidden=noNades();
   tryLock();
   if(navigator.wakeLock&&navigator.wakeLock.request)navigator.wakeLock.request('screen').catch(()=>{});
 }
@@ -5583,7 +5585,7 @@ function roomsHTML(){let h=`<div class="lobTop"><div class="lobCode"><span class
   return h;}
 function mpHost(code,tries){
   if(!mpAvailable())return mpErr('Multiplayer needs the public link of the game. Open it from GitHub and try again.');
-  if(!code){mpLeave(true);NET.err='';NET.status='Opening a room…';renderMP();code=Array.from({length:5},()=>'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[(Math.random()*32)|0]).join('');}
+  if(!code){mpLeave(true);NET.err='';NET.cool=null;NET.kicked=null;NET.status='Opening a room…';renderMP();code=Array.from({length:5},()=>'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[(Math.random()*32)|0]).join('');}
   const peer=new Peer(roomId(code),peerOpts());NET.peer=peer;if(tries&&NET.mode!=='host'){NET.status='Reopening your room '+code+'…';renderMP();renderMPPill();}
   peer.on('open',()=>{if(NET.peer!==peer)return;NET.offline=false;const first=NET.mode!=='host';requestWake();NET.mode='host';NET.code=code;NET.nid='P0';player.nid='P0';NET.status='';if(first&&!tries)NET.blk.clear();ss('bf.host',code);rlHostStart(code);renderMP();renderMPPill();roomReg();});
   peer.on('connection',hostAccept);
@@ -5799,7 +5801,7 @@ function clientRecv(d){
   if(d.t==='die'){clientDie(d);return;}
   if(d.t==='hurt'){vigT=Math.min(1,vigT+d.v/45);sfx.hurt();if(d.ax!==undefined)showDmgDir(d.ax,d.az);return;}
   if(d.t==='kg'){KG.on=true;$('kgHud').hidden=false;const me=nidOf(player),k=(player.team==='blue'?d.b:d.r)[0];player.king=k===me;player.ks=player.king?KS:1;kgView(d);return;}
-  if(d.t==='king'){if(d.on&&isFinite(d.x)){player.x=+d.x;player.y=+d.y;player.z=+d.z;player.vx=player.vy=player.vz=0;player.smoothY=0;}if(d.on){player.king=true;player.ks=KS;player.maxHp=KHP;player.hp=KHP;player.shield=0;player.maxSh=0;}else{player.king=false;player.ks=1;applyGear(true);player.hp=Math.min(player.hp,player.maxHp);}return;}
+  if(d.t==='king'){kgArm(!!d.on);if(d.on&&isFinite(d.x)){player.x=+d.x;player.y=+d.y;player.z=+d.z;player.vx=player.vy=player.vz=0;player.smoothY=0;}if(d.on){player.king=true;player.ks=KS;player.maxHp=KHP;player.hp=KHP;player.shield=0;player.maxSh=0;}else{player.king=false;player.ks=1;applyGear(true);player.hp=Math.min(player.hp,player.maxHp);}return;}
   if(d.t==='kc'){player.streak=(player.streak||0)+1;onMyKill(d.v,!!d.h,d.w,d.k);return;}
   if(d.t==='cash'){Z.money+=d.v;if(d.kill&&state==='play'){Z.kills++;match.kills++;if(d.h)match.heads++;const S=ST();S.kills++;S.zkills=(S.zkills||0)+1;if(d.h)S.heads++;S.weap[d.w]=(S.weap[d.w]||0)+1;chProgress('kills',1);if(d.h){chProgress('heads',1);showMsg('HEADSHOT',true);}}return;}
   if(d.t==='pk'){if(state==='play'&&player.alive){giveWeapon(d.w);sfx.reload();showMsg('PICKED UP '+WEAPONS[d.w].name.toUpperCase(),true);}return;}
@@ -6211,7 +6213,15 @@ function kgCrownMesh(){const g=new THREE.Group(),m=new THREE.MeshLambertMaterial
   const gem=new THREE.Mesh(new THREE.BoxGeometry(.1,.1,.06),new THREE.MeshBasicMaterial({color:0xff3050}));gem.position.set(0,.02,-.29);g.add(gem);
   g.position.y=.31;return g;}
 // king or not: size, health and the crown
+// the king carries a minigun and an RPG (no grenades); a dead king goes back to his own guns
+function playerLoadout(){return isZ()?Z.loadout.slice():MAP.mode==='knife'?[myKnife()]:MAP.mode==='sniper'?['awm']:profile.slots.map(id=>WEAPONS[id]?id:'ak47');}
+function kgArm(on){if(on===!!player.kingArmed)return;player.kingArmed=!!on;
+  loadout=on?['minigun','rpg']:playerLoadout();LW=loadout.map(effW);ammo=LW.map(w=>({mag:w.mag,reserve:w.reserve}));cur=0;reloadT=0;swapT=.35;ads=false;
+  nades=on?0:(noNades()?0:profile.nadeLvl);minesLeft=on?0:(noNades()?0:profile.mineLvl);try{buildViewmodels();}catch(e){}
+  try{tl.querySelector('[data-b=nade]').hidden=on||noNades();tl.querySelector('[data-b=mine]').hidden=on||noNades()||!profile.mineLvl;}catch(e){}
+  if(on)showMsg('MINIGUN + ROCKET LAUNCHER',true);}
 function kgSet(e,on){if(!e)return;const was=!!e.king;e.king=!!on;e.ks=on?KS:1;
+  if(e===player)kgArm(!!on);else if(!e.remote&&e.baseWeapon){e.weapon=on?'King Minigun':(MAP.mode==='knife'?'Knife':MAP.mode==='sniper'?'Longbow .338':e.baseWeapon);}
   if(e.head&&!e.crown){e.crown=kgCrownMesh();e.head.add(e.crown);}if(e.crown)e.crown.visible=!!on;
   if(!isClient()){if(on){e.maxHp=KHP;e.hp=KHP;e.shield=0;e.maxSh=0;e.spawnProt=0;}
     else if(was){e.maxHp=e.isPlayer?100+gearStats().hp:100;e.maxSh=e.isPlayer?gearStats().sh:0;e.hp=Math.min(e.hp,e.maxHp);}
@@ -6268,7 +6278,9 @@ function kgView(s){kgLast=s;if(!KG.on)return;
     else if(tm===player.team)$('kgNote').hidden=true;}
   if(isClient()&&s.g){GOAL=s.g;$('goalTxt').textContent=`Kill ${GOAL} kings`;}}
 // size grows smoothly; the camera of a king sits three times higher
-function kgAnim(dt){if(!KG.on&&!player.king)return;for(const e of ents){const tgt=e.king?KS:1;e.ksv=e.ksv||1;if(Math.abs(e.ksv-tgt)>.001){e.ksv+=(tgt-e.ksv)*Math.min(1,dt*2.6);if(Math.abs(e.ksv-tgt)<.01)e.ksv=tgt;}
+function kgAnim(dt){if(!KG.on&&!player.king)return;
+  if(state==='play'){for(const e of ents){if(!e.king||!e.alive||e.remote)continue;if(e===player&&isClient()&&!player.king)continue;
+    if(collides(e.x,e.y,e.z)||e.y<1){const pd=kgPad(e.team);e.x=pd[0];e.y=pd[1];e.z=pd[2];e.vx=e.vy=e.vz=0;if(e.mesh)e.mesh.position.set(e.x,e.y,e.z);}}}for(const e of ents){const tgt=e.king?KS:1;e.ksv=e.ksv||1;if(Math.abs(e.ksv-tgt)>.001){e.ksv+=(tgt-e.ksv)*Math.min(1,dt*2.6);if(Math.abs(e.ksv-tgt)<.01)e.ksv=tgt;}
     if(e.mesh)e.mesh.scale.setScalar(.9*e.ksv);}
   if(kgLLT>0){kgLLT-=dt;if(kgLLT<=0)$('kgCd').hidden=true;}}
 function kgStop(){KG.on=false;$('kgHud').hidden=true;$('kgCd').hidden=true;$('kgNote').hidden=true;for(const e of ents){if(e.king)kgSet(e,false);e.king=false;e.ks=1;e.ksv=1;if(e.mesh)e.mesh.scale.setScalar(.9);if(e.crown)e.crown.visible=false;}}
@@ -6372,8 +6384,8 @@ function step(dt,now){
     for(const b of bots)updateBot(b,dt);
     if(isZ())zUpdate(dt);
     menuCam(dt);
-  }else if(FK.on){fkStep(dt);
-  }else if(cineT>0){cineStep(dt);
+  }else if(FK.on){fkStep(dt);if(isHost())hostTick(dt);
+  }else if(cineT>0){cineStep(dt);if(isHost())hostTick(dt);
   }else if(!paused){
     matchT-=dt;if(streakT>0)streakT-=dt;
     updatePlayer(dt);
