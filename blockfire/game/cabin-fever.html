@@ -87,6 +87,9 @@ body.touch #zhud{padding:2px 12px 1px}body.touch #zRound{font-size:16px}body.tou
 #tmHp{position:absolute;left:50%;top:calc(50% + 30px);transform:translateX(-50%);background:rgba(8,12,18,.72);border:1px solid rgba(91,156,240,.55);border-radius:4px;padding:3px 10px 5px;text-align:center;pointer-events:none;min-width:120px;animation:tmIn .15s ease-out}
 #tmHp b{display:block;font:500 17px/1.1 var(--f-hud);letter-spacing:.04em;color:#cfe2ff;white-space:nowrap}#tmHp i{display:block;height:5px;background:rgba(255,255,255,.15);margin-top:3px;border-radius:3px;overflow:hidden}#tmHp s{display:block;height:100%;background:#7be04a;transition:width .2s}#tmHp s.lo{background:#ef5a4f}#tmHp s.md{background:#f3b54a}
 @keyframes tmIn{from{opacity:0}to{opacity:1}}
+.hMode.hGrpGo{background:linear-gradient(90deg,#ffd34a,#f29a1a)!important;border-color:#ffd34a!important}.hMode.hGrpGo b,.hMode.hGrpGo small{color:#1a1206!important}
+.hNew{display:inline-block;margin-left:6px;padding:1px 5px 0;border-radius:3px;background:#e5484d;color:#fff;font:600 11px/1.3 var(--f-body);font-style:normal;letter-spacing:.06em;vertical-align:2px;animation:hNewP 1s ease-in-out infinite alternate}
+@keyframes hNewP{from{opacity:1;transform:scale(1)}to{opacity:.55;transform:scale(1.12)}}
 body.touch #zprompt{bottom:calc(var(--sb) + 148px);font-size:15px}
 #nadeWarn{position:absolute;left:50%;top:62%;transform:translateX(-50%);font-size:24px;letter-spacing:.2em;color:var(--red);background:var(--panel);padding:2px 14px 0}
 #nukeFlash{position:absolute;inset:0;background:#fff;opacity:0}
@@ -4510,7 +4513,7 @@ function renderHome(){
   const mk=isClient()?(NET.mapKey||MAP.key):MAP.key,md=modeOf(mk);
   const grp=modeGroup||modeGrp(md);
   $('hModes').innerHTML=MODES.filter(m=>modeGrp(m)===grp).map(m=>`<button class="hMode ${m.id===md.id?'on':''}" data-hmode="${m.id}" style="--c:${m.col}" ${isClient()?'disabled':''}><b>${m.name}</b><small>${m.sub}</small></button>`).join('')+
-    `<button class="hMode hGrp" data-hgrp="${grp==='party'?'classic':'party'}" style="--c:#ffd34a"><b>${grp==='party'?'◂ Classic modes':'★ Party modes ▸'}</b><small>${grp==='party'?'Elimination, S&D, Zombies…':'10 new modes'}</small></button>`;
+    `<button class="hMode hGrp ${grp==='party'?'':'hGrpGo'}" data-hgrp="${grp==='party'?'classic':'party'}" style="--c:#ffd34a"><b>${grp==='party'?'◂ Classic modes':'★ Party modes ▸'}${grp!=='party'&&!profile.partySeen?'<i class="hNew">NEW</i>':''}</b><small>${grp==='party'?'Elimination, S&D, Zombies…':'10 new modes · tap here'}</small></button>`;
   const M=MAPS[mk]||MAP,zm=M.mode==='zombie',DF=ZDIFF[isClient()?(NET.zdiff||'medium'):(profile.zdiff||'medium')]||ZDIFF.medium;
   $('hSelMap').textContent=M.name+(zm?' · '+DF.name:'');
   $('hName').textContent=profile.name;
@@ -4534,7 +4537,7 @@ function renderHome(){
   if(rows.length>1)$('hLB').innerHTML=`<h4><span>Leaderboard · device</span><a data-open="lb">All ›</a></h4>`+rows.slice(0,5).map((r,i)=>`<div class="lbr ${r.me?'me':''}"><i>${i+1}</i><b>${esc(r.n)}</b><span>Lv ${r.lv} · ${r.k} kills</span></div>`).join('');
   else{const S=ST();$('hLB').innerHTML=`<h4><span>Your records</span><a data-open="lb">All ›</a></h4><div class="lbr"><i>★</i><b>Best streak</b><span>${S.bestStreak||0}</span></div><div class="lbr"><i>★</i><b>Most kills in a match</b><span>${S.bestMatch||0}</span></div><div class="lbr"><i>★</i><b>Best zombie round</b><span>${S.zbest||0}</span></div><div class="lbr"><i>★</i><b>Wins</b><span>${S.wins||0}</span></div>`;}
 }
-$('hModes').addEventListener('click',e=>{const g=e.target.closest('[data-hgrp]');if(g){modeGroup=g.dataset.hgrp;renderHome();return;}const b=e.target.closest('[data-hmode]');if(!b||isClient())return;pickMode(MODES.find(x=>x.id===b.dataset.hmode));});
+$('hModes').addEventListener('click',e=>{const g=e.target.closest('[data-hgrp]');if(g){modeGroup=g.dataset.hgrp;if(modeGroup==='party'&&!profile.partySeen){profile.partySeen=1;saveProfile();}renderHome();return;}const b=e.target.closest('[data-hmode]');if(!b||isClient())return;pickMode(MODES.find(x=>x.id===b.dataset.hmode));});
 $('hParty').addEventListener('click',e=>{const t=e.target.closest('button,a');if(!t)return;
   if(t.id==='hInvite'){openLobby();mpHost();}
   if(t.id==='openMP'||t.id==='hOpenLobby')openLobby(true);
