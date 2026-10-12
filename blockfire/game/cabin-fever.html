@@ -4154,7 +4154,7 @@ function perchStep(b,dt){const P=b.perch;b.ptime=(b.ptime||0)+dt;if(b.ptime>50&&
   if(!b.target){const c=MAP.center;b.yaw=turnTo(b.yaw,Math.atan2(-(c[0]-b.x),-(c[2]-b.z)),2*dt);}
   return [0,0];}
 // when a bot comes back, sometimes it takes a free lookout on its own half of the map
-function perchPick(b){b.perch=null;if(!PERCHES.length||isZ()||b.objRun||b.knifeOnly||MM()==='knife'||MM()==='boom'||state!=='play'||rand()>.45)return;
+function perchPick(b){b.perch=null;if(!PERCHES.length||isZ()||RS.on||b.objRun||b.knifeOnly||MM()==='knife'||MM()==='boom'||state!=='play'||rand()>.45)return;
   const mine=bots.filter(x=>x!==b&&x.perch&&x.team===b.team).length;if(mine>=Math.max(1,teamSize()>>2))return;
   const side=MAP.spawn[b.team]?(MAP.spawn[b.team][2]+MAP.spawn[b.team][3])/2<D/2:true;
   const L=PERCHES.filter(p=>(p.dest[2]<D/2)===side&&!bots.some(x=>x.perch===p)&&reachable(p.wp[0][0],p.wp[0][2]));if(!L.length)return;
