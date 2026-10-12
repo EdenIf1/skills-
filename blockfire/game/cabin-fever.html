@@ -31,6 +31,7 @@ body{font-family:var(--f-body);touch-action:none;user-select:none;-webkit-user-s
 #score .goal{font-size:14px;letter-spacing:.12em;color:var(--dim);text-transform:uppercase}
 
 #radar{position:absolute;left:calc(var(--sl) + 14px);top:calc(var(--st) + 10px);width:132px;height:132px;border-radius:50%;background:rgba(11,15,20,.55);border:2px solid rgba(238,242,244,.25)}
+#protTag{position:fixed;left:50%;bottom:calc(var(--sb) + 150px);transform:translateX(-50%);color:#7cc4ff;font-family:var(--f-hud);font-size:18px;letter-spacing:.14em;text-shadow:0 0 8px rgba(74,168,255,.8);pointer-events:none;z-index:6}
 #uavTag{position:absolute;left:calc(var(--sl) + 14px);top:calc(var(--st) + 146px);width:132px;text-align:center;font-size:16px;letter-spacing:.14em;color:var(--amber)}
 
 #feed{position:absolute;top:calc(var(--st) + 172px);left:calc(var(--sl) + 14px);display:flex;flex-direction:column;align-items:flex-start;gap:3px;font-size:17px;max-width:40vw}
@@ -852,6 +853,7 @@ body.cine #hud>*:not(#nukeFlash),body.cine #touch,body.cine #airTab{visibility:h
 <div id="hud" hidden>
   <canvas id="radar" width="132" height="132"></canvas>
   <div id="uavTag" hidden>UAV ONLINE</div>
+  <div id="protTag" hidden>SPAWN PROTECTION</div>
   <div id="score">
     <div class="tm b cut" id="sB">0</div>
     <div class="mid"><div id="timer">6:00</div><div class="goal" id="goalTxt">First to 60</div></div>
@@ -3143,7 +3145,7 @@ function armorParts(ar,head,body,legL,legR,armL,armR){
 }
 // dress a soldier (a friend in multiplayer, or the preview) in a skin and armor
 function applyLook(e,sk,ar){
-  if(!e.mesh||!e.head)return;const S=skinMats(sk,e.team);
+  if(!e.mesh||!e.head)return;const S=skinMats(sk,lookTeam(e));
   e.head.material=S.head;if(e.body)e.body.material=S.body;e.legL.material=S.leg;e.legR.material=S.leg;if(e.armL)e.armL.material=S.arm;e.armR.material=S.arm;
   for(const o of e.armorP||[])o.parent&&o.parent.remove(o);
   e.armorP=armorParts(ar|0,e.head,e.body,e.legL,e.legR,e.armL,e.armR);e.sk=sk;e.ar=ar|0;
@@ -3183,12 +3185,15 @@ GM.acog=reticle(g=>{const r=g.createRadialGradient(64,64,30,64,64,64);r.addColor
   g.fillStyle='rgba(0,0,0,.85)';for(let i=1;i<5;i++)g.fillRect(60,74+i*9,8,1.5);});
 GM.metD=GM.met.clone();GM.metD.side=THREE.DoubleSide;
 const flashMat=new THREE.MeshBasicMaterial({color:0xffd27a});
+// the uniform an entity wears: in free-for-all everyone but you is an enemy, so everyone else wears red
+function lookTeam(e){if(e!==player&&!e.isPlayer&&state==='play'&&XFFA.includes(RULE()))return 'red';return TEAMS[e.team]?e.team:(e.xmTeam0||'blue');}
 function nameSprite(name,color){
   const c=document.createElement('canvas');c.width=256;c.height=64;
   const tx=new THREE.CanvasTexture(c);
   const draw=()=>{const g=c.getContext('2d');g.clearRect(0,0,256,64);g.font='600 44px Teko, "Arial Narrow", sans-serif';g.textAlign='center';g.textBaseline='middle';g.lineWidth=7;g.strokeStyle='rgba(0,0,0,.75)';g.strokeText(name,128,36);g.fillStyle=color;g.fillText(name,128,36);tx.needsUpdate=true;};
   draw();if(document.fonts&&document.fonts.ready)document.fonts.ready.then(draw).catch(()=>{});
   const s=new THREE.Sprite(new THREE.SpriteMaterial({map:tx,depthTest:false,transparent:true,fog:false}));
+  s.userData.recolor=c=>{if(c===color)return;color=c;draw();};
   s.scale.set(1.7,.425,1);s.renderOrder=20;return s;
 }
 
@@ -3313,7 +3318,7 @@ function respawn(e){
     for(const o of ents)if(o.alive&&o.team!==e.team&&o.inMatch!==false)md=Math.min(md,Math.hypot(o.x-c[0],o.z-c[2]));
     for(const o of ents)if(o.alive&&o!==e&&Math.hypot(o.x-c[0],o.z-c[2])<.8)md-=50;
     if(md>bd){bd=md;best=c;}}
-  e.x=best[0];e.y=best[1];e.z=best[2];e.vx=e.vy=e.vz=0;e.bl=64;e.hp=e.maxHp||100;e.shield=e.maxSh||0;e.alive=true;e.spawnProt=1.5;e.smoothY=0;e.onGround=false;e.lastAttacker=null;e.streak=0;
+  e.x=best[0];e.y=best[1];e.z=best[2];e.vx=e.vy=e.vz=0;e.bl=64;e.hp=e.maxHp||100;e.shield=e.maxSh||0;e.alive=true;e.spawnProt=2;e.smoothY=0;e.onGround=false;e.lastAttacker=null;e.streak=0;
   e.yaw=Math.atan2(-(MAP.center[0]-e.x),-(MAP.center[2]-e.z));e.pitch=0;
   if(e.isPlayer){
     player.kingArmed=false;loadout=playerLoadout();
@@ -6622,7 +6627,7 @@ function hostRecv(c,d){
     if(!e.king){const mh=fin(d.mh,100,1,isZ()?300:150),ms=fin(d.ms,0,0,100),fresh=e.alive&&!(e.lastHurt<6);
      if(mh!==e.maxHp){e.hp=fresh?mh:Math.min(e.hp,mh);e.maxHp=mh;}if(ms!==(e.maxSh||0)){e.shield=fresh?ms:Math.min(e.shield||0,ms);e.maxSh=ms;}}
     e.mask=!!d.mk;e.crouch=!!d.c&&e.alive;e.wpId=WEAPONS[d.wp]?d.wp:e.wpId;
-    if(d.a&&!e.alive&&state==='play'&&!e.away&&(d.l|0)===(e.life|0)&&now()-(e.deadAt||0)>1500&&((!isZ()&&!RS.on)||e.spawnOk)&&!e.xmOut){e.spawnOk=false;e.alive=true;e.hp=e.maxHp;e.shield=e.maxSh||0;e.spawnProt=1.5;e.deadT=0;e.mesh.visible=true;e.mesh.rotation.x=0;e.lastHurt=99;}
+    if(d.a&&!e.alive&&state==='play'&&!e.away&&(d.l|0)===(e.life|0)&&now()-(e.deadAt||0)>1500&&((!isZ()&&!RS.on)||e.spawnOk)&&!e.xmOut){e.spawnOk=false;e.alive=true;e.hp=e.maxHp;e.shield=e.maxSh||0;e.spawnProt=2;e.deadT=0;e.mesh.visible=true;e.mesh.rotation.x=0;e.lastHurt=99;}
     if(Array.isArray(d.ev))for(const ev of d.ev.slice(0,64))if(Array.isArray(ev))hostClientEv(e,ev);
   }
 }
@@ -6676,7 +6681,7 @@ function netRoster(){
 function hostSnap(){
   const E=[];
   for(const e of ents){if(!(e.isPlayer||e.remote)&&e.inMatch===false)continue;if(e.isPlayer&&state!=='play')continue;
-    E.push([e.nid,r1(e.x),r1(e.y),r1(e.z),r2(e.yaw),r2(e.pitch||0),Math.max(0,Math.ceil(e.hp)),e.alive?1:0,e.kills,e.deaths,e.firedT>0?1:0,Math.max(0,Math.ceil(e.shield||0)),e.crouch&&e.alive?1:0]);}
+    E.push([e.nid,r1(e.x),r1(e.y),r1(e.z),r2(e.yaw),r2(e.pitch||0),Math.max(0,Math.ceil(e.hp)),e.alive?1:0,e.kills,e.deaths,e.firedT>0?1:0,Math.max(0,Math.ceil(e.shield||0)),e.crouch&&e.alive?1:0,e.alive&&e.spawnProt>0?1:0]);}
   return{t:'snap',E,
     Zs:zombies.map(z=>[z.nid,ZORDER.indexOf(z.type),r1(z.x),r1(z.y),r1(z.z),r2(z.yaw),z.alive?1:0,z.fuse>=0?1:0,z.burn>0?1:0]),
     P:projs.map(g=>[g.type==='rocket'?1:g.type==='spit'?2:g.kind==='fire'?3:g.kind==='smoke'?4:g.kind==='flash'?5:g.kind==='impact'?6:0,r1(g.x),r1(g.y),r1(g.z)]),
@@ -6817,11 +6822,11 @@ const zPuppetMesh=new Map();
 function clientSnap(d){
   const seen=new Set();
   for(const a of d.E){
-    const [nid,x,y,z,yaw,pitch,hp,al,k,dd,fired,sh,cr]=a;
+    const [nid,x,y,z,yaw,pitch,hp,al,k,dd,fired,sh,cr,pr]=a;
     if(nid===NET.nid){player.hp=hp;player.shield=sh|0;player.kills=k;player.deaths=dd;continue;}
     const e=findNid(nid);if(!e)continue;seen.add(e);
     const fresh=e.tx===undefined||e.inMatch===false||Math.hypot(x-e.x,z-e.z)>4;
-    e.tx=x;e.ty=y;e.tz=z;e.tyaw=yaw;e.pitch=pitch;e.hp=hp;e.kills=k;e.deaths=dd;e.firedT=fired?1:0;e.crouch=!!cr&&!!al;e.inMatch=true;
+    e.tx=x;e.ty=y;e.tz=z;e.tyaw=yaw;e.pitch=pitch;e.hp=hp;e.kills=k;e.deaths=dd;e.firedT=fired?1:0;e.crouch=!!cr&&!!al;e.sprot=!!pr&&!!al;e.inMatch=true;
     if(fresh){e.x=x;e.y=y;e.z=z;e.yaw=yaw;}
     if(al&&!e.alive){e.alive=true;e.deadT=0;e.mesh.visible=true;e.mesh.rotation.x=0;}
     if(!al&&e.alive){e.alive=false;e.deadT=0;e.sprite.visible=false;}
@@ -7599,7 +7604,7 @@ function kgView(s){kgLast=s;if(!KG.on)return;
 // crouching soldiers squat (the body shrinks to ~72% height); also drives the camera drop for your own player
 function crAnim(dt){for(const e of ents){const tgt=e.crouch&&e.alive?.72:1;const c=e.crv||1;if(c===tgt&&c===1)continue;
     let n=c+(tgt-c)*Math.min(1,dt*12);if(Math.abs(n-tgt)<.01)n=tgt;e.crv=n;if(e.mesh&&e!==player){const s=.9*(e.ksv||1);e.mesh.scale.set(s,s*n,s);}}
-  tipTick(dt);animTick(dt);portalTick(dt);}
+  tipTick(dt);animTick(dt);portalTick(dt);lookTick(dt);}
 /* ================= match tips: a short hint when a match starts and now and then after you die ================= */
 function tipList(){const T=isTouch,J=T?'JUMP':'SPACE',A=T?'ACT':'E';const L=[];
   if(isZ())L.push('Zombies: press '+A+' at a station to buy guns, perks and ammo','Zombies: from round 11, hounds come in packs and explode - shoot them early','Zombies: the yellow stairs lead up to more ammo crates','Zombies: stick with your team - a downed friend needs you');
@@ -7620,6 +7625,14 @@ function tipTick(dt){if(state!=='play'){TIP.was=true;return;}
   if(TIP.was&&!player.alive&&TIP.next<=0&&!FK.on&&!(cineT>0)){TIP.next=40;showTip();}
   TIP.was=player.alive;}
 function tipStart(){TIP.next=40;TIP.was=true;setTimeout(()=>{if(state==='play')showTip();},1600);}
+// keeps every soldier's colours right for the mode, and shows the blue spawn-protection bubble
+const PROT_GEO=new THREE.SphereGeometry(1.15,16,12),PROT_MAT=new THREE.MeshBasicMaterial({color:0x4aa8ff,transparent:true,opacity:.28,depthWrite:false,blending:THREE.AdditiveBlending});
+const isProt=e=>e.alive&&(isClient()&&e!==player?!!e.sprot:e.spawnProt>0);
+function lookTick(dt){const ffa=state==='play'&&XFFA.includes(RULE());
+  for(const e of ents){if(e===player||!e.mesh)continue;const want=(ffa?'ffa':'t')+lookTeam(e);
+    if(e.lookKey!==want){e.lookKey=want;try{applyLook(e,e.sk||'std',e.ar||0);}catch(x){}if(e.sprite&&e.sprite.userData.recolor)e.sprite.userData.recolor(TEAMS[lookTeam(e)].tag);}
+    const pr=isProt(e)&&e.mesh.visible;if(pr&&!e.prot){e.prot=new THREE.Mesh(PROT_GEO,PROT_MAT);e.prot.position.y=1.05;e.mesh.add(e.prot);}if(e.prot){e.prot.visible=pr;if(pr)e.prot.scale.setScalar(1+Math.sin(performance.now()/120)*.04);}}
+  const me=state==='play'&&player.alive&&player.spawnProt>0;const t=$('protTag');if(t&&t.hidden===me)t.hidden=!me;}
 function kgAnim(dt){if(!KG.on&&!player.king)return;
   if(state==='play'){for(const e of ents){if(!e.king||!e.alive||e.remote)continue;if(e===player&&isClient()&&!player.king)continue;
     if(collides(e.x,e.y,e.z)||e.y<1){const pd=kgPad(e.team);e.x=pd[0];e.y=pd[1];e.z=pd[2];e.vx=e.vy=e.vz=0;if(e.mesh)e.mesh.position.set(e.x,e.y,e.z);}}}for(const e of ents){const tgt=e.king?KS:1;e.ksv=e.ksv||1;if(Math.abs(e.ksv-tgt)>.001){e.ksv+=(tgt-e.ksv)*Math.min(1,dt*2.6);if(Math.abs(e.ksv-tgt)<.01)e.ksv=tgt;}
