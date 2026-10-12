@@ -3467,6 +3467,16 @@ function explode(x,y,z,owner,o){
 /* ================= bots ================= */
 const prev=new Int32Array(WMAX*WMAX),bq=new Int32Array(WMAX*WMAX);
 function nearestValid(x,z){for(let r=0;r<6;r++)for(let dx=-r;dx<=r;dx++)for(let dz=-r;dz<=r;dz++){const nx=x+dx,nz=z+dz;if(nx>=0&&nz>=0&&nx<W&&nz<D&&SY[nx+W*nz]>=0)return nx+W*nz;}return -1;}
+// every column you can walk to from the team spawns (same steps the bots take); random spawns, the stash and loot only go there
+const REACH={key:'',a:null};
+function reachMap(){const key=MAP.key+'|'+W+'|'+D;if(REACH.key===key&&REACH.a)return REACH.a;
+  const a=new Uint8Array(W*D),q=new Int32Array(W*D);let h=0,t=0;
+  for(const s of Object.values(MAP.spawn||{})){const c=nearestValid(Math.floor((s[0]+s[1])/2),Math.floor((s[2]+s[3])/2));if(c>=0&&!a[c]){a[c]=1;q[t++]=c;}}
+  while(h<t){const c=q[h++],cx=c%W,cz=(c/W)|0,cy=SY[c];
+    for(let k=0;k<4;k++){const nx=cx+(k===0?1:k===1?-1:0),nz=cz+(k===2?1:k===3?-1:0);if(nx<0||nz<0||nx>=W||nz>=D)continue;const n=nx+W*nz;if(a[n])continue;
+      const ny=SY[n];if(ny<0||ny-cy>1||cy-ny>3)continue;a[n]=1;q[t++]=n;}}
+  REACH.key=key;REACH.a=a;return a;}
+const reachable=(x,z)=>{x=Math.floor(x);z=Math.floor(z);if(x<0||z<0||x>=W||z>=D)return false;return !!reachMap()[x+W*z];};
 function bfs(s,g){
   prev.fill(-2);let h=0,t=0;prev[s]=-1;bq[t++]=s;
   while(h<t){const c=bq[h++];if(c===g)break;const cx=c%W,cz=(c/W)|0,cy=SY[c];
@@ -4175,7 +4185,7 @@ function stashShow(s){if(STASH.m){scene.remove(STASH.m);freeObj(STASH.m);STASH.m
 function stashPick(){const cs=Object.values(MAP.spawn).map(([x0,x1,z0,z1])=>[(x0+x1)/2,(z0+z1)/2]);let best=null,bs=-1e9;
   // only ground the bots can walk to (SY: the standing height of each column, -1 = nowhere to stand)
   for(let k=0;k<600;k++){const x=2+((rand()*(W-4))|0),z=2+((rand()*(D-4))|0),y=SY[x+W*z];if(y<1||y>=H-3)continue;
-    if(solid(x,y,z)||solid(x,y+1,z)||!solid(x,y-1,z))continue;
+    if(solid(x,y,z)||solid(x,y+1,z)||!solid(x,y-1,z)||!reachable(x,z))continue;
     const near=Math.min(...cs.map(([sx,sz])=>Math.hypot(sx-x,sz-z)));if(near<14)continue;
     let walls=0,roof=0;for(const [ax,az] of [[1,0],[-1,0],[0,1],[0,-1]])for(let r=1;r<=2;r++)if(solid(x+ax*r,y,z+az*r)){walls++;break;}
     for(let h=2;h<=5;h++)if(solid(x,y+h,z)){roof=1;break;}
@@ -5555,7 +5565,7 @@ $('crateOpen').addEventListener('click',()=>{
 });
 
 /* ================= match flow ================= */
-function resetMatch(inMatch){
+function resetMatch(inMatch){REACH.key='';
   xmStop();
   $('zTip').hidden=true;PB.clear();buildHeld=false;ghost.visible=false;
   genWorld();rebuildWorld();
@@ -6703,7 +6713,7 @@ function xmGround(x,z){x=Math.floor(x);z=Math.floor(z);const c=nearestValid(x,z)
 function xmBase(t){const s=MAP.spawn[t];if(!s)return null;return xmGround((s[0]+s[1])/2,(s[2]+s[3])/2);}
 // a free spot anywhere on the ground, as far as possible from everyone alive
 function xmFreeSpot(e){let best=null,bs=-1;
-  for(let k=0;k<50;k++){const x=2+((rand()*(W-4))|0),z=2+((rand()*(D-4))|0),y=SY[x+W*z];if(y<1||y>=H-3||solid(x,y,z)||solid(x,y+1,z))continue;
+  for(let k=0;k<120;k++){const x=2+((rand()*(W-4))|0),z=2+((rand()*(D-4))|0),y=SY[x+W*z];if(y<1||y>=H-3||solid(x,y,z)||solid(x,y+1,z)||!reachable(x,z))continue;
     let md=60;for(const o of ents)if(o!==e&&o.alive&&o.inMatch!==false)md=Math.min(md,Math.hypot(o.x-x,o.z-z));
     if(md>bs){bs=md;best=[x+.5,y,z+.5];}if(md>=18)break;}
   return best;}
@@ -6755,7 +6765,7 @@ function xmStart(){xmStop();const r=RULE();if(!XRULES.includes(r)||isZ())return;
   if(r==='br'&&host){XM.ring={x:W/2+(rand()-.5)*W*.2,z:D/2+(rand()-.5)*D*.2,r0:Math.hypot(W,D)*.55,r:Math.hypot(W,D)*.55,t:0};
     // loot on the ground everywhere
     const pool=['ak47','m4a1','mp5','spas','deagle','hornet','raptor','vandal','talon','striker','b7','m249','awm','thunder','hammer','goliath','rpg'];
-    for(let i=0;i<34;i++){const x=3+((rand()*(W-6))|0),z=3+((rand()*(D-6))|0),y=SY[x+W*z];if(y<1||solid(x,y,z))continue;const d=makeDrop(dropSeq++,pool[(rand()*pool.length)|0],x+.5,y,z+.5);d.t=1e9;}}
+    for(let i=0,n=0;i<300&&n<34;i++){const x=3+((rand()*(W-6))|0),z=3+((rand()*(D-6))|0),y=SY[x+W*z];if(y<1||solid(x,y,z)||!reachable(x,z))continue;n++;const d=makeDrop(dropSeq++,pool[(rand()*pool.length)|0],x+.5,y,z+.5);d.t=1e9;}}
   // spawn again now that sides and rules are set (friends do the same for themselves)
   for(const e of ents){if(e.inMatch===false)continue;if(e.remote)continue;if(e.isPlayer&&isClient()){respawn(player);continue;}respawn(e);}
   xmBuildVis();xmHudDraw();$('xmHud').hidden=false;
