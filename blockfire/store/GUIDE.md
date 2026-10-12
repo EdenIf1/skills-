@@ -22,6 +22,13 @@
 6. **Test in TestFlight** on your phone and your friends' phones.
 7. **Fill in the store page** from store/APP_STORE_LISTING.md, upload the screenshots from store/screenshots, and Submit for Review.
 
+## Open items (as of 12 October 2026)
+- [x] GitHub Pages is on: edenif1.github.io/skills-/privacy.html and support.html open for everyone (checked in a private tab).
+- [ ] **Final app name**: still being decided. When it is picked, change it in the game title and logo, Info.plist (CFBundleDisplayName), capacitor.config.json (appName), the App Store listing, the legal pages and the icon. Check that the name is free in the App Store and as a trademark.
+- [ ] **Support email**: add it to support.html, privacy.html and terms.html (Apple wants a published contact).
+- [ ] **Apple Developer account** ($99/year), then create the app in App Store Connect and add the 4 GitHub secrets.
+- [ ] **Test account** for the App Review notes (never in the repository).
+
 ## Admin rights
 - The one-time admin code is not in the code or in git; the server keeps only its hash.
 - To become admin: create a real account (not a guest) → Profile → "Game owner? Enter admin code" → paste the code. The code is deleted after one use, and only one account can ever be admin.
