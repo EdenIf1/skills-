@@ -7240,7 +7240,7 @@ function safeExit(){try{if(NET.mode)mpLeave(false);}catch(e){}state='menu';pause
 // phones can drop the 3D context when the app goes to the background: wait for it to come back, then redraw the world
 canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();glLost=true;},false);
 canvas.addEventListener('webglcontextrestored',()=>{glLost=false;worldDirty=true;},false);
-const DQ={t:0,n:0,good:0};let frameN=0;const noRender=(()=>{try{return localStorage.getItem('blockfire.norender')==='1';}catch(e){return false;}})();
+const DQ={t:0,n:0,good:0,bad:0};let frameN=0;const noRender=(()=>{try{return localStorage.getItem('blockfire.norender')==='1';}catch(e){return false;}})();
 function frame(now){frameN++;animCamos(now);
   requestAnimationFrame(frame);
   const rdt=(now-last)/1000,dt=Math.min(.05,rdt);last=now;
@@ -7255,7 +7255,9 @@ function frame(now){frameN++;animCamos(now);
   if(flameSndT>0&&state==='play'){flameSndT-=dt;if(!flameSnd&&AC){flameSnd=sfx.loop(650);}if(flameSnd)flameSnd.g.gain.value=.5;}
   else if(flameSnd){sfx.stopLoop(flameSnd);flameSnd=null;}
   if(state==='play'&&SET.quality==='auto'&&!document.hidden){DQ.t+=rdt;DQ.n++;if(DQ.t>=2){const fps=DQ.n/DQ.t;DQ.t=0;DQ.n=0;const base=qualityRatio();let pr=renderer.getPixelRatio();
-    if(fps<45&&pr>.62){pr=Math.max(.6,pr-.15);DQ.good=0;renderer.setPixelRatio(pr);}else if(fps>57&&pr<base){if(++DQ.good>=3){pr=Math.min(base,pr+.1);DQ.good=0;renderer.setPixelRatio(pr);}}else DQ.good=0;}}
+    // never below the screen's normal sharpness (1.0), and only after two slow checks in a row (a real slowdown, not a hiccup)
+    const floor=Math.min(1,base);if(fps<35){if(++DQ.bad>=2&&pr>floor+.01){pr=Math.max(floor,pr-.1);renderer.setPixelRatio(pr);DQ.bad=0;}DQ.good=0;}
+    else{DQ.bad=0;if(fps>55&&pr<base){if(++DQ.good>=2){pr=Math.min(base,pr+.1);DQ.good=0;renderer.setPixelRatio(pr);}}else DQ.good=0;}}}
   if(noRender||glLost)return;
   try{renderer.clear();
   if(window.__cam){const q=window.__cam;camera.position.set(q[0],q[1],q[2]);camera.lookAt(q[3],q[4],q[5]);}
