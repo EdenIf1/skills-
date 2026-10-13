@@ -1490,7 +1490,7 @@ async function adminClaim(code){if(!CS||CS.guest)return 'Sign in to your own acc
   if(r.ok){CS.admin=true;cloudKeep();return '';}const e=r.j&&r.j.error;
   return !r.status?'No connection to the server.':e==='code'?'That code is not right.':e==='taken'?'This game already has its admin.':e==='guest'?'Guest accounts cannot be admins. Create your account first.':'The server said no (error '+r.status+').';}
 /* ================= version, remote settings, crash reports ================= */
-const APP_VERSION='1.0.0',BUILD_ID='d032cad';
+const APP_VERSION='1.0.0',BUILD_ID='8b098da';
 const verNum=v=>String(v||'0').split('.').slice(0,3).map(n=>parseInt(n)||0).reduce((a,n)=>a*1000+n,0);
 let RCFG={};try{RCFG=JSON.parse(localStorage.getItem('blockfire.rcfg')||'{}')||{};}catch(e){RCFG={};}
 const feat=k=>!(RCFG.features&&RCFG.features[k]===false);
@@ -2832,7 +2832,17 @@ function rayAABB(ox,oy,oz,dx,dy,dz,x0,y0,z0,x1,y1,z1){
   }
   return tmin;
 }
-const ER=.3,EH=1.8,GRAV=24,JUMP_V=9.4;
+// a real jump: about 1.3 blocks, enough to get onto one block (on the moon gravity is lower, so you go higher)
+const ER=.3,EH=1.8,GRAV=24,JUMP_V=7.9;
+// climbing: holding JUMP against a wall pulls you up at most 3 blocks above the ground you stood on. That gets you out of
+// any crater and onto a low ledge, never up a tall wall. After a climb, landing on a ledge right by the same wall (a window
+// sill, a branch) does not restart the count unless you stand there for a moment, so you cannot chain your way up to the roof.
+// Walk away from the wall and it restarts. Bots follow the same rule.
+const CLIMB_MAX=3.1;
+function climbGround(e,dt){if(!e.onGround){e.gT=0;return;}e.gT=(e.gT||0)+dt;
+  if(e.climbFrom==null||e.y<e.climbFrom||e.clx==null||e.gT>.35||Math.hypot(e.x-e.clx,e.z-e.clz)>1.5){e.climbFrom=e.y;e.clx=null;}}
+// may this body still be pushed up the wall? (it stops pushing a little early: its speed carries it the rest of the way)
+const climbLeft=e=>e.climbFrom!=null&&e.y-e.climbFrom<CLIMB_MAX-.2;
 function collides(px,py,pz){
   const x0=Math.floor(px-ER+1e-4),x1=Math.floor(px+ER-1e-4),y0=Math.floor(py+1e-4),y1=Math.floor(py+EH-1e-4),z0=Math.floor(pz-ER+1e-4),z1=Math.floor(pz+ER-1e-4);
   for(let y=y0;y<=y1;y++)for(let z=z0;z<=z1;z++)for(let x=x0;x<=x1;x++)if(solid(x,y,z))return true;
@@ -3346,7 +3356,7 @@ function respawn(e){
     for(const o of ents)if(o.alive&&o.team!==e.team&&o.inMatch!==false)md=Math.min(md,Math.hypot(o.x-c[0],o.z-c[2]));
     for(const o of ents)if(o.alive&&o!==e&&Math.hypot(o.x-c[0],o.z-c[2])<.8)md-=50;
     if(md>bd){bd=md;best=c;}}
-  e.x=best[0];e.y=best[1];e.z=best[2];e.vx=e.vy=e.vz=0;e.bl=64;e.hp=e.maxHp||100;e.shield=e.maxSh||0;e.alive=true;e.spawnProt=2;e.smoothY=0;e.onGround=false;e.lastAttacker=null;e.streak=0;
+  e.x=best[0];e.y=best[1];e.z=best[2];e.vx=e.vy=e.vz=0;e.bl=64;e.hp=e.maxHp||100;e.shield=e.maxSh||0;e.alive=true;e.spawnProt=2;e.smoothY=0;e.onGround=false;e.climbFrom=null;e.clx=null;e.gT=0;e.lastAttacker=null;e.streak=0;
   e.yaw=Math.atan2(-(MAP.center[0]-e.x),-(MAP.center[2]-e.z));e.pitch=0;
   if(e.isPlayer){
     player.kingArmed=false;loadout=playerLoadout();
@@ -4168,7 +4178,7 @@ function perchStep(b,dt){const P=b.perch;b.ptime=(b.ptime||0)+dt;if(b.ptime>50&&
   const pts=P.wp.concat([P.dest]);
   if(b.pph===1){const w=pts[b.pi],dx=w[0]-b.x,dz=w[2]-b.z,d=Math.hypot(dx,dz);
     if(d<.45&&b.y>w[1]-.6){if(b.pi>=pts.length-1){b.pph=2;b.pholdT=25+rand()*25;b.vx=b.vz=0;return [0,0];}b.pi++;}
-    if(w[1]>b.y+.4&&b.onGround&&d<1.5)b.vy=JUMP_V*.8;
+    if(w[1]>b.y+.4&&b.onGround&&d<1.5)b.vy=JUMP_V;
     if(b.y<P.wp[0][1]+.5&&b.pi>2){b.pph=0;b.path=null;return null;}
     return [dx/(d||1),dz/(d||1)];}
   b.pholdT-=dt;if(b.pholdT<=0||b.y<P.dest[1]-1.5){b.perch=null;b.path=null;return null;}
@@ -4259,9 +4269,9 @@ function updateBot(b,dt){
     if(bad(b.x+mx*.7,b.z+mz*.7)){if(!bad(b.x+mx*.7,b.z))mz=0;else if(!bad(b.x,b.z+mz*.7))mx=0;else{mx=0;mz=0;}}}
   speed*=(b.spd||1);const k=Math.min(1,10*dt);b.vx+=(mx*speed-b.vx)*k;b.vz+=(mz*speed-b.vz)*k;
   const ox=b.x,oz=b.z;
-  const blocked=physics(b,dt);
+  const blocked=physics(b,dt);climbGround(b,dt);
   const moved=Math.hypot(b.x-ox,b.z-oz)/dt;
-  if(ml>0&&moved<.6){b.stuckT+=dt;if(b.stuckT>.4&&blocked&&b.stuckT<2)b.vy=Math.max(b.vy,b.onGround?JUMP_V:4.8);if(b.stuckT>2){b.stuckT=0;b.path=null;b.lastSeenT=0;}}else b.stuckT=Math.max(0,b.stuckT-dt);
+  if(ml>0&&moved<.6){b.stuckT+=dt;if(b.stuckT>.4&&blocked&&b.stuckT<2){if(b.onGround)b.vy=JUMP_V;else if(climbLeft(b)){b.vy=Math.max(b.vy,4.8);b.clx=b.x;b.clz=b.z;}}if(b.stuckT>2){b.stuckT=0;b.path=null;b.lastSeenT=0;}}else b.stuckT=Math.max(0,b.stuckT-dt);
   b.walk+=moved*dt*2.4;
   const sw=Math.sin(b.walk)*Math.min(1,moved/3)*.75;
   b.legL.rotation.x=sw;b.legR.rotation.x=-sw;b.head.rotation.x=b.pitch*.7;
@@ -4967,14 +4977,14 @@ function updatePlayer(dt){
   const onIce=p.onGround&&getV(Math.floor(p.x),Math.floor(p.y-.05),Math.floor(p.z))===B.ICE;
   const k=Math.min(1,(p.onGround?(onIce?2.4:14):3)*dt);
   p.vx+=((fx*f+rx*s)*speed-p.vx)*k;p.vz+=((fz*f+rz*s)*speed-p.vz)*k;
-  // a higher jump (about 1.85 blocks); holding JUMP while pushing into a wall climbs it, up to 4 blocks (out of craters, onto ledges)
+  // a real jump (about 1.3 blocks); holding JUMP while pushing into a wall climbs at most 3 blocks (out of craters, onto low ledges)
   const wantUp=keys.Space||jumpHeld;p.holdJ=wantUp?(p.holdJ||0)+dt:0;
   if(wantUp&&p.onGround&&!p.climbing){p.vy=JUMP_V;p.onGround=false;}
-  if(p.onGround){p.climbFrom=p.y;p.climbing=false;}
-  const wallHit=physics(p,dt);
-  if(wantUp&&wallHit&&ml>.2&&p.holdJ>.16){if(p.climbFrom==null)p.climbFrom=p.y;
-    if(p.y-p.climbFrom>=3.7){if(p.vy>1.2)p.vy=1.2;}else{p.vy=Math.max(p.vy,4.8);p.climbing=true;if((p.climbSnd=(p.climbSnd||0)-dt)<=0){p.climbSnd=.32;sfx.step&&sfx.step(.12);}}}
-  else if(p.climbing&&!wallHit){p.climbing=false;if(wantUp&&p.vy>0)p.vy=Math.max(p.vy,3.2);}
+  if(p.onGround)p.climbing=false;
+  const wallHit=physics(p,dt);climbGround(p,dt);
+  if(wantUp&&wallHit&&ml>.2&&p.holdJ>.16&&!p.onGround){
+    if(climbLeft(p)){p.vy=Math.max(p.vy,4.8);p.climbing=true;p.clx=p.x;p.clz=p.z;if((p.climbSnd=(p.climbSnd||0)-dt)<=0){p.climbSnd=.32;sfx.step&&sfx.step(.12);}}}
+  else if(p.climbing&&!wallHit){p.climbing=false;if(wantUp&&p.vy>0&&p.y-p.climbFrom<CLIMB_MAX)p.vy=Math.max(p.vy,2.6);}
   fireCD-=dt;if(swapT>0)swapT-=dt;buildTick(dt);
   // Boom Only: a grenade and a rocket come back every 5 seconds (up to 3 grenades)
   if(MM()==='boom'&&p.alive&&state==='play'){boomT+=dt;if(boomT>=5){boomT=0;if(nades<3)nades++;const ri=LW.findIndex(w=>w.kind==='rpg');if(ri>=0&&ammo[ri].reserve<8)ammo[ri].reserve++;}}
@@ -7690,7 +7700,7 @@ function tipList(){const T=isTouch,J=T?'JUMP':'SPACE',A=T?'ACT':'E';const L=[];
     if(dropsOn())L.push('Walk over a dropped gun and press '+A+' to pick it up');
     if(XM.on&&XM.rule==='ctf')L.push('CTF: take the enemy flag back to your own flag to score');
     if(RS.on)L.push('Round mode: no respawns - when you are out you can watch your team');}
-  L.push('Hold '+J+' against a wall to climb up to 4 blocks',(T?'Tap CROUCH':'Press C')+' to be harder to hit - moving forward stands you up',(T?'Hold SPRINT':'Hold SHIFT')+' to run - let go to stop',
+  L.push('Hold '+J+' against a wall to climb up to 3 blocks (out of craters)',(T?'Tap CROUCH':'Press C')+' to be harder to hit - moving forward stands you up',(T?'Hold SPRINT':'Hold SHIFT')+' to run - let go to stop',
     'Headshots do much more damage - aim for the head','Your health comes back if you avoid damage for a few seconds',(T?'AIM':'Right-click')+' to aim down sights - tighter shots, slower moves','Grenades bounce - throw them around corners');
   return L;}
 const TIP={t:0,next:0,i:0,was:true};
