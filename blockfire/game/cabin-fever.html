@@ -1518,14 +1518,14 @@ function errTell(code){const now=Date.now();if(now-errToldT<60000)return;errTold
 function reportErr(where,e){try{const msg0=String(e&&e.message||e||'?').slice(0,400);
   // a browser extension or another site's script: nothing of ours broke
   if(where==='window'&&/^Script error\.?$/.test(msg0))return;
-  const code=errCode(where+'|'+msg0),msg='['+code+'] '+msg0,key=where+'|'+msg0;
+  const code=errCode(where+'|'+msg0),msg='['+code+'] '+msg0,key=where+'|'+msg0;window.__bfLastCode=code;
   if(['window','promise','step'].includes(where))errTell(code);
-  if(errSeen.has(key)||errN>=20)return;errSeen.add(key);errN++;
+  if(errSeen.has(key)||errN>=20)return code;errSeen.add(key);errN++;
   (window.__bfErrs=window.__bfErrs||[]).push(where+': '+msg);
   try{const L=JSON.parse(localStorage.getItem('blockfire.errlog')||'[]');L.unshift({t:Date.now(),w:where,m:msg,s:String(e&&e.stack||'').slice(0,600),mode:typeof RULE==='function'?RULE():''});localStorage.setItem('blockfire.errlog',JSON.stringify(L.slice(0,10)));}catch(x){}
-  if(!cloudOn()||!navigator.onLine)return;
-  cloudReq('/rest/v1/client_errors',{method:'POST',auth:!!CS,headers:{Prefer:'return=minimal'},body:{app_version:APP_VERSION,message:msg,stack:String(e&&e.stack||'').slice(0,2000),where_:String(where).slice(0,60),device:navigator.userAgent.slice(0,160)}});}catch(x){}}
-addEventListener('error',ev=>reportErr('window',ev.error||ev.message));
+  if(!cloudOn()||!navigator.onLine)return code;
+  cloudReq('/rest/v1/client_errors',{method:'POST',auth:!!CS,headers:{Prefer:'return=minimal'},body:{app_version:APP_VERSION,message:msg,stack:String(e&&e.stack||'').slice(0,2000),where_:String(where).slice(0,60),device:navigator.userAgent.slice(0,160)}});return code;}catch(x){return window.__bfLastCode||'E00000';}}
+addEventListener('error',ev=>{if(ev.error&&ev.error.__bfRep)return;reportErr('window',ev.error||ev.message);});
 addEventListener('unhandledrejection',ev=>reportErr('promise',ev.reason));
 /* the iPhone app (Capacitor): live updates of the game files, haptics, app info */
 const CAP=window.Capacitor&&typeof window.Capacitor.isNativePlatform==='function'&&window.Capacitor.isNativePlatform()?window.Capacitor:null;
@@ -6507,7 +6507,7 @@ function netErrText(e){const t=e&&e.type;
   if(t==='network'||t==='server-error'||t==='socket-error'||t==='socket-closed')return 'Could not reach the room server. Check your internet connection and try again.';
   if(t==='browser-incompatible')return 'This browser cannot do multiplayer. Try Safari or Chrome.';
   return 'The connection failed ('+(t||'unknown')+'). Try again.';}
-function mpErr(t){NET.err=t;NET.status='';renderMP();if(!mpAvailable())$('mpBody').insertAdjacentHTML('beforeend',`<div class="row" style="margin-top:8px"><a class="btn sm cut" href="${PUBLIC_URL}" target="_blank" rel="noopener" style="text-decoration:none">Open the public game</a></div>`);}
+function mpErr(t){const c=reportErr('net',t);t=t+' (code '+c+')';NET.err=t;NET.errCode=c;NET.status='';renderMP();if(!mpAvailable())$('mpBody').insertAdjacentHTML('beforeend',`<div class="row" style="margin-top:8px"><a class="btn sm cut" href="${PUBLIC_URL}" target="_blank" rel="noopener" style="text-decoration:none">Open the public game</a></div>`);}
 /* ---- bots step aside for real players ---- */
 function netFitBots(){
   if(isClient())return;
@@ -6917,7 +6917,7 @@ function clientRecv0(d){
   if(d.t==='po'){NET.ping=Math.round(now()-d.ts);return;}
   if(d.t==='pi'){try{NET.host.send({t:'po',ts:d.ts});}catch(e){}return;}
   if(d.t==='pgs'){const o={};if(d.v&&typeof d.v==='object')for(const k in d.v)o[k]=clamp(fin(d.v[k],0),0,99999)|0;NET.pings=o;return;}
-  if(d.t==='away'){if(!NET.hostAway)NET.awaySince=now();NET.hostAway=true;return;}
+  if(d.t==='away'){if(!NET.hostAway)NET.awaySince=performance.now();NET.hostAway=true;return;}
   if(d.t==='back'){NET.hostAway=false;NET.awaySince=0;return;}
   if(d.t==='evs'){if(state==='play'&&Array.isArray(d.ev))for(const ev of d.ev)clientEvent(ev);return;}
   if(d.t==='ver'){NET.leaving=true;mpLeave(true);mpErr('You and your friend have different versions of the game. Both of you: close the game and open the link again (pull down to refresh), then try again.');return;}
@@ -7071,7 +7071,7 @@ function stepClient(dt,now){
     if(NET.sendT<=0&&NET.host&&NET.host.open){NET.sendT=.05;
       sendU(NET.host,{t:'st',q:++NET.seq,p:[r2(player.x),r2(player.y),r2(player.z),r2(player.yaw),r2(player.pitch),r1(player.vx),r1(player.vz)],a:player.alive?1:0,l:NET.life|0,mh:player.maxHp||100,ms:player.maxSh||0,mk:Z.perks.mask?1:0,wp:curW().id,c:player.crouch?1:0});
       if(NET.q.length){try{NET.host.send({t:'cev',ev:NET.q});}catch(e){}NET.q=[];}}
-    if(NET.hostAway&&NET.awaySince&&now()-NET.awaySince>60000){NET.awaySince=0;mpLost('The host left the game for more than a minute, so the match ended. Your progress from it is saved.');return;}
+    if(NET.hostAway&&NET.awaySince&&performance.now()-NET.awaySince>60000){NET.awaySince=0;mpLost('The host left the game for more than a minute, so the match ended. Your progress from it is saved.');return;}
     $('netBanner').hidden=!(NET.reconnecting||NET.hostAway||performance.now()-NET.lastSnapAt>2500);
     if(!$('netBanner').hidden&&!NET.reconnecting)$('netBanner').textContent=NET.hostAway?"Host's game is in the background · waiting for them…":'Waiting for the host…';
   }else{
@@ -7141,7 +7141,7 @@ function mpLeave(silent){
   if(!silent){renderMP();renderMPPill();}
 }
 function requestWake(){try{if(navigator.wakeLock&&navigator.wakeLock.request&&!document.hidden)navigator.wakeLock.request('screen').catch(()=>{});}catch(e){}}
-function mpLost(why){NET.leaving=true;mpLeave(false);mpErr(why||'Lost the connection to the room.');toast(why||'Lost the connection to the room');}
+function mpLost(why){NET.leaving=true;mpLeave(false);mpErr(why||'Lost the connection to the room.');toast(NET.err);}
 /* ---- lobby screen ---- */
 function renderMPPill(){
   const p=$('mpPill');if(p)p.hidden=true;
@@ -7360,7 +7360,7 @@ let last=performance.now(),menuT=0;
 let frameErrs=0,glLost=false;
 function safeExit(){try{if(NET.mode)mpLeave(false);}catch(e){}state='menu';paused=false;fireHeld=false;ads=false;
   ['hud','touch','end','board','pause','death','scope'].forEach(id=>{try{$(id).hidden=true;}catch(e){}});
-  try{resetMatch(false);}catch(e){}try{renderProfile();}catch(e){}$('menu').hidden=false;toast('Something went wrong in that match (code '+errCode('exit|'+((window.__bfErrs||[]).slice(-1)[0]||''))+'). You are back in the menu and your progress is saved.');}
+  try{resetMatch(false);}catch(e){}try{renderProfile();}catch(e){}$('menu').hidden=false;toast('Something went wrong in that match (code '+(window.__bfLastCode||reportErr('exit','left the match after repeated errors'))+'). You are back in the menu and your progress is saved.');}
 // phones can drop the 3D context when the app goes to the background: wait for it to come back, then redraw the world
 let glLostAt=0;
 canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();glLost=true;glLostAt=performance.now();
@@ -7369,20 +7369,20 @@ canvas.addEventListener('webglcontextrestored',()=>{glLost=false;glLostAt=0;worl
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&glLost)glLostAt=performance.now();});
 // never leave a frozen screen: save everything, then reload and say what happened
 function glReload(){memSafeOn();try{autoSave();}catch(e){}try{saveProfile();}catch(e){}try{if(NET.mode)mpLeave(false);}catch(e){}
-  try{localStorage.setItem('blockfire.glreset','1');localStorage.removeItem('blockfire.alive');}catch(e){}location.reload();}
+  try{localStorage.setItem('blockfire.glreset',window.__bfLastCode||'1');localStorage.removeItem('blockfire.alive');}catch(e){}location.reload();}
 // a match that ends without the page saying goodbye (iOS closed it for memory) is reported on the next start
 let aliveT=0;
-function aliveTick(dt){if(state==='play'){aliveT-=dt;if(aliveT<=0){aliveT=5;try{localStorage.setItem('blockfire.alive',JSON.stringify({t:Date.now(),r:RULE(),m:MAP&&MAP.name,q:SET.quality,pr:renderer.getPixelRatio(),king:!!player.king,w:curW().id}));}catch(e){}}}
+function aliveTick(dt){if(state==='play'){aliveT-=dt;if(aliveT<=0){aliveT=5;try{const I=renderer.info;localStorage.setItem('blockfire.alive',JSON.stringify({t:Date.now(),r:RULE(),m:MAP&&MAP.name,q:SET.quality,pr:renderer.getPixelRatio(),king:!!player.king,w:curW().id,fps:DQ.fps|0,geo:I.memory.geometries,tex:I.memory.textures,ents:ents.length,z:zombies.length,fx:typeof parts!=='undefined'&&parts.length||0,mp:NET.mode||'',sec:Math.round(matchT||0),dev:(window.devicePixelRatio||1)+'x'+screen.width+'x'+screen.height}));}catch(e){}}}
   else if(aliveT){aliveT=0;try{localStorage.removeItem('blockfire.alive');}catch(e){}}}
 window.addEventListener('pagehide',()=>{try{localStorage.removeItem('blockfire.alive');}catch(e){}});
-setTimeout(()=>{try{const a=localStorage.getItem('blockfire.alive');localStorage.removeItem('blockfire.alive');if(a){const o=JSON.parse(a);if(Date.now()-o.t<120000){memSafeOn();reportErr('crash','page closed during a match '+a);}}
-  if(localStorage.getItem('blockfire.glreset')){localStorage.removeItem('blockfire.glreset');toast('The phone reset the graphics, so the game restarted. Your progress is saved.');}}catch(e){}},1500);
+setTimeout(()=>{try{const a=localStorage.getItem('blockfire.alive');localStorage.removeItem('blockfire.alive');if(a){const o=JSON.parse(a);if(Date.now()-o.t<120000){memSafeOn();const c=reportErr('crash','page closed during a match '+a);toast('The game closed unexpectedly last time (code '+c+'). Your progress is saved.');}}
+  const g=localStorage.getItem('blockfire.glreset');if(g){localStorage.removeItem('blockfire.glreset');toast('The phone reset the graphics, so the game restarted'+(g.length>1?' (code '+g+')':'')+'. Your progress is saved.');}}catch(e){}},1500);
 const DQ={t:0,n:0,good:0,bad:0};let frameN=0;const noRender=(()=>{try{return localStorage.getItem('blockfire.norender')==='1';}catch(e){return false;}})();
 function frame(now){frameN++;animCamos(now);
   requestAnimationFrame(frame);
   const rdt=(now-last)/1000,dt=Math.min(.05,rdt);last=now;
   if(SET.fps){fpsN++;fpsT+=rdt;if(fpsT>=.5){$('fps').textContent=Math.round(fpsN/fpsT)+' FPS';fpsN=0;fpsT=0;}}
-  try{if(!(document.hidden&&bgWorker))step(dt,now);frameErrs=0;}catch(e){frameErrs++;reportErr('step',e);if(errN<=20)setTimeout(()=>{throw e;});
+  try{if(!(document.hidden&&bgWorker))step(dt,now);frameErrs=0;}catch(e){frameErrs++;reportErr('step',e);if(errN<=20)setTimeout(()=>{try{e.__bfRep=1;}catch(x){}throw e;});
     if(frameErrs>=3&&state==='play'&&(FK.on||XM.win)){frameErrs=0;try{fkClear();}catch(x){}try{endMatch(false);}catch(x){reportErr('endMatch',x);safeExit();}}
     else if(frameErrs===20&&state!=='menu')safeExit();}
   document.body.classList.toggle('playing',state==='play');
@@ -7391,9 +7391,13 @@ function frame(now){frameN++;animCamos(now);
   if(state!=='play'&&!$('spec').hidden){$('spec').hidden=true;document.body.classList.remove('ghost');if(specT&&specT.mesh)specT.mesh.visible=!!specT.alive;specT=null;specWait=0;}
   if(flameSndT>0&&state==='play'){flameSndT-=dt;if(!flameSnd&&AC){flameSnd=sfx.loop(650);}if(flameSnd)flameSnd.g.gain.value=.5;}
   else if(flameSnd){sfx.stopLoop(flameSnd);flameSnd=null;}
-  if(state==='play'&&SET.quality==='high'&&!document.hidden){DQ.t+=rdt;DQ.n++;if(DQ.t>=2){const fps=DQ.n/DQ.t;DQ.t=0;DQ.n=0;const base=qualityRatio();let pr=renderer.getPixelRatio();
-    // picture quality is never lowered automatically; restore full sharpness if anything reduced it
-    if(pr<base-.01)renderer.setPixelRatio(base);}}
+  if((state==='play'||state==='menu')&&!document.hidden){DQ.t+=rdt;DQ.n++;if(DQ.t>=2){const fps=DQ.n/DQ.t;DQ.t=0;DQ.n=0;DQ.fps=Math.round(fps);const base=qualityRatio();let pr=renderer.getPixelRatio();
+    // phones: smooth play comes first. When frames get slow the picture gets a little softer at once (before the phone
+    // overheats or gives up); when it runs smoothly again for a while, sharpness comes back. Computers keep full sharpness.
+    if(isTouch){if(fps<40&&pr>1.25){renderer.setPixelRatio(Math.max(1.25,pr-.25));DQ.good=0;}
+      else if(fps>55){DQ.good=(DQ.good|0)+1;if(DQ.good>=5&&pr<base-.01){renderer.setPixelRatio(Math.min(base,pr+.25));DQ.good=0;}}else DQ.good=0;
+      if(pr>base+.01)renderer.setPixelRatio(base);}
+    else if(pr<base-.01)renderer.setPixelRatio(base);}}
   aliveTick(rdt);
   if(glLost&&glLostAt&&!document.hidden&&performance.now()-glLostAt>3000){glLostAt=0;glReload();return;}
   if(noRender||glLost)return;
