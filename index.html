@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-0DyOAhECJE3vXFXcwNw4h8mO8gGu9ipiVydQh+qgfGc=' 'sha256-orhMZInxGUuyZT7gWz1n0dlzp1lZTgj3VJIV9P8mIdg=' 'unsafe-eval'; script-src-attr 'none'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; media-src 'self' data: blob:; connect-src 'self' https: wss: data: blob: http://127.0.0.1:* ws://127.0.0.1:* http://localhost:* ws://localhost:*; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'; frame-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-/89aaNXDL7sYdUB3C8lwOzo00Mu0ycJjjcgxWXye+is=' 'sha256-0DyOAhECJE3vXFXcwNw4h8mO8gGu9ipiVydQh+qgfGc=' 'unsafe-eval'; script-src-attr 'none'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; media-src 'self' data: blob:; connect-src 'self' https: wss: data: blob: http://127.0.0.1:* ws://127.0.0.1:* http://localhost:* ws://localhost:*; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'; frame-src 'none'">
 <meta name="referrer" content="no-referrer">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
@@ -320,6 +320,9 @@ html,body{overscroll-behavior:none}
 .auCs{display:flex;align-items:center;gap:12px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:10px 12px}.auCs b{display:block;font:500 24px/1 var(--f-hud);color:#fff;letter-spacing:.03em}.auCs span{font:400 12.5px var(--f-body);color:var(--dim)}
 .auMsg{padding:9px 12px;border-radius:9px;font:500 13.5px/1.3 var(--f-body)}.auMsg.bad{background:rgba(239,90,79,.14);color:#ffb3ab;border:1px solid rgba(239,90,79,.4)}.auMsg.good{background:rgba(111,208,140,.14);color:#9fe3b4;border:1px solid rgba(111,208,140,.4)}
 #authForm.auForm{display:flex!important}
+.slot .sn{min-width:72px;flex:1 1 auto;overflow:hidden}.slot .sn b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.slot .sn small .pg{font-size:inherit;position:static;margin:0;padding:0;background:none}
+.staleTab{position:fixed;left:50%;top:8px;transform:translateX(-50%);z-index:9999;background:#2a1414;border:1px solid var(--red);color:#fff;padding:8px 12px;border-radius:8px;font:13px system-ui;max-width:92vw;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.gmb{font:800 10px/1 system-ui;background:linear-gradient(#ffd34a,#e0a400);color:#2a1d00;border-radius:4px;padding:2px 4px;vertical-align:middle}.vfb{color:#5fd38a;font-size:12px}#callsign.bad{outline:2px solid var(--red)}
 @media (max-height:262px){#authForm.auForm{display:grid!important;grid-template-columns:1fr 1fr;column-gap:8px}#authForm.auForm>*:not(.fld){grid-column:1/-1}#authForm.auForm .fld em{display:none}.auSteps span{display:none}}
 @media (max-height:320px){.auBrand .auPerks{display:none}.auBrand{justify-content:flex-start}.auForm{padding:6px 12px;gap:5px}.auHead .authH{font-size:18px}.auForm .fld>span{font-size:10px}.auForm .fld input{padding:5px 10px;font-size:14px}.auSeg button{padding:3px 0}.auForm .authGo{padding:5px 0 3px;font-size:16px}}
 @media (max-height:400px){.auPerks span{font-size:0}.auPerks b{font-size:12.5px}.auPerks{gap:5px}.auNow em{display:none}.auTag{display:none}}
@@ -1024,7 +1027,7 @@ body.cine #hud>*:not(#nukeFlash),body.cine #touch,body.cine #airTab{visibility:h
 <div id="adm" class="overlay" hidden>
   <div class="sheet cut">
     <div class="shopHead"><h2>ADMIN</h2><button class="btn sm ghost cut" id="admClose">Close</button></div>
-    <div class="tabs" id="admTabs"><button class="chip on" data-adt="cfg">Game settings</button><button class="chip" data-adt="msg">Player messages</button><button class="chip" data-adt="err">Crash reports</button></div>
+    <div class="tabs" id="admTabs"><button class="chip on" data-adt="cfg">Game settings</button><button class="chip" data-adt="msg">Player messages</button><button class="chip" data-adt="err">Crash reports</button><button class="chip" data-adt="ban">Bans</button></div>
     <div id="admBody"></div>
   </div>
 </div>
@@ -1140,6 +1143,7 @@ body.cine #hud>*:not(#nukeFlash),body.cine #touch,body.cine #airTab{visibility:h
   </div>
 </div>
 <div id="board" class="overlay" hidden><div class="sheet cut"><div class="row" style="justify-content:space-between;align-items:center;flex-wrap:nowrap"><h2 style="margin:0">SCOREBOARD</h2><button class="btn sm ghost cut" id="boardLeave">Leave match</button></div><div class="teams" id="boardBody"></div><div class="row" style="margin-top:14px"><button class="btn cut" id="boardBack">Back to game</button><button class="btn ghost cut" id="boardSet">Settings</button></div></div></div>
+<div id="ageAsk" class="overlay" hidden style="z-index:95;background:rgba(0,0,0,.75)"><div class="sheet cut" style="text-align:center;max-width:380px"><h2 style="margin-top:0">Before you play</h2><p>What year were you born?</p><select id="ageY" style="font-size:18px;min-height:44px;min-width:180px"></select><div style="margin-top:12px"><button class="btn cut" id="ageGo" style="min-height:48px;min-width:160px;font-size:18px" disabled>Continue</button></div><p class="note" style="margin-top:10px">Only one thing is kept, on this device: whether online play is open to you.</p></div></div>
 <div id="leaveAsk" class="overlay" hidden style="z-index:90;background:rgba(0,0,0,.6)"><div class="sheet cut" style="text-align:center;max-width:380px"><h2 style="margin-top:0">Leave the match?</h2><p id="leaveAskTx">Are you sure you want to leave the match?</p><div class="row" style="justify-content:center;gap:12px;flex-wrap:wrap"><button class="btn cut" id="leaveNo" style="min-height:48px;min-width:150px;font-size:18px">No, keep playing</button><button class="btn ghost cut" id="leaveYes" style="min-height:48px;min-width:120px;font-size:18px">Yes, leave</button></div></div></div>
 <div id="pause" class="overlay" hidden><div class="sheet cut"><h2>PAUSED</h2><p>Click to jump back in.</p><div class="row" style="justify-content:center"><button class="btn ghost cut" id="pauseSet">Settings</button><button class="btn ghost cut" id="pauseLeave">Leave match</button></div></div></div>
 <div id="end" class="overlay" hidden>
@@ -1293,7 +1297,14 @@ function storeUsers(){const s=JSON.stringify(USERS);try{localStorage.setItem('bl
   try{['blockfire.errlog','blockfire.rcfg','blockfire.rooms','blockfire.news'].forEach(k=>localStorage.removeItem(k));localStorage.setItem('blockfire.users',s);return true;}catch(e){}
   if(Date.now()-fullToldT>120000){fullToldT=Date.now();toast(CS&&!CS.guest?'This phone has no room left to save. Your progress is still saved online in your account.':'This phone has no room left to save, so progress may be lost. Free some space, or sign in to save online.');}
   return false;}
-function saveProfile(){if(!USERS||!USERS.users[USERS.cur])return;profile.savedAt=Date.now();USERS.users[USERS.cur].p=profile;storeUsers();cloudDirty();}
+// the game open in two tabs: whichever saved last is the real one; the other stops saving (so an old copy can never
+// overwrite newer progress, e.g. to undo a crate) and asks to be reloaded
+let TAB_STALE=false;
+addEventListener('storage',e=>{if(e.key!=='blockfire.users'||TAB_STALE)return;TAB_STALE=true;
+  try{const d=document.createElement('div');d.id='staleTab';d.className='staleTab';d.innerHTML='<b>The game is open in another tab.</b> This tab stopped saving so your progress stays safe. <button class="btn sm cut" id="staleGo">Use this tab</button>';document.body.appendChild(d);
+    $('staleGo').addEventListener('click',()=>location.reload());}catch(err){}});
+try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(()=>{});}catch(e){}
+function saveProfile(){if(!USERS||!USERS.users[USERS.cur]||TAB_STALE)return;profile.savedAt=Date.now();profile.tmax=Math.max(+profile.tmax||0,Math.floor(gNow()/36e5)*36e5);USERS.users[USERS.cur].p=profile;storeUsers();cloudDirty();}
 loadProfile();
 try{localStorage.setItem('blockfire.users',JSON.stringify(USERS));}catch(e){}
 const ST=()=>{const S=profile.stats;if(S&&!S.kdv2){S.kdv2=1;S.kills=Math.max(0,(S.kills|0)-(S.zkills|0));S.heads=Math.min(S.heads|0,S.kills);}return S;};
@@ -1321,7 +1332,7 @@ async function cloudReq(path,opt={}){const c=cloudCfg();const h={apikey:c.key,'C
   try{const r=await fetch(c.url.replace(/\/$/,'')+path,{method:opt.method||'GET',headers:h,body:opt.body?JSON.stringify(opt.body):undefined,signal:ctl.signal,keepalive:!!opt.keepalive});
     const txt=await r.text();let j=null;try{j=txt?JSON.parse(txt):null;}catch(e){}return{ok:r.ok,status:r.status,j};}
   catch(e){return{ok:false,status:0,j:null};}finally{clearTimeout(t);}}
-function cloudSession(j,name){if(!j||!j.access_token)return false;const keep=CS&&CS.uid===(j.user&&j.user.id)?CS:{};CS={at:j.access_token,rt:j.refresh_token,exp:Date.now()+((j.expires_in||3600)-60)*1000,uid:(j.user&&j.user.id)||keep.uid,name,ver:keep.ver||'',dirty:!!keep.dirty,guest:!!keep.guest,gpw:keep.gpw||'',seen:Date.now()};cloudKeep();return true;}
+function cloudSession(j,name){if(!j||!j.access_token)return false;const keep=CS&&CS.uid===(j.user&&j.user.id)?CS:{};CS={at:j.access_token,rt:j.refresh_token,exp:Date.now()+((j.expires_in||3600)-60)*1000,uid:(j.user&&j.user.id)||keep.uid,name,ver:keep.ver||'',dirty:!!keep.dirty,guest:!!keep.guest,gpw:keep.gpw||'',seen:Date.now(),base:keep.base||null};cloudKeep();return true;}
 async function dkCreate(){if(!CS||CS.guest)return false;const r=await cloudReq('/functions/v1/device',{method:'POST',body:{action:'create',label:deviceLabel()}});
   if(r.ok&&r.j&&typeof r.j.key==='string'){dkSave({uid:CS.uid,key:r.j.key,name:CS.name});return true;}return false;}
 // the phone's key signs it back in (a fresh session from the server); a refused key is forgotten
@@ -1341,7 +1352,7 @@ async function cloudFresh(){if(!CS)return false;if(Date.now()<CS.exp)return true
     return false;})();
   try{return await refreshing;}finally{refreshing=null;}}
 // a long time without playing: a registered player logs in again (guests keep their own key on this phone)
-const IDLE_MS=90*864e5;
+const IDLE_MS=30*864e5;
 if(CS&&!CS.guest&&CS.seen&&Date.now()-CS.seen>IDLE_MS){const n=CS.name;CS=null;try{localStorage.removeItem('blockfire.cloud');}catch(e){}dkSave(null);
   if(USERS.users[n]){delete USERS.users[n];USERS.cur='';try{localStorage.setItem('blockfire.users',JSON.stringify(USERS));}catch(e){}loadProfile();}}
 else if(CS){CS.seen=Date.now();try{localStorage.setItem('blockfire.cloud',JSON.stringify(CS));}catch(e){}}
@@ -1349,7 +1360,7 @@ function authErr(r){const m=String((r.j&&(r.j.msg||r.j.error_description||r.j.me
   if(!r.status)return 'No connection to the save server. Check your internet and try again.';
   if(/already|exists/i.test(m))return 'That username is taken. Pick another one, or log in if it is yours.';
   if(/invalid|credentials|grant/i.test(m))return 'Wrong username or password. Passwords are case-sensitive (A is not a).';
-  if(/password/i.test(m))return 'The password needs at least 6 characters.';
+  if(/password/i.test(m))return 'The password needs at least 8 characters.';
   if(/rate|too many/i.test(m)||r.status===429)return 'Too many tries. Wait a minute and try again.';
   return m||('The save server answered with error '+r.status+'.');}
 async function cloudPull(){if(!await cloudFresh())return null;const r=await cloudReq('/rest/v1/players?id=eq.'+encodeURIComponent(CS.uid)+'&select=name,data,updated_at');return r.ok&&Array.isArray(r.j)?(r.j[0]||{}):null;}
@@ -1358,19 +1369,38 @@ const cloudMine=()=>!!(CS&&cloudOn()&&USERS&&USERS.cur===CS.name);
 // every save names the version it was based on; if another phone saved in between, nothing is overwritten blindly
 const NOINT='Not saved online yet: no internet. It saves as soon as you are back online.';
 function cloudDirty(){if(!cloudMine())return;if(!CS.dirty){CS.dirty=true;cloudKeep();}cloudQueue();}
-function cloudTake(row){USERS.users[USERS.cur].p=fillProfile(row.data,USERS.cur);try{localStorage.setItem('blockfire.users',JSON.stringify(USERS));}catch(e){}loadProfile();afterSwitch();CS.ver=row.updated_at;CS.dirty=false;cloudKeep();if(!$('acct').hidden)renderAcct();}
+function cloudTake(row){USERS.users[USERS.cur].p=fillProfile(row.data,USERS.cur);CS.base=syncSnap(USERS.users[USERS.cur].p);try{localStorage.setItem('blockfire.users',JSON.stringify(USERS));}catch(e){}loadProfile();afterSwitch();CS.ver=row.updated_at;CS.dirty=false;cloudKeep();if(!$('acct').hidden)renderAcct();}
 // the database changed since this phone last synced: keep this phone's play only if it got further
+// what the cloud copy looked like the last time this phone and the server agreed, so changes made on two phones
+// can be combined: GP, XP and keys add up, things bought on either phone are kept, things sold on either are gone
+const SYNC_LISTS=['owned','knives','gearOwn','hitfxs','camos','equipOwn','skins','armorOwn','blocks','titles','cards','killfxs'];
+function syncSnap(p){const o={gp:+p.gp||0,xp:+p.xp||0,keys:p.keys|0,L:{},A:{}};for(const k of SYNC_LISTS)o.L[k]=Array.isArray(p[k])?p[k].slice(0,400):[];for(const g in p.attOwn||{})o.A[g]=(p.attOwn[g]||[]).slice(0,40);return o;}
+function syncMerge(loc,cl,B){const L=fillProfile(JSON.parse(JSON.stringify(loc)),loc.name),C=fillProfile(JSON.parse(JSON.stringify(cl)),loc.name);
+  const num=k=>B?Math.max(0,(+B[k]||0)+((+L[k]||0)-(+B[k]||0))+((+C[k]||0)-(+B[k]||0))):Math.max(+L[k]||0,+C[k]||0);
+  L.gp=num('gp');L.xp=num('xp');L.keys=num('keys');
+  const m3=(l,c,b)=>{l=Array.isArray(l)?l:[];c=Array.isArray(c)?c:[];if(!b)return [...new Set(l.concat(c))];const o=new Set();for(const x of l)if(c.includes(x)||!b.includes(x))o.add(x);for(const x of c)if(l.includes(x)||!b.includes(x))o.add(x);return [...o];};
+  for(const k of SYNC_LISTS)L[k]=m3(L[k],C[k],B&&B.L[k]);
+  L.attOwn=L.attOwn||{};for(const g of new Set(Object.keys(L.attOwn).concat(Object.keys(C.attOwn||{}))))L.attOwn[g]=m3(L.attOwn[g],(C.attOwn||{})[g],B&&B.A[g]);
+  L.rent=L.rent||{};for(const k in C.rent||{}){const x=C.rent[k];if(x&&(!L.rent[k]||(L.rent[k].e||0)<(x.e||0)))L.rent[k]=x;}
+  if(C.stats&&L.stats)for(const k in C.stats)if(typeof C.stats[k]==='number')L.stats[k]=Math.max(+L.stats[k]||0,C.stats[k]);
+  if(C.cal&&(!L.cal||(L.cal.m===C.cal.m&&(C.cal.n|0)>(L.cal.n|0))))L.cal=Object.assign({},C.cal);
+  if(C.daily&&(!L.daily||L.daily.date!==C.daily.date&&(C.daily.dn|0)>(L.daily.dn|0)))L.daily=C.daily;else if(C.daily&&L.daily&&L.daily.date===C.daily.date&&!C.daily.freeCrate)L.daily.freeCrate=false;
+  L.calls=Math.max(L.calls|0,C.calls|0);L.best=Math.max(L.best|0,C.best|0);L.tmax=Math.max(+L.tmax||0,+C.tmax||0);
+  L.pity=L.pity||{};return fillProfile(L,loc.name);}
 async function cloudResolve(row){
   const c=row&&row.data&&typeof row.data.xp==='number'?row.data:null;if(!c){CS.ver='';return 'push';}
-  if(!CS.dirty||(c.xp||0)>=(profile.xp||0)){cloudTake(row);if(CS.dirty===false&&state==='menu')toast('Loaded your latest progress');return 'took';}
-  CS.ver=row.updated_at;cloudKeep();return 'push';}
-async function cloudPush(keepalive,depth){clearTimeout(cloudT);cloudT=0;if(!cloudMine()||!cloudReady)return;if(cloudBusy&&!depth){cloudQueue();return;}cloudBusy=true;
+  if(!CS.dirty){cloudTake(row);if(state==='menu')toast('Loaded your latest progress');return 'took';}
+  if(row.updated_at===CS.ver)return 'push';
+  // this phone and another one both changed things since they last agreed: keep both
+  const m=syncMerge(profile,c,CS.base||null);USERS.users[USERS.cur].p=m;storeUsers();loadProfile();try{afterSwitch();}catch(e){}
+  CS.ver=row.updated_at;CS.dirty=true;cloudKeep();if(state==='menu')toast('Combined your progress from your other device');return 'push';}
+async function cloudPush(keepalive,depth){clearTimeout(cloudT);cloudT=0;if(!cloudMine()||!cloudReady||TAB_STALE||isKid())return;if(cloudBusy&&!depth){cloudQueue();return;}cloudBusy=true;
   try{if(!await cloudFresh()){if(!cloudErr)cloudErr=NOINT;return;}
     const now2=new Date().toISOString(),body={id:CS.uid,name:CS.name,data:profile,updated_at:now2};let r;
     if(!CS.ver)r=await cloudReq('/rest/v1/players?select=updated_at',{method:'POST',keepalive,headers:{Prefer:'resolution=merge-duplicates,return=representation'},body});
     else r=await cloudReq('/rest/v1/players?select=updated_at&id=eq.'+encodeURIComponent(CS.uid)+'&updated_at=eq.'+encodeURIComponent(CS.ver),{method:'PATCH',keepalive,headers:{Prefer:'return=representation'},body:{data:profile,updated_at:now2,name:CS.name}});
     if(!r.ok){cloudErr=r.status?'The save server refused the save (error '+r.status+').':NOINT;return;}
-    if(Array.isArray(r.j)&&r.j.length){CS.ver=r.j[0].updated_at||now2;CS.dirty=false;cloudKeep();cloudLast=Date.now();cloudErr='';return;}
+    if(Array.isArray(r.j)&&r.j.length){CS.ver=r.j[0].updated_at||now2;CS.dirty=false;CS.base=syncSnap(profile);cloudKeep();cloudLast=Date.now();cloudErr='';return;}
     // nothing matched: another phone saved first
     if((depth|0)>1)return;const row=await cloudPull();if(row===null)return;
     if(await cloudResolve(row)==='push'){cloudBusy=false;return cloudPush(keepalive,(depth|0)+1);}
@@ -1388,7 +1418,7 @@ window.addEventListener('pagehide',()=>{autoSave();if(cloudMine()&&cloudReady&&C
 let autoObj=null,autoSig='';
 function autoSave(){try{if(!USERS||!USERS.users[USERS.cur]||!profile)return;
   if(state==='play'||state==='end')bankMatch();
-  const sig=p=>JSON.stringify(p,(k,v)=>k==='savedAt'?undefined:v),s=sig(profile);
+  const sig=p=>JSON.stringify(p,(k,v)=>k==='savedAt'||k==='tmax'?undefined:v),s=sig(profile);
   // a different profile was loaded (sign-in, switch, newer save pulled): compare with the copy stored on the phone
   if(profile!==autoObj){autoObj=profile;try{const u=JSON.parse(localStorage.getItem('blockfire.users')||'{}');autoSig=sig(fillProfile(u.users[USERS.cur].p,USERS.cur));}catch(e){autoSig=s;}}
   if(s!==autoSig){autoSig=s;saveProfile();}}catch(e){}}
@@ -1410,14 +1440,31 @@ function cloudAdopt(name,p,fresh){
 // names other players can see: refuse slurs, swearing and hate words, also written with numbers or symbols (the server checks the same list)
 const BADSUB=['fuck','fuk','shit','cunt','nigg','nigr','faggot','bitch','whore','slut','porn','penis','vagina','pussy','hitler','nazi','retard','twat','wank','jizz','rapist','molest','pedophil','kkk','asshole','bastard','motherf','dildo','boob','tits','sharmuta','benzona','kusemek','kusemak','kusomo'];
 const BADWORD=['fag','rape','cock','dick','anal','cum','sex','ass','zona','kus','homo','isis'];
+// names that pretend to be the game team are refused too: only the owner's account is the GM, and that badge comes from the server
+const RESSUB=['admin','moderator','gamemaster','cubefront','blockfire','official'],RESWORD=['gm','mod','mods','dev','devs','staff','support','owner','system','server'];
 const nameBad=n=>{const s=String(n||'').toLowerCase().replace(/[013457@$!|]/g,c=>({0:'o',1:'i',3:'e',4:'a',5:'s',7:'t','@':'a','$':'s','!':'i','|':'i'}[c]));
-  const flat=s.replace(/[^a-z]/g,'');if(BADSUB.some(w=>flat.includes(w)))return true;
-  return s.split(/[^a-z]+/).concat([flat]).some(t=>BADWORD.includes(t));};
+  const flat=s.replace(/[^a-z]/g,'');if(BADSUB.concat(RESSUB).some(w=>flat.includes(w)))return true;
+  return s.split(/[^a-z]+/).concat([flat]).some(t=>BADWORD.includes(t)||RESWORD.includes(t));};
 const nameOk=n=>{n=String(n||'').replace(/[^\w \-.]/g,'').trim().slice(0,14);return n.length>=2&&nameKey(n)!=='player'?n:'';};
 // first time here: an account with a temporary name is made on the server, so progress is saved online right away
 let guestBusy=false;
+/* age screen (asked once, neutral, no hints): under 13 plays offline. No online account is made for them, no online
+   rooms, and nothing about them is sent anywhere. Only the yes/no answer is kept, on this device. */
+let AGE=null;try{AGE=JSON.parse(localStorage.getItem('blockfire.age')||'null');}catch(e){}
+const ageKnown=()=>{if(AGE)return true;if(!navigator.webdriver)return false;try{return !localStorage.getItem('blockfire.agetest');}catch(e){return true;}};
+const isKid=()=>!!AGE&&AGE.kid===true;
+const noGuest=()=>{try{return !!localStorage.getItem('blockfire.noguest');}catch(e){return false;}};
+const KID_MSG='Online play is for players 13 and older. Every mode works against bots, and your progress stays on this device.';
+function ageAsk(){if(ageKnown())return;const s=$('ageY'),y=new Date().getFullYear();s.innerHTML='<option value="">Select year</option>'+Array.from({length:100},(_,i)=>`<option>${y-3-i}</option>`).join('');
+  s.onchange=()=>{$('ageGo').disabled=!s.value;};$('ageGo').onclick=()=>{const v=+s.value;if(!v)return;AGE={kid:new Date().getFullYear()-v<=13,at:Date.now()};
+    try{localStorage.setItem('blockfire.age',JSON.stringify(AGE));}catch(e){}$('ageAsk').hidden=true;if(isKid()){toast(KID_MSG);}else cloudSync();renderProfile();};
+  $('ageAsk').hidden=false;}
+setTimeout(ageAsk,600);
+// a friendly break reminder after every 2 hours of play in one sitting (time in the menus does not count)
+{let playMs=0,last=Date.now();setInterval(()=>{const t=Date.now(),d=Math.min(t-last,60000);last=t;if(state==='play'&&!document.hidden){playMs+=d;if(playMs>=2*3600e3){playMs=0;try{inboxAdd('news','Time for a break?','You have been playing for 2 hours. Stretch, drink some water, rest your eyes. Your progress is saved.');}catch(e){}toast('You have played for 2 hours. Time for a short break? Your progress is saved.');}}},30000);}
+document.addEventListener('click',e=>{if(e.target&&e.target.closest&&e.target.closest('.acOk')){acAdmTap++;if(acAdmTap===5)renderAcct();}});
 async function cloudGuest(){
-  if(guestBusy||CS||!cloudOn()||!isGuest(USERS.cur))return false;guestBusy=true;
+  if(guestBusy||CS||!cloudOn()||!isGuest(USERS.cur)||!ageKnown()||isKid()||noGuest())return false;guestBusy=true;
   try{const r=await cloudReq('/functions/v1/guest',{method:'POST',auth:false,body:{}});if(!r.ok||!r.j||!r.j.name)return false;
     const {name,password}=r.j;
     const t=await cloudReq('/auth/v1/token?grant_type=password',{method:'POST',auth:false,body:{email:cloudEmail(name),password}});
@@ -1441,7 +1488,7 @@ async function cloudClaim(name,pass){
   if(!profile.name||profile.name===old)profile.name=name;u.p=profile;u.guest=false;USERS.users[name]=u;USERS.cur=name;
   CS.name=name;CS.guest=false;CS.gpw='';CS.dirty=true;cloudKeep();lastName(name);
   try{localStorage.setItem('blockfire.users',JSON.stringify(USERS));}catch(e){}loadProfile();afterSwitch();await cloudPush();dkCreate();return cloudErr;}
-async function cloudSignup(name,pass){
+async function cloudSignup(name,pass){try{localStorage.removeItem('blockfire.noguest');}catch(e){}
   if(nameBad(name))return 'That username is not allowed. Please pick another one.';
   if(CS&&CS.guest&&cloudMine())return cloudClaim(name,pass);
   // the server makes the account (already confirmed), then we log straight in
@@ -1456,7 +1503,7 @@ async function cloudSignup(name,pass){
   if(!t.ok||!cloudSession(t.j,name))return 'Your account was made, but logging in failed. Press Log in.';
   const p=fillProfile(Object.assign({},profile),name);if(!p.name||p.name==='Player')p.name=name;
   cloudAdopt(name,p,true);CS.ver='';CS.dirty=true;cloudKeep();lastName(CS.name);cloudReady=true;await cloudPush();dkCreate();return cloudErr;}
-async function cloudLogin(name,pass){
+async function cloudLogin(name,pass){try{localStorage.removeItem('blockfire.noguest');}catch(e){}
   const r=await cloudReq('/auth/v1/token?grant_type=password',{method:'POST',auth:false,body:{email:cloudEmail(name),password:pass}});
   if(!r.ok)return authErr(r);
   const row=await cloudPull(r.j&&cloudSession(r.j,name));
@@ -1470,7 +1517,7 @@ async function cloudLogin(name,pass){
 async function cloudDelete(){if(!CS)return 'You are not logged in.';if(!await cloudFresh())return 'No connection to the save server. Check your internet and try again.';
   const r=await cloudReq('/functions/v1/delete-account',{method:'POST',body:{confirm:'DELETE'}});
   if(!r.ok)return r.status?'The server could not delete the account (error '+r.status+'). Try again, or contact us from Help.':'No connection to the save server. Check your internet and try again.';
-  const n=CS.name;CS=null;cloudKeep();dkSave(null);lastName('');cloudReady=false;clearTimeout(cloudT);cloudT=0;
+  const n=CS.name,wasGuest=!!CS.guest;CS=null;cloudKeep();dkSave(null);lastName('');if(wasGuest)try{localStorage.setItem('blockfire.noguest','1');}catch(e){}cloudReady=false;clearTimeout(cloudT);cloudT=0;
   if(USERS.users[n])delete USERS.users[n];USERS.cur='';try{localStorage.setItem('blockfire.users',JSON.stringify(USERS));}catch(e){}loadProfile();afterSwitch();setTimeout(cloudSync,400);return '';}
 async function cloudLogout(){if(cloudMine()&&cloudReady)await cloudPush();
   {const dk=dkLoad();if(dk&&CS&&await cloudFresh())await cloudReq('/functions/v1/device',{method:'POST',body:{action:'revoke',key:dk.key}});dkSave(null);}
@@ -1484,8 +1531,8 @@ async function cloudRestore(dk){
   cloudAdopt(CS.name,p);CS.ver=row.updated_at||'';CS.dirty=!row.data;cloudKeep();cloudReady=true;if(CS.dirty)await cloudPush();else cloudLast=Date.now();
   toast('Welcome back, '+CS.name);cloudAdminCheck();return true;}
 let restoring=false;
-// "Keep me signed in": the account stays on this device for 90 days after the last visit; without it, only until the app is closed
-const KEEP='blockfire.keep',KEEP_MS=90*864e5;
+// "Keep me signed in": the account stays on this device for 30 days after the last visit; without it, only until the app is closed
+const KEEP='blockfire.keep',KEEP_MS=30*864e5;
 function keepSet(on){try{localStorage.setItem(KEEP,JSON.stringify(on?{until:Date.now()+KEEP_MS}:{session:1}));sessionStorage.setItem('bf.live','1');}catch(e){}}
 let keepChecked=false;
 async function keepCheck(){if(keepChecked)return;keepChecked=true;let k=null,live=false;
@@ -1513,12 +1560,12 @@ async function adminClaim(code){if(!CS||CS.guest)return 'Sign in to your own acc
   if(r.ok){CS.admin=true;cloudKeep();return '';}const e=r.j&&r.j.error;
   return !r.status?'No connection to the server.':e==='code'?'That code is not right.':e==='taken'?'This game already has its admin.':e==='guest'?'Guest accounts cannot be admins. Create your account first.':'The server said no (error '+r.status+').';}
 /* ================= version, remote settings, crash reports ================= */
-const APP_VERSION='1.0.1',BUILD_ID='0dde476';
+const APP_VERSION='1.0.2',BUILD_ID='2028d8d';
 const verNum=v=>String(v||'0').split('.').slice(0,3).map(n=>parseInt(n)||0).reduce((a,n)=>a*1000+n,0);
 let RCFG={};try{RCFG=JSON.parse(localStorage.getItem('blockfire.rcfg')||'{}')||{};}catch(e){RCFG={};}
 const feat=k=>!(RCFG.features&&RCFG.features[k]===false);
 async function loadConfig(){if(!cloudOn())return;const r=await cloudReq('/rest/v1/app_config?select=key,value',{auth:false});if(!r.ok||!Array.isArray(r.j))return;
-  const o={};for(const x of r.j)if(x&&typeof x.key==='string')o[x.key]=x.value;RCFG=o;try{localStorage.setItem('blockfire.rcfg',JSON.stringify(o));}catch(e){}applyConfig();}
+  const o={};for(const x of r.j)if(x&&typeof x.key==='string')o[x.key]=x.value;const tw=RCFG&&RCFG.turn;RCFG=o;if((o.turn||'')!==(tw||''))try{fetchIce();}catch(e){}try{localStorage.setItem('blockfire.rcfg',JSON.stringify(o));}catch(e){}applyConfig();}
 let updSkipped=false;
 function applyConfig(){
   const m=$('hMotd');if(m){const t=String(RCFG.maintenance||RCFG.motd||'').slice(0,200);m.hidden=!t;m.textContent=t;}
@@ -1549,14 +1596,25 @@ addEventListener('unhandledrejection',ev=>reportErr('promise',ev.reason));
 const CAP=window.Capacitor&&typeof window.Capacitor.isNativePlatform==='function'&&window.Capacitor.isNativePlatform()?window.Capacitor:null;
 const capPlug=n=>CAP&&CAP.Plugins&&CAP.Plugins[n]||null;
 const UPDATE_URL='https://raw.githubusercontent.com/EdenIf1/skills-/gh-pages/app/update.json';
-async function liveUpdate(){const U=capPlug('CapacitorUpdater');if(!U)return;try{await U.notifyAppReady();}catch(e){}
+// SAFETY: every update for the iPhone app is signed by the game's owner. The app only installs a bundle whose signature
+// matches this public key, so even someone who got into the code repository could not push code to players' phones.
+const UPD_PUB={kty:'EC',crv:'P-256',x:'br1u5XzYmDTE5Hkx0PDAEXuBLPDYDfCclHEJWK4zY8Q',y:'esOCk4p97TcYWylCUFaVKUkei2knSOb3FR5LcTqD8nM'};
+async function updVerify(m){try{if(typeof m.sig!=='string'||!/^[A-Za-z0-9+/=]{80,100}$/.test(m.sig)||!crypto||!crypto.subtle)return false;
+  const k=await crypto.subtle.importKey('jwk',UPD_PUB,{name:'ECDSA',namedCurve:'P-256'},false,['verify']);
+  const sig=Uint8Array.from(atob(m.sig),c=>c.charCodeAt(0)),msg=new TextEncoder().encode(['cubefront-update',m.version,m.url,String(m.checksum).toLowerCase(),m.minNative||''].join('|'));
+  return await crypto.subtle.verify({name:'ECDSA',hash:'SHA-256'},k,sig,msg);}catch(e){return false;}}
+// the app tells the updater "this version works" only after the game has drawn its first frames, so a bundle that
+// breaks while starting is rolled back to the last good one automatically
+async function updReady(U){const t0=Date.now();while(Date.now()-t0<12000&&!(typeof frameN==='number'&&frameN>3))await new Promise(r=>setTimeout(r,250));if(typeof frameN==='number'&&frameN>3)try{await U.notifyAppReady();}catch(e){}}
+async function liveUpdate(){const U=capPlug('CapacitorUpdater');if(!U)return;updReady(U);
   try{const r=await fetch(UPDATE_URL+'?t='+Date.now(),{cache:'no-store'});if(!r.ok)return;const m=await r.json();
     if(!m||!m.version||!m.url||!/^[0-9a-f]{64}$/i.test(String(m.checksum||''))||verNum(m.version)<=verNum(APP_VERSION))return;
+    if(!/^https:\/\/raw\.githubusercontent\.com\/EdenIf1\/skills-\/gh-pages\/app\/bundle-[\d.]+\.zip$/.test(m.url)||!await updVerify(m)){reportErr('update','unsigned or wrongly signed update refused');return;}
     const A=capPlug('App');if(m.minNative&&A){const info=await A.getInfo();if(verNum(m.minNative)>verNum(info.version))return;}
     const b=await U.download({url:m.url,version:m.version,checksum:m.checksum});await U.next({id:b.id});toast('Update downloaded · it installs next time you open the game');try{inboxAdd('news',`Version ${m.version} is ready`,'It installs the next time you open the game.');}catch(e){}}
   catch(e){reportErr('update',e);}}
 function haptic(style){const H=capPlug('Haptics');if(!H||SET.haptics===false)return;try{H.impact({style:style||'LIGHT'});}catch(e){}}
-setTimeout(()=>{loadConfig();liveUpdate();},800);setInterval(()=>{if(!document.hidden)loadConfig();},10*60*1000);
+setTimeout(()=>{loadConfig();srvTime();liveUpdate();},800);setInterval(()=>{if(!document.hidden){loadConfig();srvTime();}},10*60*1000);
 setTimeout(cloudSync,300);addEventListener('online',()=>{cloudSync();if(cloudReady)cloudQueue();});setInterval(()=>{if(!cloudReady)cloudSync();},60000);
 
 const SET_DEFAULT={sens:1,adsSens:1,invert:false,vol:.8,quality:'high',fov:75,btnScale:1,btnAlpha:1,fps:false,aim:true};
@@ -1567,7 +1625,18 @@ SET.sens=Math.min(2.5,Math.max(.3,SET.sens));SET.adsSens=Math.min(1.5,Math.max(.
 // the old 'Auto' graphics option is gone: everyone starts on the best picture and can lower it in Settings
 if(!['high','med','low'].includes(SET.quality))SET.quality='high';
 function saveSettings(){try{localStorage.setItem('blockfire.settings',JSON.stringify(SET));}catch(e){}}
-const today=()=>{const d=new Date();return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;};
+// trusted time: the server's clock (checked at start and every 10 minutes); moving the phone's date does not give
+// extra daily gifts or endless rentals. Small differences are ignored.
+const SRV={off:0,ok:false};try{SRV.off=+localStorage.getItem('blockfire.srvoff')||0;}catch(e){}
+const gNow=()=>Date.now()+SRV.off;
+const dayNum=()=>{const d=new Date(gNow());return Math.floor((d.getTime()-d.getTimezoneOffset()*60000)/864e5);};
+// rentals never run backwards: the latest trusted time this profile has seen counts
+const rNow=()=>Math.max(gNow(),profile&&+profile.tmax||0);
+async function srvTime(){if(!cloudOn())return;const t0=Date.now();const r=await cloudReq('/rest/v1/rpc/server_now',{method:'POST',auth:false,body:{}});const t1=Date.now();
+  const s=r.ok&&typeof r.j==='string'?Date.parse(r.j):NaN;if(!isFinite(s))return;let off=Math.round(s-(t0+t1)/2);if(Math.abs(off)<120000)off=0;
+  const was=SRV.off;SRV.off=off;SRV.ok=true;try{localStorage.setItem('blockfire.srvoff',String(off));}catch(e){}
+  if(was!==off&&state==='menu'&&profile){const lm=rollDaily();if(lm)toast(lm);try{renderCalDot();}catch(e){}renderProfile();}}
+const today=()=>{const d=new Date(gNow());return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;};
 const CHALLENGES=[
   {id:'kills',text:'Get 20 kills',goal:20,gp:100},
   {id:'heads',text:'Land 8 headshots',goal:8,gp:100},
@@ -1586,8 +1655,8 @@ const CAL=[['gp',100],['skin',2],['camo',2],['gp',300],['key',1],['blk',1],['key
   ['gp',3000],['key',5],['gp',5000]];
 const CALNAME={camo:'Camo',skin:'Skin',blk:'Blocks',title:'Title',card:'Banner',fx:'Kill effect'};
 const monthKey=d=>`${d.getFullYear()}-${d.getMonth()+1}`;
-function calState(){const d=new Date(),m=monthKey(d),t=today();let c=profile.cal;if(!c||typeof c!=='object'||c.m!==m)c=profile.cal={m,n:0,last:''};
-  const dim=new Date(d.getFullYear(),d.getMonth()+1,0).getDate();return{c,dim,t,can:c.last!==t&&c.n<dim,month:d.toLocaleString('en',{month:'long'})};}
+function calState(){const d=new Date(gNow()),m=monthKey(d),t=today();let c=profile.cal;if(!c||typeof c!=='object'||c.m!==m)c=profile.cal={m,n:0,last:''};
+  const dim=new Date(d.getFullYear(),d.getMonth()+1,0).getDate();return{c,dim,t,can:c.last!==t&&c.n<dim&&!((c.ld|0)>dayNum()),month:d.toLocaleString('en',{month:'long'})};}
 // the exact prize for a day: a cosmetic you do not own yet (picked the same way all month), or GP if you own them all
 function calPrize(i){const [k,v]=CAL[i]||['gp',500];
   if(k==='gp')return{kind:'gp',v,label:v.toLocaleString()+' GP',tier:0};
@@ -1597,7 +1666,7 @@ function calPrize(i){const [k,v]=CAL[i]||['gp',500];
   const s=[...(profile.cal&&profile.cal.m||'')].reduce((a,c)=>a*31+c.charCodeAt(0),i+7)>>>0;return Object.assign({},P[s%P.length],{tier:v});}
 function calClaim(){const s=calState();if(!s.can)return null;const w=calPrize(s.c.n);
   if(w.kind==='key')profile.keys=(profile.keys|0)+w.v;else giveReward(w);
-  s.c.n++;s.c.last=s.t;saveProfile();return w;}
+  s.c.n++;s.c.last=s.t;s.c.ld=dayNum();saveProfile();return w;}
 function calIcon(w,k){if(w&&w.kind!=='gp'&&w.kind!=='key'){const u=rewardPic(w);if(u)return `<img src="${u}" alt="">`;}
   const kk=w?w.kind:k;return kk==='gp'?'<span style="color:#6fd08c;font-family:var(--f-hud)">GP</span>':kk==='key'?'📦':kk==='skin'?'🧍':kk==='title'?'🏷️':kk==='card'?'🎴':kk==='fx'?'✨':kk==='camo'?'🎨':'🧱';}
 function renderCal(){const s=calState();$('calTitle').textContent='DAILY GIFTS · '+s.month.toUpperCase();
@@ -1609,12 +1678,12 @@ function renderCal(){const s=calState();$('calTitle').textContent='DAILY GIFTS �
   $('calGrid').innerHTML=h;}
 function renderCalDot(){const s=calState();$('calDot').hidden=!s.can;}
 function rollDaily(){
-  const t=today();if(profile.daily&&profile.daily.date===t)return null;
+  const t=today();if(profile.daily&&(profile.daily.date===t||(profile.daily.dn|0)>dayNum()))return null;
   const r=rng([...t].reduce((a,c)=>a*31+c.charCodeAt(0),7));
   const pool=CHALLENGES.slice();const pick=[];while(pick.length<3){pick.push(pool.splice((r()*pool.length)|0,1)[0].id);}
-  profile.daily={date:t,list:pick.map(id=>({id,p:0,done:false})),freeCrate:true};
+  profile.daily={date:t,dn:dayNum(),list:pick.map(id=>({id,p:0,done:false})),freeCrate:true};
   // login streak
-  const y=new Date();y.setDate(y.getDate()-1);const ys=`${y.getFullYear()}-${y.getMonth()+1}-${y.getDate()}`;
+  const y=new Date(gNow());y.setDate(y.getDate()-1);const ys=`${y.getFullYear()}-${y.getMonth()+1}-${y.getDate()}`;
   profile.login.streak=profile.login.last===ys?profile.login.streak+1:1;profile.login.last=t;saveProfile();
   return calState().can?'Your daily gift is ready: tap 🎁 at the top':null;
 }
@@ -1625,7 +1694,7 @@ function chProgress(id,n){
     c.p=Math.min(def.goal,c.p+n);if(c.p>=def.goal){c.done=true;
       // inside a match the reward shares the match's 300 GP limit
       let got=def.gp;if(state==='play'||state==='end'){got=Math.max(0,Math.min(def.gp,GP_MAX-match.gp));match.gp+=got;}else profile.gp+=got;
-      pendingToasts.push(got?`Challenge done: ${def.text} +${got} GP`:`Challenge done: ${def.text} (match GP limit reached)`);if(state==='play')showMsg('CHALLENGE COMPLETE',false,'gp');}}
+      if(got)pendingToasts.push(`Challenge done: ${def.text} +${got} GP`);if(state==='play')showMsg('CHALLENGE COMPLETE',false,'gp');}}
 }
 
 /* ================= renderer ================= */
@@ -1635,8 +1704,8 @@ const canvas=$('c');
 const renderer=new THREE.WebGLRenderer({canvas,antialias:!isTouch&&SET.quality!=='low'&&(window.devicePixelRatio||1)<2.5,powerPreference:'high-performance'});
 renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,isTouch?1.25:1.5));
 // High = the screen's full native sharpness (3x on iPhones); the game never lowers it by itself
-// phones draw at most 2x (still sharp, about half the graphics memory of 3x): long matches on big maps never run the phone
-// out of memory. A device that still lost its graphics drops to 1.5x for 14 days. Computers keep full sharpness.
+// "never crash" guard: a phone that ran out of graphics memory (lost graphics or closed mid-match) draws at 2x instead
+// of 3x for the next 14 days. Barely visible on a phone screen, and about half the memory. Every other device keeps full sharpness.
 const memSafe=()=>{try{return +localStorage.getItem('blockfire.memsafe')>Date.now();}catch(e){return false;}};
 const memSafeOn=()=>{try{localStorage.setItem('blockfire.memsafe',String(Date.now()+14*864e5));}catch(e){}};
 const maxRatio=()=>Math.min(window.devicePixelRatio||1,memSafe()?1.35:isTouch?1.8:3);
@@ -3385,9 +3454,12 @@ const player=makeEnt(profile.name||'Recruit','blue',true);
 ['Yeti','Frostbite','Avalanche','Lumberjack','Viper','Scrapper','Cinder','Rook','Blizzard','Gravel','Wraith','Boulder'].forEach(n=>makeEnt(n,'red',false));
 const bots=ents.filter(e=>!e.isPlayer);
 
+// a soldier only ever comes back to life inside the map: on open ground, away from the outer edge, and on ground
+// that is connected on foot to the rest of the battlefield (never in a strip behind the outer walls)
 function spawnCandidates(team){
-  const [x0,x1,z0,z1]=MAP.spawn[team]||MAP.spawn.blue,out=[];
-  for(let x=x0;x<=x1;x++)for(let z=z0;z<=z1;z++){if(SY[x+W*z]>=0&&SY[x+W*z]<10)out.push([x+.5,SY[x+W*z],z+.5]);}
+  const [x0,x1,z0,z1]=MAP.spawn[team]||MAP.spawn.blue,out=[],ok=(x,z)=>x>=2&&z>=2&&x<W-2&&z<D-2&&SY[x+W*z]>=0&&SY[x+W*z]<10;
+  for(let x=x0;x<=x1;x++)for(let z=z0;z<=z1;z++){if(ok(x,z)&&reachable(x,z))out.push([x+.5,SY[x+W*z],z+.5]);}
+  if(!out.length){const c=nearestValid(Math.floor((x0+x1)/2),Math.floor((z0+z1)/2));if(c>=0){const x=c%W,z=(c/W)|0;out.push([x+.5,SY[c],z+.5]);}}
   return out;
 }
 function respawn(e){
@@ -3613,6 +3685,9 @@ const feedEl=$('feed'),msgsEl=$('msgs');
 function teamCls(e){return e.team==='blue'?'cb':'cr';}
 function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]);}
 // a small grey line in the kill feed (someone left, joined...); outside a match it is a toast
+// SAFETY: a room's host can send short game messages. Anything that asks for passwords or codes, or points to other
+// apps or websites, is not shown (typical phishing), whoever sends it.
+const PHISH=/pass|pin\b|login|log in|sign ?in|code|email|e-mail|snap|insta|discord|whats|telegram|tiktok|kik|http|www|\.com|\.net|\.gg|\.io|@|admin|support|moderat|\bgm\b|verify|account/i;
 function sysFeed(t){t=String(t||'').slice(0,60);if(state!=='play'){toast(t);return;}const d=document.createElement('div');d.className='sys';d.textContent=t;feedEl.prepend(d);while(feedEl.children.length>5)feedEl.lastChild.remove();setTimeout(()=>d.remove(),6000);}
 function addFeed(killer,victim,weapon,head){
   if(state!=='play')return;
@@ -4472,7 +4547,7 @@ function zSpawn(type,pos,nid){
 }
 function zStartRound(){
   Z.round++;Z.toSpawn=Math.round(Math.min(4+Z.round*3+Math.max(0,Z.round-10)*5,130)*zD().count);Z.spawnT=1.2;
-  for(const e of ents)if(e.team==='blue'&&e.inMatch!==false&&!e.alive){if(e.remote){e.spawnOk=true;e.deadAt=0;netSendTo(e,{t:'spawn'});}else respawn(e);}
+  for(const e of ents)if(e.team==='blue'&&e.inMatch!==false&&!e.alive){if(e.remote){e.spawnOk=true;e.deadAt=0;netSendTo(acTp(e),{t:'spawn'});}else respawn(e);}
   if(player.alive&&state==='play'){nades=Math.max(nades,profile.nadeLvl+1);}
   showMsg('ROUND '+Z.round,false,'big');sfx.round();netEv(['m','ROUND '+Z.round,0,'big']);
   const tip=m=>{setTimeout(()=>showMsg(m),1800);netEv(['m',m]);};
@@ -5104,7 +5179,9 @@ function drawRadar(){
     // rotate so the player's facing points up
     const rx=dx*c-dz*s,rz=dx*s+dz*c;
     const X=R+rx*sc,Y=R+rz*sc;
-    rctx.fillStyle=enemy?'#ef5a4f':'#5b9cf0';rctx.fillRect(X-3,Y-3,6,6);
+    // friends in the room (real players) stand out in green: a green dot on your team, a green ring around an enemy dot
+    if(e.friend){rctx.lineWidth=2;rctx.beginPath();rctx.arc(X,Y,enemy?4.5:5,0,Math.PI*2);rctx.fillStyle=enemy?'#ef5a4f':'#3ee06a';rctx.fill();rctx.strokeStyle=enemy?'#3ee06a':'#fff';rctx.stroke();}
+    else{rctx.fillStyle=enemy?'#ef5a4f':'#5b9cf0';rctx.fillRect(X-3,Y-3,6,6);}
   }
   for(const z of zombies){if(!z.alive)continue;const dx=z.x-player.x,dz=z.z-player.z,rx=dx*c-dz*s,rz=dx*s+dz*c;rctx.fillStyle='#7be04a';rctx.fillRect(R+rx*sc-2.5,R+rz*sc-2.5,5,5);}
   for(const o of xmTargets()){const dx=o.x-player.x,dz=o.z-player.z;let rx=(dx*c-dz*s)*sc,rz=(dx*s+dz*c)*sc;const l=Math.hypot(rx,rz),mx=R-8;if(l>mx){rx*=mx/l;rz*=mx/l;}
@@ -5265,7 +5342,7 @@ $('hLB').addEventListener('click',e=>{if(e.target.closest('[data-open=lb]'))open
 $('hCard').addEventListener('click',()=>$('openAcct').click());
 addEventListener('online',()=>renderHome());addEventListener('offline',()=>renderHome());
 $('callsign').value=profile.name;
-$('callsign').addEventListener('input',e=>{const v=e.target.value.replace(/[^\w \-.]/g,'').slice(0,14);profile.name=v||'Recruit';player.name=profile.name;saveProfile();$('hName').textContent=profile.name;});
+$('callsign').addEventListener('input',e=>{const v=e.target.value.replace(/[^\w \-.]/g,'').slice(0,14);if(v&&nameBad(v)){e.target.classList.add('bad');return;}e.target.classList.remove('bad');profile.name=v||'Recruit';player.name=profile.name;saveProfile();$('hName').textContent=profile.name;});
 function selectMap(k){if(isClient()||!MAPS[k])return;profile.map=k;saveProfile();MAP=MAPS[k];renderProfile();resetMatch(false);if(isHost()){netRoster();renderMP();renderMPPill();}}
 {const NEWM=['moon','forest','city','code','town','rail','outpost','farm','house'];$('mapPick').innerHTML=NEWM.concat(Object.keys(MAPS).filter(k=>!NEWM.includes(k))).map(k=>`<button class="chip" data-map="${k}">${esc(MAPS[k].name)}</button>`).join('');}
 $('mapPick').addEventListener('click',e=>{const b=e.target.closest('[data-map]');if(b)selectMap(b.dataset.map);});
@@ -5323,7 +5400,8 @@ function openAdmin(){if(!CS||!CS.admin)return;admMsg='';$('adm').hidden=false;ad
 async function admLoad(){admData=null;renderAdmin();
   if(admTab==='cfg'){const r=await cloudReq('/rest/v1/app_config?select=key,value',{auth:false});admData=r.ok&&Array.isArray(r.j)?Object.fromEntries(r.j.map(x=>[x.key,x.value])):{err:'Could not load the settings.'};}
   else{if(!await cloudFresh()){admData={err:'Not signed in.'};renderAdmin();return;}
-    const path=admTab==='msg'?'/rest/v1/support_messages?select=id,created_at,player_name,topic,message,contact,app_version&order=created_at.desc&limit=40':'/rest/v1/client_errors?select=id,created_at,app_version,message,where_,device&order=created_at.desc&limit=200';
+    if(admTab==='ban'){const r=await cloudReq('/rest/v1/rpc/admin_bans',{method:'POST',body:{}});admData=r.ok&&Array.isArray(r.j)?{rows:r.j}:{err:'Could not load (error '+r.status+').'};renderAdmin();return;}
+    const path=admTab==='msg'?'/rest/v1/support_messages?select=id,created_at,player_name,topic,message,contact,app_version,reported_uid,user_id&order=created_at.desc&limit=40':'/rest/v1/client_errors?select=id,created_at,app_version,message,where_,device&order=created_at.desc&limit=200';
     const r=await cloudReq(path);admData=r.ok&&Array.isArray(r.j)?{rows:r.j}:{err:r.status===401||r.status===403?'The server says this account is not the admin.':'Could not load (error '+r.status+').'};}
   renderAdmin();}
 function renderAdmin(){for(const b of $('admTabs').children)b.classList.toggle('on',b.dataset.adt===admTab);let h='';const D=admData;
@@ -5331,11 +5409,12 @@ function renderAdmin(){for(const b of $('admTabs').children)b.classList.toggle('
   else if(admTab==='cfg'){const s=k=>esc(typeof D[k]==='string'?D[k]:''),F=D.features&&typeof D.features==='object'?D.features:{};
     const fld=(k,l,ph)=>`<label class="fld"><span>${l}</span><input data-cfg="${k}" maxlength="300" value="${s(k)}" placeholder="${ph}"></label>`;
     h=`<div class="admGrid"><div class="authCard">${fld('motd','Message of the day','Shown on the main screen')}${fld('maintenance','Maintenance notice','Leave empty when all is fine')}
-      ${fld('min_version','Minimum app version','1.0.0 · older apps must update')}${fld('latest_version','Latest app version','1.0.0')}${fld('store_url','App Store link','https://apps.apple.com/…')}${fld('peer_server','Own multiplayer server (optional)','wss://your-server/peerjs · empty = the free public one')}</div>
+      ${fld('min_version','Minimum app version','1.0.0 · older apps must update')}${fld('latest_version','Latest app version','1.0.0')}${fld('store_url','App Store link','https://apps.apple.com/…')}${fld('peer_server','Own multiplayer server (optional)','wss://your-server/peerjs · empty = the free public one')}${fld('turn','Own relay server (optional)','turn:host:port user password · empty = the free ones')}</div>
       <div class="authCard"><div class="authH" style="font-size:20px">Switch features on or off</div>
-      ${['building','crates','multiplayer'].map(k=>`<label class="tgl"><input type="checkbox" data-feat="${k}" ${F[k]!==false?'checked':''}><span>${{building:'Building blocks',crates:'Crates',multiplayer:'Multiplayer rooms'}[k]}</span></label>`).join('')}
+      ${['building','crates','multiplayer','rt'].map(k=>`<label class="tgl"><input type="checkbox" data-feat="${k}" ${F[k]!==false?'checked':''}><span>${{building:'Building blocks',crates:'Crates',multiplayer:'Multiplayer rooms',rt:'Backup route through our server'}[k]}</span></label>`).join('')}
       <button class="btn cut authGo" id="admSave">Save changes</button><div class="authFine">Players get the changes within a few minutes. Every change is checked on the server.</div></div></div>`;}
-  else if(admTab==='msg'){h=D.rows.length?D.rows.map(m=>`<div class="admRow"><div class="admTop"><b>${esc(m.topic||'')}</b><span>${esc(m.player_name||'anonymous')} · ${new Date(m.created_at).toLocaleString()}${m.app_version?' · v'+esc(m.app_version):''}</span><button class="linkBtn dz" data-admdel="${m.id|0}">Delete</button></div><div class="admTxt">${esc(m.message)}</div>${m.contact?`<div class="authFine">Reply to: ${esc(m.contact)}</div>`:''}</div>`).join(''):'<div class="note">No messages. 🎉</div>';}
+  else if(admTab==='msg'){h=D.rows.length?D.rows.map(m=>`<div class="admRow"><div class="admTop"><b>${esc(m.topic||'')}</b><span>${esc(m.player_name||'anonymous')} · ${new Date(m.created_at).toLocaleString()}${m.app_version?' · v'+esc(m.app_version):''}</span><button class="linkBtn dz" data-admdel="${m.id|0}">Delete</button></div><div class="admTxt">${esc(m.message)}</div>${m.reported_uid&&/^[0-9a-f-]{36}$/.test(m.reported_uid)?`<div class="row" style="gap:6px;margin-top:4px"><span class="authFine">Reported player:</span><button class="btn sm ghost cut" data-ban="${m.reported_uid}" data-days="3">Ban 3 days</button><button class="btn sm ghost cut" data-ban="${m.reported_uid}" data-days="30">Ban 30 days</button><button class="btn sm ghost cut" data-ban="${m.reported_uid}" data-days="0">Ban for good</button></div>`:''}${m.contact?`<div class="authFine">Reply to: ${esc(m.contact)}</div>`:''}</div>`).join(''):'<div class="note">No messages. 🎉</div>';}
+  else if(admTab==='ban'){h=D.rows.length?D.rows.map(b=>`<div class="admRow"><div class="admTop"><b>${esc(b.name||'?')}</b><span>${b.until?'until '+new Date(b.until).toLocaleString():'for good'}${b.reason?' · '+esc(b.reason):''}</span><button class="linkBtn" data-unban="${/^[0-9a-f-]{36}$/.test(b.user_id)?b.user_id:''}">Lift ban</button></div></div>`).join(''):'<div class="note">Nobody is banned.</div>';}
   else{const G=new Map();for(const e of D.rows){const k=(e.where_||'')+' · '+e.message;const g=G.get(k)||{n:0,last:e.created_at,v:e.app_version,dev:e.device,k};g.n++;G.set(k,g);}
     h=G.size?`<div class="row" style="justify-content:space-between;margin-bottom:6px"><span class="note">${D.rows.length} reports · ${G.size} different problems</span><button class="btn sm ghost cut" id="admClear">Clear all</button></div>`+[...G.values()].sort((a,b)=>b.n-a.n).map(g=>`<div class="admRow"><div class="admTop"><b>×${g.n}</b><span>last ${new Date(g.last).toLocaleString()}${g.v?' · v'+esc(g.v):''}</span></div><div class="admTxt mono">${esc(g.k)}</div><div class="authFine">${esc(g.dev||'')}</div></div>`).join(''):'<div class="note">No crash reports. 🎉</div>';}
   if(admMsg)h+=`<div class="acMsg ${admMsg.startsWith('!')?'bad':'good'}">${esc(admMsg.replace(/^!/,''))}</div>`;
@@ -5351,6 +5430,10 @@ $('admClose').addEventListener('click',()=>{$('adm').hidden=true;});
 $('admTabs').addEventListener('click',e=>{const b=e.target.closest('[data-adt]');if(b){admTab=b.dataset.adt;admMsg='';admLoad();}});
 $('admBody').addEventListener('click',async e=>{const b=e.target.closest('button');if(!b)return;
   if(b.id==='admSave'){b.disabled=true;b.textContent='Saving…';admSave();return;}
+  if(b.dataset.ban){const days=b.dataset.days|0;if(!confirm(days?`Ban this player from online play for ${days} days?`:'Ban this player from online play for good?'))return;
+    const why=(prompt('Reason (only you see it):','reports')||'').slice(0,200);const r=await cloudReq('/rest/v1/rpc/admin_ban',{method:'POST',body:{p_uid:b.dataset.ban,p_days:days,p_reason:why}});
+    admMsg=r.ok&&r.j==='ok'?'Banned. They cannot list rooms, join checked rooms or send invites.':'!'+(r.j==='no'?'That account cannot be banned.':'Could not ban (error '+r.status+').');renderAdmin();return;}
+  if(b.dataset.unban){const r=await cloudReq('/rest/v1/rpc/admin_unban',{method:'POST',body:{p_uid:b.dataset.unban}});admMsg=r.ok&&r.j==='ok'?'Ban lifted.':'!Could not lift (error '+r.status+').';admLoad();return;}
   if(b.dataset.admdel){const r=await cloudReq('/rest/v1/support_messages?id=eq.'+(b.dataset.admdel|0),{method:'DELETE',headers:{Prefer:'return=representation'}});admMsg=r.ok?'Message deleted.':'!Could not delete (error '+r.status+').';admLoad();return;}
   if(b.id==='admClear'){if(!confirm('Delete every crash report?'))return;const r=await cloudReq('/rest/v1/client_errors?id=gt.0',{method:'DELETE'});admMsg=r.ok?'Crash reports cleared.':'!Could not clear (error '+r.status+').';admLoad();}});
 function renderSettings(){
@@ -5425,7 +5508,7 @@ applySettings();
 let fpsN=0,fpsT=0;
 
 /* ---------- accounts and stats ---------- */
-let acTab='cloud',acMsg='',acDel=false,acMode=lastName()?'in':'up',acAdm=false,acStep=1,acDraft={n:'',pw:''},acKeep=true,acShowPw=false;
+let acAdmTap=0,acTab='cloud',acMsg='',acDel=false,acMode=lastName()?'in':'up',acAdm=false,acStep=1,acDraft={n:'',pw:''},acKeep=true,acShowPw=false;
 const fmtTime=s=>{s=Math.round(s);const h=Math.floor(s/3600),m=Math.floor(s%3600/60);return h?`${h}h ${m}m`:`${m}m`;};
 let acMsgShown=false;
 // the player-name preview follows what you type
@@ -5465,7 +5548,7 @@ function renderAcct(){
         ${msgHtml()}<button type="submit" class="btn cut authGo" id="clLogin">Sign in</button>`;}
       else if(!s2){f+=`<div class="auHead"><div class="authH">Create your account</div><div class="auSteps"><b class="on">1</b><i></i><b>2</b><span>Login details</span></div></div>
         <label class="fld"><span>Username <em>· used to sign in</em></span><input id="clName" name="username" maxlength="14" autocomplete="username" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="2–14 letters or numbers" value="${esc(acDraft.n)}"></label>
-        <label class="fld"><span>Password <em>· 6+ characters</em></span><span class="pwWrap"><input id="clPass" name="password" type="${acShowPw?'text':'password'}" maxlength="64" autocomplete="new-password" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="Choose a password" value="${esc(acDraft.pw)}">${eye}</span></label>
+        <label class="fld"><span>Password <em>· 8+ characters</em></span><span class="pwWrap"><input id="clPass" name="password" type="${acShowPw?'text':'password'}" maxlength="64" autocomplete="new-password" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="Choose a password" value="${esc(acDraft.pw)}">${eye}</span></label>
         ${msgHtml()}<button type="submit" class="btn cut authGo" id="clNext">Continue</button>`;}
       else{const cs=acDraft.cs||acDraft.n;f+=`<div class="auHead"><div class="authH">Name your soldier</div><div class="auSteps"><b class="done">✓</b><i class="on"></i><b class="on">2</b><span>Player name</span></div></div>
         <div class="auCs"><div class="avBig" style="background:${col}">${esc((cs||'?').charAt(0).toUpperCase())}</div><div><b id="csPrev">${esc(cs)}</b><span>Lv ${li.level} · ${esc(li.rank)}</span></div></div>
@@ -5476,6 +5559,7 @@ function renderAcct(){
     let card='';
     if(IN_CLAUDE)card=`<div class="authCard auForm auClaude"><div class="auBadge">Preview</div><div class="authH">Accounts live in the full game</div><div class="authSub">You are playing a preview inside Claude. It runs in a sealed box that cannot reach the save server, so signing in and saving online only work in the full game. What you play here stays on this device.</div>
       <a class="btn cut authGo" id="acFull" href="${PUBLIC_URL}" target="_blank" rel="noopener">Open the full game ↗</a><div class="authFine">In the full game your account stays signed in on your device.</div></div>`;
+    else if(isKid())card=`<div class="authCard"><div class="authH">Playing offline</div><div class="authSub">${KID_MSG}</div>${CS?delBox():''}</div>`;
     else if(!cloudOn())card=`<div class="authCard"><div class="authH">Online accounts are off</div><div class="authSub">Progress stays on this device. Move it with a save code from the More tab.</div></div>`;
     else if(CS&&!CS.guest&&!cloudMine()){
       card=`<div class="authCard acIn"><div class="acOk">✓ Signed in</div><div class="authH">${esc(CS.name)}</div>
@@ -5488,9 +5572,9 @@ function renderAcct(){
         <div class="acBtns"><button class="btn ghost cut acOut" id="clLogout">Sign out</button></div>
         ${CS.admin?`<div class="adminBox"><div><b>Admin</b><span>You control the game's settings.</span></div><button class="btn sm cut" id="admOpen">Admin panel</button></div>`
           :acAdm?`<div class="adminBox col"><div><b>Admin code</b><span>Only for the game's owner. It works once.</span></div><div class="form"><input id="admCode" maxlength="40" autocomplete="off" autocapitalize="characters" placeholder="XXXXX-XXXXX-XXXXX-XXXXX"><button class="btn sm cut" id="admClaim">Activate</button></div></div>`
-          :`<button class="linkBtn" id="admShow">Game owner? Enter admin code</button>`}
+          :acAdmTap>=5?`<button class="linkBtn" id="admShow">Enter admin code</button>`:''}
         ${delBox()}</div>`;}
-    else{card=formBox();acMsgShown=true;}
+    else{card=formBox()+(CS&&CS.guest&&cloudMine()?`<div class="authCard"><div class="authSub">Your progress is saved online as a guest (${esc(CS.name)}).</div>${delBox()}</div>`:'');acMsgShown=true;}
     h+=`<div class="authWrap">${side}<div class="authMain">${card}</div></div>`;
   }else if(acTab==='stats'){
     const kd=S.deaths?(S.kills/S.deaths).toFixed(2):S.kills.toFixed(2),acc=S.shots?Math.round(100*S.hits/S.shots):0,hs=S.kills?Math.round(100*S.heads/S.kills):0,wr=S.matches?Math.round(100*S.wins/S.matches):0;
@@ -5566,7 +5650,7 @@ $('acBody').addEventListener('click',e=>{
   if(b.id==='clNext'){const n=nameOk($('clName').value),pw=$('clPass').value||'';acDraft.n=$('clName').value;acDraft.pw=pw;
     if(!n){acMsg='!Pick a username with 2 to 14 letters or numbers (not "Player").';renderAcct();return;}
     if(nameBad(n)){acMsg='!That username is not allowed. Please pick another one.';renderAcct();return;}
-    if(pw.length<6){acMsg='!The password needs at least 6 characters.';renderAcct();return;}
+    if(pw.length<8){acMsg='!The password needs at least 8 characters.';renderAcct();return;}
     acDraft.n=n;acDraft.cs=acDraft.cs||n;acStep=2;acMsg='';renderAcct();setTimeout(()=>{const f=$('clCs');if(f){f.focus();f.select();}},30);return;}
   if(b.id==='clBack'){acStep=1;acMsg='';renderAcct();return;}
   if(b.id==='clSignup'){const cs=nameOk(($('clCs')&&$('clCs').value)||'');
@@ -5576,7 +5660,7 @@ $('acBody').addEventListener('click',e=>{
       profile.name=cs;saveProfile();try{cloudDirty();}catch(e){}keepSet(true);acStep=1;acDraft={n:'',pw:''};acMsg=`Welcome, ${cs}! Your account is ready and saved online.`;renderAcct();renderProfile();});return;}
   if(b.id==='clLogin'){const n=nameOk($('clName').value),pw=$('clPass').value||'';acKeep=true;
     if(!n){acMsg='!Pick a username with 2 to 14 letters (not "Player").';renderAcct();return;}
-    if(pw.length<6){acMsg='!The password needs at least 6 characters.';renderAcct();return;}
+    if(!pw){acMsg='!Type your password.';renderAcct();return;}
     b.disabled=true;b.textContent='Please wait…';
     cloudLogin(n,pw).then(err=>{if(!err)keepSet(acKeep);acMsg=err?'!'+err:`Welcome back, ${profile.name||CS.name}. Your progress is loaded.`;renderAcct();renderProfile();});return;}
   if(b.id==='clDel'){acDel=true;renderAcct();return;}
@@ -5718,7 +5802,7 @@ function inboxNews(){if(!profile)return;
 let invT=0;
 async function invPoll(){if(!cloudOn()||!CS||!navigator.onLine||Date.now()-invT<20000)return;invT=Date.now();
   try{const r=await cloudReq('/rest/v1/invites?select=id,from_name,code,mode,created_at&order=created_at.desc&limit=10');if(!r.ok||!Array.isArray(r.j)||!r.j.length)return;
-    const ids=[];for(const v of r.j){ids.push(v.id);if(Date.now()-Date.parse(v.created_at)>30*60000)continue;
+    const ids=[];for(const v of r.j){ids.push(v.id);if(Date.now()-Date.parse(v.created_at)>30*60000||isBlocked(v.from_name))continue;
       inboxAdd('invite',`${v.from_name} invited you to play`,`Room ${v.code}${v.mode?' · '+v.mode:''}. Tap Join to go straight in.`,{join:String(v.code)});
       if(state!=='play')toast(`${v.from_name} invited you to play · see your Inbox`);}
     if(ids.length)cloudReq('/rest/v1/invites?id=in.('+ids.map(n=>parseInt(n)).join(',')+')',{method:'DELETE',headers:{Prefer:'return=minimal'}});}catch(e){}}
@@ -5729,7 +5813,7 @@ async function invSend(name){name=String(name||'').trim();if(!name)return;
   if(!NET.code){toast('Open a room first');return;}
   const r=await cloudReq('/rest/v1/rpc/invite_send',{method:'POST',body:{p_to:name,p_code:NET.code,p_mode:modeOf(MAP.key).name}});
   const v=r.ok?r.j:'';toast(v==='ok'?`Invite sent to ${name}`:v==='nouser'?`No player called ${name}`:v==='self'?'That is you':v==='limit'?'Too many invites. Try again later':'Could not send the invite');}
-const rentChip=(kind,id)=>{try{const r=itOk(kind,id)&&rentInfo(kind,id);return r?`<span class="rentChip">⏳ ${leftTxt(r.e-Date.now())}</span>`:'';}catch(e){return '';}};
+const rentChip=(kind,id)=>{try{const r=itOk(kind,id)&&rentInfo(kind,id);return r?`<span class="rentChip">⏳ ${leftTxt(r.e-rNow())}</span>`:'';}catch(e){return '';}};
 
 /* ================= store: rentals and selling ================= */
 // rent anything for a day up to 90 days to try it, or buy it forever.
@@ -5765,7 +5849,7 @@ function rentInfo(kind,id){const r=profile.rent&&profile.rent[ikey(kind,id)];ret
 function leftTxt(ms){ms=Math.max(0,ms);const m=Math.ceil(ms/6e4),h=Math.floor(m/60),d=Math.floor(h/24);return d?`${d}d ${h%24}h`:h?`${h}h ${m%60}m`:`${m}m`;}
 // one item a day is 25% off (rentals too)
 function dealToday(){let off=false;try{off=!!localStorage.getItem('blockfire.nodeal');}catch(e){}if(off)return null;
-  const day=Math.floor(Date.now()/DAY),lv=myLevel(),c=dealToday.c;if(c&&c.day===day&&c.lv===lv)return c.v;
+  const day=Math.floor(gNow()/DAY),lv=myLevel(),c=dealToday.c;if(c&&c.day===day&&c.lv===lv)return c.v;
   const pool=[];for(const id of WORDER)if(IT.gun.price(id)&&gunReq(id)<=lv+3)pool.push({kind:'gun',id});
   for(const id in CHARS)if(IT.skin.price(id))pool.push({kind:'skin',id});
   for(const id in GEAR)if(GEAR[id].price&&(GEAR[id].req||1)<=lv+3&&GEAR[id].price<1e6)pool.push({kind:'gear',id});
@@ -5784,7 +5868,7 @@ function buyItem(kind,id,dur){dur=dur||rentSel;const I=IT[kind];if(!itOk(kind,id
   const own=hasIt(kind,id),rent=rentInfo(kind,id);if(own&&!rent)return false;   // already yours forever
   const c=costOf(kind,id,dur);if(profile.gp<c)return false;
   const R=rentOf(dur),k=ikey(kind,id);profile.gp-=c;profile.rent=profile.rent||{};profile.paid=profile.paid||{};
-  if(R.d){const now=Date.now(),r=profile.rent[k]||{e:now,d:0,p:0};r.e=Math.max(r.e,now)+R.d*DAY;r.d=(r.d||0)+R.d*DAY;r.p=(r.p|0)+c;profile.rent[k]=r;delete profile.paid[k];}
+  if(R.d){const now=rNow(),r=profile.rent[k]||{e:now,d:0,p:0};r.e=Math.max(r.e,now)+R.d*DAY;r.d=(r.d||0)+R.d*DAY;r.p=(r.p|0)+c;profile.rent[k]=r;delete profile.paid[k];}
   else{delete profile.rent[k];profile.paid[k]=c;}
   if(!own)I.arr(id).push(I.v?I.v(id):id);
   if(I.on)I.on(id);
@@ -5792,7 +5876,7 @@ function buyItem(kind,id,dur){dur=dur||rentSel;const I=IT[kind];if(!itOk(kind,id
 function sellItem(kind,id){const v=sellValue(kind,id);if(!v)return 0;const I=IT[kind],a=I.arr(id),j=a.indexOf(I.v?I.v(id):id);if(j<0)return 0;
   a.splice(j,1);if(I.off)I.off(id);if(profile.paid)delete profile.paid[ikey(kind,id)];profile.gp+=v;toast(`Sold ${I.name(id)} · +${v.toLocaleString()} GP`);return v;}
 // take back rentals that ran out (waits until the match is over)
-function rentSweep(){if(!profile||!profile.rent||state==='play')return [];const now=Date.now(),out=[];
+function rentSweep(){if(!profile||!profile.rent||state==='play')return [];const now=rNow(),out=[];
   for(const k of Object.keys(profile.rent)){const r=profile.rent[k];if(r&&r.e>now)continue;delete profile.rent[k];
     const i=k.indexOf(':'),kind=k.slice(0,i),id=k.slice(i+1);if(!itOk(kind,id))continue;
     try{const I=IT[kind],a=I.arr(id),j=a.indexOf(I.v?I.v(id):id);if(j>=0)a.splice(j,1);if(I.off)I.off(id);out.push(I.name(id));}catch(e){}}
@@ -5827,11 +5911,11 @@ function buyBox(kind,id,attr){const R=rentOf(rentSel),c=costOf(kind,id,rentSel),
   return `<div class="row buyRow"><span class="price">${full!==c?`<s>${full.toLocaleString()}</s>`:''}${c.toLocaleString()} GP<small>${R.d?R.n:'forever'}</small></span><button class="btn sm cut" ${attr} ${profile.gp<c?'disabled':''}>${lab}</button></div>`;}
 const sellBtn=(kind,id,v)=>`<button class="btn sm ghost cut sellBtn" data-sell="${kind}|${id}" data-v="${v}">Sell · +${v.toLocaleString()} GP</button>`;
 function ownExtra(kind,id){if(!itOk(kind,id))return '';const r=rentInfo(kind,id);
-  if(r)return `<span class="rentTag">⏳ ${leftTxt(r.e-Date.now())}</span>`+buyBox(kind,id,`data-bi="${kind}|${id}"`);
+  if(r)return `<span class="rentTag">⏳ ${leftTxt(r.e-rNow())}</span>`+buyBox(kind,id,`data-bi="${kind}|${id}"`);
   const v=sellValue(kind,id);return v?sellBtn(kind,id,v):'';}
 const durBar=()=>{const R=rentOf(rentSel);return `<div class="durBar"><span class="lbl2">Time</span><div class="durSeg">${RENT.map(r=>`<button data-dur="${r.k}" class="${rentSel===r.k?'on':''}">${r.s}</button>`).join('')}</div><small>${R.d?`Try it for ${R.n} · ${Math.round(R.f*100)}% of the forever price`:`Yours forever · sells back for ${Math.round(SELL_PCT*100)}%`}</small></div>`;};
 function dealCard(){const d=dealToday();if(!d||!itOk(d.kind,d.id))return '';const I=IT[d.kind],R=rentOf(rentSel),full=costOf(d.kind,d.id,rentSel,true),now=costOf(d.kind,d.id,rentSel);
-  const end=(Math.floor(Date.now()/DAY)+1)*DAY-Date.now(),own=hasIt(d.kind,d.id)&&!rentInfo(d.kind,d.id),lock=I.req&&I.req(d.id)>myLevel();
+  const end=(Math.floor(gNow()/DAY)+1)*DAY-gNow(),own=hasIt(d.kind,d.id)&&!rentInfo(d.kind,d.id),lock=I.req&&I.req(d.id)>myLevel();
   return `<div class="dealCard">${thumbOf(d.kind,d.id)}<div class="dealTx"><span class="dealTag">Deal of the day · −25%</span><b>${esc(I.name(d.id))}</b><small>${KIND_N[d.kind]} · ends in ${leftTxt(end)}</small></div>
     <div class="dealBuy">${own?'<span class="cg">Yours</span>':lock?`<span class="lockNote">🔒 Level ${I.req(d.id)}</span>`:`<span class="price"><s>${full.toLocaleString()}</s>${now.toLocaleString()} GP<small>${R.d?R.n:'forever'}</small></span><button class="btn sm cut" data-bi="${d.kind}|${d.id}" ${profile.gp<now?'disabled':''}>${R.d?'Rent':'Buy'}</button>`}</div></div>`;}
 function renderShop(){
@@ -6189,7 +6273,7 @@ const CRATE_PRICE=900;
 let crateBusy=false;
 function renderPity(){const el=$('cratePity');if(!el)return;const P=profile.pity||{e:0,l:0};el.textContent=`Epic or better within ${PITY_E-P.e} · Legendary or better within ${PITY_L-P.l} crates`;}
 function renderCrateBtn(){renderPity();const keys=profile.keys|0,free=(profile.daily&&profile.daily.freeCrate)||keys>0;const b=$('crateOpen');b.textContent=free?'Open free crate'+(keys>0?` (${keys+(profile.daily&&profile.daily.freeCrate?1:0)})`:''):`Open · ${CRATE_PRICE} GP`;b.disabled=crateBusy||(!free&&profile.gp<CRATE_PRICE);}
-$('openCrate').addEventListener('click',()=>{$('crateOdds').innerHTML=RAR.map((r,i)=>`<span style="color:${r.c}">${r.n} ${ODDS[i]}%</span>`).join('');$('reel').innerHTML='';$('reel').style.transition='none';$('reel').style.transform='translateX(0)';$('crateWin').innerHTML='&nbsp;';renderCrateBtn();$('crate').hidden=false;});
+$('openCrate').addEventListener('click',()=>{$('crateOdds').innerHTML=RAR.map((r,i)=>`<span style="color:${r.c}">${r.n} ${ODDS[i]}%</span>`).join('')+((profile.gearOwn||[]).includes('n_legend')?'':`<span title="Rolled first, before the other odds">Legend Dog Tag ${+(NECK_ODDS*100).toFixed(2)}%</span>`);$('reel').innerHTML='';$('reel').style.transition='none';$('reel').style.transform='translateX(0)';$('crateWin').innerHTML='&nbsp;';renderCrateBtn();$('crate').hidden=false;});
 $('openCal').addEventListener('click',()=>{renderCal();$('cal').hidden=false;});
 $('crateWin').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
   if(b.dataset.pequip){equipPrize(b.dataset.pequip,b.dataset.pv);b.textContent='Equipped ✓';b.disabled=true;toast('Equipped');}
@@ -6329,7 +6413,7 @@ function toggleReady(){if(!isClient())return;NET.ready=!NET.ready;try{NET.host.s
 function lobbyStart(){goFull();if(isClient()){toggleReady();return;}if(isHost()&&!mpAllReady()){toast('Waiting for everyone to press Ready');return;}if(LD.on)return;loadThen(startMatch);}
 $('play').addEventListener('click',()=>{goFull();openLobby(true);});
 $('navPlay').addEventListener('click',()=>{for(const id of['char','lb','shop','crate','acct','settings','mp'])$(id).hidden=true;renderProfile();});
-function backToMenu(){roomRegSoon();$('end').hidden=true;state='menu';if(isClient()&&MAPS[NET.mapKey])MAP=MAPS[NET.mapKey];const lm=rollDaily();if(lm)toast(lm);resetMatch(false);renderProfile();$('menu').hidden=false;}
+function backToMenu(){roomRegSoon();$('end').hidden=true;state='menu';if(isHost())setTimeout(()=>{try{netRoster();}catch(e){}},0);if(isClient()&&MAPS[NET.mapKey])MAP=MAPS[NET.mapKey];const lm=rollDaily();if(lm)toast(lm);resetMatch(false);renderProfile();$('menu').hidden=false;}
 $('again').addEventListener('click',()=>{if(NET.mode){backToMenu();openLobby();if(isClient()&&!NET.ready)toggleReady();}else{$('end').hidden=true;state='menu';resetMatch(false);loadThen(startMatch);}});
 $('toMenu').addEventListener('click',backToMenu);
 
@@ -6459,7 +6543,7 @@ player.nid='P0';bots.forEach((b,i)=>b.nid='B'+i);
 for(const k in MAPS)MAPS[k].key=k;
 let mineSeq=1;
 // protocol version: a friend with an older cached copy of the game gets a clear "refresh" message instead of strange bugs
-const PROTO=5,DEAD_MS=8000,GRACE_MS=20000;
+const PROTO=6,DEAD_MS=8000,GRACE_MS=20000;
 const now=()=>performance.now();
 function netEv(e){if(isHost()&&NET.conns.size&&state==='play'){NET.q.push(e);if(NET.q.length>400)NET.q.splice(0,NET.q.length-400);}}
 function netOut(e){if(isClient()&&state==='play'){NET.q.push(e);if(NET.q.length>200)NET.q.splice(0,NET.q.length-200);}}
@@ -6489,7 +6573,8 @@ let iceDyn=null;
 function relayParse(v){v=String(v||'').trim();if(!v||/^https?:/i.test(v))return null;const [u0,user,pass]=v.split(/[\s,]+/);if(!u0||!user||!pass)return null;
   const u=u0.replace(/^turns?:/i,'');const tls=/^turns:/i.test(u0)||/:(443|5349)$/.test(u);
   return {urls:tls?['turns:'+u,'turn:'+u+'?transport=tcp']:['turn:'+u,'turn:'+u+'?transport=tcp'],username:user,credential:pass};}
-function fetchIce(){let u=TURN_API;try{u=localStorage.getItem('blockfire.turn')||u;}catch(e){}
+// relay servers: this device's override, else the owner's choice in the admin panel (app_config: turn), else the free ones
+function fetchIce(){let u=(typeof RCFG!=='undefined'&&RCFG&&typeof RCFG.turn==='string'&&RCFG.turn.trim())||TURN_API;try{u=localStorage.getItem('blockfire.turn')||u;}catch(e){}
   const st=relayParse(u);if(st){iceDyn=[st].concat(ICE);return Promise.resolve(iceDyn);}
   iceDyn=null;if(!u||!window.fetch)return Promise.resolve(null);
   return Promise.race([fetch(u).then(r=>r.ok?r.json():null).then(j=>{if(Array.isArray(j)&&j.length){iceDyn=j.filter(s=>[].concat(s&&s.urls||[]).some(u=>/^turns?:/i.test(u))).concat(ICE);}return iceDyn;}).catch(()=>null),new Promise(r=>setTimeout(()=>r(null),4000))]);}
@@ -6543,8 +6628,10 @@ function netFitBots(){
 
 /* ---- backup route: when two phones cannot connect directly (mobile data, strict Wi-Fi), the game data goes through a
    public message server (MQTT over a secure WebSocket). Works on any network that can open a web page. ---- */
-const MQ_BROKERS=['wss://broker.emqx.io:8084/mqtt','wss://broker.hivemq.com:8884/mqtt','wss://test.mosquitto.org:8081/mqtt'];
-function mqBrokers(){try{const o=localStorage.getItem('blockfire.mq');if(o)return [o];}catch(e){}return (rtUrl()?['cubefront']:[]).concat(MQ_BROKERS);}
+const MQ_BROKERS=['wss://broker.emqx.io:8084/mqtt','wss://broker.hivemq.com:8884/mqtt'];
+// the public brokers first; our own (Supabase) last, so game traffic does not use up the save server's monthly quota.
+// The owner can switch our own route off in the admin panel (features: rt).
+function mqBrokers(){try{const o=localStorage.getItem('blockfire.mq');if(o)return [o];}catch(e){}return MQ_BROKERS.concat(rtUrl()&&feat('rt')?['cubefront']:[]);}
 // our own backup route: Supabase Realtime on the normal web port (443), which mobile networks do not block
 function rtUrl(){try{const o=localStorage.getItem('blockfire.rt');if(o)return o;}catch(e){}if(!cloudOn())return '';const c=cloudCfg();
   return c.url?c.url.replace(/^http/,'ws').replace(/\/$/,'')+'/realtime/v1/websocket?apikey='+encodeURIComponent(c.key)+'&vsn=1.0.0':'';}
@@ -6635,6 +6722,7 @@ function rlHostStart(code){
       if(o.k==='o'){if(typeof o.p!=='string'||o.p.length>200)return;
         // a link already exists for this friend: answer only the same key again, ignore anyone else
         if(c&&!c.closed){if(c._peer===o.p&&c._myPub)reply({k:'a',p:c._myPub});return;}
+        if(!c&&H.conns.size>=40)return;
         c=rlConn(env=>{if(c._sec)c._sec.send(env);});c._peer=o.p;c.onGone=()=>{if(H.conns.get(f)===c)H.conns.delete(f);};H.conns.set(f,c);
         (async()=>{try{const K=await rlKeys();const key=await rlDerive(K.kp,o.p,code);if(c.closed||H.stop)return;
           c._myPub=K.pub;c._sec=rlSecure(key,'h2c','c2h',o2=>reply(o2));hostAccept(c);reply({k:'a',p:K.pub});c._open();}catch(e){c._close();}})();return;}
@@ -6665,6 +6753,31 @@ function rlConnect(code){
     m=>{if(m===live&&!c.closed)c._close();});mqs.push(m);}
   return c;
 }
+/* ---- who is who: room tickets ----
+   Each player asks the server for a ticket that works for this one room only. The room asks the server what the
+   ticket means and gets back the account's checked name, a private id that only means something inside this game
+   (for kicks, blocks and reports), whether it is the game owner (GM) and whether it is banned. Never an account id,
+   never an address. A GM badge therefore cannot be faked, and a kicked or blocked player stays out after a rename. */
+const TK={own:{},chk:new Map()};
+async function mpTicket(code){if(!cloudOn())return '';try{if(TK.own[code])return TK.own[code];if(!CS&&isGuest(USERS.cur))await cloudGuest();if(!CS||!await cloudFresh())return '';
+  const r=await cloudReq('/rest/v1/rpc/mp_ticket',{method:'POST',body:{p_room:code}});const t=r.ok&&typeof r.j==='string'?r.j:'';if(/^[0-9a-f]{36}$/.test(t))TK.own[code]=t;return t;}catch(e){return '';}}
+function mpCheck(tk,code){if(!/^[0-9a-f]{36}$/.test(String(tk||''))||!cloudOn())return Promise.resolve(null);const k=tk+'|'+code;if(TK.chk.has(k))return TK.chk.get(k);
+  const p=cloudReq('/rest/v1/rpc/mp_check',{method:'POST',auth:!!CS,body:{p_token:tk,p_room:code}}).then(r=>{const j=r.ok&&r.j&&typeof r.j==='object'?r.j:null;
+    if(!j){TK.chk.delete(k);return null;}return {name:String(j.name||'').replace(/[^\w \-.]/g,'').slice(0,14),pid:String(j.pid||'').replace(/[^0-9a-f]/g,'').slice(0,20),gm:j.gm===true,banned:j.banned===true};});
+  TK.chk.set(k,p);return p;}
+// what this phone knows for sure about a player in the room (checked with the server itself, never taken from the host's word)
+function mpVinfo(nid){if(!nid)return null;if(nid===NET.nid)return NET.myV||null;if(isHost()){const e=NET.remotes.get(nid);return e&&e.ver?{gm:!!e.gm,pid:e.pid}:null;}return (NET.vinfo||{})[nid]||null;}
+const BAN_MSG='Your account cannot play online right now (suspended by the game team after reports). You can still play against bots.';
+function kickEnt(x,why){if(!x)return;NET.kicked=NET.kicked||new Set();NET.kicked.add('s:'+x.sid);NET.kicked.add('n:'+nameKey(x.name));if(x.pid)NET.kicked.add('p:'+x.pid);if(x.pid)NET.kicked.add('p:'+x.pid);
+  try{if(x.conn)x.conn.send({t:'kicked',why:why||''});}catch(err){}setTimeout(()=>{if(NET.remotes.get(x.nid))hostRemove(x,'kicked');},400);}
+// the room checks a newcomer's ticket: banned accounts and players this host kicked or blocked are turned away
+function hostVerify(e,tk){if(!tk||e.tk||!/^[0-9a-f]{36}$/.test(tk))return;e.tk=tk;
+  mpCheck(tk,NET.code).then(v=>{if(!v||NET.remotes.get(e.nid)!==e)return;e.pid=v.pid;e.gm=v.gm;e.ver=true;
+    if(v.banned){kickEnt(e,'banned');toast(e.name+' is suspended by the game team and cannot play online.');return;}
+    if((NET.kicked&&NET.kicked.has('p:'+v.pid))||isBlocked(e.name,v.pid)){kickEnt(e);return;}
+    netRoster();renderMP();});}
+// online rooms only take players the server knows: someone who will not show a ticket is asked to leave
+function hostNeedTicket(e){if(!NET.tkOK)return;setTimeout(()=>{if(NET.remotes.get(e.nid)===e&&!e.ver&&NET.tkOK&&!e.away){kickEnt(e,'ticket');}},15000);}
 function forceRelay(){try{return localStorage.getItem('blockfire.forceRelay')==='1';}catch(e){return false;}}
 /* ---- hosting ---- */
 function hostAccept(c){c.lastIn=now();c.born=now();NET.pend.add(c);c.on('open',()=>attachU(c,d=>hostRecv(c,d)));c.on('data',d=>{c.lastIn=now();hostRecv(c,d);});c.on('close',()=>hostDrop(c));c.on('error',()=>hostDrop(c));}
@@ -6690,7 +6803,7 @@ function roomUnreg(keep){if(!NET.listed||!roomsOn())return;NET.listed=false;clou
 setInterval(()=>{if(isHost())roomReg();},6000);
 // the open rooms list: anyone can read it (no account needed), it refreshes itself every few seconds while it is on screen
 let roomsBusy=false;
-async function roomsFetch(quiet){if(roomsBusy)return;
+async function roomsFetch(quiet){if(roomsBusy||isKid())return;
   if(!quiet){if(!NET.rooms)NET.rooms=null;renderMP();}
   if(!cloudOn()){NET.rooms=[];NET.roomsErr=IN_CLAUDE?'The room list works in the full game.':'The room list is not available in this copy of the game. Join with a code instead.';roomsPaint();return;}
   roomsBusy=true;let r;
@@ -6716,16 +6829,19 @@ function roomsHTML(){const n=(NET.rooms||[]).length;
     <div class="lobInv"><button class="btn sm cut" id="rmCreate">＋ Create room</button><button class="btn sm ghost cut" id="rmSolo">Play solo</button><input id="mpCode" maxlength="6" placeholder="CODE" autocomplete="off" style="width:88px;font-family:var(--f-hud);font-size:18px;letter-spacing:.12em;text-transform:uppercase"><button class="btn sm ghost cut" id="mpJoin">Join</button></div>
     <div class="lobCount"><b id="rmCnt">${n}</b><span id="rmCntL">open room${n===1?'':'s'}</span><i class="rmLive">● live</i></div></div><div id="rmBox">${roomsList()}</div>`;}
 function mpHost(code,tries){
+  if(isKid())return mpErr(KID_MSG);
   if(!mpAvailable())return mpErr('Multiplayer needs the public link of the game. Open it from GitHub and try again.');
-  if(!code){mpLeave(true);NET.err='';NET.cool=null;NET.kicked=null;NET.status='Opening a room…';renderMP();code=Array.from({length:5},()=>'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[(Math.random()*32)|0]).join('');}
+  if(!code){mpLeave(true);NET.err='';NET.cool=null;NET.kicked=null;NET.myTk='';NET.myV=null;NET.tkOK=false;NET.status='Opening a room…';renderMP();code=Array.from({length:5},()=>'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[(Math.random()*32)|0]).join('');}
   const peer=new Peer(roomId(code),peerOpts());NET.peer=peer;if(tries&&NET.mode!=='host'){NET.status='Reopening your room '+code+'…';renderMP();renderMPPill();}
-  peer.on('open',()=>{if(NET.peer!==peer)return;NET.offline=false;const first=NET.mode!=='host';requestWake();NET.mode='host';NET.code=code;NET.nid='P0';player.nid='P0';NET.status='';if(first&&!tries)NET.blk.clear();ss('bf.host',code);rlHostStart(code);renderMP();renderMPPill();roomReg();});
+  peer.on('open',()=>{if(NET.peer!==peer)return;NET.offline=false;const first=NET.mode!=='host',mig=NET.migrating;requestWake();NET.mode='host';NET.code=code;NET.nid='P0';player.nid='P0';NET.status='';if(first&&!tries)NET.blk.clear();ss('bf.host',code);rlHostStart(code);renderMP();renderMPPill();roomReg();if(mig){NET.migrating=false;NET.reconnecting=false;$('netBanner').hidden=true;netRoster();netFitBots();toast(state==='play'?'You are the host now. The match goes on.':'You are the host of this room now.');}
+    if(first)mpTicket(code).then(t=>{if(NET.code!==code||!isHost())return;if(t==='banned'){mpLeave(true);mpErr(BAN_MSG);return;}
+      if(t){NET.myTk=t;mpCheck(t,code).then(v=>{if(!v||NET.code!==code)return;NET.myV=v;NET.tkOK=true;for(const e of NET.remotes.values())if(!e.ver)hostNeedTicket(e);netRoster();renderMP();});}});});
   peer.on('connection',hostAccept);
   peer.on('error',e=>{if(NET.peer!==peer)return;
     if(e.type==='unavailable-id'){
       // the server still remembers our old connection: keep the room (and every friend in it) and try again shortly
       if(NET.mode==='host'){NET.offline=true;return;}
-      if(tries){if(tries<15){try{peer.destroy();}catch(err){}setTimeout(()=>{if(NET.peer===peer)mpHost(code,tries+1);},4000);}else{NET.status='';try{peer.destroy();}catch(err){}NET.peer=null;mpErr('Could not reopen room '+code+'. Open a new room.');ss('bf.host',null);renderMPPill();}return;}
+      if(tries){if(tries<15){try{peer.destroy();}catch(err){}setTimeout(()=>{if(NET.peer===peer)mpHost(code,tries+1);},4000);}else{NET.status='';try{peer.destroy();}catch(err){}NET.peer=null;if(NET.migrating){NET.migrating=false;NET.mode='client';mpLost('The host left and the match could not move to your phone. Your progress from it is saved.');return;}mpErr('Could not reopen room '+code+'. Open a new room.');ss('bf.host',null);renderMPPill();}return;}
       mpHost();return;}
     if(e.type==='peer-unavailable')return;if(!NET.mode)mpErr(netErrText(e));});
   peer.on('disconnected',()=>{if(NET.peer===peer&&!peer.destroyed)setTimeout(()=>{try{if(NET.peer===peer&&peer.disconnected&&!peer.destroyed)peer.reconnect();}catch(err){}},NET.offline?2000:600);});
@@ -6754,25 +6870,26 @@ function hostRecv0(c,d){
   // Beyond 400 a second the rest is dropped; 3 seconds of flooding in a row and that player is removed.
   {const t=now(),R=c._rt||(c._rt={w:t,n:0,bad:0});if(t-R.w>=1000){R.bad=R.n>400?R.bad+1:0;R.w=t;R.n=0;}
     if(++R.n>400){if(R.bad>=3&&!c._flood){c._flood=true;const x=NET.conns.get(c);try{c.send({t:'kicked'});}catch(e){}
-      if(x){NET.kicked=NET.kicked||new Set();NET.kicked.add('s:'+x.sid);NET.kicked.add('n:'+nameKey(x.name));setTimeout(()=>{if(NET.remotes.get(x.nid))hostRemove(x,'kicked');},300);}else setTimeout(()=>{try{c.close();}catch(e){}},300);}return;}}
+      if(x){NET.kicked=NET.kicked||new Set();NET.kicked.add('s:'+x.sid);NET.kicked.add('n:'+nameKey(x.name));if(x.pid)NET.kicked.add('p:'+x.pid);setTimeout(()=>{if(NET.remotes.get(x.nid))hostRemove(x,'kicked');},300);}else setTimeout(()=>{try{c.close();}catch(e){}},300);}return;}}
   if(d.t==='pi'){try{c.send({t:'po',ts:d.ts});}catch(e){}return;}
   if(d.t==='po'){const e=NET.conns.get(c);if(e)e.ping=Math.round(now()-d.ts);return;}
   if(d.t==='hello'){
     if(NET.conns.has(c))return;
     if(d.v!==PROTO){try{c.send({t:'ver',v:PROTO});}catch(e){}setTimeout(()=>c.close(),600);return;}
     // the same player coming back (reload, lost signal, app switch): give them their old slot, team and score
-    if(NET.pass&&String(d.pw||'')!==NET.pass&&!(d.sid&&[...NET.remotes.values()].some(x=>x.sid===d.sid))){try{c.send({t:'badpw'});}catch(e){}setTimeout(()=>c.close(),600);return;}
+    if(NET.pass&&!(d.sid&&[...NET.remotes.values()].some(x=>x.sid===d.sid))&&(String(d.pw||'')!==NET.pass||(NET.pwBad&&NET.pwBad.n>=5&&now()-NET.pwBad.t<60000))){NET.pwBad=NET.pwBad&&now()-NET.pwBad.t<60000?NET.pwBad:{n:0,t:now()};NET.pwBad.n++;try{c.send({t:'badpw'});}catch(e){}setTimeout(()=>c.close(),600);return;}
     if((NET.kicked&&(NET.kicked.has('s:'+String(d.sid||''))||NET.kicked.has('n:'+nameKey(String(d.name||'')))))||isBlocked(d.name)){try{c.send({t:'kicked'});}catch(e){}setTimeout(()=>c.close(),600);return;}
     {const cl=NET.cool&&Math.max(NET.cool.get('s:'+String(d.sid||''))||0,NET.cool.get('n:'+nameKey(String(d.name||'')))||0);
       if(cl&&cl>Date.now()){try{c.send({t:'cool',s:Math.ceil((cl-Date.now())/1000)});}catch(e){}setTimeout(()=>c.close(),600);return;}}
-    const back=d.sid&&[...NET.remotes.values()].find(x=>x.sid===d.sid);
+    const back=d.sid&&[...NET.remotes.values()].find(x=>x.sid===d.sid)||migSlot(d);if(back&&back.mig){back.mig=0;back.sid=String(d.sid||'').slice(0,20);}
     if(back){if(back.conn&&back.conn!==c){NET.conns.delete(back.conn);try{back.conn.close();}catch(e){}}
       back.conn=c;back.away=0;back.spawnOk=true;back.deadAt=0;NET.conns.set(c,back);
       c.send({t:'welcome',v:PROTO,name:back.name,nid:back.nid,team:back.team,map:MAP.key,playing:state==='play',changes:[...NET.blk].map(([k,v])=>k.split(',').map(Number).concat(v)),teamUp:NET.teamUp,host:profile.name,zd:profile.zdiff||'medium'});if(RS.on)c.send({t:'rs',rs:rsPack()});if(STASH.on)c.send({t:'stash',s:[STASH.x,STASH.y,STASH.z].map(r1)});
-      netRoster();toast(back.name+' is back');renderMP();renderMPPill();return;}
+      hostVerify(back,String(d.tk||''));netRoster();toast(back.name+' is back');renderMP();renderMPPill();return;}
     if(state==='play'&&matchProgress()>=LATE_PCT){try{c.send({t:'late',p:matchProgress()});}catch(e){}setTimeout(()=>c.close(),600);return;}
     const cap=isZ()?4:12;if(NET.remotes.size+1>=cap){const gone=[...NET.remotes.values()].filter(x=>x.away).sort((a,b)=>a.away-b.away)[0];if(gone)hostRemove(gone,'lost');}
     if(NET.remotes.size+1>=cap){try{c.send({t:'full',cap});}catch(e){}setTimeout(()=>c.close(),600);return;}
+    // free-for-all modes give everyone their own side; a newcomer still starts on blue or red and the mode places them
     const myT=player.team==='red'?'red':'blue',nid='P'+(NET.next++),oth=myT==='blue'?'red':'blue',team=isZ()?'blue':NET.teamUp?(teamCount(myT)<6?myT:oth):(teamCount('red')<teamCount('blue')?'red':'blue');
     let nm=String(d.name||'Friend').replace(/[^\w \-.]/g,'').trim().slice(0,12)||'Friend';if(nameBad(nm))nm='Player';
     // nobody in the room shares a name, so kills and messages never mix people up
@@ -6783,18 +6900,23 @@ function hostRecv0(c,d){
     NET.conns.set(c,e);NET.remotes.set(nid,e);
     netFitBots();
     c.send({t:'welcome',v:PROTO,name:e.name,nid,team,map:MAP.key,playing:state==='play',changes:[...NET.blk].map(([k,v])=>k.split(',').map(Number).concat(v)),teamUp:NET.teamUp,host:profile.name,zd:profile.zdiff||'medium'});if(RS.on)c.send({t:'rs',rs:rsPack()});if(STASH.on)c.send({t:'stash',s:[STASH.x,STASH.y,STASH.z].map(r1)});
-    netRoster();toast(e.name+' joined the room');renderMP();renderMPPill();roomRegSoon();
+    hostVerify(e,String(d.tk||''));hostNeedTicket(e);netRoster();toast(e.name+' joined the room');renderMP();renderMPPill();roomRegSoon();
     return;
   }
   const e=NET.conns.get(c);if(!e)return;
   if(d.t==='bye'){hostRemove(e,'left');return;}
+  if(d.t==='yield'){if(document.hidden&&NET.awayAt&&now()-NET.awayAt>50000&&state==='play'){NET.yielded=true;try{leaveMatch();}catch(err){try{mpLeave(true);}catch(x){}}}return;}
+  if(d.t==='tk'){hostVerify(e,String(d.v||''));return;}
   if(d.t==='cev'){if(Array.isArray(d.ev))for(const ev of d.ev.slice(0,64))if(Array.isArray(ev))hostClientEv(e,ev);return;}
   if(d.t==='look'){applyLook(e,CHARS[d.sk]?d.sk:'std',(d.ar|0)&127);netRoster();renderMP();return;}
   if(d.t==='rdy'){if(state==='play'){netRoster();return;}e.ready=!!d.v;if(e.ready)toast(e.name+' is ready');netRoster();renderMP();renderMPPill();return;}
   if(d.t==='st'){
     // never trust the wire: bad numbers from a buggy or old client must not break the host's game
     const p=Array.isArray(d.p)?d.p:[];if(d.q!==undefined){if(d.q<=(e.lastQ||-1)&&e.lastQ-d.q<5000)return;e.lastQ=d.q;}
-    e.x=fin(p[0],e.x,0,W);e.y=fin(p[1],e.y,0,H);e.z=fin(p[2],e.z,0,D);e.yaw=fin(p[3],e.yaw);e.pitch=fin(p[4],0,-1.6,1.6);e.vx=fin(p[5],0,-30,30);e.vz=fin(p[6],0,-30,30);
+    {let nx=fin(p[0],e.x,0,W),nz=fin(p[2],e.z,0,D);const T=now()/1000,M=e._mv||(e._mv={a:30,t:T,g:T+2.5});M.a=Math.min(30,M.a+(T-M.t)*16);M.t=T;
+      const dd=Math.hypot(nx-e.x,nz-e.z);
+      if(e.alive&&!e.king&&!acOff()&&!(T<M.g)&&dd>M.a&&dd>0){const k=M.a/dd;nx=e.x+(nx-e.x)*k;nz=e.z+(nz-e.z)*k;M.a=0;}else M.a=Math.min(30,Math.max(0,M.a-dd));
+      if(!e.alive)M.g=T+2.5;e.x=nx;e.z=nz;e.y=fin(p[1],e.y,0,H);}e.yaw=fin(p[3],e.yaw);e.pitch=fin(p[4],0,-1.6,1.6);e.vx=fin(p[5],0,-30,30);e.vz=fin(p[6],0,-30,30);
     // max health / shield come from the friend's gear (capped here); a fresh soldier fills up to the new max
     if(!e.king){const mh=fin(d.mh,100,1,isZ()?300:150),ms=fin(d.ms,0,0,100),fresh=e.alive&&!(e.lastHurt<6);
      if(mh!==e.maxHp){e.hp=fresh?mh:Math.min(e.hp,mh);e.maxHp=mh;}if(ms!==(e.maxSh||0)){e.shield=fresh?ms:Math.min(e.shield||0,ms);e.maxSh=ms;}}
@@ -6803,27 +6925,52 @@ function hostRecv0(c,d){
     if(Array.isArray(d.ev))for(const ev of d.ev.slice(0,64))if(Array.isArray(ev))hostClientEv(e,ev);
   }
 }
+/* ---- fair play: the host never takes a friend's game at its word ----
+   Damage: a friend can only deal what the gun in their hands can deal, at the speed it fires (a damage "tank"
+   that refills at the gun's top rate, so lag bursts still count). Sight: hits through walls are tracked; when most
+   recent hits come through solid walls the player's hits stop counting for a while. Movement: a friend cannot
+   move faster than running (with room for lag), so teleports and speed hacks do not work on the host. */
+function acDps(e,kind){if(kind==='knife')return 400;const w=WEAPONS[e.wpId]||WEAPONS.ak47;
+  return w.dmg*(w.head||2)*(w.pellets||1)/Math.max(.05,w.rate||.1)*1.35+60;}
+function acSees(e,t){const ox=e.x,oy=e.y+1.55,oz=e.z;
+  for(const h of [1.6,1.1,.5]){const tx=t.x-ox,ty=t.y+h-oy,tz=t.z-oz,len=Math.hypot(tx,ty,tz);if(len<1.5)return true;
+    const r=rayVoxel(ox,oy,oz,tx/len,ty/len,tz/len,len,true);if(!r||r.t>=len-.6)return true;}
+  return false;}
+// automated multiplayer tests teleport players on purpose: they switch the checks off on their own host only
+const acOff=()=>window.__acOff===true;
+function acHit(e,t,dmg,kind){if(acOff())return dmg;const T=now()/1000,A=e._ac||(e._ac={b:300,t:T,log:[],off:0,n:0});
+  const cap=acDps(e,kind);A.b=Math.min(Math.max(300,cap*.6),A.b+(T-A.t)*cap);A.t=T;
+  if(kind==='knife'&&Math.hypot(t.x-e.x,t.z-e.z)>5)return 0;
+  if(kind!=='boom'&&kind!=='fire'&&kind!=='gas'&&kind!=='zombie'){
+    A.log.push(acSees(e,t)?0:1);if(A.log.length>12)A.log.shift();
+    const bad=A.log.reduce((a,b)=>a+b,0);
+    if(A.log.length>=8&&bad>=A.log.length*.7){if(T>A.off){A.n++;if(A.n>=3&&isHost())toast(e.name+'’s hits through walls are being ignored.');}A.off=T+10;A.log.length=0;}
+    if(T<A.off)return 0;}
+  const d=Math.min(dmg,Math.max(0,A.b));A.b-=d;return d;}
+function acRate(e,key,perSec){const T=now(),R=e['_r'+key]||(e['_r'+key]={w:T,n:0});if(T-R.w>=1000){R.w=T;R.n=0;}return ++R.n<=perSec;}
+function acTp(e){if(e){const T=now()/1000;e._mv={a:30,t:T,g:T+2.5};}return e;}
 function hostClientEv(e,ev){
   if(state!=='play'||!e||e.away)return;const k=ev[0];if(typeof k!=='string')return;
   if(k==='act'){e.rsHeld=!!ev[1];return;}
   if(k==='an'){animalKill(ev[1]|0,'peer');return;}
-  if(k==='h'){const t=findNid(ev[1]);const dmg=fin(ev[2],0,0,250);if(t&&t!==e&&t.alive&&e.alive&&dmg>0&&Math.hypot(t.x-e.x,t.z-e.z)<160)damage(t,dmg,e,!!ev[3],String(ev[4]||'').slice(0,24),String(ev[5]||'').slice(0,12));}
+  if(k==='h'){const t=findNid(ev[1]);let dmg=fin(ev[2],0,0,250);const kd=String(ev[5]||'').slice(0,12);if(t&&t!==e&&t.alive&&e.alive&&dmg>0&&Math.hypot(t.x-e.x,t.z-e.z)<160){dmg=acHit(e,t,dmg,kd);if(dmg>0)damage(t,dmg,e,!!ev[3],String(ev[4]||'').slice(0,24),kd);}}
+  else if((k==='t'||k==='fl')&&!acRate(e,'fx',40))return;
   else if(k==='t'){tracer(ev[1],ev[2],ev[3],ev[4],ev[5],ev[6],[1,.85,.5]);sfx.gun(ev[7],volAt(ev[1],ev[2],ev[3],.38,85),distAt(ev[1],ev[2],ev[3]));e.firedT=1.2;netEv(['t',e.nid].concat(ev.slice(1)));}
   else if((k==='n'||k==='r'||k==='m')&&now()-(e.lastThrow||0)<350)return;
   else if(k==='n'){e.lastThrow=now();throwNade(e,ev[2],ev[3],ev[4],ev[5],ev[6],ev[7],EQUIP[ev[1]]?ev[1]:'frag');}
   else if(k==='r'){e.lastThrow=now();fireRocket(e,ev[1],ev[2],ev[3],ev[4],ev[5],ev[6]);}
   else if(k==='m'){e.lastThrow=now();if(mines.filter(m=>m.owner===e).length>=4)return;placeMineAt(e,ev[1],ev[2],ev[3],ev[4]);}
   else if(k==='w'){const w=WINDOWS[ev[1]];if(w&&zAddBoard(w))netSendTo(e,{t:'cash',v:Math.round(10*zD().cash)});}
-  else if(k==='hl'){if(isZ()&&e.alive&&zInside(e))e.hp=Math.min(e.maxHp||100,e.hp+10);}
+  else if(k==='hl'){if(now()-(e.lastHl||0)<400)return;e.lastHl=now();if(isZ()&&e.alive&&zInside(e))e.hp=Math.min(e.maxHp||100,e.hp+10);}
   else if(k==='k'){const tg=isFinite(ev[2])&&isFinite(ev[3])?{x:+ev[2],z:+ev[3]}:null;
     if(ev[1]==='air'&&(e.airOwed|0)>0){e.airOwed--;killstreak('air',e,tg);}
     else if(ev[1]==='nuke'&&(e.nukeOwed|0)>0){e.nukeOwed--;killstreak('nuke',e);}
-    else if(ev[1]==='uav')killstreak(ev[1],e);
+    else if(ev[1]==='uav'){if(now()-(e.lastUav||0)<15000)return;e.lastUav=now();killstreak(ev[1],e);}
     // a bought airstrike: at most 2 a match per player
     else if(ev[1]==='call'&&!isZ()&&!noNades()){if(e.callMid!==matchId){e.callMid=matchId;e.callN=0;}if(e.callN<CALL.perMatch){e.callN++;killstreak('air',e,tg);}}}
   else if(k==='sx'){stashTake(e);}
   else if(k==='pk'){const d=drops.find(x=>x.id===ev[1]);if(d&&e.alive&&Math.hypot(d.x-e.x,d.z-e.z)<3.2){removeDrop(d);if(ev[2]&&!isKnife(ev[2]))spawnDrop(ev[2],d.x,d.y,d.z);netSendTo(e,{t:'pk',w:d.w});}}
-  else if(k==='dw'){if(e.alive&&WEAPONS[ev[1]])spawnDrop(ev[1],ev[2],ev[3],ev[4]);}
+  else if(k==='dw'){if(e.alive&&WEAPONS[ev[1]]&&now()-(e.lastDw||0)>700&&Math.hypot(fin(ev[2],0)-e.x,fin(ev[4],0)-e.z)<5){e.lastDw=now();spawnDrop(ev[1],fin(ev[2],e.x,0,W),fin(ev[3],e.y,0,H),fin(ev[4],e.z,0,D));}}
   else if(k==='pb'){if(isZ()||!e.alive||now()-(e.lastPb||0)<110||(e.bl|0)<=0)return;const x=ev[1]|0,y=ev[2]|0,z=ev[3]|0;if(Math.hypot(x+.5-e.x,y+.5-e.y-1.5,z+.5-e.z)>7.5)return;e.lastPb=now();if(hostPlace(e,x,y,z,String(ev[4])))e.bl--;}
   else if(k==='bd'){if(!e.alive||now()-(e.lastBd||0)<35)return;e.lastBd=now();const x=ev[1]|0,y=ev[2]|0,z=ev[3]|0;if(Math.hypot(x-e.x,z-e.z)>160)return;hitBlock(x,y,z,fin(ev[4],0,0,150));}
   else if(k==='fl'){flameFX(ev[1],ev[2],ev[3],ev[4],ev[5],ev[6],10);if(rand()<.4)sfx.crackle(volAt(ev[1],ev[2],ev[3],.5,40),distAt(ev[1],ev[2],ev[3]));e.firedT=1.2;netEv(['fl',e.nid].concat(ev.slice(1)));}
@@ -6844,11 +6991,11 @@ function hostRemove(e,why){roomRegSoon();
   netBroadcast({t:'sys',m:msg});netFitBots();netRoster();sysFeed(msg);renderMP();renderMPPill();
 }
 function netRoster(){
-  const list=[{nid:'P0',name:profile.name,team:player.xmTeam0||player.team,rd:1,lv:levelInfo(profile.xp).level}].concat([...NET.remotes.values()].map(e=>({nid:e.nid,name:e.name,team:e.xmTeam0||e.team,rd:e.ready?1:0,lv:e.lv||1,aw:e.away?1:0,pg:e.ping||0})));
+  const list=[{nid:'P0',name:profile.name,team:player.xmTeam0||player.team,rd:1,lv:levelInfo(profile.xp).level,tk:NET.myTk||''}].concat([...NET.remotes.values()].map(e=>({nid:e.nid,name:e.name,team:e.xmTeam0||e.team,rd:e.ready?1:0,lv:e.lv||1,aw:e.away?1:0,pg:e.ping||0,tk:e.ver?e.tk:''})));
   const bl=t=>bots.filter(b=>b.team===t&&b.inMatch!==false&&(!isZ()||ZALLY.includes(b.name))).map(b=>b.name);
   for(const r of list){const e=r.nid==='P0'?null:NET.remotes.get(r.nid);r.sk=r.nid==='P0'?(profile.skin||'std'):e&&e.sk;r.ar=r.nid==='P0'?armorBits():e&&e.ar;}
   NET.roster=list;NET.botsList={blue:bl('blue'),red:bl('red')};
-  netBroadcast({t:'roster',botd:profile.botd||'medium',list,map:MAP.key,rule:profile.rule||'tdm',goal:clamp(profile.goal||50,10,100),zd:profile.zdiff||'medium',teamUp:NET.teamUp,fill:profile.fillBots!==false,bots:NET.botsList});
+  netBroadcast({t:'roster',play:state==='play'?1:0,botd:profile.botd||'medium',list,map:MAP.key,rule:profile.rule||'tdm',goal:clamp(profile.goal||50,10,100),zd:profile.zdiff||'medium',teamUp:NET.teamUp,fill:profile.fillBots!==false,bots:NET.botsList});
 }
 function hostSnap(){
   const E=[];
@@ -6883,17 +7030,21 @@ function hostSetTeam(e,team){
 }
 /* ---- joining ---- */
 function mpJoin(code,rejoin,pw){
+  if(isKid())return mpErr(KID_MSG);
   code=String(code||'').trim().toUpperCase().replace(/[^A-Z0-9]/g,'');if(!rejoin)NET.pw=pw==null?'':String(pw).slice(0,20);
   if(code.length<4)return mpErr('Type the 5-letter room code.');
   if(!mpAvailable())return mpErr('Multiplayer needs the public link of the game. Open it from GitHub and try again.');
   if(rejoin)netDropTransport();else{mpLeave(true);NET.err='';NET.viaRelay=false;}
-  NET.code=code;NET.retryCode=code;NET.status=rejoin?'Reconnecting to room '+code+'…':'Step 1 of 3 · Connecting to the game server…';renderMP();
-  const peer=new Peer(peerOpts());NET.peer=peer;let tries=0,to=0;const t0=now(),LIMIT=rejoin?28000:90000;
-  const give=(msg)=>{clearTimeout(to);if(NET.peer!==peer)return;if(rejoin){mpLost('Could not get back into the room. The host may have closed it.');return;}mpLeave(true);mpErr(msg);};
+  NET.code=code;NET.retryCode=code;if(!rejoin){NET.tk='';NET.vinfo={};NET.myV=null;}
+  mpTicket(code).then(t=>{if(NET.code!==code)return;if(t==='banned'){NET.leaving=true;mpLeave(true);mpErr(BAN_MSG);return;}
+    if(!t)return;NET.tk=t;mpCheck(t,code).then(v=>{if(v)NET.myV=v;renderMP();});if(isClient()&&NET.host){try{NET.host.send({t:'tk',v:t});}catch(e){}}});
+  NET.status=rejoin?'Reconnecting to room '+code+'…':'Step 1 of 3 · Connecting to the game server…';renderMP();
+  const peer=new Peer(peerOpts());NET.peer=peer;let tries=0,to=0;const t0=now(),LIMIT=rejoin?(NET.migrating?80000:28000):90000;
+  const give=(msg)=>{clearTimeout(to);if(NET.peer!==peer)return;if(rejoin){if(!NET.migrating&&migrate('lost'))return;mpLost(NET.migrating?'The host left and the match could not move to another player. Your progress from it is saved.':'Could not get back into the room. The host may have closed it.');return;}mpLeave(true);mpErr(msg);};
   let direct=0,viaRelay=0;
   const bind=c=>{
     c.on('open',()=>{if(NET.host!==c)return;NET.status='Step 3 of 3 · Joining '+code+'…';renderMP();attachU(c,d=>{NET.lastIn=now();if(NET.host===c)clientRecv(d);});
-      c.send({t:'hello',v:PROTO,sid:mySid(),name:profile.name,lv:levelInfo(profile.xp).level,sk:profile.skin||'std',ar:armorBits(),pw:NET.pw||''});});
+      c.send({t:'hello',v:PROTO,sid:mySid(),name:profile.name,lv:levelInfo(profile.xp).level,sk:profile.skin||'std',ar:armorBits(),pw:NET.pw||'',tk:NET.tk||'',mig:rejoin||NET.migrating?NET.nid:'',mn:rejoin||NET.migrating?(NET.myName||profile.name):''});});
     c.on('data',d=>{NET.lastIn=now();if(NET.host!==c)return;if(d&&d.t==='welcome'){c.joined=true;clearTimeout(to);if(c.relay&&!NET.viaRelay)toast('Connected through the backup route');NET.viaRelay=!!c.relay;}clientRecv(d);});
     c.on('close',()=>{if(NET.host!==c)return;if(NET.mode==='client'&&!NET.leaving)clientReconnect();});};
   // the direct link did not open: go through the backup route (and keep alternating until the time is up)
@@ -6902,7 +7053,7 @@ function mpJoin(code,rejoin,pw){
     NET.status=(rejoin?'Reconnecting':'Step 2 of 3 · Connecting to room '+code)+' through the backup route…';renderMP();
     const c=rlConnect(code);NET.host=c;c.lastIn=now();bind(c);
     clearTimeout(to);to=setTimeout(()=>{if(NET.peer!==peer||NET.host!==c||c.joined)return;try{c.close();}catch(e){}
-      if(now()-t0<LIMIT)(forceRelay()||viaRelay<2?attemptRelay:attempt)();else give('The room did not answer. Your friend must keep the game open on screen (not in another app), then press Try again.');},12000);
+      if(now()-t0<LIMIT)(forceRelay()||viaRelay<2&&!NET.migrating?attemptRelay:attempt)();else give('The room did not answer. Your friend must keep the game open on screen (not in another app), then press Try again.');},NET.migrating?6000:12000);
   };
   const attempt=()=>{
     if(NET.peer!==peer||NET.mode==='client'&&!rejoin)return;
@@ -6910,7 +7061,7 @@ function mpJoin(code,rejoin,pw){
     NET.status=(rejoin?'Reconnecting':'Step 2 of 3 · Looking for room '+code)+(tries>1?` · try ${tries}`:'')+'…';renderMP();
     const c=peer.connect(roomId(code),{reliable:true,metadata:{sid:mySid()}});NET.host=c;c.lastIn=now();
     clearTimeout(to);to=setTimeout(()=>{if(NET.peer!==peer||NET.host!==c||c.joined)return;try{c.close();}catch(e){}
-      if(now()-t0<LIMIT)attemptRelay();else give(c.iceFailed?'Your phone and your friend\'s phone could not connect. This happens on some mobile networks: put one phone on Wi-Fi and press Try again.':'The room did not answer. Your friend must keep the game open on screen (not in another app). If you are both on mobile data, try Wi-Fi on one phone, then press Try again.');},10000);
+      if(now()-t0<LIMIT)(NET.migrating&&direct%3?attempt:attemptRelay)();else give(c.iceFailed?'Your phone and your friend\'s phone could not connect. This happens on some mobile networks: put one phone on Wi-Fi and press Try again.':'The room did not answer. Your friend must keep the game open on screen (not in another app). If you are both on mobile data, try Wi-Fi on one phone, then press Try again.');},NET.migrating?3500:10000);
     c.on('iceStateChanged',st=>{if(NET.host!==c||c.joined)return;if(st==='failed'){c.iceFailed=true;clearTimeout(to);try{c.close();}catch(e){}NET.status='Your phones could not reach each other directly, using the backup route…';renderMP();attemptRelay();}});
     bind(c);
   };
@@ -6920,7 +7071,7 @@ function mpJoin(code,rejoin,pw){
   peer.on('error',e=>{if(NET.peer!==peer)return;
     if(NET.mode==='client'&&NET.host&&NET.host.joined&&!NET.reconnecting)return;
     // the host's phone may be switching back from another app: keep trying for a while instead of failing at once
-    if(e.type==='peer-unavailable'){clearTimeout(to);if(now()-t0<LIMIT){NET.status=rejoin?`Waiting for the host to come back… (try ${tries})`:`Room ${code} is not open right now. If your friend switched to another app, they need to go back to the game. Still trying… ${Math.round((now()-t0)/1000)}s`;renderMP();to=setTimeout(attempt,2500);}else give(netErrText(e));return;}
+    if(e.type==='peer-unavailable'){clearTimeout(to);if(rejoin&&!NET.migrating&&now()-t0>10000&&migrate('lost'))return;if(now()-t0<LIMIT){NET.status=rejoin?`Waiting for the host to come back… (try ${tries})`:`Room ${code} is not open right now. If your friend switched to another app, they need to go back to the game. Still trying… ${Math.round((now()-t0)/1000)}s`;renderMP();to=setTimeout(attempt,2500);}else give(netErrText(e));return;}
     if((e.type==='network'||e.type==='server-error'||e.type==='socket-error'||e.type==='socket-closed')&&now()-t0<LIMIT){clearTimeout(to);NET.status='The game server did not answer, trying again…';renderMP();to=setTimeout(()=>{if(NET.peer!==peer)return;try{peer.destroy();}catch(err){}if(rejoin)mpJoin(code,true);else{const keep=NET.retryCode;mpJoin(keep);}},3000);return;}
     give(netErrText(e));});
 }
@@ -6941,19 +7092,28 @@ function clientRecv0(d){
   if(d.t==='back'){NET.hostAway=false;NET.awaySince=0;return;}
   if(d.t==='evs'){if(state==='play'&&Array.isArray(d.ev))for(const ev of d.ev)clientEvent(ev);return;}
   if(d.t==='ver'){NET.leaving=true;mpLeave(true);mpErr('You and your friend have different versions of the game. Both of you: close the game and open the link again (pull down to refresh), then try again.');return;}
-  if(d.t==='kicked'){NET.leaving=true;mpLeave(true);mpErr('The host removed you from this room.');return;}
+  if(d.t==='kicked'){NET.leaving=true;mpLeave(true);mpErr(d.why==='banned'?BAN_MSG:d.why==='ticket'?'This online room only takes signed-in players. Check your internet connection and join again.':'The host removed you from this room.');return;}
   if(d.t==='badpw'){if(NET.mode==='client')return;const code=NET.code,had=!!NET.pw;NET.leaving=true;mpLeave(true);const pw=prompt(had?'Wrong password. Try again:':'This room is locked. Enter the password:','');if(pw)mpJoin(code,false,pw);else mpErr('This room is locked with a password.');return;}
   if(d.t==='cool'){NET.leaving=true;mpLeave(true);mpErr(`You just left this room. You can join it again in ${Math.max(1,d.s|0)} seconds.`);return;}
-  if(d.t==='sys'){sysFeed(d.m);return;}
+  if(d.t==='sys'){const t=String(d.m||'').slice(0,60);if(!PHISH.test(t))sysFeed(t);return;}
   if(d.t==='full'){NET.leaving=true;mpLeave(true);NET.browse=true;mpErr(`Room is full (${d.cap||12} players). Pick another room or create your own.`);roomsFetch(true);return;}
   if(d.t==='late'){NET.leaving=true;mpLeave(true);NET.browse=true;mpErr('This match is more than half over, so it is closed to new players. Join the next one, or pick another room.');roomsFetch(true);return;}
   if(d.t==='welcome'&&d.v!==PROTO){NET.leaving=true;mpLeave(true);mpErr('Your friend has an older version of the game. Ask them to close it and open the link again, then try again.');return;}
-  if(d.t==='welcome'){requestWake();const wasRe=NET.reconnecting;NET.reconnecting=false;$('netBanner').hidden=true;ss('bf.room',NET.code);NET.lastSeq=-1;if(d.zd)NET.zdiff=d.zd;if(wasRe)toast('Back in the room');NET.myName=d.name||profile.name;player.name=NET.myName;NET.mode='client';NET.nid=d.nid;player.nid=d.nid;player.team=d.team;NET.teamUp=d.teamUp;NET.mapKey=d.map;NET.pendingBlk=d.changes;NET.hostName=d.host;NET.status='';
-    renderMP();renderMPPill();if(d.playing)clientStart(d.map);return;}
+  if(d.t==='welcome'){requestWake();const wasRe=NET.reconnecting,wasMig=NET.migrating||!!(wasRe&&NET.hostName&&d.host&&d.host!==NET.hostName);NET.migrating=false;NET.reconnecting=false;
+    if(wasMig){const o=NET.remotes.get('P0');if(o&&o.name!==d.host){scene.remove(o.mesh);const i=ents.indexOf(o);if(i>=0)ents.splice(i,1);NET.remotes.delete('P0');}}$('netBanner').hidden=true;ss('bf.room',NET.code);NET.lastSeq=-1;if(d.zd)NET.zdiff=d.zd;if(wasMig)toast((d.host||'A friend')+' is the host now.'+(state==='play'?' The match goes on.':''));else if(wasRe)toast('Back in the room');NET.myName=d.name||profile.name;player.name=NET.myName;NET.mode='client';NET.nid=d.nid;player.nid=d.nid;player.team=d.team;NET.teamUp=d.teamUp;NET.mapKey=d.map;NET.pendingBlk=d.changes;try{NET.blk=new Map((Array.isArray(d.changes)?d.changes:[]).map(c=>[c[0]+','+c[1]+','+c[2],c[3]]));}catch(e){NET.blk=new Map();}NET.hostName=d.host;NET.status='';
+    renderMP();renderMPPill();if(d.playing&&!(wasMig&&state==='play'&&MAP&&MAP.key===d.map)){clientStart(d.map);}else if(wasMig)NET.lastSnapAt=now();return;}
+  if(d.t==='roster'&&Array.isArray(d.list)){for(const r of d.list){if(!r||typeof r!=='object')continue;r.name=String(r.name||'Player').replace(/[^\w \-.]/g,'').slice(0,16)||'Player';if(nameBad(r.name))r.name='Player';
+      if(r.nid!==NET.nid&&r.tk&&!(NET.vinfo||{})[r.nid]){const nid=r.nid,code=NET.code;mpCheck(String(r.tk),code).then(v=>{if(!v||NET.code!==code)return;NET.vinfo=NET.vinfo||{};NET.vinfo[nid]=v;
+        if(nid==='P0'&&v.banned){NET.leaving=true;mpLeave(true);mpErr('This room was closed: its host is suspended by the game team.');return;}
+        if(isBlocked('',v.pid)){toast('Someone you blocked is in this room. You left the room.');setTimeout(()=>{try{mpLeave(false);}catch(e){}},50);return;}
+        renderMP();});}}}
+  // the host is back in the lobby but this phone is still in the match (it missed the end): follow the host
+  if(d.t==='roster'&&d.play===0&&state==='play'){clearTimeout(NET.followT);NET.followT=setTimeout(()=>{if(isClient()&&state==='play'&&NET.hostPlay===0){backToMenu();openLobby();toast('The host went back to the lobby.');}},3000);}
+  if(d.t==='roster')NET.hostPlay=d.play===0?0:1;
   if(d.t==='roster'){NET.botd=BOTD[d.botd]?d.botd:'medium';if(d.goal)NET.goal=clamp(fin(d.goal,50),10,100);NET.rule=RULES.includes(d.rule)?d.rule:'tdm';{const me=(d.list||[]).find(r=>r.nid===NET.nid);if(me&&state!=='play')NET.ready=!!me.rd;}netApplyRoster(d.list);{const bl=(d.list||[]).find(r=>r.nid!==NET.nid&&!r.bot&&isBlocked(r.name));if(bl){toast(`${bl.name} is in this room and you blocked them. You left the room.`);setTimeout(()=>{try{mpLeave(false);}catch(e){}},50);return;}}NET.botsList=d.bots||null;NET.fillC=d.fill!==false;if(d.map){NET.mapKey=d.map;NET.zdiff=d.zd||'medium';NET.teamUpC=d.teamUp!==false;if(state==='menu'&&MAPS[d.map]&&MAP!==MAPS[d.map]){MAP=MAPS[d.map];resetMatch(false);}renderProfile();}renderMP();renderMPPill();return;}
   if(d.t==='load'){if(state!=='play'&&MAPS[d.map]){MAP=MAPS[d.map];NET.mapKey=d.map;NET.rule=RULES.includes(d.rule)?d.rule:'tdm';resetMatch(false);loadShow();}return;}
   if(d.t==='start'){NET.pendingBlk=[];NET.ready=false;if(d.zd)NET.zdiff=d.zd;NET.rule=RULES.includes(d.rule)?d.rule:'tdm';NET.goal=clamp(fin(d.goal,50),10,100);clientStart(d.map);return;}
-  if(d.t==='gp'){if(state==='play')award(clamp(fin(d.v,0),0,GP_MAX),String(d.l||'').slice(0,20),d.x==null?undefined:clamp(fin(d.x,0),0,1000));return;}
+  if(d.t==='gp'){if(state==='play'){const g=clamp(fin(d.v,0),0,GP_MAX),x0=d.x==null?g:clamp(fin(d.x,0),0,1000),x=Math.max(0,Math.min(x0,6000-(match.hxp||0)));match.hxp=(match.hxp||0)+x;award(g,String(d.l||'').slice(0,20),x);}return;}
   if(d.t==='blind'){if(state==='play')blindMe(clamp(fin(d.v,0),0,4));return;}
   if(d.t==='snap'){if(d.s!==undefined){if(d.s<=NET.lastSeq&&NET.lastSeq-d.s<5000)return;NET.lastSeq=d.s;}NET.lastSnapAt=now();if(state==='play')clientSnap(d);return;}
   if(d.t==='die'){clientDie(d);return;}
@@ -6968,7 +7128,7 @@ function clientRecv0(d){
   if(d.t==='pk'){if(state==='play'&&player.alive){giveWeapon(d.w);sfx.reload();showMsg('PICKED UP '+WEAPONS[d.w].name.toUpperCase(),true);}return;}
   if(d.t==='spawn'){if(state==='play'&&(!player.alive||d.f))respawn(player);return;}
   if(d.t==='rs'){rsApply(d.rs);return;}
-  if(d.t==='bye'){mpLost('The host closed the room.');return;}
+  if(d.t==='bye'){if(migrate('left'))return;mpLost('The host closed the room.');return;}
   if(d.t==='end'&&Array.isArray(d.kd))for(const a of d.kd){if(!Array.isArray(a))continue;const e=a[0]===NET.nid?player:findNid(a[0]);if(e&&!e.zombie){e.kills=fin(a[1],e.kills)|0;e.deaths=fin(a[2],e.deaths)|0;}}
   if(d.t==='end'&&isZ()){if(d.z)Z.round=d.z;if(state==='play')zGameOver(!!d.win);return;}
   if(d.t==='fk'){const a=findNid(d.a),v=findNid(d.v);if(a&&v&&fkStart(a,v,REC.t-.12))FK.head=!!d.h;return;}
@@ -6978,7 +7138,7 @@ function clientRecv0(d){
 function netApplyRoster(list){
   NET.roster=list;const keep=new Set();
   for(const r of list){if(r.nid===NET.nid){if(XM.on&&player.xmTeam0!==undefined)player.xmTeam0=r.team;else player.team=r.team;continue;}keep.add(r.nid);
-    const old=NET.remotes.get(r.nid);if(old&&(old.xmTeam0!==undefined?old.xmTeam0:old.team)!==r.team){scene.remove(old.mesh);const i=ents.indexOf(old);if(i>=0)ents.splice(i,1);NET.remotes.delete(r.nid);}
+    const old=NET.remotes.get(r.nid);if(old&&((old.xmTeam0!==undefined?old.xmTeam0:old.team)!==r.team||old.name!==r.name)){scene.remove(old.mesh);const i=ents.indexOf(old);if(i>=0)ents.splice(i,1);NET.remotes.delete(r.nid);}
     if(!NET.remotes.has(r.nid)){const e=makeEnt(r.name,r.team,false);Object.assign(e,{remote:true,puppet:true,nid:r.nid,inMatch:true,alive:false});e.mesh.visible=false;friendTag(e);NET.remotes.set(r.nid,e);}
     const pe=NET.remotes.get(r.nid);if(pe&&(pe.sk!==(r.sk||'std')||pe.ar!==(r.ar|0)))applyLook(pe,r.sk||'std',r.ar|0);}
   for(const [nid,e] of NET.remotes)if(!keep.has(nid)){scene.remove(e.mesh);const i=ents.indexOf(e);if(i>=0)ents.splice(i,1);NET.remotes.delete(nid);}
@@ -7018,7 +7178,7 @@ function clientSnap(d){
 function clientEvent(ev){
   const k=ev[0];
   if(k==='t'){if(ev[1]===NET.nid)return;tracer(ev[2],ev[3],ev[4],ev[5],ev[6],ev[7],[1,.8,.5]);sfx.gun(ev[8],volAt(ev[2],ev[3],ev[4],.38,85),distAt(ev[2],ev[3],ev[4]));}
-  else if(k==='x'){blkApply(ev[1],ev[2],ev[3],ev[4]);worldDirty=true;}
+  else if(k==='x'){blkApply(ev[1],ev[2],ev[3],ev[4]);worldDirty=true;try{NET.blk.set(ev[1]+','+ev[2]+','+ev[3],ev[4]);}catch(e){}}
   else if(k==='b'){explodeFX(ev[1],ev[2],ev[3],ev[4],ev[5]);}
   else if(k==='an'){animalKill(ev[1]|0,'host');}
   else if(k==='vb'){vehBurn(ev[1]|0,'host');}
@@ -7026,7 +7186,7 @@ function clientEvent(ev){
   else if(k==='s'){popSmoke(ev[1],ev[2],ev[3]);}
   else if(k==='fb'){flashFX(ev[1],ev[2],ev[3]);}
   else if(k==='k'){const kk=ev[1]===player.name?player:{name:ev[1],team:ev[2]},vv=ev[5]===player.name?player:{name:ev[5],team:ev[6]};addFeed(ev[1]?kk:null,vv,ev[3],!!ev[4]);if(kk===player&&vv!==player&&Number.isFinite(ev[7]))killFx(ev[7],ev[8],ev[9]);}
-  else if(k==='m'){showMsg(ev[1],!!ev[2],ev[3]||'');}
+  else if(k==='m'){const t=String(ev[1]||'').slice(0,60);if(!PHISH.test(t))showMsg(t,!!ev[2],String(ev[3]||'').replace(/[^a-z ]/g,'').slice(0,20));}
   else if(k==='n'){nukeT=1.6;sfx.explosion('Nuclear Strike',1,0);shake=1;}
   else if(k==='N'){nukeStart(ev[1]|0,String(ev[2]||''),null);}
   else if(k==='j'){sfx.jet();}
@@ -7091,7 +7251,8 @@ function stepClient(dt,now){
     if(NET.sendT<=0&&NET.host&&NET.host.open){NET.sendT=.05;
       sendU(NET.host,{t:'st',q:++NET.seq,p:[r2(player.x),r2(player.y),r2(player.z),r2(player.yaw),r2(player.pitch),r1(player.vx),r1(player.vz)],a:player.alive?1:0,l:NET.life|0,mh:player.maxHp||100,ms:player.maxSh||0,mk:Z.perks.mask?1:0,wp:curW().id,c:player.crouch?1:0});
       if(NET.q.length){try{NET.host.send({t:'cev',ev:NET.q});}catch(e){}NET.q=[];}}
-    if(NET.hostAway&&NET.awaySince&&performance.now()-NET.awaySince>60000){NET.awaySince=0;mpLost('The host left the game for more than a minute, so the match ended. Your progress from it is saved.');return;}
+    // the host has been in another app (or its phone crashed) for a minute: stop waiting, the progress made so far is kept
+    if(NET.hostAway&&NET.awaySince&&performance.now()-NET.awaySince>60000){NET.awaySince=0;if(migrate('away'))return;mpLost('The host left the game for more than a minute, so the match ended. Your progress from it is saved.');return;}
     $('netBanner').hidden=!(NET.reconnecting||NET.hostAway||performance.now()-NET.lastSnapAt>2500);
     if(!$('netBanner').hidden&&!NET.reconnecting)$('netBanner').textContent=NET.hostAway?"Host's game is in the background · waiting for them…":'Waiting for the host…';
   }else{
@@ -7117,7 +7278,8 @@ setInterval(()=>{
 // when the host's game goes to the background the browser stops drawing; keep the match running from a worker timer and tell friends
 let bgWorker=null,bgLast=0;
 document.addEventListener('visibilitychange',()=>{
-  if(isHost())netBroadcast({t:document.hidden?'away':'back'});
+  if(isHost())netBroadcast({t:document.hidden?'away':'back'});if(isHost())NET.awayAt=document.hidden?now():0;
+  if(!document.hidden&&NET.yielded){NET.yielded=false;toast('Your game was in another app for over a minute, so your friends kept playing with a new host.');}
   if(!document.hidden){NET.lastIn=now();if(NET.mode)requestWake();if(bgWorker){bgWorker.terminate();bgWorker=null;}
     if(isClient()&&NET.host&&!NET.host.open&&!NET.reconnecting)clientReconnect();return;}
   if(isHost()&&!bgWorker){try{bgWorker=new Worker(URL.createObjectURL(new Blob(['setInterval(function(){postMessage(0)},50)'],{type:'text/javascript'})));bgLast=now();
@@ -7161,6 +7323,41 @@ function mpLeave(silent){
   if(!silent){renderMP();renderMPPill();}
 }
 function requestWake(){try{if(navigator.wakeLock&&navigator.wakeLock.request&&!document.hidden)navigator.wakeLock.request('screen').catch(()=>{});}catch(e){}}
+// HOST MOVE: the host left in the middle of a match. Everyone picks the same next host (the player who joined
+// first); that phone opens the room again under the same code with the match exactly as it is, and the others
+// reconnect to it and keep their slot, team and score. Only if that fails does the match end (progress is kept).
+function migNext(){const L=(NET.roster||[]).filter(r=>r&&/^P\d+$/.test(r.nid)&&r.nid!=='P0'&&!r.aw).sort((a,b)=>(+a.nid.slice(1))-(+b.nid.slice(1)));return L[0]?L[0].nid:'';}
+function migrate(why){
+  if(!isClient()||NET.migrating||NET.leaving||!NET.code)return false;
+  const nx=migNext();if(!nx)return false;
+  const oldHost=NET.hostName||'The host';if(why==='away')try{if(NET.host&&NET.host.open)NET.host.send({t:'yield'});}catch(e){}
+  NET.migrating=true;NET.migAt=now();NET.hostAway=false;NET.awaySince=0;
+  try{netDropTransport();}catch(e){}
+  // the old host leaves the match
+  const o=NET.remotes.get('P0');if(o){scene.remove(o.mesh);const i=ents.indexOf(o);if(i>=0)ents.splice(i,1);NET.remotes.delete('P0');}
+  try{sysFeed(oldHost+(why==='left'?' left':' lost connection'));}catch(e){}
+  NET.reconnecting=true;if(state==='play'){$('netBanner').hidden=false;$('netBanner').textContent=oldHost+' left · keeping the match going…';}else{NET.status=oldHost+' left the room · moving it to the next player…';renderMP();}
+  if(nx===NET.nid)migHost();else{NET.lastIn=now();mpJoin(NET.code,true);}
+  // whatever happens, never hang: after 85 seconds without a new host the match ends (progress is kept)
+  const at=NET.migAt;setTimeout(()=>{if(NET.migrating&&NET.migAt===at){NET.migrating=false;NET.leaving=false;mpLost('The host left and the match could not move to another player. Your progress from it is saved.');}},85000);
+  return true;}
+function migHost(){
+  // the room keeps its settings
+  if(NET.rule)profile.rule=NET.rule;if(NET.goal)profile.goal=NET.goal;if(NET.botd)profile.botd=NET.botd;if(NET.zdiff)profile.zdiff=NET.zdiff;if(NET.mapKey)profile.map=NET.mapKey;profile.fillBots=NET.fillC!==false;
+  NET.pass=NET.pw||'';NET.conns=new Map();NET.pend=new Set();NET.q=[];NET.snapT=0;
+  let mx=+String(NET.nid).slice(1)||0;const t=now();
+  // every other player keeps their place, waiting for them to reconnect (a little longer than a normal drop)
+  for(const [nid,e] of NET.remotes){mx=Math.max(mx,+nid.slice(1)||0);
+    if(e.tx!==undefined){e.x=e.tx;e.y=e.ty;e.z=e.tz;e.yaw=e.tyaw!==undefined?e.tyaw:e.yaw;}
+    const rr=(NET.roster||[]).find(r=>r&&r.nid===nid);
+    Object.assign(e,{puppet:false,remote:true,conn:null,sid:'',mig:1,away:t+30000,ready:state==='play'?true:!!(rr&&rr.rd),ping:0,maxHp:e.maxHp||100,spawnOk:true,lastHurt:99});}
+  for(const b of bots)if(b.inMatch!==false&&b.tx!==undefined){b.x=b.tx;b.y=b.ty;b.z=b.tz;}
+  for(const z of zombies)if(z.tx!==undefined){z.x=z.tx;z.y=z.ty;z.z=z.tz;}
+  if(isZ()){const alive=zombies.filter(z=>z.alive).length;Z.toSpawn=Math.max(0,(Z.left|0)-alive);}
+  NET.next=mx+1;NET.nid='P0';player.nid='P0';NET.hostName=profile.name;
+  mpHost(NET.code,1);}
+function migSlot(d){if(!NET.migAt||now()-NET.migAt>120000||typeof d.mig!=='string'||!d.mig)return null;
+  const nm=nameKey(String(d.mn||d.name||''));return [...NET.remotes.values()].find(x=>x.mig&&x.nid===d.mig&&nameKey(x.name)===nm)||null;}
 function mpLost(why){NET.leaving=true;mpLeave(false);mpErr(why||'Lost the connection to the room.');toast(NET.err);}
 /* ---- lobby screen ---- */
 function renderMPPill(){
@@ -7174,16 +7371,16 @@ function lobSlot(o){
   if(o.empty)return `<div class="slot empty"><i class="av">${o.locked?'–':'+'}</i><div class="sn"><b>${o.locked?'No bot':'Open slot'}</b><small>${o.locked?'Bots are off for your team':'Waiting for a friend'}</small></div></div>`;
   const col=o.team==='red'?'var(--red)':o.team==='zombie'?'var(--green)':'var(--blue)';
   const png=fin(o.ping,0)|0,pg=png?`<span class="pg ${png<90?'cg':png<220?'ca':'cr'}">${png} ms</span>`:'';
-  const st=o.bot?'<span class="st bot">BOT</span>':o.solo?'':o.away?'<span class="st nr">RECONNECTING</span>':o.host?pg+'<span class="st host">♛ HOST</span>':pg+(o.ready?'<span class="st rd">READY</span>':'<span class="st nr">NOT READY</span>');
+  const st=o.bot?'<span class="st bot">BOT</span>':o.solo?'':o.away?'<span class="st nr">RECONNECTING</span>':o.host?'<span class="st host">♛ HOST</span>':(o.ready?'<span class="st rd">READY</span>':'<span class="st nr">NOT READY</span>');
   return `<div class="slot ${o.me?'me':''} ${o.bot?'bot':''} ${o.friend?'fr':''}"><i class="av" style="background:${o.bot?'rgba(255,255,255,.08)':col}">${o.bot?'⚙':esc(o.name.charAt(0).toUpperCase())}</i>
-    <div class="sn"><b>${o.friend?'★ ':''}${esc(o.name)}${o.me?' <em>(you)</em>':''}</b><small>${o.bot?'Fills the spot':'Level '+(clamp(fin(o.lv,1),1,99)|0)+(o.sk&&o.sk!=='std'&&CHARS[o.sk]?' · '+CHARS[o.sk].name:'')}</small></div>${st}${o.nid&&!o.me&&!o.bot&&!o.solo?`<button class="swap" data-rep="${esc(o.nid)}" title="Report player" aria-label="Report ${esc(o.name)}">⚑</button><button class="swap" data-blk="${esc(o.nid)}" title="Block player" aria-label="Block ${esc(o.name)}">⊘</button>`+(o.kick?`<button class="swap" data-kick="${esc(o.nid)}" title="Remove from room" aria-label="Remove ${esc(o.name)}">✕</button>`:''):''}${o.swap?`<button class="swap" data-swap="${o.swap}" title="Switch team">⇄</button>`:''}</div>`;
+    <div class="sn"><b>${o.friend?'★ ':''}${esc(o.name)}${(()=>{const v=mpVinfo(o.nid||(o.me?NET.nid:''));return v?(v.gm?' <span class="gmb" title="Game owner (checked by the server)">GM</span>':' <span class="vfb" title="Signed-in player (checked by the server)">✓</span>'):'';})()}${o.me?' <em>(you)</em>':''}</b><small>${o.bot?'Fills the spot':'Level '+(clamp(fin(o.lv,1),1,99)|0)+(o.sk&&o.sk!=='std'&&CHARS[o.sk]?' · '+CHARS[o.sk].name:'')}${pg?' · '+pg:''}</small></div>${o.nid&&!o.me&&!o.bot&&!o.solo&&(NET.more||new Set()).has(o.nid)?`<button class="swap" data-rep="${esc(o.nid)}" title="Report player" aria-label="Report ${esc(o.name)}">⚑</button><button class="swap" data-blk="${esc(o.nid)}" title="Block player" aria-label="Block ${esc(o.name)}">⊘</button>`+(o.kick?`<button class="swap" data-kick="${esc(o.nid)}" title="Remove from room" aria-label="Remove ${esc(o.name)}">✕</button>`:''):st}${o.nid&&!o.me&&!o.bot&&!o.solo?`<button class="swap" data-more="${esc(o.nid)}" title="Report, block or remove" aria-label="More for ${esc(o.name)}">${(NET.more||new Set()).has(o.nid)?'‹':'⋯'}</button>`:''}${o.swap?`<button class="swap" data-swap="${o.swap}" title="Switch team">⇄</button>`:''}</div>`;
 }
 const blocked=()=>{if(!Array.isArray(profile.blocked))profile.blocked=[];return profile.blocked;};
-const isBlocked=n=>!!n&&blocked().some(b=>b.k===nameKey(String(n)));
+const isBlocked=(n,pid)=>blocked().some(b=>(!!n&&b.k===nameKey(String(n)))||(!!pid&&b.p===pid));
 function blockPlayer(nid){const who=rosterName(nid);if(!who)return;
   if(!confirm(`Block ${who}? You will not see their rooms and you will not play in the same room again. You can unblock them in Settings.`))return;
-  if(!isBlocked(who))blocked().push({k:nameKey(who),n:String(who).slice(0,20)});saveProfile();
-  if(isHost()){const x=NET.remotes.get(nid);if(x){NET.kicked=NET.kicked||new Set();NET.kicked.add('s:'+x.sid);NET.kicked.add('n:'+nameKey(x.name));try{if(x.conn)x.conn.send({t:'kicked'});}catch(err){}setTimeout(()=>{if(NET.remotes.get(x.nid))hostRemove(x,'kicked');},400);}toast(`${who} is blocked and removed from your room.`);}
+  const vi=mpVinfo(nid);if(!isBlocked(who,vi&&vi.pid))blocked().push({k:nameKey(who),n:String(who).slice(0,20),p:vi&&vi.pid||undefined});saveProfile();
+  if(isHost()){const x=NET.remotes.get(nid);if(x)kickEnt(x);toast(`${who} is blocked and removed from your room.`);}
   else if(isClient()){toast(`${who} is blocked. You left the room.`);try{mpLeave(false);}catch(e){}}
   renderMP();}
 function rosterName(nid){if(isHost()){const x=NET.remotes.get(nid);return x?x.name:'';}const r=(NET.roster||[]).find(r=>r.nid===nid);return r?r.name:'';}
@@ -7191,9 +7388,11 @@ async function reportPlayer(nid){const who=rosterName(nid);if(!who)return;
   const why=prompt(`Report ${who}? Tell us what happened (bad name, cheating, abuse…).`,'');if(why===null)return;
   if(!cloudOn()||!navigator.onLine){toast('No internet right now. Use Help › Report a player later.');return;}
   if(CS)await cloudFresh();
-  const r=await cloudReq('/rest/v1/support_messages',{method:'POST',auth:!!CS,headers:{Prefer:'return=minimal'},body:{player_name:String(profile.name).slice(0,20),topic:'report',message:(`Reported "${who}" in room ${NET.code||'?'}: `+String(why||'no details')).slice(0,2000),app_version:APP_VERSION,device:deviceLabel()}});
+  const tk=isHost()?(NET.remotes.get(nid)||{}).tk:((NET.roster||[]).find(r=>r.nid===nid)||{}).tk;let r=null;
+  if(CS&&tk){const q=await cloudReq('/rest/v1/rpc/report_player',{method:'POST',body:{p_token:String(tk),p_room:NET.code,p_why:String(why||'').slice(0,1500)}});if(q.ok&&q.j==='ok')r=q;}
+  if(!r)r=await cloudReq('/rest/v1/support_messages',{method:'POST',auth:!!CS,headers:{Prefer:'return=minimal'},body:{player_name:String(profile.name).slice(0,20),topic:'report',message:(`Reported "${who}" (not signed in) in room ${NET.code||'?'}: `+String(why||'no details')).slice(0,2000),app_version:APP_VERSION,device:deviceLabel()}});
   toast(r.ok?'Thanks. The report was sent to the game team.':'Could not send the report right now. Try Help › Report a player.');
-  if(isHost()&&r.ok){const x=NET.remotes.get(nid);if(x&&confirm(`Also remove ${who} from your room?`)){NET.kicked=NET.kicked||new Set();NET.kicked.add('s:'+x.sid);NET.kicked.add('n:'+nameKey(x.name));try{if(x.conn)x.conn.send({t:'kicked'});}catch(err){}setTimeout(()=>{if(NET.remotes.get(x.nid))hostRemove(x,'kicked');},400);}}}
+  if(isHost()&&r.ok){const x=NET.remotes.get(nid);if(x&&confirm(`Also remove ${who} from your room?`)){NET.kicked=NET.kicked||new Set();NET.kicked.add('s:'+x.sid);NET.kicked.add('n:'+nameKey(x.name));if(x.pid)NET.kicked.add('p:'+x.pid);try{if(x.conn)x.conn.send({t:'kicked'});}catch(err){}setTimeout(()=>{if(NET.remotes.get(x.nid))hostRemove(x,'kicked');},400);}}}
 let lobGroup=null;
 function renderMP(){
   const b=$('mpBody');let h='';
@@ -7259,7 +7458,9 @@ $('mpClose').addEventListener('click',()=>{$('mp').hidden=true;});
 $('mpBody').addEventListener('change',e=>{if(e.target.id==='rmPub'&&isHost()){NET.public=e.target.checked;roomReg();return;}if(e.target.id==='lobFill'&&!isClient()){profile.fillBots=e.target.checked;saveProfile();netFitBots();if(isHost())netRoster();renderMP();}});
 $('mpBody').addEventListener('click',e=>{
   const t=e.target.closest('button');if(!t)return;
-  if(t.dataset.kick&&isHost()){const x=NET.remotes.get(t.dataset.kick);if(x&&confirm(`Remove ${x.name} from the room? They will not be able to join it again.`)){NET.kicked=NET.kicked||new Set();NET.kicked.add('s:'+x.sid);NET.kicked.add('n:'+nameKey(x.name));
+  // a player's row keeps room for the name: report, block and remove sit behind one ⋯ button
+  if(t.dataset.more){NET.more=NET.more||new Set();NET.more.has(t.dataset.more)?NET.more.delete(t.dataset.more):NET.more.add(t.dataset.more);renderMP();return;}
+  if(t.dataset.kick&&isHost()){const x=NET.remotes.get(t.dataset.kick);if(x&&confirm(`Remove ${x.name} from the room? They will not be able to join it again.`)){NET.kicked=NET.kicked||new Set();NET.kicked.add('s:'+x.sid);NET.kicked.add('n:'+nameKey(x.name));if(x.pid)NET.kicked.add('p:'+x.pid);
     try{if(x.conn)x.conn.send({t:'kicked'});}catch(err){}setTimeout(()=>{if(NET.remotes.get(x.nid))hostRemove(x,'kicked');},400);}return;}
   if(t.dataset.rep){reportPlayer(t.dataset.rep);return;}
   if(t.dataset.blk){blockPlayer(t.dataset.blk);return;}
@@ -7752,7 +7953,7 @@ function kgSet(e,on){if(!e)return;const was=!!e.king;e.king=!!on;if(on)e.perch=n
   if(e.head&&!e.crown){e.crown=kgCrownMesh();e.head.add(e.crown);}if(e.crown)e.crown.visible=!!on;
   if(!isClient()){if(on){e.maxHp=KHP;e.hp=KHP;e.shield=0;e.maxSh=0;e.spawnProt=0;}
     else if(was){e.maxHp=e.isPlayer?100+gearStats().hp:100;e.maxSh=e.isPlayer?gearStats().sh:0;e.hp=Math.min(e.hp,e.maxHp);}
-    if(e.remote&&was!==!!on)netSendTo(e,{t:'king',on:on?1:0});}
+    if(e.remote&&was!==!!on)netSendTo(acTp(e),{t:'king',on:on?1:0});}
   if(on&&!was&&e.alive){burst(e.x,e.y+1.5,e.z,0xffd34a,40,7,.25,1.2);burst(e.x,e.y+.3,e.z,0xffffff,20,4,.2,.8);}}
 function kgStart(){KG.on=RULE()==='king'&&!isZ();for(const e of ents)if(e.king||e.ks)kgSet(e,false);player.king=false;player.ks=1;
   KG.cd={blue:null,red:null};KG.kg={blue:'',red:''};KG.pads={};$('kgHud').hidden=!KG.on;$('kgCd').hidden=true;
@@ -7773,7 +7974,7 @@ function kgPad(tm){KG.pads=KG.pads||{};if(KG.pads[tm])return KG.pads[tm];let p=n
 function kgCrown(e,first){const T=KG.t[e.team];T.k=e;T.cand=null;
   // every new king starts the reign on the team's stage: flat ground, open sky
   const pd=kgPad(e.team);e.x=pd[0];e.y=pd[1];e.z=pd[2];e.vx=e.vy=e.vz=0;e.smoothY=0;e.onGround=false;if(e.mesh)e.mesh.position.set(e.x,e.y,e.z);if(!e.isPlayer&&!e.remote){e.path=null;}
-  kgSet(e,true);e.spawnProt=2;if(e.remote)netSendTo(e,{t:'king',on:1,x:r2(pd[0]),y:r2(pd[1]),z:r2(pd[2])});
+  kgSet(e,true);e.spawnProt=2;if(e.remote)netSendTo(acTp(e),{t:'king',on:1,x:r2(pd[0]),y:r2(pd[1]),z:r2(pd[2])});
   const tn=e.team==='blue'?'BLUE':'RED';
   if(e!==player)showMsg(`${e.name.toUpperCase()} IS THE ${tn} KING`,false,'gp');
   netEv(['m',`${e.name.toUpperCase()} IS THE ${tn} KING`,0,'gp']);if(e===player)sfx.ding();}
@@ -7890,7 +8091,7 @@ function rsStart(){if(isClient()){rsBuildVis();if(RS.on)$('goalTxt').textContent
 function rsFieldClear(){for(const g of projs){scene.remove(g.m);if(g.snd)sfx.stopLoop(g.snd);}projs.length=0;fires.length=0;for(const s of smokes){for(const p of s.sp)scene.remove(p);s.mat.dispose();}smokes.length=0;for(const m of mines)scene.remove(m.m);mines.length=0;clearDrops();}
 function rsNewRound(){
   RS.n++;RS.ph='live';RS.t=RLIVE;RS.att=RS.rule==='snd'&&RS.n>RWIN-1?'red':'blue';RS.goal=(rand()*2)|0;rsFieldClear();
-  for(const e of ents){if(e.inMatch===false)continue;if(e.remote){e.spawnOk=true;e.deadAt=0;e.hp=e.maxHp||100;e.shield=e.maxSh||0;netSendTo(e,{t:'spawn',f:1});}else respawn(e);e.rsHeld=false;e.rsAct=false;}
+  for(const e of ents){if(e.inMatch===false)continue;if(e.remote){e.spawnOk=true;e.deadAt=0;e.hp=e.maxHp||100;e.shield=e.maxSh||0;netSendTo(acTp(e),{t:'spawn',f:1});}else respawn(e);e.rsHeld=false;e.rsAct=false;}
   RS.bomb=null;
   if(RS.rule==='snd'){const A=ents.filter(e=>e.inMatch!==false&&e.team===RS.att&&(e.alive||e.remote));const c=A[(rand()*A.length)|0]||null;RS.bomb={st:'carried',by:c,x:0,y:0,z:0,t:0,p:0,dp:0};}
   const myAtt=RS.rule==='snd'&&player.team===RS.att;
