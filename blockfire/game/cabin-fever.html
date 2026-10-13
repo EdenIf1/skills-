@@ -1579,7 +1579,8 @@ function chProgress(id,n){
 const canvas=$('c');
 const renderer=new THREE.WebGLRenderer({canvas,antialias:false,powerPreference:'high-performance'});
 renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,isTouch?1.25:1.5));
-const qualityRatio=()=>({low:.6,med:1,high:Math.min(window.devicePixelRatio||1,2)})[SET.quality]||Math.min(window.devicePixelRatio||1,isTouch?1.25:1.5);
+// auto = full sharpness (up to 2x); the game never lowers the picture quality by itself
+const qualityRatio=()=>({low:.6,med:1,high:Math.min(window.devicePixelRatio||1,2)})[SET.quality]||Math.min(window.devicePixelRatio||1,2);
 renderer.autoClear=false;
 const scene=new THREE.Scene();
 scene.background=new THREE.Color(0xa7b6c6);
@@ -7255,9 +7256,8 @@ function frame(now){frameN++;animCamos(now);
   if(flameSndT>0&&state==='play'){flameSndT-=dt;if(!flameSnd&&AC){flameSnd=sfx.loop(650);}if(flameSnd)flameSnd.g.gain.value=.5;}
   else if(flameSnd){sfx.stopLoop(flameSnd);flameSnd=null;}
   if(state==='play'&&SET.quality==='auto'&&!document.hidden){DQ.t+=rdt;DQ.n++;if(DQ.t>=2){const fps=DQ.n/DQ.t;DQ.t=0;DQ.n=0;const base=qualityRatio();let pr=renderer.getPixelRatio();
-    // never below the screen's normal sharpness (1.0), and only after two slow checks in a row (a real slowdown, not a hiccup)
-    const floor=Math.min(1,base);if(fps<35){if(++DQ.bad>=2&&pr>floor+.01){pr=Math.max(floor,pr-.1);renderer.setPixelRatio(pr);DQ.bad=0;}DQ.good=0;}
-    else{DQ.bad=0;if(fps>55&&pr<base){if(++DQ.good>=2){pr=Math.min(base,pr+.1);DQ.good=0;renderer.setPixelRatio(pr);}}else DQ.good=0;}}}
+    // picture quality is never lowered automatically; restore full sharpness if anything reduced it
+    if(pr<base-.01)renderer.setPixelRatio(base);}}
   if(noRender||glLost)return;
   try{renderer.clear();
   if(window.__cam){const q=window.__cam;camera.position.set(q[0],q[1],q[2]);camera.lookAt(q[3],q[4],q[5]);}
