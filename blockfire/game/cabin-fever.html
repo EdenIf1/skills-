@@ -7890,7 +7890,8 @@ function step(dt,now){
   if(worldDirty){worldDirty=false;rebuildWorld();}
 }
 // test hooks used by the automated QA runs
-window.__bf={
+// the automated test hook exists only for test browsers (WebDriver) and local test servers, never for real players
+if(navigator.webdriver||/^(localhost|127\.0\.0\.1)$/.test(location.hostname))window.__bf={
   ev:c=>eval(c),
   start(m){const OLD={knife:'knife',canyon:'sniper',plant:'solid',throne:'king',war:'front'};if(OLD[m]&&!MAPS[m]){profile.rule=OLD[m];this.oldRule=1;}else if(this.oldRule){profile.rule='tdm';this.oldRule=0;}if(!MAPS[m])m='town';profile.map=m;MAP=MAPS[m];startMatch();},
   sim(sec,dtt){dtt=dtt||1/30;for(let i=0,n=Math.round(sec/dtt);i<n&&state==='play';i++)step(dtt,i*dtt*1000);},

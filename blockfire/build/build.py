@@ -29,8 +29,11 @@ meta='''<meta charset="utf-8">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 '''
+# web build: a browser security policy. Scripts and styles only from the game's own site (no outside scripts can be
+# injected), no plugins, no forms posting elsewhere, no changing the page's base address. Network: the game's servers over https/wss.
+csp='' if native else '<meta http-equiv="Content-Security-Policy" content="default-src \'self\'; script-src \'self\' \'unsafe-inline\' \'unsafe-eval\'; style-src \'self\' \'unsafe-inline\'; img-src \'self\' data: blob:; font-src \'self\' data:; media-src \'self\' data: blob:; connect-src \'self\' https: wss: data: blob: http://127.0.0.1:* ws://127.0.0.1:* http://localhost:* ws://localhost:*; worker-src \'self\' blob:; manifest-src \'self\'; object-src \'none\'; base-uri \'self\'; form-action \'none\'; frame-src \'none\'">\n<meta name="referrer" content="no-referrer">\n'
 sw='' if native else '<script>if("serviceWorker" in navigator&&(location.protocol==="https:"||location.hostname==="localhost"))navigator.serviceWorker.register("sw.js").catch(function(){});</script>\n'
-html='<!doctype html>\n<html lang="en">\n<head>\n'+meta+head+'\n</head>\n<body>\n'+body+'\n'+sw+'</body>\n</html>\n'
+html='<!doctype html>\n<html lang="en">\n<head>\n'+csp+meta+head+'\n</head>\n<body>\n'+body+'\n'+sw+'</body>\n</html>\n'
 if out.endswith('.html'):
     page,d=out,os.path.dirname(out)
 else:
