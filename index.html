@@ -1,6 +1,8 @@
 <!doctype html>
 <html lang="en">
 <head>
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; media-src 'self' data: blob:; connect-src 'self' https: wss: data: blob: http://127.0.0.1:* ws://127.0.0.1:* http://localhost:* ws://localhost:*; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'; frame-src 'none'">
+<meta name="referrer" content="no-referrer">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <meta name="theme-color" content="#0d1116">
@@ -1511,7 +1513,7 @@ async function adminClaim(code){if(!CS||CS.guest)return 'Sign in to your own acc
   if(r.ok){CS.admin=true;cloudKeep();return '';}const e=r.j&&r.j.error;
   return !r.status?'No connection to the server.':e==='code'?'That code is not right.':e==='taken'?'This game already has its admin.':e==='guest'?'Guest accounts cannot be admins. Create your account first.':'The server said no (error '+r.status+').';}
 /* ================= version, remote settings, crash reports ================= */
-const APP_VERSION='1.0.0',BUILD_ID='4bb0e42';
+const APP_VERSION='1.0.0',BUILD_ID='b839f2a';
 const verNum=v=>String(v||'0').split('.').slice(0,3).map(n=>parseInt(n)||0).reduce((a,n)=>a*1000+n,0);
 let RCFG={};try{RCFG=JSON.parse(localStorage.getItem('blockfire.rcfg')||'{}')||{};}catch(e){RCFG={};}
 const feat=k=>!(RCFG.features&&RCFG.features[k]===false);
@@ -7906,7 +7908,8 @@ function step(dt,now){
   if(worldDirty){worldDirty=false;rebuildWorld();}
 }
 // test hooks used by the automated QA runs
-window.__bf={
+// the automated test hook exists only for test browsers (WebDriver) and local test servers, never for real players
+if(navigator.webdriver||/^(localhost|127\.0\.0\.1)$/.test(location.hostname))window.__bf={
   ev:c=>eval(c),
   start(m){const OLD={knife:'knife',canyon:'sniper',plant:'solid',throne:'king',war:'front'};if(OLD[m]&&!MAPS[m]){profile.rule=OLD[m];this.oldRule=1;}else if(this.oldRule){profile.rule='tdm';this.oldRule=0;}if(!MAPS[m])m='town';profile.map=m;MAP=MAPS[m];startMatch();},
   sim(sec,dtt){dtt=dtt||1/30;for(let i=0,n=Math.round(sec/dtt);i<n&&state==='play';i++)step(dtt,i*dtt*1000);},
