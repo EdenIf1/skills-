@@ -1122,6 +1122,7 @@ body.cine #hud>*:not(#nukeFlash),body.cine #touch,body.cine #airTab{visibility:h
   </div>
 </div>
 <div id="board" class="overlay" hidden><div class="sheet cut"><div class="row" style="justify-content:space-between;align-items:center;flex-wrap:nowrap"><h2 style="margin:0">SCOREBOARD</h2><button class="btn sm ghost cut" id="boardLeave">Leave match</button></div><div class="teams" id="boardBody"></div><div class="row" style="margin-top:14px"><button class="btn cut" id="boardBack">Back to game</button><button class="btn ghost cut" id="boardSet">Settings</button></div></div></div>
+<div id="leaveAsk" class="overlay" hidden style="z-index:90;background:rgba(0,0,0,.6)"><div class="sheet cut" style="text-align:center;max-width:380px"><h2 style="margin-top:0">Leave the match?</h2><p id="leaveAskTx">Are you sure you want to leave the match?</p><div class="row" style="justify-content:center;gap:12px;flex-wrap:wrap"><button class="btn cut" id="leaveNo" style="min-height:48px;min-width:150px;font-size:18px">No, keep playing</button><button class="btn ghost cut" id="leaveYes" style="min-height:48px;min-width:120px;font-size:18px">Yes, leave</button></div></div></div>
 <div id="pause" class="overlay" hidden><div class="sheet cut"><h2>PAUSED</h2><p>Click to jump back in.</p><div class="row" style="justify-content:center"><button class="btn ghost cut" id="pauseSet">Settings</button><button class="btn ghost cut" id="pauseLeave">Leave match</button></div></div></div>
 <div id="end" class="overlay" hidden>
   <div class="sheet cut">
@@ -5361,17 +5362,24 @@ $('pauseSet').addEventListener('click',e=>{e.stopPropagation();openSettings();})
 function leaveMatch(){
   RS.on=false;rsClearVis();$('rsHud').hidden=true;
   if(state!=='play'&&state!=='end')return;
-  if(NET.mode&&!confirm(isHost()?'Leave the match? This closes the room for your friends.':'Leave the match and the room?'))return;
   if(NET.mode)mpLeave(false);
   if(document.pointerLockElement)try{document.exitPointerLock();}catch(e){}
-  state='menu';paused=false;fireHeld=false;ads=false;['hud','touch','end','board','pause','death','scope','zTip'].forEach(id=>$(id).hidden=true);
+  state='menu';paused=false;fireHeld=false;ads=false;['hud','touch','end','board','pause','death','scope','zTip','leaveAsk'].forEach(id=>$(id).hidden=true);
   MAP=MAPS[profile.map]||MAP;resetMatch(false);renderProfile();$('menu').hidden=false;
 }
-// leaving takes two deliberate taps: the button sits where the weapon buttons are, so one stray touch must never end a match
-function leaveTap(b){const now=Date.now();if(b._arm&&now-b._arm<3000&&now-b._arm>250){b._arm=0;b.textContent=b._t;b.classList.remove('armed');leaveMatch();return;}
-  if(b._arm&&now-b._arm<=250)return;b._t=b._t||b.textContent;b._arm=now;b.textContent='Tap again to leave';b.classList.add('armed');
-  clearTimeout(b._tm);b._tm=setTimeout(()=>{b._arm=0;b.textContent=b._t;b.classList.remove('armed');},3000);}
-for(const id of['boardLeave','pauseLeave']){const b=$(id);b.addEventListener('click',e=>{e.stopPropagation();if(b._touch&&Date.now()-b._touch<600)return;leaveTap(b);});b.addEventListener('touchend',e=>{e.stopPropagation();e.preventDefault();b._touch=Date.now();leaveTap(b);},{passive:false});}
+// leaving always asks first (Yes / No in the middle of the screen): the Leave button sits where the weapon buttons are,
+// so a stray touch must never end a match
+let leaveAskT=0;
+function askLeave(){if(state!=='play'&&state!=='end')return;fireHeld=false;
+  $('leaveAskTx').textContent=NET.mode?(isHost()?'Are you sure you want to leave the match? This closes the room for your friends.':'Are you sure you want to leave the match? You will leave the room too.'):'Are you sure you want to leave the match?';
+  leaveAskT=Date.now();$('leaveAsk').hidden=false;}
+function closeLeaveAsk(){$('leaveAsk').hidden=true;}
+const tapOnly=(el,fn)=>{let tt=0;el.addEventListener('touchend',e=>{e.stopPropagation();e.preventDefault();tt=Date.now();fn();},{passive:false});el.addEventListener('click',e=>{e.stopPropagation();if(Date.now()-tt<600)return;fn();});};
+for(const id of['boardLeave','pauseLeave'])tapOnly($(id),askLeave);
+tapOnly($('leaveNo'),closeLeaveAsk);
+// a second touch of the same stray tap (within a third of a second) cannot press Yes
+tapOnly($('leaveYes'),()=>{if(Date.now()-leaveAskT<350)return;closeLeaveAsk();leaveMatch();});
+addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('leaveAsk').hidden){e.stopPropagation();closeLeaveAsk();}},true);
 $('setClose').addEventListener('click',()=>{$('settings').hidden=true;});
 // privacy policy and terms live next to the game (and on the public site when playing inside Claude)
 const legalUrl=f=>(CAP||/^https?:$/.test(location.protocol)&&!inFrame?'':PUBLIC_URL.replace(/[^/]*$/,''))+f;
