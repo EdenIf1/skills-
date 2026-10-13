@@ -6434,7 +6434,7 @@ player.nid='P0';bots.forEach((b,i)=>b.nid='B'+i);
 for(const k in MAPS)MAPS[k].key=k;
 let mineSeq=1;
 // protocol version: a friend with an older cached copy of the game gets a clear "refresh" message instead of strange bugs
-const PROTO=4,DEAD_MS=8000,GRACE_MS=20000;
+const PROTO=5,DEAD_MS=8000,GRACE_MS=20000;
 const now=()=>performance.now();
 function netEv(e){if(isHost()&&NET.conns.size&&state==='play'){NET.q.push(e);if(NET.q.length>400)NET.q.splice(0,NET.q.length-400);}}
 function netOut(e){if(isClient()&&state==='play'){NET.q.push(e);if(NET.q.length>200)NET.q.splice(0,NET.q.length-200);}}
@@ -6451,8 +6451,9 @@ const ss=(k,v)=>{try{if(v===undefined)return sessionStorage.getItem(k);if(v===nu
 function netBlk(x,y,z,id){if(isHost()&&state==='play'){NET.blk.set(x+','+y+','+z,id);netEv(['x',x,y,z,id]);}}
 function netSendTo(e,msg){if(e&&e.conn&&e.conn.open)try{e.conn.send(msg);}catch(err){}}
 function netBroadcast(msg){for(const c of NET.conns.keys())if(c.open)try{c.send(msg);}catch(err){}}
-// STUN finds a direct path between phones; TURN relays the game when a mobile network blocks direct connections
-const ICE=[{urls:['stun:stun.l.google.com:19302','stun:stun1.l.google.com:19302','stun:stun2.l.google.com:19302']},{urls:'stun:stun.cloudflare.com:3478'},
+// PRIVACY: phones never connect to each other directly. Every game link goes through a relay server (TURN), so no player can
+// ever see another player's IP address - each phone only ever sees the relay's address. No STUN, no direct (host) paths.
+const ICE=[
   {urls:['turn:freestun.net:3478','turn:freestun.net:3478?transport=tcp','turns:freestun.net:5349'],username:'free',credential:'free'},
   {urls:['turn:openrelay.metered.ca:80','turn:openrelay.metered.ca:443','turn:openrelay.metered.ca:443?transport=tcp'],username:'openrelayproject',credential:'openrelayproject'}];
 // optional relay service with short-lived credentials (Metered TURN API URL); set TURN_API or localStorage 'blockfire.turn'
@@ -6464,11 +6465,11 @@ function relayParse(v){v=String(v||'').trim();if(!v||/^https?:/i.test(v))return 
   const u=u0.replace(/^turns?:/i,'');const tls=/^turns:/i.test(u0)||/:(443|5349)$/.test(u);
   return {urls:tls?['turns:'+u,'turn:'+u+'?transport=tcp']:['turn:'+u,'turn:'+u+'?transport=tcp'],username:user,credential:pass};}
 function fetchIce(){let u=TURN_API;try{u=localStorage.getItem('blockfire.turn')||u;}catch(e){}
-  const st=relayParse(u);if(st){iceDyn=ICE.slice(0,2).concat([st],ICE.slice(2));return Promise.resolve(iceDyn);}
+  const st=relayParse(u);if(st){iceDyn=[st].concat(ICE);return Promise.resolve(iceDyn);}
   iceDyn=null;if(!u||!window.fetch)return Promise.resolve(null);
-  return Promise.race([fetch(u).then(r=>r.ok?r.json():null).then(j=>{if(Array.isArray(j)&&j.length){iceDyn=ICE.slice(0,2).concat(j,ICE.slice(2));}return iceDyn;}).catch(()=>null),new Promise(r=>setTimeout(()=>r(null),4000))]);}
+  return Promise.race([fetch(u).then(r=>r.ok?r.json():null).then(j=>{if(Array.isArray(j)&&j.length){iceDyn=j.filter(s=>[].concat(s&&s.urls||[]).some(u=>/^turns?:/i.test(u))).concat(ICE);}return iceDyn;}).catch(()=>null),new Promise(r=>setTimeout(()=>r(null),4000))]);}
 fetchIce();
-function peerOpts(){const o={debug:0,config:{iceServers:iceDyn||ICE}};let ps=null;
+function peerOpts(){const o={debug:0,config:{iceServers:iceDyn||ICE,iceTransportPolicy:'relay'}};let ps=null;
   // the game owner can move matchmaking to their own server from the admin panel (app_config: peer_server = wss://host[:port]/path)
   try{const v=typeof RCFG!=='undefined'&&RCFG&&typeof RCFG.peer_server==='string'?RCFG.peer_server.trim():'';if(v){const u=new URL(v);o.host=u.hostname;o.secure=/^(wss|https):$/.test(u.protocol);o.port=+u.port||(o.secure?443:80);o.path=u.pathname||'/';}}catch(e){}try{ps=localStorage.getItem('blockfire.ps');}catch(e){}if(ps){const [h,p]=ps.split(':');o.host=h;o.port=+p||9000;o.path='/';o.secure=false;}return o;}
 const roomId=c=>'blockfire-r1-'+c.toLowerCase();
@@ -6567,26 +6568,53 @@ function Mq(url,onMsg,onUp,onDown){
   return m;
 }
 const rlTopic=(code,x)=>'blockfire/r2/'+String(code).toLowerCase()+'/'+x;
+/* ---- the backup route is END-TO-END ENCRYPTED. The public message servers only ever carry ciphertext:
+   each friend<->host link makes a fresh ECDH (P-256) key pair on both phones; the shared secret never travels, and an
+   AES-GCM key is derived from it (HKDF-SHA-256, bound to the room code). Every message is encrypted and authenticated,
+   carries a per-direction counter (no replays) and a direction tag (no reflection). A forged or altered message is
+   dropped. If anyone answers a phone with a different key while the link is set up, the phone notices and starts over. ---- */
+const RLC={te:new TextEncoder(),td:new TextDecoder()};
+const rlOK=()=>!!(window.crypto&&crypto.subtle&&window.isSecureContext!==false);
+function rlB64(u){let s='';for(let i=0;i<u.length;i+=8192)s+=String.fromCharCode.apply(null,u.subarray(i,i+8192));return btoa(s);}
+function rlUnB64(t){const s=atob(String(t||''));const u=new Uint8Array(s.length);for(let i=0;i<s.length;i++)u[i]=s.charCodeAt(i);return u;}
+async function rlKeys(){const kp=await crypto.subtle.generateKey({name:'ECDH',namedCurve:'P-256'},false,['deriveBits']);
+  return {kp,pub:rlB64(new Uint8Array(await crypto.subtle.exportKey('raw',kp.publicKey)))};}
+async function rlDerive(kp,peerPub,code){const pk=await crypto.subtle.importKey('raw',rlUnB64(peerPub),{name:'ECDH',namedCurve:'P-256'},false,[]);
+  const bits=await crypto.subtle.deriveBits({name:'ECDH',public:pk},kp.privateKey,256);const hk=await crypto.subtle.importKey('raw',bits,'HKDF',false,['deriveKey']);
+  return crypto.subtle.deriveKey({name:'HKDF',hash:'SHA-256',salt:RLC.te.encode('cubefront-relay-v1|'+String(code).toLowerCase()),info:RLC.te.encode('game-link')},hk,{name:'AES-GCM',length:256},false,['encrypt','decrypt']);}
+// one secure link end: sends in order, decrypts in order, drops anything forged, replayed or reflected
+function rlSecure(key,me,them,pubRaw){let tx=Promise.resolve(),rx=Promise.resolve(),nOut=0,nIn=0;
+  return {send(env){const n=++nOut;tx=tx.then(async()=>{const iv=crypto.getRandomValues(new Uint8Array(12));
+      const ct=new Uint8Array(await crypto.subtle.encrypt({name:'AES-GCM',iv,additionalData:RLC.te.encode(me)},key,RLC.te.encode(JSON.stringify({n,e:env}))));
+      pubRaw({k:'e',i:rlB64(iv),c:rlB64(ct)});}).catch(()=>{});},
+    recv(o,cb){rx=rx.then(async()=>{if(typeof o.i!=='string'||typeof o.c!=='string'||o.c.length>2e6)return;
+      let pt;try{pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:rlUnB64(o.i),additionalData:RLC.te.encode(them)},key,rlUnB64(o.c));}catch(e){return;}
+      let m;try{m=JSON.parse(RLC.td.decode(pt));}catch(e){return;}if(!m||!(m.n>nIn))return;nIn=m.n;cb(m.e);}).catch(()=>{});}};}
 // a connection object that behaves like a PeerJS DataConnection, so the rest of the game does not care which route is used
 function rlConn(sendEnv){const L={};const c={open:false,relay:true,closed:false,
   on(ev,fn){(L[ev]=L[ev]||[]).push(fn);return c;},
   send(msg){if(c.open)sendEnv({k:'d',d:msg});},
-  close(){if(c.closed)return;try{sendEnv({k:'x'});}catch(e){}c._close();},
+  close(){if(c.closed)return;try{if(c.open)sendEnv({k:'x'});}catch(e){}c._close();},
   _emit(ev,a){for(const f of L[ev]||[])try{f(a);}catch(e){console.error(e);}},
   _open(){if(c.open||c.closed)return;c.open=true;c._emit('open');},
   _close(){if(c.closed)return;c.closed=true;c.open=false;if(c.onGone)c.onGone();c._emit('close');}};return c;}
+const rlInner=(c,e)=>{if(!e||c.closed)return;if(e.k==='d'){c.lastIn=now();c._emit('data',e.d);}else if(e.k==='x')c._close();};
 // host: listen for friends on the backup route as long as the room is open
 function rlHostStart(code){
   if(NET.rlHost&&NET.rlHost.code===code)return;rlHostStop();
+  if(!rlOK())return;
   const H={code,mqs:[],conns:new Map(),stop:false};NET.rlHost=H;
-  const open=url=>{if(H.stop)return;const m=mqOpen(url,(m,topic,text)=>{let o;try{o=JSON.parse(text);}catch(e){return;}
+  const open=url=>{if(H.stop)return;const m=mqOpen(url,(m,topic,text)=>{if(typeof text!=='string'||text.length>3e6)return;let o;try{o=JSON.parse(text);}catch(e){return;}
       const f=o&&o.f;if(typeof f!=='string'||!/^[a-z0-9]{6,16}$/.test(f))return;
-      let c=H.conns.get(f);
-      if(o.k==='o'){if(c&&!c.closed){m.pub(rlTopic(code,'c/'+f),JSON.stringify({k:'a'}));return;}
-        c=rlConn(env=>{m.pub(rlTopic(code,'c/'+f),JSON.stringify(env));});c.onGone=()=>{if(H.conns.get(f)===c)H.conns.delete(f);};
-        H.conns.set(f,c);hostAccept(c);m.pub(rlTopic(code,'c/'+f),JSON.stringify({k:'a'}));c._open();return;}
-      if(!c)return;
-      if(o.k==='d'){c.lastIn=now();c._emit('data',o.d);}else if(o.k==='x')c._close();},
+      let c=H.conns.get(f);const reply=o2=>m.pub(rlTopic(code,'c/'+f),JSON.stringify(o2));
+      if(o.k==='o'){if(typeof o.p!=='string'||o.p.length>200)return;
+        // a link already exists for this friend: answer only the same key again, ignore anyone else
+        if(c&&!c.closed){if(c._peer===o.p&&c._myPub)reply({k:'a',p:c._myPub});return;}
+        c=rlConn(env=>{if(c._sec)c._sec.send(env);});c._peer=o.p;c.onGone=()=>{if(H.conns.get(f)===c)H.conns.delete(f);};H.conns.set(f,c);
+        (async()=>{try{const K=await rlKeys();const key=await rlDerive(K.kp,o.p,code);if(c.closed||H.stop)return;
+          c._myPub=K.pub;c._sec=rlSecure(key,'h2c','c2h',o2=>reply(o2));hostAccept(c);reply({k:'a',p:K.pub});c._open();}catch(e){c._close();}})();return;}
+      if(!c||!c._sec)return;
+      if(o.k==='e')c._sec.recv(o,e=>{c.lastIn=now();rlInner(c,e);});},
       m=>m.sub(rlTopic(code,'h')),
       m=>{const i=H.mqs.indexOf(m);if(i>=0)H.mqs.splice(i,1);if(!H.stop)setTimeout(()=>open(url),3000);});
     H.mqs.push(m);};
@@ -6596,12 +6624,17 @@ function rlHostStop(){const H=NET.rlHost;if(!H)return;H.stop=true;for(const c of
 // client: ask the host for a backup-route link; resolves to a connection object right away (it opens when the host answers)
 function rlConnect(code){
   // one message server is used for the whole link: the first one that answers
-  const f=Math.random().toString(36).slice(2,12).padEnd(8,'x');let live=null,ask=0;const mqs=[];
-  const hello=()=>{if(live&&!c.open&&!c.closed)live.pub(rlTopic(code,'h'),JSON.stringify({f,k:'o'}));};
-  const c=rlConn(env=>{if(live){env.f=f;live.pub(rlTopic(code,'h'),JSON.stringify(env));}});
+  const f=Math.random().toString(36).slice(2,12).padEnd(8,'x');let live=null,ask=0,K=null,hostPub=null;const mqs=[];
+  const hello=()=>{if(live&&K&&!c.open&&!c.closed)live.pub(rlTopic(code,'h'),JSON.stringify({f,k:'o',p:K.pub}));};
+  const c=rlConn(env=>{if(c._sec)c._sec.send(env);});
   const gone=c._close;c._close=()=>{clearInterval(ask);gone();for(const m of mqs)try{m.close();}catch(e){}};
-  for(const u of mqBrokers()){const m=mqOpen(u,(m,topic,text)=>{if(m!==live)return;let o;try{o=JSON.parse(text);}catch(e){return;}
-      if(o.k==='a'){clearInterval(ask);c._open();}else if(o.k==='d'){c.lastIn=now();c._emit('data',o.d);}else if(o.k==='x')c._close();},
+  if(!rlOK()){setTimeout(()=>c._close(),0);return c;}
+  rlKeys().then(k=>{K=k;hello();}).catch(()=>c._close());
+  for(const u of mqBrokers()){const m=mqOpen(u,(m,topic,text)=>{if(m!==live||typeof text!=='string'||text.length>3e6)return;let o;try{o=JSON.parse(text);}catch(e){return;}
+      if(o.k==='a'){if(typeof o.p!=='string'||o.p.length>200||!K)return;
+        if(hostPub){if(o.p!==hostPub){toast('Someone tried to interfere with the connection. Reconnecting safely…');reportErr('relay','two different keys answered');c._close();}return;}
+        hostPub=o.p;clearInterval(ask);rlDerive(K.kp,o.p,code).then(key=>{if(c.closed)return;c._sec=rlSecure(key,'c2h','h2c',o2=>{o2.f=f;live.pub(rlTopic(code,'h'),JSON.stringify(o2));});c._open();}).catch(()=>c._close());return;}
+      if(o.k==='e'&&c._sec)c._sec.recv(o,e=>{c.lastIn=now();rlInner(c,e);});},
     m=>{if(live||c.closed){if(m!==live)m.close();return;}live=m;for(const x of mqs)if(x!==m)try{x.close();}catch(e){}
       m.sub(rlTopic(code,'c/'+f));setTimeout(hello,300);ask=setInterval(hello,1500);},
     m=>{if(m===live&&!c.closed)c._close();});mqs.push(m);}
@@ -6677,6 +6710,11 @@ function mpHost(code,tries){
 document.addEventListener('visibilitychange',()=>{if(document.hidden||!NET.peer)return;const p=NET.peer;try{if(p.disconnected&&!p.destroyed)p.reconnect();}catch(e){}});
 function hostRecv(c,d){
   if(!d||!d.t)return;
+  // flood guard: a normal phone sends a few dozen messages a second; a modified one cannot drown the room.
+  // Beyond 400 a second the rest is dropped; 3 seconds of flooding in a row and that player is removed.
+  {const t=now(),R=c._rt||(c._rt={w:t,n:0,bad:0});if(t-R.w>=1000){R.bad=R.n>400?R.bad+1:0;R.w=t;R.n=0;}
+    if(++R.n>400){if(R.bad>=3&&!c._flood){c._flood=true;const x=NET.conns.get(c);try{c.send({t:'kicked'});}catch(e){}
+      if(x){NET.kicked=NET.kicked||new Set();NET.kicked.add('s:'+x.sid);NET.kicked.add('n:'+nameKey(x.name));setTimeout(()=>{if(NET.remotes.get(x.nid))hostRemove(x,'kicked');},300);}else setTimeout(()=>{try{c.close();}catch(e){}},300);}return;}}
   if(d.t==='pi'){try{c.send({t:'po',ts:d.ts});}catch(e){}return;}
   if(d.t==='po'){const e=NET.conns.get(c);if(e)e.ping=Math.round(now()-d.ts);return;}
   if(d.t==='hello'){
@@ -6882,7 +6920,7 @@ function clientRecv(d){
   if(d.t==='kg'){KG.on=true;$('kgHud').hidden=false;const me=nidOf(player),k=(player.team==='blue'?d.b:d.r)[0];player.king=k===me;player.ks=player.king?KS:1;kgView(d);return;}
   if(d.t==='king'){kgArm(!!d.on);if(d.on&&isFinite(d.x)){player.x=+d.x;player.y=+d.y;player.z=+d.z;player.vx=player.vy=player.vz=0;player.smoothY=0;}if(d.on){player.king=true;player.ks=KS;player.maxHp=KHP;player.hp=KHP;player.shield=0;player.maxSh=0;}else{player.king=false;player.ks=1;applyGear(true);player.hp=Math.min(player.hp,player.maxHp);}return;}
   if(d.t==='kc'){player.streak=(player.streak||0)+1;onMyKill(d.v,!!d.h,d.w,d.k);return;}
-  if(d.t==='cash'){Z.money+=d.v;if(d.kill&&state==='play'){Z.kills++;match.kills++;if(d.h)match.heads++;const S=ST();S.zkills=(S.zkills||0)+1;S.weap[d.w]=(S.weap[d.w]||0)+1;chProgress('kills',1);if(d.h){chProgress('heads',1);showMsg('HEADSHOT',true);}}return;}
+  if(d.t==='cash'){Z.money+=clamp(fin(d.v,0),-100000,100000);if(d.kill&&state==='play'){Z.kills++;match.kills++;if(d.h)match.heads++;const S=ST();S.zkills=(S.zkills||0)+1;S.weap[d.w]=(S.weap[d.w]||0)+1;chProgress('kills',1);if(d.h){chProgress('heads',1);showMsg('HEADSHOT',true);}}return;}
   if(d.t==='xm'){xmView(d,false);return;}
   if(d.t==='stash'){stashShow(Array.isArray(d.s)&&d.s.every(Number.isFinite)?d.s:null);return;}
   if(d.t==='stashGot'){if(WEAPONS[d.w]){nades=Math.min(nades+2,9);setTimeout(()=>showMsg('SECRET STASH · '+WEAPONS[d.w].name.toUpperCase(),true),50);}return;}
@@ -7053,15 +7091,14 @@ function rlProbe(){return new Promise(res=>{const t='diag/'+Math.random().toStri
   for(const u of mqBrokers()){const m=mqOpen(u,(m,topic,text)=>{if(text==='ping'){done(true);for(const x of ms)try{x.close();}catch(e){}}},m=>{m.sub(rlTopic('probe',t));setTimeout(()=>m.pub(rlTopic('probe',t),'ping'),400);},()=>done(false));ms.push(m);setTimeout(()=>{try{m.close();}catch(e){}},9000);}
   setTimeout(()=>{if(!ok){ok=true;res(false);}},9500);});}
 async function netDiag(){
-  await fetchIce();try{if(NET.peer&&NET.peer.options&&NET.peer.options.config)NET.peer.options.config.iceServers=iceDyn||ICE;}catch(e){}const relays=(iceDyn||ICE).slice(2),rName=r=>{const u=[].concat(r.urls)[0]||'';return 'Relay · '+u.replace(/^turns?:/,'').split(/[:?]/)[0];};
-  const DG=NET.diag=[['Game server','checking…'],['Direct connection (STUN)','checking…']].concat(relays.map(r=>[rName(r),'checking…']));renderMP();
+  await fetchIce();try{if(NET.peer&&NET.peer.options&&NET.peer.options.config){NET.peer.options.config.iceServers=iceDyn||ICE;NET.peer.options.config.iceTransportPolicy='relay';}}catch(e){}const relays=(iceDyn||ICE),rName=r=>{const u=[].concat(r.urls)[0]||'';return 'Private relay · '+u.replace(/^turns?:/,'').split(/[:?]/)[0];};
+  const DG=NET.diag=[['Game server','checking…']].concat(relays.map(r=>[rName(r),'checking…']));renderMP();
   const srv=await new Promise(res=>{let p;try{p=new Peer(peerOpts());}catch(e){res(false);return;}const t=setTimeout(()=>{try{p.destroy();}catch(e){}res(false);},9000);
     p.on('open',()=>{clearTimeout(t);try{p.destroy();}catch(e){}res(true);});p.on('error',()=>{clearTimeout(t);try{p.destroy();}catch(e){}res(false);});});
   DG[0][1]=srv?'ok':'failed';renderMP();
-  const st=await iceProbe(ICE.slice(0,2),'srflx',6000);DG[1][1]=st?'ok':'failed';renderMP();
-  DG.splice(2,0,['Backup route','checking…']);const bk=rlProbe().then(v=>{DG[2][1]=v?'ok':'failed';renderMP();return v;});
-  const rs=await Promise.all(relays.map((r,i)=>iceProbe([r],'relay',9000).then(v=>{DG[3+i][1]=v?'ok':'failed';renderMP();return v;})));const tu=rs.some(Boolean)||await bk;
-  DG.push(['Result',!srv?'No internet or the game server is down. Try again in a minute.':st&&tu?'Everything looks good.':st?'Should work on Wi-Fi. On some mobile networks the relay is needed and it is not reachable right now.':tu?'Works through the relay only. Expect a bit more delay.':'Your network blocks game connections. Try another Wi-Fi or mobile data.']);
+  DG.splice(1,0,['Backup route (encrypted)','checking…']);const bk=rlProbe().then(v=>{DG[1][1]=v?'ok':'failed';renderMP();return v;});
+  const rs=await Promise.all(relays.map((r,i)=>iceProbe([r],'relay',9000).then(v=>{DG[2+i][1]=v?'ok':'failed';renderMP();return v;})));const tr=rs.some(Boolean),b2=await bk;
+  DG.push(['Result',!srv?'No internet or the game server is down. Try again in a minute.':tr?'Everything looks good. Your address stays private: games always go through a relay.':b2?'Works through the backup route. Expect a bit more delay.':'Your network blocks game connections. Try another Wi-Fi or mobile data.']);
   renderMP();
 }
 /* ---- leaving ---- */
