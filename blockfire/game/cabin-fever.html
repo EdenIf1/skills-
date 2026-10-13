@@ -5449,7 +5449,7 @@ function renderAcct(){
         <label class="fld"><span>Player name <em>· what others see in matches</em></span><input id="clCs" maxlength="14" autocomplete="nickname" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="Your player name" value="${esc(cs)}"></label>
         ${msgHtml()}<div class="auRow"><button type="button" class="btn ghost cut" id="clBack">Back</button><button type="submit" class="btn cut authGo" id="clSignup">Create account</button></div>`;}
       f+=`<div class="authFine">🔒 Encrypted · your password is never stored on this device · <a href="${legalUrl('terms.html')}" ${LT}>Terms</a> · <a href="${legalUrl('privacy.html')}" ${LT}>Privacy</a></div>`;
-      return `<form class="authCard auForm" id="authForm" onsubmit="return false" autocomplete="on">${f}</form>`;};
+      return `<form class="authCard auForm" id="authForm" autocomplete="on">${f}</form>`;};
     let card='';
     if(IN_CLAUDE)card=`<div class="authCard auForm auClaude"><div class="auBadge">Preview</div><div class="authH">Accounts live in the full game</div><div class="authSub">You are playing a preview inside Claude. It runs in a sealed box that cannot reach the save server, so signing in and saving online only work in the full game. What you play here stays on this device.</div>
       <a class="btn cut authGo" id="acFull" href="${PUBLIC_URL}" target="_blank" rel="noopener">Open the full game ↗</a><div class="authFine">In the full game your account stays signed in on your device.</div></div>`;
@@ -6708,8 +6708,23 @@ function mpHost(code,tries){
 }
 // coming back from another app: get the room back online straight away
 document.addEventListener('visibilitychange',()=>{if(document.hidden||!NET.peer)return;const p=NET.peer;try{if(p.disconnected&&!p.destroyed)p.reconnect();}catch(e){}});
-function hostRecv(c,d){
-  if(!d||!d.t)return;
+// SAFETY: every message from another player's device is untrusted. Text can never carry markup or
+// break out of an attribute (no < > " ' ` =), odd keys are dropped and huge or deeply nested data is refused.
+const WIRE_BAD=/[<>"'`=\\]/g;
+function netClean(v){let n=0;const go=(x,dep)=>{if(++n>60000||dep>7)throw 0;
+    if(typeof x==='string')return x.length>400?x.slice(0,400).replace(WIRE_BAD,''):x.replace(WIRE_BAD,'');
+    if(typeof x==='number')return x;if(typeof x==='boolean'||x==null)return x;
+    if(Array.isArray(x)){const a=new Array(Math.min(x.length,30000));for(let i=0;i<a.length;i++)a[i]=go(x[i],dep+1);return a;}
+    if(typeof x==='object'){const o={};let k=0;for(const key in x){if(!Object.prototype.hasOwnProperty.call(x,key))continue;if(++k>400)break;
+        if(key==='__proto__'||key==='constructor'||key==='prototype'||key.length>40)continue;o[key.replace(WIRE_BAD,'')]=go(x[key],dep+1);}return o;}
+    return null;};
+  try{return go(v,0);}catch(e){return null;}}
+document.addEventListener('submit',e=>e.preventDefault(),true);
+// a broken or hostile message is dropped; it can never stop the game (reported once so real bugs are still seen)
+function netGuard(f,args){try{f.apply(null,args);}catch(e){if(!NET._badMsg){NET._badMsg=1;try{reportErr('net-msg',e);}catch(x){}}}}
+function hostRecv(c,d){netGuard(hostRecv0,[c,d]);}
+function hostRecv0(c,d){
+  d=netClean(d);if(!d||!d.t)return;
   // flood guard: a normal phone sends a few dozen messages a second; a modified one cannot drown the room.
   // Beyond 400 a second the rest is dropped; 3 seconds of flooding in a row and that player is removed.
   {const t=now(),R=c._rt||(c._rt={w:t,n:0,bad:0});if(t-R.w>=1000){R.bad=R.n>400?R.bad+1:0;R.w=t;R.n=0;}
@@ -6891,17 +6906,18 @@ function clientReconnect(){
   mpJoin(NET.code,true);
 }
 function netDropTransport(){const p=NET.peer,h=NET.host;NET.peer=null;NET.host=null;try{if(h&&h.relay)h.close();}catch(e){}try{if(p)p.destroy();}catch(e){}}
-function clientRecv(d){
-  if(!d||!d.t)return;
+function clientRecv(d){netGuard(clientRecv0,[d]);}
+function clientRecv0(d){
+  d=netClean(d);if(!d||!d.t)return;
   if(d.t==='po'){NET.ping=Math.round(now()-d.ts);return;}
   if(d.t==='pi'){try{NET.host.send({t:'po',ts:d.ts});}catch(e){}return;}
-  if(d.t==='pgs'){NET.pings=d.v||{};return;}
+  if(d.t==='pgs'){const o={};if(d.v&&typeof d.v==='object')for(const k in d.v)o[k]=clamp(fin(d.v[k],0),0,99999)|0;NET.pings=o;return;}
   if(d.t==='away'){NET.hostAway=true;return;}
   if(d.t==='back'){NET.hostAway=false;return;}
   if(d.t==='evs'){if(state==='play'&&Array.isArray(d.ev))for(const ev of d.ev)clientEvent(ev);return;}
   if(d.t==='ver'){NET.leaving=true;mpLeave(true);mpErr('You and your friend have different versions of the game. Both of you: close the game and open the link again (pull down to refresh), then try again.');return;}
   if(d.t==='kicked'){NET.leaving=true;mpLeave(true);mpErr('The host removed you from this room.');return;}
-  if(d.t==='badpw'){const code=NET.code,had=!!NET.pw;NET.leaving=true;mpLeave(true);const pw=prompt(had?'Wrong password. Try again:':'This room is locked. Enter the password:','');if(pw)mpJoin(code,false,pw);else mpErr('This room is locked with a password.');return;}
+  if(d.t==='badpw'){if(NET.mode==='client')return;const code=NET.code,had=!!NET.pw;NET.leaving=true;mpLeave(true);const pw=prompt(had?'Wrong password. Try again:':'This room is locked. Enter the password:','');if(pw)mpJoin(code,false,pw);else mpErr('This room is locked with a password.');return;}
   if(d.t==='cool'){NET.leaving=true;mpLeave(true);mpErr(`You just left this room. You can join it again in ${Math.max(1,d.s|0)} seconds.`);return;}
   if(d.t==='sys'){sysFeed(d.m);return;}
   if(d.t==='full'){NET.leaving=true;mpLeave(true);NET.browse=true;mpErr(`Room is full (${d.cap||12} players). Pick another room or create your own.`);roomsFetch(true);return;}
@@ -6931,8 +6947,8 @@ function clientRecv(d){
   if(d.t==='end'&&Array.isArray(d.kd))for(const a of d.kd){if(!Array.isArray(a))continue;const e=a[0]===NET.nid?player:findNid(a[0]);if(e&&!e.zombie){e.kills=fin(a[1],e.kills)|0;e.deaths=fin(a[2],e.deaths)|0;}}
   if(d.t==='end'&&isZ()){if(d.z)Z.round=d.z;if(state==='play')zGameOver(!!d.win);return;}
   if(d.t==='fk'){const a=findNid(d.a),v=findNid(d.v);if(a&&v&&fkStart(a,v,REC.t-.12))FK.head=!!d.h;return;}
-  if(d.t==='end'&&FK.on){scores.blue=d.sc[0];scores.red=d.sc[1];FK.pend=!!d.nuke;return;}
-  if(d.t==='end'){scores.blue=d.sc[0];scores.red=d.sc[1];if(d.z)Z.round=d.z;if(state==='play')endMatch(!!d.nuke);return;}
+  if(d.t==='end'&&FK.on){const sc=Array.isArray(d.sc)?d.sc:[];scores.blue=fin(sc[0],0)|0;scores.red=fin(sc[1],0)|0;FK.pend=!!d.nuke;return;}
+  if(d.t==='end'){const sc=Array.isArray(d.sc)?d.sc:[];scores.blue=fin(sc[0],0)|0;scores.red=fin(sc[1],0)|0;if(d.z)Z.round=d.z;if(state==='play')endMatch(!!d.nuke);return;}
 }
 function netApplyRoster(list){
   NET.roster=list;const keep=new Set();
@@ -6955,10 +6971,10 @@ function clientSnap(d){
   const seen=new Set();
   for(const a of d.E){
     const [nid,x,y,z,yaw,pitch,hp,al,k,dd,fired,sh,cr,pr]=a;
-    if(nid===NET.nid){player.hp=hp;player.shield=sh|0;player.kills=k;player.deaths=dd;continue;}
+    if(nid===NET.nid){player.hp=fin(hp,player.hp);player.shield=sh|0;player.kills=k|0;player.deaths=dd|0;continue;}
     const e=findNid(nid);if(!e)continue;seen.add(e);
     const fresh=e.tx===undefined||e.inMatch===false||Math.hypot(x-e.x,z-e.z)>4;
-    e.tx=x;e.ty=y;e.tz=z;e.tyaw=yaw;e.pitch=pitch;e.hp=hp;e.kills=k;e.deaths=dd;e.firedT=fired?1:0;e.crouch=!!cr&&!!al;e.sprot=!!pr&&!!al;e.inMatch=true;
+    e.tx=x;e.ty=y;e.tz=z;e.tyaw=yaw;e.pitch=pitch;e.hp=fin(hp,0);e.kills=k|0;e.deaths=dd|0;e.firedT=fired?1:0;e.crouch=!!cr&&!!al;e.sprot=!!pr&&!!al;e.inMatch=true;
     if(fresh){e.x=x;e.y=y;e.z=z;e.yaw=yaw;}
     if(al&&!e.alive){e.alive=true;e.deadT=0;e.mesh.visible=true;e.mesh.rotation.x=0;}
     if(!al&&e.alive){e.alive=false;e.deadT=0;e.sprite.visible=false;}
@@ -7131,10 +7147,10 @@ function lobSlot(o){
   // o: {name, team, lv, tag, me, friend, bot, ready, host, swap, empty}
   if(o.empty)return `<div class="slot empty"><i class="av">${o.locked?'–':'+'}</i><div class="sn"><b>${o.locked?'No bot':'Open slot'}</b><small>${o.locked?'Bots are off for your team':'Waiting for a friend'}</small></div></div>`;
   const col=o.team==='red'?'var(--red)':o.team==='zombie'?'var(--green)':'var(--blue)';
-  const pg=o.ping?`<span class="pg ${o.ping<90?'cg':o.ping<220?'ca':'cr'}">${o.ping} ms</span>`:'';
+  const png=fin(o.ping,0)|0,pg=png?`<span class="pg ${png<90?'cg':png<220?'ca':'cr'}">${png} ms</span>`:'';
   const st=o.bot?'<span class="st bot">BOT</span>':o.solo?'':o.away?'<span class="st nr">RECONNECTING</span>':o.host?pg+'<span class="st host">♛ HOST</span>':pg+(o.ready?'<span class="st rd">READY</span>':'<span class="st nr">NOT READY</span>');
   return `<div class="slot ${o.me?'me':''} ${o.bot?'bot':''} ${o.friend?'fr':''}"><i class="av" style="background:${o.bot?'rgba(255,255,255,.08)':col}">${o.bot?'⚙':esc(o.name.charAt(0).toUpperCase())}</i>
-    <div class="sn"><b>${o.friend?'★ ':''}${esc(o.name)}${o.me?' <em>(you)</em>':''}</b><small>${o.bot?'Fills the spot':'Level '+(o.lv||1)+(o.sk&&o.sk!=='std'&&CHARS[o.sk]?' · '+CHARS[o.sk].name:'')}</small></div>${st}${o.nid&&!o.me&&!o.bot&&!o.solo?`<button class="swap" data-rep="${esc(o.nid)}" title="Report player" aria-label="Report ${esc(o.name)}">⚑</button><button class="swap" data-blk="${esc(o.nid)}" title="Block player" aria-label="Block ${esc(o.name)}">⊘</button>`+(o.kick?`<button class="swap" data-kick="${esc(o.nid)}" title="Remove from room" aria-label="Remove ${esc(o.name)}">✕</button>`:''):''}${o.swap?`<button class="swap" data-swap="${o.swap}" title="Switch team">⇄</button>`:''}</div>`;
+    <div class="sn"><b>${o.friend?'★ ':''}${esc(o.name)}${o.me?' <em>(you)</em>':''}</b><small>${o.bot?'Fills the spot':'Level '+(clamp(fin(o.lv,1),1,99)|0)+(o.sk&&o.sk!=='std'&&CHARS[o.sk]?' · '+CHARS[o.sk].name:'')}</small></div>${st}${o.nid&&!o.me&&!o.bot&&!o.solo?`<button class="swap" data-rep="${esc(o.nid)}" title="Report player" aria-label="Report ${esc(o.name)}">⚑</button><button class="swap" data-blk="${esc(o.nid)}" title="Block player" aria-label="Block ${esc(o.name)}">⊘</button>`+(o.kick?`<button class="swap" data-kick="${esc(o.nid)}" title="Remove from room" aria-label="Remove ${esc(o.name)}">✕</button>`:''):''}${o.swap?`<button class="swap" data-swap="${o.swap}" title="Switch team">⇄</button>`:''}</div>`;
 }
 const blocked=()=>{if(!Array.isArray(profile.blocked))profile.blocked=[];return profile.blocked;};
 const isBlocked=n=>!!n&&blocked().some(b=>b.k===nameKey(String(n)));

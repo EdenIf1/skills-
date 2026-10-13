@@ -102,15 +102,16 @@ Data used to track you: **None**. Data linked to you:
 Not collected: location, contacts, health, financial, browsing, search, purchases, usage data for analytics, advertising data.
 
 ## Export compliance
-Uses only standard encryption (HTTPS, WebRTC DTLS). `ITSAppUsesNonExemptEncryption = NO` is already set in Info.plist, so no questions appear on upload.
+Uses only standard encryption provided by the operating system: HTTPS, WebRTC DTLS, and Web Crypto (ECDH P-256 key exchange + AES-GCM) for the end-to-end encrypted backup route between players, plus ECDSA P-256 to check the signature of live updates. No custom or proprietary algorithms. `ITSAppUsesNonExemptEncryption = NO` is set in Info.plist. If App Store Connect asks: "uses encryption: yes, standard algorithms only, provided by Apple's OS" (exempt). Have this confirmed before the first submission if unsure.
 
 ## App Review notes (paste and fill in)
-Cubefront works without an account: a guest account is created automatically on first launch and progress is saved online.
+On first launch the game asks once for the year of birth (neutral screen). Choose a year that makes you 13 or older to test online features; under 13 the game stays offline (no account, no online rooms).
+Cubefront works without an account: a guest account is created automatically and progress is saved online.
 To test a full account: tap the player name (top right) → Account → "Create account", or "Sign in" with the test account below.
 Test account: username ______ · password ______   (create it in the game first; do not commit it to the repository)
 Multiplayer: tap "Invite friends" on one device; on a second device open Lobby → Rooms and tap Join (or type the room code). Or press Play for a match with bots. Search & Destroy: hold E / the PLANT button inside a site to plant, DEFUSE next to the bomb to defuse. Party modes: Home → ★ Party modes.
-Safety: offensive usernames are refused; in a room, ⚑ reports a player to us, ⊘ blocks a player (Settings → Blocked players to undo) and the host's ✕ removes a player. Reports also go through Settings → Help & feedback → "Report a player".
-Account deletion: player name → Account → Delete account (type DELETE).
+Safety: offensive usernames and names that impersonate the game team are refused (server-side); the game owner's GM badge is verified by the server; the owner can suspend reported accounts from online play (admin panel → Player messages → Ban); in a room, ⚑ reports a player to us, ⊘ blocks a player (Settings → Blocked players to undo) and the host's ✕ removes a player. Reports also go through Settings → Help & feedback → "Report a player".
+Account deletion: player name → Account → Delete account (type DELETE). Works for guest accounts too. Web page for deletion requests: support.html#delete.
 Building: in any mode except Zombies, tap BUILD to see where the block goes, then tap BUILD again to place it.
 Everything in the game is earned with in-game GP; there are no real-money purchases.
 

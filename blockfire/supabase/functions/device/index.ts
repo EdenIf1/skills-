@@ -78,7 +78,7 @@ Deno.serve(async (req: Request) => {
     if (!vr.ok) return out(500, { error: 'server' });
     const session = await vr.json();
     await fetch(url + '/rest/v1/device_keys?id=eq.' + rows[0].id, { method: 'PATCH', headers: adm, body: JSON.stringify({ last_used_at: new Date().toISOString() }) });
-    return out(200, { access_token: session.access_token, refresh_token: session.refresh_token, expires_in: session.expires_in, user: { id: uid }, name: user.user_metadata?.name ?? '', guest: user.user_metadata?.guest === true });
+    return out(200, { access_token: session.access_token, refresh_token: session.refresh_token, expires_in: session.expires_in, user: { id: uid }, name: user.app_metadata?.name ?? user.user_metadata?.name ?? '', guest: (user.app_metadata?.guest ?? user.user_metadata?.guest) === true });
   }
   return out(400, { error: 'action' });
 });

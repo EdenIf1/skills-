@@ -21,7 +21,7 @@ Deno.serve(async (req: Request) => {
     const r = await fetch(url + '/auth/v1/admin/users', {
       method: 'POST',
       headers: { apikey: service, Authorization: 'Bearer ' + service, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password, email_confirm: true, user_metadata: { name, guest: true } }),
+      body: JSON.stringify({ email, password, email_confirm: true, user_metadata: { name, guest: true }, app_metadata: { name, guest: true } }),
     });
     if (r.ok) return out(200, { name, password });
     if (r.status !== 422) return out(500, { error: 'server' });

@@ -12,6 +12,12 @@ execFileSync('python3',[path.join(root,'build','build.py'),src,tmp,'--native'],{
 const zip=path.join(out,`bundle-${version}.zip`);if(fs.existsSync(zip))fs.rmSync(zip);
 execFileSync('zip',['-qr','-X',zip,'.'],{cwd:tmp});
 const sha=crypto.createHash('sha256').update(fs.readFileSync(zip)).digest('hex');
-const manifest={version,url:`https://raw.githubusercontent.com/EdenIf1/skills-/gh-pages/app/bundle-${version}.zip`,checksum:sha,minNative:'1.0.0',date:new Date().toISOString()};
+// the oldest installed app that can run this bundle: the native app's own version (package.json)
+const minNative=JSON.parse(fs.readFileSync(path.join(root,'app','package.json'),'utf8')).version||'1.0.0';
+const url=`https://raw.githubusercontent.com/EdenIf1/skills-/gh-pages/app/bundle-${version}.zip`;
+// every update is signed with the owner's private key (kept outside the repository); the app refuses anything else
+const keyFile=process.env.UPDATE_KEY;if(!keyFile||!fs.existsSync(keyFile))throw new Error('UPDATE_KEY (the signing key file) is required: unsigned updates are refused by the app');
+const sig=crypto.sign('sha256',Buffer.from(['cubefront-update',version,url,sha,minNative].join('|')),{key:fs.readFileSync(keyFile),dsaEncoding:'ieee-p1363'}).toString('base64');
+const manifest={version,url,checksum:sha,minNative,sig,date:new Date().toISOString()};
 fs.writeFileSync(path.join(out,'update.json'),JSON.stringify(manifest,null,2)+'\n');
 console.log(`bundle ${version} · ${(fs.statSync(zip).size/1024).toFixed(0)} KB · sha256 ${sha.slice(0,12)}…`);

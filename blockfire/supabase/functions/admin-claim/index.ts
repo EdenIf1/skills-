@@ -22,7 +22,8 @@ Deno.serve(async (req: Request) => {
   if (!who.ok) return out(401, { error: 'login' });
   const user = await who.json();
   if (!user?.id) return out(401, { error: 'login' });
-  if (user.user_metadata?.guest === true) return out(403, { error: 'guest' });
+  // the guest flag is read from the server-only field (players can edit user_metadata themselves)
+  if ((user.app_metadata?.guest ?? user.user_metadata?.guest) === true) return out(403, { error: 'guest' });
   let body: { code?: unknown } = {};
   try { body = await req.json(); } catch { /* empty */ }
   const code = typeof body.code === 'string' ? body.code.trim().toUpperCase() : '';

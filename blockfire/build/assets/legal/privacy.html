@@ -1,8 +1,10 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Cubefront Privacy</title><link rel="stylesheet" href="legal.css"></head><body><main>
 <nav><a href="index.html">Back to the game</a><a href="terms.html">Terms of use</a></nav>
-<h1>CUBE<b>FRONT</b> privacy policy</h1><p class="sub">Effective 12 October 2026</p>
+<h1>CUBE<b>FRONT</b> privacy policy</h1><p class="sub">Effective 13 October 2026</p>
 <p>Cubefront is a multiplayer block shooter. This page explains what the game stores about you, why, who else is involved, and how to delete it. We keep it short and plain on purpose.</p>
+<h2>Who we are</h2>
+<p>Cubefront is made and run by an independent developer in Israel (“we”). We are responsible for the data described here. You can reach us from the game (<b>Settings → Help &amp; feedback</b>) or from the <a href="support.html">support page</a>; we answer within 30 days.</p>
 <h2>What we collect</h2>
 <table><tr><th>Data</th><th>Why</th><th>Linked to you</th></tr>
 <tr><td>Your username (or a temporary guest name) and a password</td><td>To sign you in and keep your progress. Passwords are stored by our database provider in hashed form; we never see them.</td><td>Yes</td></tr>
@@ -10,22 +12,29 @@
 <tr><td>Messages you send from the in-game Help screen, and an optional contact you add</td><td>To answer you and fix problems.</td><td>Yes, if you are signed in</td></tr>
 <tr><td>Open rooms you host: your username, the room code, mode, map, number of players and whether it is locked (shown to other players in Rooms for as long as the room is open; untick "Listed in Rooms" to hide it). Room passwords stay on the host's device and are never sent to our servers.</td><td>So other players can find and join your game.</td><td>Yes, while the room is open</td></tr>
 <tr><td>Game invites: when a friend invites you by username, we store their name, the room code and the mode until you open the game (at most a day). Your inbox (rentals ending, news, invites) is saved with your progress.</td><td>So friends can invite you to play.</td><td>Yes</td></tr>
-<tr><td>Player reports: the reported player's name, the room code and what you wrote</td><td>To keep the game free of abuse.</td><td>Yes, if you are signed in</td></tr>
+<tr><td>Player reports: the reported player's name and account, the room code and what you wrote. The reported player never learns who reported them.</td><td>To keep the game free of abuse, and to suspend accounts that break the rules.</td><td>Yes, if you are signed in</td></tr>
+<tr><td>Room tickets: when you join or open an online room, the game asks our server for a one-room ticket. The room uses it to check your account name, whether you are the game's owner, and whether the account is suspended. Other players never get your account number or address, only a private code that means something inside this game (so a kick or block still works if you rename). Tickets are kept for 2 days.</td><td>To stop people pretending to be someone else, and to keep suspended players out.</td><td>Yes</td></tr>
+<tr><td>Suspensions: if an account is suspended after reports, the date and the reason.</td><td>To keep that player out of online play.</td><td>Yes, until the suspension ends</td></tr>
 <tr><td>A random sign-in key for each of your devices (we store only a scrambled hash of it) and the device type</td><td>To keep you signed in without typing your password again. It expires after 90 days unused or when you sign out.</td><td>Yes</td></tr>
-<tr><td>Crash reports: the error, game version and your browser or device model</td><td>To find and fix crashes.</td><td>Yes, if you are signed in</td></tr></table>
+<tr><td>Crash reports: the error, game version and your browser or device model (the support page also sends your browser's user-agent text)</td><td>To find and fix crashes.</td><td>Yes, if you are signed in</td></tr></table>
+<p>The game also asks, once, for your year of birth. Only the answer to “13 or older?” is kept, on your device; the year itself is not stored or sent. The game reads the server's clock so daily gifts follow the real date.</p>
 <p>We do not collect your real name, email (unless you type one in Help), contacts, location, photos, or advertising identifiers. There are no ads, no tracking across other apps or websites, and we never sell data.</p>
 <h2>Playing online with others</h2>
-<p>Your network (IP) address is never shown to other players. Every multiplayer link between devices goes through a relay server, so the devices in a room only ever see the relay's address, never each other's. The services that help connect you are: the PeerJS matchmaking server, TURN relay servers (freestun.net, Metered Open Relay, or the game's own relay), and, as a backup route, our own relay on Supabase Realtime or public message relays (EMQX, HiveMQ, Eclipse Mosquitto). These services see your connection the way any web server does. Game traffic on the backup route is end-to-end encrypted, so those message relays cannot read it. Game data sent between players is your name, level, look, and your position and actions in the match, never your password or saved progress.</p>
+<p>Your network (IP) address is never shown to other players. Every multiplayer link between devices goes through a relay server, so the devices in a room only ever see the relay's address, never each other's. The services that help connect you are: the PeerJS matchmaking server, TURN relay servers (freestun.net, Metered Open Relay, or the game's own relay), and, as a backup route, our own relay on Supabase Realtime or public message relays (EMQX, HiveMQ). These services see your connection the way any web server does. Game traffic on the backup route is end-to-end encrypted, so those message relays cannot read it. Game data sent between players is your name, level, look, and your position and actions in the match, never your password or saved progress.</p>
 <h2>Who stores the data</h2>
 <p>Accounts, progress, Help messages and crash reports are stored with Supabase (database hosting) in Frankfurt, Germany. The game files are hosted on GitHub. The iPhone app checks GitHub for updated game files and downloads them; this sends no personal data. Players you block are saved with your progress so you do not meet them again. These providers process data only to run those services.</p>
+<h2>Why we may use it (legal basis)</h2>
+<p>We use your data to provide the game you asked for (keeping your account, progress and online play working), for our legitimate interest in keeping the game safe, fair and free of crashes (reports, suspensions, crash reports), and to answer you when you contact us.</p>
+<h2>Data outside your country</h2>
+<p>Our database is in the European Union (Frankfurt). Some connection services (the PeerJS matchmaking server, relay servers and public message relays) may run in other countries, including the United States. They only carry connection and encrypted game traffic, never your saved progress or password.</p>
 <h2>How long we keep it</h2>
-<p>Your account and progress are kept until you delete them. Help messages and crash reports are kept for up to 12 months.</p>
+<p>Your account and progress are kept until you delete them. Help messages and reports are kept for up to 12 months; crash reports for up to 30 days; room tickets for 2 days. When you delete your account, Help messages you sent stay without the link to your account.</p>
 <h2>Deleting your data</h2>
-<p>Open the game, go to <b>Profile → Account → Delete account</b> and type DELETE. Your account and all of its progress are deleted from our servers at once. Progress saved only on your device is removed when you clear the game's data or delete the app.</p>
+<p>Open the game, go to <b>Profile → Account → Delete account</b> and type DELETE (guests too). Your account and all of its progress are deleted from our servers at once. Progress saved only on your device is removed when you clear the game's data or delete the app.</p>
 <h2>Children</h2>
-<p>Cubefront is not directed to children under 13, and we do not knowingly collect data from them. If you believe a child has created an account, contact us from the Help screen and we will delete it.</p>
+<p>Cubefront is not directed to children under 13. When a player says they are under 13, the game works offline only: no online account is made, no online rooms, and nothing about them is sent to our servers. If you believe a child has an account, contact us and we will delete it.</p>
 <h2>Your rights</h2>
-<p>Depending on where you live (for example under the GDPR or Israel's Privacy Protection Law), you can ask to see, correct, export or delete your data. Use the Help screen in the game; we answer within 30 days.</p>
+<p>Depending on where you live (for example under the GDPR or Israel's Privacy Protection Law), you can ask to see, correct, export or delete your data. Use the Help screen in the game or the support page; we answer within 30 days. You can also complain to your data protection authority (in Israel, the Privacy Protection Authority; in the EU, the authority where you live).</p>
 <h2>Changes</h2>
 <p>If this policy changes, we will update the date above and, for important changes, tell you in the game.</p>
 <h2>Contact</h2>
