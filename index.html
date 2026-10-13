@@ -473,6 +473,7 @@ body.touch .ctrl.desk{display:none} body:not(.touch) .ctrl.mob{display:none}
 #tip.go{animation:tipIn 6.5s ease forwards}
 @keyframes tipIn{0%{opacity:0}6%{opacity:1}88%{opacity:1}100%{opacity:0}}
 body.touch #tip{top:calc(var(--st) + 94px);max-width:52vw}body.touch #tip b{font-size:13px}
+.btn.armed{background:#e5484d!important;color:#fff!important;border-color:#e5484d!important}
 .toast.errnote{background:#ffcf5a;color:#2a1c00;font-family:system-ui,-apple-system,sans-serif;font-size:15px;letter-spacing:0;line-height:1.35;padding:8px 14px;max-width:min(560px,92vw)}
 .toast{position:fixed;left:50%;top:calc(var(--st) + 14px);transform:translateX(-50%);background:var(--green);color:#08200f;font-family:var(--f-hud);font-size:22px;padding:6px 16px 2px;z-index:50;letter-spacing:.06em;max-width:90vw;text-align:center}
 
@@ -1509,7 +1510,7 @@ async function adminClaim(code){if(!CS||CS.guest)return 'Sign in to your own acc
   if(r.ok){CS.admin=true;cloudKeep();return '';}const e=r.j&&r.j.error;
   return !r.status?'No connection to the server.':e==='code'?'That code is not right.':e==='taken'?'This game already has its admin.':e==='guest'?'Guest accounts cannot be admins. Create your account first.':'The server said no (error '+r.status+').';}
 /* ================= version, remote settings, crash reports ================= */
-const APP_VERSION='1.0.0',BUILD_ID='ad03ef5';
+const APP_VERSION='1.0.0',BUILD_ID='2d0de1d';
 const verNum=v=>String(v||'0').split('.').slice(0,3).map(n=>parseInt(n)||0).reduce((a,n)=>a*1000+n,0);
 let RCFG={};try{RCFG=JSON.parse(localStorage.getItem('blockfire.rcfg')||'{}')||{};}catch(e){RCFG={};}
 const feat=k=>!(RCFG.features&&RCFG.features[k]===false);
@@ -5382,7 +5383,11 @@ function leaveMatch(){
   state='menu';paused=false;fireHeld=false;ads=false;['hud','touch','end','board','pause','death','scope','zTip'].forEach(id=>$(id).hidden=true);
   MAP=MAPS[profile.map]||MAP;resetMatch(false);renderProfile();$('menu').hidden=false;
 }
-for(const id of['boardLeave','pauseLeave']){$(id).addEventListener('click',e=>{e.stopPropagation();leaveMatch();});$(id).addEventListener('touchend',e=>{e.stopPropagation();e.preventDefault();leaveMatch();},{passive:false});}
+// leaving takes two deliberate taps: the button sits where the weapon buttons are, so one stray touch must never end a match
+function leaveTap(b){const now=Date.now();if(b._arm&&now-b._arm<3000&&now-b._arm>250){b._arm=0;b.textContent=b._t;b.classList.remove('armed');leaveMatch();return;}
+  if(b._arm&&now-b._arm<=250)return;b._t=b._t||b.textContent;b._arm=now;b.textContent='Tap again to leave';b.classList.add('armed');
+  clearTimeout(b._tm);b._tm=setTimeout(()=>{b._arm=0;b.textContent=b._t;b.classList.remove('armed');},3000);}
+for(const id of['boardLeave','pauseLeave']){const b=$(id);b.addEventListener('click',e=>{e.stopPropagation();if(b._touch&&Date.now()-b._touch<600)return;leaveTap(b);});b.addEventListener('touchend',e=>{e.stopPropagation();e.preventDefault();b._touch=Date.now();leaveTap(b);},{passive:false});}
 $('setClose').addEventListener('click',()=>{$('settings').hidden=true;});
 // privacy policy and terms live next to the game (and on the public site when playing inside Claude)
 const legalUrl=f=>(CAP||/^https?:$/.test(location.protocol)&&!inFrame?'':PUBLIC_URL.replace(/[^/]*$/,''))+f;
