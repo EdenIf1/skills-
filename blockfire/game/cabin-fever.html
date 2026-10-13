@@ -1510,9 +1510,11 @@ function haptic(style){const H=capPlug('Haptics');if(!H||SET.haptics===false)ret
 setTimeout(()=>{loadConfig();liveUpdate();},800);setInterval(()=>{if(!document.hidden)loadConfig();},10*60*1000);
 setTimeout(cloudSync,300);addEventListener('online',()=>{cloudSync();if(cloudReady)cloudQueue();});setInterval(()=>{if(!cloudReady)cloudSync();},60000);
 
-const SET_DEFAULT={sens:1,adsSens:1,invert:false,vol:.8,quality:'auto',fov:75,btnScale:1,btnAlpha:1,fps:false,aim:true};
+const SET_DEFAULT={sens:1,adsSens:1,invert:false,vol:.8,quality:'high',fov:75,btnScale:1,btnAlpha:1,fps:false,aim:true};
 let SET=Object.assign({},SET_DEFAULT);
 try{Object.assign(SET,JSON.parse(localStorage.getItem('blockfire.settings')||'{}'));}catch(e){}
+// the old 'Auto' graphics option is gone: everyone starts on the best picture and can lower it in Settings
+if(!['high','med','low'].includes(SET.quality))SET.quality='high';
 function saveSettings(){try{localStorage.setItem('blockfire.settings',JSON.stringify(SET));}catch(e){}}
 const today=()=>{const d=new Date();return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;};
 const CHALLENGES=[
@@ -1577,10 +1579,10 @@ function chProgress(id,n){
 
 /* ================= renderer ================= */
 const canvas=$('c');
-const renderer=new THREE.WebGLRenderer({canvas,antialias:false,powerPreference:'high-performance'});
+const renderer=new THREE.WebGLRenderer({canvas,antialias:SET.quality!=='low',powerPreference:'high-performance'});
 renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,isTouch?1.25:1.5));
-// auto = full sharpness (up to 2x); the game never lowers the picture quality by itself
-const qualityRatio=()=>({low:.6,med:1,high:Math.min(window.devicePixelRatio||1,2)})[SET.quality]||Math.min(window.devicePixelRatio||1,2);
+// High = the screen's full native sharpness (3x on iPhones); the game never lowers it by itself
+const qualityRatio=()=>({low:.6,med:1,high:Math.min(window.devicePixelRatio||1,3)})[SET.quality]||Math.min(window.devicePixelRatio||1,3);
 renderer.autoClear=false;
 const scene=new THREE.Scene();
 scene.background=new THREE.Color(0xa7b6c6);
@@ -5209,7 +5211,7 @@ const SET_ROWS=[
   ['vol','Volume','range',0,1,.05,v=>Math.round(v*100)+'%'],
   ['btnScale','Button size','range',.8,1.2,.05,v=>Math.round(v*100)+'%'],
   ['btnAlpha','Button opacity','range',.35,1,.05,v=>Math.round(v*100)+'%'],
-  ['quality','Graphics','opts',['auto','low','med','high'],{auto:'Auto',low:'Low',med:'Medium',high:'High'}],
+  ['quality','Graphics','opts',['high','med','low'],{high:'High (best)',med:'Medium',low:'Low'}],
   ['invert','Invert look','opts',[false,true],{false:'Off',true:'On'}],
   ['aim','Aim assist (touch)','opts',[true,false],{true:'On',false:'Off'}],
   ['fps','Show FPS','opts',[false,true],{false:'Off',true:'On'}]
@@ -7255,7 +7257,7 @@ function frame(now){frameN++;animCamos(now);
   if(state!=='play'&&!$('spec').hidden){$('spec').hidden=true;document.body.classList.remove('ghost');if(specT&&specT.mesh)specT.mesh.visible=!!specT.alive;specT=null;specWait=0;}
   if(flameSndT>0&&state==='play'){flameSndT-=dt;if(!flameSnd&&AC){flameSnd=sfx.loop(650);}if(flameSnd)flameSnd.g.gain.value=.5;}
   else if(flameSnd){sfx.stopLoop(flameSnd);flameSnd=null;}
-  if(state==='play'&&SET.quality==='auto'&&!document.hidden){DQ.t+=rdt;DQ.n++;if(DQ.t>=2){const fps=DQ.n/DQ.t;DQ.t=0;DQ.n=0;const base=qualityRatio();let pr=renderer.getPixelRatio();
+  if(state==='play'&&SET.quality==='high'&&!document.hidden){DQ.t+=rdt;DQ.n++;if(DQ.t>=2){const fps=DQ.n/DQ.t;DQ.t=0;DQ.n=0;const base=qualityRatio();let pr=renderer.getPixelRatio();
     // picture quality is never lowered automatically; restore full sharpness if anything reduced it
     if(pr<base-.01)renderer.setPixelRatio(base);}}
   if(noRender||glLost)return;
