@@ -473,6 +473,7 @@ body.touch .ctrl.desk{display:none} body:not(.touch) .ctrl.mob{display:none}
 #tip.go{animation:tipIn 6.5s ease forwards}
 @keyframes tipIn{0%{opacity:0}6%{opacity:1}88%{opacity:1}100%{opacity:0}}
 body.touch #tip{top:calc(var(--st) + 94px);max-width:52vw}body.touch #tip b{font-size:13px}
+.toast.errnote{background:#ffcf5a;color:#2a1c00;font-family:system-ui,-apple-system,sans-serif;font-size:15px;letter-spacing:0;line-height:1.35;padding:8px 14px;max-width:min(560px,92vw)}
 .toast{position:fixed;left:50%;top:calc(var(--st) + 14px);transform:translateX(-50%);background:var(--green);color:#08200f;font-family:var(--f-hud);font-size:22px;padding:6px 16px 2px;z-index:50;letter-spacing:.06em;max-width:90vw;text-align:center}
 
 #board,#pause,#end,#shop,#crate,#acct,#settings,#mp{background:rgba(9,12,16,.78)}
@@ -1235,7 +1236,19 @@ function migrateProfile(p){if(!p||typeof p!=='object')return {};const v=p.v|0;
     for(const k of ao)if(M[k]&&!p.gearOwn.includes(M[k][0]))p.gearOwn.push(M[k][0]);
     for(const k in M)if(aq[k]&&ao.includes(k)&&!p.gear[M[k][1]])p.gear[M[k][1]]=M[k][0];}
   if(v<SCHEMA)p.v=SCHEMA;return p;}
-function fillProfile(p,name){const base=makeProfile(name);const out=Object.assign(base,migrateProfile(p));out.stats=Object.assign(newStats(),out.stats||{});out.attOwn=out.attOwn||{};if(!out.rent||typeof out.rent!=='object'||Array.isArray(out.rent))out.rent={};if(!out.paid||typeof out.paid!=='object'||Array.isArray(out.paid))out.paid={};if(!out.attOwn.m4a1)out.attOwn.m4a1=['holo'];for(const g of ['spas','thunder'])if(!(out.attOwn[g]||[]).includes('red'))out.attOwn[g]=(out.attOwn[g]||[]).concat('red');return out;}
+// a damaged save (cut off mid-write, edited, or from a very old version) must never break the game: every field that has
+// the wrong kind of value goes back to its default, numbers stay sane, and lists keep only plain names
+function cleanProfile(out,def){
+  for(const k in def){const d=def[k],v=out[k];if(d===null||d===undefined)continue;
+    if(Array.isArray(d)){if(!Array.isArray(v))out[k]=d.slice();else out[k]=v.filter(x=>typeof x==='string'||typeof x==='number');continue;}
+    if(typeof d==='number'){if(typeof v!=='number'||!isFinite(v))out[k]=d;continue;}
+    if(typeof d==='object'){if(!v||typeof v!=='object'||Array.isArray(v))out[k]=Object.assign({},d);continue;}
+    if(typeof v!==typeof d)out[k]=d;}
+  for(const k of['gp','xp','lvl','keys','calls'])if(typeof out[k]==='number')out[k]=Math.max(0,Math.min(k==='lvl'?999:1e9,out[k]));
+  // (the weapon list is not loaded yet here: unknown guns in the slots become the default rifle when the loadout is built)
+  if(Array.isArray(def.slots)&&(!Array.isArray(out.slots)||!out.slots.length))out.slots=def.slots.slice();
+  return out;}
+function fillProfile(p,name){const base=makeProfile(name),def=makeProfile(name);const out=cleanProfile(Object.assign(base,migrateProfile(p)),def);out.stats=Object.assign(newStats(),out.stats||{});out.attOwn=out.attOwn||{};if(!out.rent||typeof out.rent!=='object'||Array.isArray(out.rent))out.rent={};if(!out.paid||typeof out.paid!=='object'||Array.isArray(out.paid))out.paid={};if(!out.attOwn.m4a1)out.attOwn.m4a1=['holo'];for(const g of ['spas','thunder'])if(!(out.attOwn[g]||[]).includes('red'))out.attOwn[g]=(out.attOwn[g]||[]).concat('red');return out;}
 function loadProfile(){
   if(!USERS)USERS=readUsers();
   if(!USERS.cur||!USERS.users[USERS.cur]){const n='Player';USERS.users[n]=USERS.users[n]||{pin:'',guest:true,p:makeProfile(n)};USERS.cur=n;}
@@ -1270,7 +1283,13 @@ function mergeProfiles(a,b){
   o.created=Math.min(o.created||Date.now(),p.created||Date.now());
   return o;
 }
-function saveProfile(){if(!USERS||!USERS.users[USERS.cur])return;profile.savedAt=Date.now();USERS.users[USERS.cur].p=profile;try{localStorage.setItem('blockfire.users',JSON.stringify(USERS));}catch(e){}cloudDirty();}
+let fullToldT=0;
+function storeUsers(){const s=JSON.stringify(USERS);try{localStorage.setItem('blockfire.users',s);return true;}catch(e){}
+  // storage full: drop our own throw-away caches and try once more
+  try{['blockfire.errlog','blockfire.rcfg','blockfire.rooms','blockfire.news'].forEach(k=>localStorage.removeItem(k));localStorage.setItem('blockfire.users',s);return true;}catch(e){}
+  if(Date.now()-fullToldT>120000){fullToldT=Date.now();toast(CS&&!CS.guest?'This phone has no room left to save. Your progress is still saved online in your account.':'This phone has no room left to save, so progress may be lost. Free some space, or sign in to save online.');}
+  return false;}
+function saveProfile(){if(!USERS||!USERS.users[USERS.cur])return;profile.savedAt=Date.now();USERS.users[USERS.cur].p=profile;storeUsers();cloudDirty();}
 loadProfile();
 try{localStorage.setItem('blockfire.users',JSON.stringify(USERS));}catch(e){}
 const ST=()=>{const S=profile.stats;if(S&&!S.kdv2){S.kdv2=1;S.kills=Math.max(0,(S.kills|0)-(S.zkills|0));S.heads=Math.min(S.heads|0,S.kills);}return S;};
@@ -1490,7 +1509,7 @@ async function adminClaim(code){if(!CS||CS.guest)return 'Sign in to your own acc
   if(r.ok){CS.admin=true;cloudKeep();return '';}const e=r.j&&r.j.error;
   return !r.status?'No connection to the server.':e==='code'?'That code is not right.':e==='taken'?'This game already has its admin.':e==='guest'?'Guest accounts cannot be admins. Create your account first.':'The server said no (error '+r.status+').';}
 /* ================= version, remote settings, crash reports ================= */
-const APP_VERSION='1.0.0',BUILD_ID='8b098da';
+const APP_VERSION='1.0.0',BUILD_ID='ad03ef5';
 const verNum=v=>String(v||'0').split('.').slice(0,3).map(n=>parseInt(n)||0).reduce((a,n)=>a*1000+n,0);
 let RCFG={};try{RCFG=JSON.parse(localStorage.getItem('blockfire.rcfg')||'{}')||{};}catch(e){RCFG={};}
 const feat=k=>!(RCFG.features&&RCFG.features[k]===false);
@@ -1504,8 +1523,18 @@ function applyConfig(){
   if(typeof renderHome==='function'&&$('hParty'))try{renderHome();}catch(e){}
   try{if(typeof inboxNews==='function'&&profile)inboxNews();}catch(e){}}
 // one report per distinct problem, at most 20 a session
-const errSeen=new Set();let errN=0;
-function reportErr(where,e){try{const msg=String(e&&e.message||e||'?').slice(0,400),key=where+'|'+msg;if(errSeen.has(key)||errN>=20)return;errSeen.add(key);errN++;
+const errSeen=new Set();let errN=0,errToldT=0;
+// a short code for a problem (the same problem always gets the same code), shown to the player and stored with the report
+const errCode=s=>{let h=5381;for(let i=0;i<s.length;i++)h=((h<<5)+h+s.charCodeAt(i))|0;return 'E'+((h>>>0)%0xfffff).toString(16).toUpperCase().padStart(5,'0');};
+function errTell(code){const now=Date.now();if(now-errToldT<60000)return;errToldT=now;
+  try{const d=document.createElement('div');d.className='toast cut errnote';d.setAttribute('role','alert');
+    d.textContent='Something went wrong (code '+code+'). The game kept going. If it keeps happening, close and reopen the game.';document.body.appendChild(d);setTimeout(()=>d.remove(),6000);}catch(x){}}
+function reportErr(where,e){try{const msg0=String(e&&e.message||e||'?').slice(0,400);
+  // a browser extension or another site's script: nothing of ours broke
+  if(where==='window'&&/^Script error\.?$/.test(msg0))return;
+  const code=errCode(where+'|'+msg0),msg='['+code+'] '+msg0,key=where+'|'+msg0;
+  if(['window','promise','step'].includes(where))errTell(code);
+  if(errSeen.has(key)||errN>=20)return;errSeen.add(key);errN++;
   (window.__bfErrs=window.__bfErrs||[]).push(where+': '+msg);
   try{const L=JSON.parse(localStorage.getItem('blockfire.errlog')||'[]');L.unshift({t:Date.now(),w:where,m:msg,s:String(e&&e.stack||'').slice(0,600),mode:typeof RULE==='function'?RULE():''});localStorage.setItem('blockfire.errlog',JSON.stringify(L.slice(0,10)));}catch(x){}
   if(!cloudOn()||!navigator.onLine)return;
@@ -1528,7 +1557,9 @@ setTimeout(cloudSync,300);addEventListener('online',()=>{cloudSync();if(cloudRea
 
 const SET_DEFAULT={sens:1,adsSens:1,invert:false,vol:.8,quality:'high',fov:75,btnScale:1,btnAlpha:1,fps:false,aim:true};
 let SET=Object.assign({},SET_DEFAULT);
-try{Object.assign(SET,JSON.parse(localStorage.getItem('blockfire.settings')||'{}'));}catch(e){}
+try{const o=JSON.parse(localStorage.getItem('blockfire.settings')||'{}');if(o&&typeof o==='object')for(const k in o)if(k in SET_DEFAULT?typeof o[k]===typeof SET_DEFAULT[k]&&(typeof o[k]!=='number'||isFinite(o[k])):true)SET[k]=o[k];}catch(e){}
+// keep numbers in a range the controls can live with, whatever was saved
+SET.sens=Math.min(2.5,Math.max(.3,SET.sens));SET.adsSens=Math.min(1.5,Math.max(.3,SET.adsSens));SET.fov=Math.min(100,Math.max(65,SET.fov));SET.vol=Math.min(1,Math.max(0,SET.vol));SET.btnScale=Math.min(1.2,Math.max(.8,SET.btnScale));SET.btnAlpha=Math.min(1,Math.max(.35,SET.btnAlpha));
 // the old 'Auto' graphics option is gone: everyone starts on the best picture and can lower it in Settings
 if(!['high','med','low'].includes(SET.quality))SET.quality='high';
 function saveSettings(){try{localStorage.setItem('blockfire.settings',JSON.stringify(SET));}catch(e){}}
@@ -2614,7 +2645,7 @@ function earthTex(){const c=document.createElement('canvas');c.width=128;c.heigh
 function swirlTex(){const c=document.createElement('canvas');c.width=c.height=64;const g=c.getContext('2d');g.clearRect(0,0,64,64);
   for(let i=0;i<180;i++){const a=i*.21,r=2+i*.16;g.fillStyle=`rgba(${60+i%3*60},255,${120+i%4*30},${.25+.6*(1-i/180)})`;g.fillRect(32+Math.cos(a)*r-1.5,32+Math.sin(a)*r-1.5,3,3);}
   const gr=g.createRadialGradient(32,32,0,32,32,30);gr.addColorStop(0,'rgba(200,255,220,.7)');gr.addColorStop(1,'rgba(0,80,30,0)');g.fillStyle=gr;g.fillRect(0,0,64,64);return new THREE.CanvasTexture(c);}
-function mapFxBuild(){for(const k of['g','w'])if(SKYFX[k]){scene.remove(SKYFX[k]);SKYFX[k]=null;}SKYFX.rain=[];SKYFX.portals=[];SKYFX.earth=null;
+function mapFxBuild(){for(const k of['g','w'])if(SKYFX[k]){scene.remove(SKYFX[k]);try{freeAll(SKYFX[k]);}catch(e){}SKYFX[k]=null;}SKYFX.rain=[];SKYFX.portals=[];SKYFX.earth=null;
   const k=MAP.sky3d;
   if(k==='space'){const g=new THREE.Group(),pos=[],R=rng(99);
     for(let i=0;i<1400;i++){const u=R()*2-1,a=R()*6.283,s=Math.sqrt(1-u*u);pos.push(Math.cos(a)*s*160,Math.abs(u)*150-12,Math.sin(a)*s*160);}
@@ -4185,7 +4216,7 @@ function perchStep(b,dt){const P=b.perch;b.ptime=(b.ptime||0)+dt;if(b.ptime>50&&
   if(!b.target){const c=MAP.center;b.yaw=turnTo(b.yaw,Math.atan2(-(c[0]-b.x),-(c[2]-b.z)),2*dt);}
   return [0,0];}
 // when a bot comes back, sometimes it takes a free lookout on its own half of the map
-function perchPick(b){b.perch=null;if(!PERCHES.length||isZ()||RS.on||b.objRun||b.knifeOnly||MM()==='knife'||MM()==='boom'||state!=='play'||rand()>.45)return;
+function perchPick(b){b.perch=null;if(!PERCHES.length||isZ()||RS.on||b.objRun||b.king||b.knifeOnly||MM()==='knife'||MM()==='boom'||state!=='play'||rand()>.45)return;
   const mine=bots.filter(x=>x!==b&&x.perch&&x.team===b.team).length;if(mine>=Math.max(1,teamSize()>>2))return;
   const side=MAP.spawn[b.team]?(MAP.spawn[b.team][2]+MAP.spawn[b.team][3])/2<D/2:true;
   const L=PERCHES.filter(p=>(p.dest[2]<D/2)===side&&!bots.some(x=>x.perch===p)&&reachable(p.wp[0][0],p.wp[0][2]));if(!L.length)return;
@@ -5551,6 +5582,10 @@ function thumbR(){if(TH!==null)return TH;
     const sc=new THREE.Scene();sc.add(new THREE.HemisphereLight(0xffffff,0x40404a,1.1));const dl=new THREE.DirectionalLight(0xfff2dd,.85);dl.position.set(1.5,3,4);sc.add(dl);
     TH={r,c,sc,cam:new THREE.PerspectiveCamera(24,2,.05,60)};}catch(e){TH=false;}return TH;}
 function disposeObj(o){o.traverse(m=>{if(m.geometry&&m.geometry!==boxGeo)m.geometry.dispose();});}
+// free everything a removed object owns on the graphics card (its shapes and its own colours), but never the block
+// materials or the animal material that the whole map shares
+function freeAll(o){if(!o)return;const keep=new Set(MATS);o.traverse(m=>{try{if(m.geometry&&m.geometry!==boxGeo)m.geometry.dispose();
+  if(m.material)(Array.isArray(m.material)?m.material:[m.material]).forEach(x=>{if(x&&!keep.has(x)&&x!==AMAT){if(x.map&&!(x.map.userData&&x.map.userData.keep))x.map.dispose();x.dispose();}});}catch(e){reportErr('free',e);}});}
 // frame an object and take a picture of it (yaw turns it for the live preview)
 function shoot3D(obj,w,h,yaw,lift){const T=thumbR();if(!T)return false;
   const holder=new THREE.Group();holder.add(obj);T.sc.add(holder);
@@ -6146,6 +6181,8 @@ $('crateOpen').addEventListener('click',()=>{
   initAudio();crateBusy=true;renderCrateBtn();
   const win=rollReward(true),N=40,WI=34,reel=$('reel');
   profile.crates=(profile.crates|0)+1;profile.pity=profile.pity||{e:0,l:0};profile.pity.e=win.tier>=3?0:profile.pity.e+1;profile.pity.l=win.tier>=4?0:profile.pity.l+1;
+  // the prize is given and saved together with the payment: if the phone closes the game during the spin, nothing is lost
+  const dupe=giveReward(win);saveProfile();
   const items=[];for(let i=0;i<N;i++)items.push(i===WI?win:rollReward(false));
   reel.innerHTML=items.map(it=>`<div class="r${it.tier}">${rewardArt(it)}<span>${esc(it.label)}</span></div>`).join('');
   reel.style.transition='none';reel.style.transform='translateX(0)';
@@ -6153,7 +6190,7 @@ $('crateOpen').addEventListener('click',()=>{
   requestAnimationFrame(()=>requestAnimationFrame(()=>{reel.style.transition=reduceMotion?'transform .3s':'transform 4.2s cubic-bezier(.12,.75,.12,1)';reel.style.transform=`translateX(${-off}px)`;}));
   let ticks=0;const tk=setInterval(()=>{if(++ticks>28)clearInterval(tk);else sfx.tick();},130);
   setTimeout(()=>{
-    const dupe=giveReward(win);saveProfile();sfx.ding();if(win.tier>=4)sfx.ding();
+    sfx.ding();if(win.tier>=4)sfx.ding();
     $('crateWin').innerHTML=`<span class="rtier" style="color:${RAR[win.tier].c}">${RAR[win.tier].n}</span> You got <span style="color:${RAR[win.tier].c}">${esc(win.label)}</span>${dupe?`<small>${esc(dupe)}</small>`:''}`+prizeActions(win,dupe);
     renderPity();
     crateBusy=false;renderCrateBtn();
@@ -7267,7 +7304,7 @@ let last=performance.now(),menuT=0;
 let frameErrs=0,glLost=false;
 function safeExit(){try{if(NET.mode)mpLeave(false);}catch(e){}state='menu';paused=false;fireHeld=false;ads=false;
   ['hud','touch','end','board','pause','death','scope'].forEach(id=>{try{$(id).hidden=true;}catch(e){}});
-  try{resetMatch(false);}catch(e){}try{renderProfile();}catch(e){}$('menu').hidden=false;toast('Something went wrong in that match. You are back in the menu.');}
+  try{resetMatch(false);}catch(e){}try{renderProfile();}catch(e){}$('menu').hidden=false;toast('Something went wrong in that match (code '+errCode('exit|'+((window.__bfErrs||[]).slice(-1)[0]||''))+'). You are back in the menu and your progress is saved.');}
 // phones can drop the 3D context when the app goes to the background: wait for it to come back, then redraw the world
 let glLostAt=0;
 canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();glLost=true;glLostAt=performance.now();
@@ -7369,7 +7406,7 @@ function xmProp(e,on){if(e.isPlayer){e.propOn=!!on;if(on&&!e.propC)e.propC=[B.PL
   if(!on&&e.prop){scene.remove(e.prop);e.prop.material.dispose();e.prop=null;}e.propOn=!!on;}
 
 function xmStop(){
-  for(const o of XM.meshes)scene.remove(o);XM.meshes.length=0;
+  for(const o of XM.meshes){scene.remove(o);try{freeAll(o);}catch(e){}}XM.meshes.length=0;
   for(const e of ents){xmTint(e,false);xmProp(e,false);if(e.xmTeam0&&e.xmTeam0!==e.team)e.team=e.xmTeam0;delete e.xmTeam0;
     e.xmOut=false;e.knifeOnly=false;e.xmPassive=false;e.spd=1;e.gg=0;e.lives=0;e.atSpot=false;e.xmSpot=null;delete e.xmKnifed;delete e.frz;delete e.propC;e.objRun=false;if(e.gun&&!e.isPlayer)e.gun.visible=MM()!=='knife';}
   XM.on=false;XM.rule='';XM.ffa=false;XM.own=false;XM.win=null;XM.flags=null;XM.lanes=null;XM.pts=null;XM.hp=null;XM.ring=null;XM.phase=0;
@@ -7630,7 +7667,7 @@ function kgArm(on){if(on===!!player.kingArmed)return;player.kingArmed=!!on;
   nades=on?0:(noNades()?0:profile.nadeLvl);minesLeft=on?0:(noNades()?0:profile.mineLvl);try{buildViewmodels();}catch(e){}
   try{tl.querySelector('[data-b=nade]').hidden=on||noNades();tl.querySelector('[data-b=mine]').hidden=on||noNades()||!profile.mineLvl;}catch(e){}
   if(on)showMsg('MINIGUN + ROCKET LAUNCHER',true);}
-function kgSet(e,on){if(!e)return;const was=!!e.king;e.king=!!on;e.ks=on?KS:1;
+function kgSet(e,on){if(!e)return;const was=!!e.king;e.king=!!on;if(on)e.perch=null;e.ks=on?KS:1;
   if(e===player)kgArm(!!on);else if(!e.remote&&e.baseWeapon){e.weapon=on?'King Minigun':(MM()==='knife'?'Knife':MM()==='sniper'?'Longbow .338':MM()==='boom'?'Viper RL':e.baseWeapon);}
   if(e.head&&!e.crown){e.crown=kgCrownMesh();e.head.add(e.crown);}if(e.crown)e.crown.visible=!!on;
   if(!isClient()){if(on){e.maxHp=KHP;e.hp=KHP;e.shield=0;e.maxSh=0;e.spawnProt=0;}
