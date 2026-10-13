@@ -1,6 +1,6 @@
 // Blockfire device: "remember this phone". After a login the phone gets a random key; only its SHA-256 is stored.
 // When the phone's normal session is gone or expired, the key signs it back in without asking for the password.
-// A key stops working after 90 days unused, when the player signs out on that phone, or when the account is deleted.
+// A key stops working after 30 days unused, when the player signs out on that phone, or when the account is deleted.
 const CORS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -12,7 +12,7 @@ const sha256 = async (s: string) =>
   Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s))), (b) => b.toString(16).padStart(2, '0')).join('');
 const b64url = (u: Uint8Array) => btoa(String.fromCharCode(...u)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const MAX_AGE = 90 * 864e5, MAX_KEYS = 8;
+const MAX_AGE = 30 * 864e5, MAX_KEYS = 8;
 
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS });

@@ -35,7 +35,7 @@
 - Settings then show an "Admin" row: live settings, player messages and reports, crash reports, and the optional own multiplayer server.
 
 ## Staying signed in
-- After signing in, the phone gets a random "device key" (the server keeps only its hash). If the session expires, the key signs the player back in without a password. It expires after 90 days unused, or when signing out.
+- After signing in, the phone gets a random "device key" (the server keeps only its hash). If the session expires, the key signs the player back in without a password. It expires after 30 days unused, or when signing out.
 - Safari, the home-screen app and the Claude app each keep separate storage, so you sign in once in each.
 
 ## Online: rooms, modes and load
