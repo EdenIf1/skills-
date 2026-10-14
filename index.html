@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-0DyOAhECJE3vXFXcwNw4h8mO8gGu9ipiVydQh+qgfGc=' 'sha256-9ukHMjAj3B//0niEyagAnVrCKsLtRunO2PE+xl0voCE=' 'unsafe-eval'; script-src-attr 'none'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; media-src 'self' data: blob:; connect-src 'self' https: wss: data: blob: http://127.0.0.1:* ws://127.0.0.1:* http://localhost:* ws://localhost:*; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'; frame-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-0DyOAhECJE3vXFXcwNw4h8mO8gGu9ipiVydQh+qgfGc=' 'sha256-cxerF8JQGMXPY3nrIYqfThNQcBZZ7BiuoipeHko73cE=' 'unsafe-eval'; script-src-attr 'none'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; media-src 'self' data: blob:; connect-src 'self' https: wss: data: blob: http://127.0.0.1:* ws://127.0.0.1:* http://localhost:* ws://localhost:*; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'; frame-src 'none'">
 <meta name="referrer" content="no-referrer">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
@@ -1338,7 +1338,7 @@ async function cloudReq(path,opt={}){const c=cloudCfg();const h={apikey:c.key,'C
   try{const r=await fetch(c.url.replace(/\/$/,'')+path,{method:opt.method||'GET',headers:h,body:opt.body?JSON.stringify(opt.body):undefined,signal:ctl.signal,keepalive:!!opt.keepalive});
     const txt=await r.text();let j=null;try{j=txt?JSON.parse(txt):null;}catch(e){}return{ok:r.ok,status:r.status,j};}
   catch(e){return{ok:false,status:0,j:null};}finally{clearTimeout(t);}}
-function cloudSession(j,name){if(!j||!j.access_token)return false;const keep=CS&&CS.uid===(j.user&&j.user.id)?CS:{};CS={at:j.access_token,rt:j.refresh_token,exp:Date.now()+((j.expires_in||3600)-60)*1000,uid:(j.user&&j.user.id)||keep.uid,name,ver:keep.ver||'',dirty:!!keep.dirty,guest:!!keep.guest,gpw:keep.gpw||'',seen:Date.now(),base:keep.base||null};cloudKeep();return true;}
+function cloudSession(j,name){if(!j||!j.access_token)return false;const keep=CS&&CS.uid===(j.user&&j.user.id)?CS:{};CS={dead:false,at:j.access_token,rt:j.refresh_token,exp:Date.now()+((j.expires_in||3600)-60)*1000,uid:(j.user&&j.user.id)||keep.uid,name,ver:keep.ver||'',dirty:!!keep.dirty,guest:!!keep.guest,gpw:keep.gpw||'',seen:Date.now(),base:keep.base||null};cloudKeep();return true;}
 async function dkCreate(){if(!CS||CS.guest)return false;const r=await cloudReq('/functions/v1/device',{method:'POST',body:{action:'create',label:deviceLabel()}});
   if(r.ok&&r.j&&typeof r.j.key==='string'){dkSave({uid:CS.uid,key:r.j.key,name:CS.name});return true;}return false;}
 // the phone's key signs it back in (a fresh session from the server); a refused key is forgotten
@@ -1346,16 +1346,35 @@ async function dkLogin(dk){if(!dk)return false;const r=await cloudReq('/function
   if(r.ok&&r.j&&r.j.access_token){if(CS&&CS.uid!==dk.uid)CS=null;const nm=(r.j.name||dk.name||(CS&&CS.name)||'').slice(0,14);if(!cloudSession(r.j,nm))return false;CS.guest=!!r.j.guest;cloudKeep();lastName(CS.name);return true;}
   if(r.status===401||r.status===400)dkSave(null);return false;}
 let refreshing=null;
-async function cloudFresh(){if(!CS)return false;if(Date.now()<CS.exp)return true;
-  // one refresh at a time: two at once would spend the same refresh token twice
+// Several open tabs share one sign-in. A sign-in's renewal key works once: two tabs renewing at the same moment made
+// the server cancel the whole sign-in (Safari, Oct 13). So a tab first takes what another tab already renewed, only
+// one tab renews at a time (a 10 s lock in storage), and every tab picks up a renewal the moment it is stored.
+const TAB_ID=Math.random().toString(36).slice(2);
+function csStored(){try{return JSON.parse(localStorage.getItem('blockfire.cloud')||'null');}catch(e){return null;}}
+function csAdopt(){const o=csStored();if(o&&CS&&o.uid===CS.uid&&o.at&&o.at!==CS.at&&!o.dead&&(o.exp|0)>(CS.exp|0)){CS.at=o.at;CS.rt=o.rt;CS.exp=o.exp;CS.dead=false;if(cloudErr===DEADMSG)cloudErr='';return true;}return false;}
+addEventListener('storage',e=>{if(e.key==='blockfire.cloud')try{csAdopt();}catch(x){}});
+const DEADMSG='Online saving is paused on this device: please log in again (your progress here is kept and will be combined).';
+let deadTold=false;
+async function cloudFresh(){if(!CS)return false;csAdopt();if(Date.now()<CS.exp)return true;
+  // a cancelled sign-in stays cancelled: no more asking the server every minute, just a clear message
+  if(CS.dead){cloudErr=DEADMSG;return false;}
   if(refreshing)return refreshing;
-  refreshing=(async()=>{const r=await cloudReq('/auth/v1/token?grant_type=refresh_token',{method:'POST',auth:false,body:{refresh_token:CS.rt}});
-    if(r.ok&&cloudSession(r.j,CS.name))return true;
-    if(r.status===400||r.status===401){
-      if(CS.guest&&CS.gpw){const t=await cloudReq('/auth/v1/token?grant_type=password',{method:'POST',auth:false,body:{email:cloudEmail(CS.name),password:CS.gpw}});if(t.ok&&cloudSession(t.j,CS.name))return true;}
-      const dk=dkLoad()||dkParse(await idbGet(DK));if(dk&&dk.uid===CS.uid&&await dkLogin(dk))return true;
-      cloudErr='You were signed out on this device. Sign in again.';}
-    return false;})();
+  refreshing=(async()=>{
+    // another tab is renewing right now: wait for it (up to 6 s) and use its result
+    for(let i=0;i<20;i++){let L=null;try{L=JSON.parse(localStorage.getItem('blockfire.rlock')||'null');}catch(e){}
+      if(!L||L.id===TAB_ID||Date.now()-L.t>10000)break;await new Promise(r=>setTimeout(r,300));if(csAdopt()&&Date.now()<CS.exp)return true;}
+    if(csAdopt()&&Date.now()<CS.exp)return true;
+    try{localStorage.setItem('blockfire.rlock',JSON.stringify({id:TAB_ID,t:Date.now()}));}catch(e){}
+    try{const r=await cloudReq('/auth/v1/token?grant_type=refresh_token',{method:'POST',auth:false,body:{refresh_token:CS.rt}});
+      if(r.ok&&cloudSession(r.j,CS.name))return true;
+      if(r.status===400||r.status===401){
+        if(csAdopt()&&Date.now()<CS.exp)return true;   // another tab won the race a moment ago
+        if(CS.guest&&CS.gpw){const t=await cloudReq('/auth/v1/token?grant_type=password',{method:'POST',auth:false,body:{email:cloudEmail(CS.name),password:CS.gpw}});if(t.ok&&cloudSession(t.j,CS.name))return true;}
+        const dk=dkLoad()||dkParse(await idbGet(DK));if(dk&&dk.uid===CS.uid&&await dkLogin(dk))return true;
+        CS.dead=true;cloudKeep();cloudErr=DEADMSG;try{reportErr('signin','sign-in cancelled by the server; asked to log in again');}catch(e){}
+        if(!deadTold){deadTold=true;try{toast(DEADMSG);}catch(e){}}}
+      return false;}
+    finally{try{const L=JSON.parse(localStorage.getItem('blockfire.rlock')||'null');if(L&&L.id===TAB_ID)localStorage.removeItem('blockfire.rlock');}catch(e){}}})();
   try{return await refreshing;}finally{refreshing=null;}}
 // a long time without playing: a registered player logs in again (guests keep their own key on this phone)
 const IDLE_MS=30*864e5;
@@ -1515,8 +1534,11 @@ async function cloudLogin(name,pass){try{localStorage.removeItem('blockfire.nogu
   const row=await cloudPull(r.j&&cloudSession(r.j,name));
   if(row===null){CS=null;cloudKeep();return 'Logged in, but your progress could not be loaded. Try again in a moment.';}
   if(row.name)CS.name=row.name,cloudKeep();
-  const p=row.data&&typeof row.data.xp==='number'?fillProfile(row.data,CS.name):fillProfile(Object.assign({},profile),CS.name);
-  const merged=!!(row.data&&isGuest(USERS.cur)&&hasProgress(USERS.users[USERS.cur].p));
+  let p=row.data&&typeof row.data.xp==='number'?fillProfile(row.data,CS.name):fillProfile(Object.assign({},profile),CS.name);
+  let merged=!!(row.data&&isGuest(USERS.cur)&&hasProgress(USERS.users[USERS.cur].p));
+  // the same account already has progress on this phone (for example saved while the sign-in was cancelled):
+  // combine it with the online copy instead of replacing it
+  {const mine=USERS.users[CS.name]&&USERS.users[CS.name].p;if(row.data&&typeof row.data.xp==='number'&&mine&&hasProgress(mine)){try{p=syncMerge(fillProfile(JSON.parse(JSON.stringify(mine)),CS.name),row.data,CS.base||null);merged=true;}catch(e){}}}
   cloudAdopt(CS.name,p);CS.ver=row.updated_at||'';CS.dirty=merged||!row.data;CS.guest=false;cloudKeep();lastName(CS.name);cloudReady=true;if(CS.dirty)await cloudPush();else cloudLast=Date.now();
   dkSave(null);dkCreate();cloudAdminCheck();return cloudErr;}
 // delete the account on the server (App Store rule), then forget it on this device
@@ -1527,9 +1549,10 @@ async function cloudDelete(){if(!CS)return 'You are not logged in.';if(!await cl
   if(USERS.users[n])delete USERS.users[n];USERS.cur='';try{localStorage.setItem('blockfire.users',JSON.stringify(USERS));}catch(e){}loadProfile();afterSwitch();setTimeout(cloudSync,400);return '';}
 async function cloudLogout(){if(cloudMine()&&cloudReady)await cloudPush();
   {const dk=dkLoad();if(dk&&CS&&await cloudFresh())await cloudReq('/functions/v1/device',{method:'POST',body:{action:'revoke',key:dk.key}});dkSave(null);}
-  const n=CS&&CS.name;CS=null;cloudKeep();cloudReady=false;
-  // the account stays safe online; this device keeps nothing of it
-  if(n&&USERS.users[n]){delete USERS.users[n];USERS.cur='';try{localStorage.setItem('blockfire.users',JSON.stringify(USERS));}catch(e){}loadProfile();afterSwitch();}}
+  const n=CS&&CS.name,dead=!!(CS&&CS.dead);CS=null;cloudKeep();cloudReady=false;
+  // the account stays safe online; this device keeps nothing of it (unless its sign-in had been cancelled: then this
+  // phone holds progress the server never got, so it stays until the next log in combines it)
+  if(n&&USERS.users[n]&&!dead){delete USERS.users[n];USERS.cur='';try{localStorage.setItem('blockfire.users',JSON.stringify(USERS));}catch(e){}loadProfile();afterSwitch();}}
 // opening the game: if the database moved on (another phone), take it unless this phone got further; then saving starts
 async function cloudRestore(dk){
   if(!await dkLogin(dk))return false;const row=await cloudPull();if(row===null||!CS)return false;
@@ -1566,7 +1589,7 @@ async function adminClaim(code){if(!CS||CS.guest)return 'Sign in to your own acc
   if(r.ok){CS.admin=true;cloudKeep();return '';}const e=r.j&&r.j.error;
   return !r.status?'No connection to the server.':e==='code'?'That code is not right.':e==='taken'?'This game already has its admin.':e==='guest'?'Guest accounts cannot be admins. Create your account first.':'The server said no (error '+r.status+').';}
 /* ================= version, remote settings, crash reports ================= */
-const APP_VERSION='1.1.0',BUILD_ID='04cd77a';
+const APP_VERSION='1.1.1',BUILD_ID='f19224e';
 const verNum=v=>String(v||'0').split('.').slice(0,3).map(n=>parseInt(n)||0).reduce((a,n)=>a*1000+n,0);
 let RCFG={};try{RCFG=JSON.parse(localStorage.getItem('blockfire.rcfg')||'{}')||{};}catch(e){RCFG={};}
 const feat=k=>!(RCFG.features&&RCFG.features[k]===false);
@@ -5675,6 +5698,13 @@ function renderAcct(){
       card=`<div class="authCard acIn"><div class="acOk">✓ Signed in</div><div class="authH">${esc(CS.name)}</div>
         <div class="authSub">You are playing on another profile on this device (${esc(USERS.cur||'Player')}), so its progress is not saved online. Switch back to your account to keep saving.</div>
         <div class="acBtns">${USERS.users[CS.name]?`<button class="btn cut" data-switch="${esc(CS.name)}">Back to ${esc(CS.name)}</button>`:''}<button class="btn ghost cut" id="clLogout">Sign out</button></div></div>`;}
+    else if(named&&CS.dead){
+      // the server cancelled this device's sign-in: log in again right here; nothing on this phone is lost
+      card=`<div class="authCard acIn"><div class="authH">Log in again</div>
+        <div class="authSub">Online saving stopped on this device because the sign-in expired. Your progress on this phone is safe: type your password and it is combined with your online save.</div>
+        <label class="fld"><span>Username</span><input id="reName" value="${esc(CS.name)}" disabled></label>
+        <label class="fld"><span>Password</span><span class="pwWrap"><input id="rePass" type="${acShowPw?'text':'password'}" maxlength="64" autocomplete="current-password" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="Your password">${eye}</span></label>
+        ${msgHtml()}<div class="acBtns"><button class="btn cut authGo" id="reLogin">Log in again</button></div></div>`;}
     else if(named){
       const row=(k,v)=>`<div class="aRow"><span>${k}</span><b>${v}</b></div>`;
       card=`<div class="authCard acIn"><div class="acOk">✓ Signed in</div><div class="authH">${esc(CS.name)}</div>
@@ -5773,6 +5803,9 @@ $('acBody').addEventListener('click',e=>{
     if(!pw){acMsg='!Type your password.';renderAcct();return;}
     b.disabled=true;b.textContent='Please wait…';
     cloudLogin(n,pw).then(err=>{if(!err)keepSet(acKeep);acMsg=err?'!'+err:`Welcome back, ${profile.name||CS.name}. Your progress is loaded.`;renderAcct();renderProfile();});return;}
+  if(b.id==='reLogin'&&CS){const pw=$('rePass').value||'';if(!pw){acMsg='!Type your password.';renderAcct();return;}
+    b.disabled=true;b.textContent='Please wait…';saveProfile();
+    cloudLogin(CS.name,pw).then(err=>{if(!err){keepSet(true);cloudErr='';}acMsg=err?'!'+err:'Logged in again. Your progress from this phone is combined with your online save.';renderAcct();renderProfile();});return;}
   if(b.id==='clDel'){acDel=true;renderAcct();return;}
   if(b.id==='clDelNo'){acDel=false;renderAcct();return;}
   if(b.id==='clDelGo'){if(($('clDelTxt').value||'').trim().toUpperCase()!=='DELETE'){acMsg='!Type DELETE to confirm.';renderAcct();return;}
