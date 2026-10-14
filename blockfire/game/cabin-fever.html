@@ -1548,7 +1548,7 @@ async function adminClaim(code){if(!CS||CS.guest)return 'Sign in to your own acc
   if(r.ok){CS.admin=true;cloudKeep();return '';}const e=r.j&&r.j.error;
   return !r.status?'No connection to the server.':e==='code'?'That code is not right.':e==='taken'?'This game already has its admin.':e==='guest'?'Guest accounts cannot be admins. Create your account first.':'The server said no (error '+r.status+').';}
 /* ================= version, remote settings, crash reports ================= */
-const APP_VERSION='1.0.5',BUILD_ID='__BUILD_ID__';
+const APP_VERSION='1.0.6',BUILD_ID='__BUILD_ID__';
 const verNum=v=>String(v||'0').split('.').slice(0,3).map(n=>parseInt(n)||0).reduce((a,n)=>a*1000+n,0);
 let RCFG={};try{RCFG=JSON.parse(localStorage.getItem('blockfire.rcfg')||'{}')||{};}catch(e){RCFG={};}
 const feat=k=>!(RCFG.features&&RCFG.features[k]===false);
@@ -1577,7 +1577,10 @@ function reportErr(where,e){try{const msg0=String(e&&e.message||e||'?').slice(0,
   (window.__bfErrs=window.__bfErrs||[]).push(where+': '+msg);
   try{const L=JSON.parse(localStorage.getItem('blockfire.errlog')||'[]');L.unshift({t:Date.now(),w:where,m:msg,s:String(e&&e.stack||'').slice(0,600),mode:typeof RULE==='function'?RULE():''});localStorage.setItem('blockfire.errlog',JSON.stringify(L.slice(0,10)));}catch(x){}
   if(!cloudOn()||!navigator.onLine)return code;
-  cloudReq('/rest/v1/client_errors',{method:'POST',auth:!!CS,headers:{Prefer:'return=minimal'},body:{app_version:APP_VERSION,message:msg,stack:String(e&&e.stack||'').slice(0,2000),where_:String(where).slice(0,60),device:navigator.userAgent.slice(0,160)}});return code;}catch(x){return window.__bfLastCode||'E00000';}}
+  // a report never depends on the sign-in: an old session token is refused by the server, so send it plainly then
+  const body={app_version:APP_VERSION,message:msg,stack:String(e&&e.stack||'').slice(0,2000),where_:String(where).slice(0,60),device:navigator.userAgent.slice(0,160)};
+  const fresh=!!(CS&&CS.at&&CS.exp>Date.now()+5000);
+  cloudReq('/rest/v1/client_errors',{method:'POST',auth:fresh,headers:{Prefer:'return=minimal'},body}).then(r=>{if(fresh&&r&&(r.status===401||r.status===403))cloudReq('/rest/v1/client_errors',{method:'POST',auth:false,headers:{Prefer:'return=minimal'},body});}).catch(()=>{});return code;}catch(x){return window.__bfLastCode||'E00000';}}
 addEventListener('error',ev=>{if(ev.error&&ev.error.__bfRep)return;reportErr('window',ev.error||ev.message);});
 addEventListener('unhandledrejection',ev=>reportErr('promise',ev.reason));
 // the last start never finished: say where it stopped (so it can be fixed) and that this start is in safe mode
@@ -1797,7 +1800,8 @@ MATS[B.BOARD]=L(tex(g=>each((x,y)=>{let c=jit([140,100,60],18);if(y%5===4)c=[50,
 MATS[B.SAND]=L(tex(g=>each((x,y)=>px(g,x,y,jit(TR()<.1?[190,160,110]:[214,188,138],18)))));
 MATS[B.ASH]=L(tex(g=>each((x,y)=>px(g,x,y,TR()<.07?jit([120,60,30],30):TR()<.2?jit([70,66,62],14):jit([34,32,30],10)))));
 {const cs=L(tex(g=>each((x,y)=>px(g,x,y,(x+y*3)%7===0?jit([60,24,12],14):jit([24,22,22],8))))),ct=L(tex(g=>each((x,y)=>{const d=Math.hypot(x-7.5,y-7.5);px(g,x,y,(d|0)%3===0?jit([46,40,38],8):jit([20,18,18],6));})));MATS[B.CHAR]=[cs,cs,ct,ct,cs,cs];}
-MATS[B.FENCE]=new THREE.MeshLambertMaterial({map:tFence,transparent:true,alphaTest:.3,side:THREE.DoubleSide});
+// fences and corn are cut-outs (no see-through blending): hundreds of layered blended faces made iPhones drop the graphics on the Farm
+MATS[B.FENCE]=new THREE.MeshLambertMaterial({map:tFence,alphaTest:.3,side:THREE.DoubleSide});
 // newer blocks for the big maps: sofa fabric, screens, bookshelves, tiles, hay, asphalt and corn
 MATS[B.FABRIC]=L(tex(g=>each((x,y)=>{let c=jit([156,46,50],12);if(x%8===0||y%8===0)c=c.map(v=>v*.78);px(g,x,y,c);})));
 {const sc=L(tex(g=>each((x,y)=>{let c=jit([16,18,24],5);if((x+y)%9===0&&x<10)c=[44,56,78];if(x===0||y===0||x===15||y===15)c=[34,34,38];px(g,x,y,c);})));MATS[B.SCREEN]=sc;}
@@ -1808,7 +1812,7 @@ MATS[B.TILE]=L(tex(g=>each((x,y)=>px(g,x,y,(x%8===0||y%8===0)?[168,172,176]:jit(
 {const ht=L(tex(g=>each((x,y)=>px(g,x,y,TR()<.2?jit([170,140,60],14):jit([214,186,98],16))))),hs=L(tex(g=>each((x,y)=>{let c=TR()<.25?jit([176,146,66],12):jit([210,180,92],14);if(y===4||y===11)c=[120,90,40];px(g,x,y,c);})));MATS[B.HAY]=[hs,hs,ht,ht,hs,hs];}
 MATS[B.ASPHALT]=L(tex(g=>each((x,y)=>px(g,x,y,TR()<.08?jit([96,96,100],10):jit([56,58,62],8)))));
 {const cs=L(tex(g=>{g.clearRect(0,0,16,16);for(let x=0;x<16;x++){const st=x%4===1;for(let y=0;y<16;y++){if(st)px(g,x,y,jit([70,124,44],16));else if(TR()<.35)px(g,x,y,y<5&&TR()<.4?jit([214,186,80],14):jit([96,150,52],18));}}}));
-  MATS[B.CORN]=new THREE.MeshLambertMaterial({map:cs.map,transparent:true,alphaTest:.4,side:THREE.DoubleSide});}
+  MATS[B.CORN]=new THREE.MeshLambertMaterial({map:cs.map,alphaTest:.4,side:THREE.DoubleSide});}
 MATS[B.RUG]=L(tex(g=>each((x,y)=>{const d=Math.max(Math.abs(x-7.5),Math.abs(y-7.5))|0;px(g,x,y,d===7?[200,170,90]:d===5?[170,60,50]:(x+y)%4===0?[230,214,170]:jit([50,84,130],10));})));
 MATS[B.LEAF2]=L(tex(g=>each((x,y)=>px(g,x,y,TR()<.12?jit([90,150,60],20):jit([46,104,48],30)))));
 MATS[B.WALLP]=L(tex(g=>each((x,y)=>px(g,x,y,x%8<2?jit([214,200,170],6):jit([232,224,204],5)))));
