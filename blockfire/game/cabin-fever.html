@@ -635,6 +635,7 @@ body.touch #tip{top:calc(var(--st) + 94px);max-width:52vw}body.touch #tip b{font
 .durSeg button{font:500 16px var(--f-hud);letter-spacing:.06em;padding:6px 11px 3px;background:none;border:0;border-right:1px solid var(--line);color:var(--dim);cursor:pointer}
 .durSeg button:last-child{border-right:0}.durSeg button.on{background:linear-gradient(180deg,#f7c463,#d48c1e);color:#1a1206}
 .durBar small{font:12px var(--f-body);color:var(--dim)}
+.durRow{margin:6px 0 2px}.durSel{width:100%;font:500 16px var(--f-hud);letter-spacing:.04em;padding:5px 8px 3px;background:rgba(0,0,0,.45);color:var(--txt,#e8edf3);border:1px solid var(--line);border-radius:0}.dealBuy .durSel{width:auto;max-width:170px}
 .dealCard{grid-column:1/-1;display:flex;align-items:center;gap:12px;padding:8px 12px;border:1px solid rgba(255,77,109,.65);background:linear-gradient(100deg,rgba(255,77,109,.24),rgba(243,181,74,.12) 60%,rgba(0,0,0,.25));position:relative;overflow:hidden}
 .dealCard::after{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 30%,rgba(255,255,255,.12) 45%,transparent 60%);transform:translateX(-100%);animation:dealShine 4s ease-in-out infinite;pointer-events:none}
 @keyframes dealShine{0%,60%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
@@ -970,7 +971,7 @@ body.cine #hud>*:not(#nukeFlash),body.cine #touch,body.cine #airTab{visibility:h
       <div class="hMapRow" id="zdiffPick" hidden><span class="lbl2">Difficulty</span><div class="row">
         <button class="chip" data-zd="low">Low · 10</button>
         <button class="chip" data-zd="medium">Medium · 15</button>
-        <button class="chip" data-zd="hard">Hard · 20</button>
+        <button class="chip" data-zd="hard">High · 20</button>
         <button class="chip" data-zd="extreme">Extreme · 20</button>
       </div></div>
     </section>
@@ -1571,7 +1572,7 @@ async function adminClaim(code){if(!CS||CS.guest)return 'Sign in to your own acc
   if(r.ok){CS.admin=true;cloudKeep();return '';}const e=r.j&&r.j.error;
   return !r.status?'No connection to the server.':e==='code'?'That code is not right.':e==='taken'?'This game already has its admin.':e==='guest'?'Guest accounts cannot be admins. Create your account first.':'The server said no (error '+r.status+').';}
 /* ================= version, remote settings, crash reports ================= */
-const APP_VERSION='1.3.1',BUILD_ID='__BUILD_ID__';
+const APP_VERSION='1.3.2',BUILD_ID='__BUILD_ID__';
 const verNum=v=>String(v||'0').split('.').slice(0,3).map(n=>parseInt(n)||0).reduce((a,n)=>a*1000+n,0);
 let RCFG={};try{RCFG=JSON.parse(localStorage.getItem('blockfire.rcfg')||'{}')||{};}catch(e){RCFG={};}
 const feat=k=>!(RCFG.features&&RCFG.features[k]===false);
@@ -1710,8 +1711,8 @@ function chProgress(id,n){
   if(!profile.daily)return;
   for(const c of profile.daily.list){if(c.id!==id||c.done)continue;const def=CHALLENGES.find(x=>x.id===id);
     c.p=Math.min(def.goal,c.p+n);if(c.p>=def.goal){c.done=true;
-      // inside a match the reward shares the match's 300 GP limit
-      let got=def.gp;if(state==='play'||state==='end'){got=Math.max(0,Math.min(def.gp,GP_MAX-match.gp));match.gp+=got;}else profile.gp+=got;
+      // inside a match the reward is added to the match's pay (on top of the placement prize)
+      let got=def.gp;if(state==='play'||state==='end'){match.extra=(match.extra|0)+got;match.gp+=got;}else profile.gp+=got;
       if(got)pendingToasts.push(`Challenge done: ${def.text} +${got} GP`);if(state==='play')showMsg('CHALLENGE COMPLETE',false,'gp');}}
 }
 
@@ -4195,11 +4196,18 @@ function damage(v,amt,att,head,weapon,kind){
   else if(att){v.lastSeen={x:att.x,z:att.z};v.lastSeenT=6;v.scanT=0;v.alertBy=att;}
   if(v.hp<=0)kill(v,att,head,weapon,kind);
 }
-const GP_MIN=100,GP_MAX=300;
-// GP stops at GP_MAX per match; XP keeps counting
-function award(gp,label,xp){const g=Math.max(0,Math.min(gp,GP_MAX-match.gp));match.gp+=g;match.xp+=xp==null?gp:xp;if(label)showMsg(g>0?`+${g} GP · ${label}`:`+${xp==null?gp:xp} XP · ${label}`,false,'gp');}
-// a finished match always pays at least GP_MIN and never more than GP_MAX
-const matchPay=()=>{match.gp=Math.max(GP_MIN,Math.min(GP_MAX,match.gp));};
+const GP_MAX=300;   // the most a single bonus message from the host may carry
+// match pay: the place you finish in (1st 2000, 2nd 1000, 3rd 500, everyone else 300) + 5 GP for every kill.
+// Special bonuses (a nuke, a challenge done mid-match) come on top. Kills and streaks still give XP as before.
+const PLACE_GP=[2000,1000,500],PLACE_REST=300,KILL_GP=5;
+function award(gp,label,xp){match.xp+=xp==null?gp:xp;
+  if(label){const g=Math.max(0,gp|0);match.extra=(match.extra|0)+g;match.gp+=g;showMsg(g>0?`+${g} GP · ${label}`:`+${xp==null?gp:xp} XP · ${label}`,false,'gp');}}
+function myPlace(){const L=matchRank();if(XM.on&&XM.win&&XM.win.n!==undefined){const w=L.find(e=>nidOf(e)===XM.win.n);if(w){L.splice(L.indexOf(w),1);L.unshift(w);}}
+  const i=L.indexOf(player);return i<0?L.length+1:i+1;}
+// the finished match's pay, worked out from scratch (so a repeated end message never pays twice)
+const matchPay=()=>{const pl=myPlace(),base=PLACE_GP[pl-1]||PLACE_REST,kg=KILL_GP*(player.kills|0);
+  match.place=pl;match.placeGp=base;match.killGp=kg;match.gp=base+kg+(match.extra|0);};
+const placeTxt=n=>n+(n%10===1&&n%100!==11?'st':n%10===2&&n%100!==12?'nd':n%10===3&&n%100!==13?'rd':'th');
 const ENVK={gas:'Toxic gas',lava:'Lava',water:'Deep water',fall:'The fall'};
 // lava burns fast, deep water drowns you after a moment under (the host decides for everyone)
 function liquidTick(dt){if(isClient()||state!=='play')return;
@@ -4719,10 +4727,10 @@ function zTipFor(next){const nw=ZORDER.filter(t=>ZT[t].unlock===next);
   const av=ZORDER.filter(t=>ZT[t].unlock<=next),t=av[next%av.length];
   return{h:'ROUND '+next+' · COMING UP',t:ZTIP[t]+' '+ZGEN[next%ZGEN.length]};}
 const ZDIFF={
-  low:{name:'Low',rounds:10,hp:.8,spd:1,dmg:.85,cash:1.25,count:1,wall:6,mask:2500},
-  medium:{name:'Medium',rounds:15,hp:1,spd:1,dmg:1,cash:1,count:1,wall:7,mask:3000},
-  hard:{name:'Hard',rounds:20,hp:1.2,spd:1.06,dmg:1.15,cash:1,count:1.15,wall:6,mask:3500},
-  extreme:{name:'Extreme',rounds:20,hp:1.6,spd:1.12,dmg:1.3,cash:.6,count:1.3,wall:4,mask:4500}
+  low:{name:'Low',rounds:10,hp:.8,spd:1,dmg:.85,cash:1.25,count:2,wall:6,mask:2500},
+  medium:{name:'Medium',rounds:15,hp:1,spd:1,dmg:1,cash:1,count:3,wall:7,mask:3000},
+  hard:{name:'High',rounds:20,hp:1.2,spd:1.06,dmg:1.15,cash:1,count:4,wall:6,mask:3500},
+  extreme:{name:'Extreme',rounds:20,hp:1.6,spd:1.12,dmg:1.3,cash:.6,count:5,wall:4,mask:4500}
 };
 const zD=()=>ZDIFF[Z.diff]||ZDIFF.medium;
 const zRand=(a,b)=>a+Math.floor(rand()*(b-a+1));
@@ -5087,14 +5095,14 @@ function zGameOver(win){
   if(document.exitPointerLock&&document.pointerLockElement)document.exitPointerLock();
   $('touch').hidden=true;$('hud').hidden=true;toggleBoard(false);$('pause').hidden=true;$('scope').hidden=true;$('zTip').hidden=true;
   const DF=zD(),before=levelInfo(profile.xp-(match.bx|0)),gp=Z.round*120+Z.kills*12+(win?{low:800,medium:1500,hard:2500,extreme:4000}[Z.diff]||1500:0);
-  match.gp+=Math.round(gp/12);match.xp+=Math.round(gp/12);matchPay();chProgress('matches',1);
+  match.xp+=Math.round(gp/12);matchPay();chProgress('matches',1);
   const S=ST();S.matches++;S.zbest=Math.max(S.zbest||0,Z.round);S.time+=0;S.zbd=S.zbd||{};S.zbd[Z.diff]=Math.max(S.zbd[Z.diff]||0,Z.round);if(win)S.zwins=(S.zwins||0)+1;
   const dt2=new Date();profile.history.unshift({t:`${dt2.getDate()}/${dt2.getMonth()+1}`,map:'Zombies',res:win?'Survived · '+DF.name:'Round '+Z.round+' · '+DF.name,k:player.kills,d:player.deaths,gp:match.gp});profile.history=profile.history.slice(0,15);
   bankMatch();saveProfile();
   const after=levelInfo(profile.xp);
   $('endTitle').textContent=win?'SURVIVED':'OVERRUN';$('endTitle').className='big '+(win?'cg':'cr');
   $('endSub').textContent=win?`You held the house for all ${Z.round} rounds on ${DF.name} · ${player.kills} zombie kills`:`You survived ${Z.round} of ${DF.rounds} round${DF.rounds===1?'':'s'} on ${DF.name} · ${player.kills} zombie kills · best ever: round ${S.zbest}`;
-  let rw=`<span>Earned <b>+${match.gp.toLocaleString()} GP</b></span><span>+${match.xp.toLocaleString()} XP</span><span>Headshots ${match.heads}</span>`;
+  let rw=`<span>Earned <b>+${match.gp.toLocaleString()} GP</b></span><span>${placeTxt(match.place)} place +${match.placeGp.toLocaleString()} · ${player.kills} kills +${match.killGp}</span><span>+${match.xp.toLocaleString()} XP</span><span>Headshots ${match.heads}</span>`;
   rw+=levelUpNote(before,after);
   $('endRewards').innerHTML=rw;renderBoard($('endBody'));
   $('shareMsg').textContent='';$('shareText').hidden=true;
@@ -6129,7 +6137,8 @@ const rentChip=(kind,id)=>{try{const r=itOk(kind,id)&&rentInfo(kind,id);return r
 // Forever items sell back for 70% of what was paid. Rentals cannot be sold; they just run out (never in the middle of a match).
 const DAY=864e5,SELL_PCT=.7;
 const RENT=[{k:'1d',n:'1 day',s:'1 Day',d:1,f:.03},{k:'3d',n:'3 days',s:'3 Days',d:3,f:.07},{k:'7d',n:'7 days',s:'Week',d:7,f:.12},{k:'30d',n:'30 days',s:'Month',d:30,f:.3},{k:'90d',n:'90 days',s:'90 Days',d:90,f:.6},{k:'perm',n:'Forever',s:'Forever',d:0,f:1}];
-let rentSel='perm';
+let rentSel='perm';const rentPick={};
+const pickOf=(kind,id)=>rentPick[kind+':'+id]||'perm';
 const rentOf=k=>RENT.find(r=>r.k===k)||RENT[RENT.length-1];
 const CAMO_T={desert:2,arctic:2,woodland:2,urban:2,dragon:3,tiger:3,digital:3,toxic:3,frost:3,carbon:4,neon:4,lava:4,galaxy:4,gold:4,diamond:5};
 const BLK_T={common:1,rare:2,epic:3,legendary:4,mythic:5};
@@ -6172,7 +6181,7 @@ function sellValue(kind,id){if(state==='play'||!itOk(kind,id)||!hasIt(kind,id)||
   // not bought (crate, gift, or before selling existed): worth what a crate duplicate pays
   const t=IT[kind].tier(id);if(t>0)return DUPE_GP[Math.min(5,t)];
   return kind==='att'?0:Math.round(IT[kind].price(id)*.35/10)*10;}
-function buyItem(kind,id,dur){dur=dur||rentSel;const I=IT[kind];if(!itOk(kind,id))return false;
+function buyItem(kind,id,dur){dur=dur||pickOf(kind,id);const I=IT[kind];if(!itOk(kind,id))return false;
   if(!I.price(id)||(I.req&&I.req(id)>myLevel()))return false;
   const own=hasIt(kind,id),rent=rentInfo(kind,id);if(own&&!rent)return false;   // already yours forever
   const c=costOf(kind,id,dur);if(profile.gp<c)return false;
@@ -6215,23 +6224,25 @@ function thumbOf(kind,id){try{
   if(kind==='hit')return `<div class="sw2 blood" style="background:linear-gradient(90deg,${HITFX[id].c.map(hexC).join(',')})"></div>`;}catch(e){}return '';}
 const gunTier=id=>{const r=gunReq(id);return r<6?1:r<14?2:r<24?3:r<34?4:5;};
 const tierTop=t=>t>0?`<div class="tierline" style="background:${RAR[Math.min(5,t)].c}"></div>`:'';
-function buyBox(kind,id,attr){const R=rentOf(rentSel),c=costOf(kind,id,rentSel),full=costOf(kind,id,rentSel,true),r=rentInfo(kind,id);
+// every item picks its own time: 1 day up to forever, each with its price
+function durPick(kind,id){const sel=pickOf(kind,id);return `<select class="durSel" data-rd="${kind}|${id}" aria-label="Time">${RENT.map(r=>`<option value="${r.k}" ${r.k===sel?'selected':''}>${r.d?'Rent · ':'Buy · '}${r.s}</option>`).join('')}</select>`;}
+function buyBox(kind,id,attr){const d=pickOf(kind,id),R=rentOf(d),c=costOf(kind,id,d),full=costOf(kind,id,d,true),r=rentInfo(kind,id);
   const lab=r?(R.d?'Extend':'Buy'):(R.d?'Rent':'Buy');
-  return `<div class="row buyRow"><span class="price">${full!==c?`<s>${full.toLocaleString()}</s>`:''}${c.toLocaleString()} GP<small>${R.d?R.n:'forever'}</small></span><button class="btn sm cut" ${attr} ${profile.gp<c?'disabled':''}>${lab}</button></div>`;}
+  return `<div class="durRow">${durPick(kind,id)}</div><div class="row buyRow"><span class="price">${full!==c?`<s>${full.toLocaleString()}</s>`:''}${c.toLocaleString()} GP<small>${R.d?R.n:'forever'}</small></span><button class="btn sm cut" ${attr} ${profile.gp<c?'disabled':''}>${lab}</button></div>`;}
 const sellBtn=(kind,id,v)=>`<button class="btn sm ghost cut sellBtn" data-sell="${kind}|${id}" data-v="${v}">Sell · +${v.toLocaleString()} GP</button>`;
 function ownExtra(kind,id){if(!itOk(kind,id))return '';const r=rentInfo(kind,id);
   if(r)return `<span class="rentTag">⏳ ${leftTxt(r.e-rNow())}</span>`+buyBox(kind,id,`data-bi="${kind}|${id}"`);
   const v=sellValue(kind,id);return v?sellBtn(kind,id,v):'';}
 const durBar=()=>{const R=rentOf(rentSel);return `<div class="durBar"><span class="lbl2">Time</span><div class="durSeg">${RENT.map(r=>`<button data-dur="${r.k}" class="${rentSel===r.k?'on':''}">${r.s}</button>`).join('')}</div><small>${R.d?`Try it for ${R.n} · ${Math.round(R.f*100)}% of the forever price`:`Yours forever · sells back for ${Math.round(SELL_PCT*100)}%`}</small></div>`;};
-function dealCard(){const d=dealToday();if(!d||!itOk(d.kind,d.id))return '';const I=IT[d.kind],R=rentOf(rentSel),full=costOf(d.kind,d.id,rentSel,true),now=costOf(d.kind,d.id,rentSel);
+function dealCard(){const d=dealToday();if(!d||!itOk(d.kind,d.id))return '';const I=IT[d.kind],dd=pickOf(d.kind,d.id),R=rentOf(dd),full=costOf(d.kind,d.id,dd,true),now=costOf(d.kind,d.id,dd);
   const end=(Math.floor(gNow()/DAY)+1)*DAY-gNow(),own=hasIt(d.kind,d.id)&&!rentInfo(d.kind,d.id),lock=I.req&&I.req(d.id)>myLevel();
   return `<div class="dealCard">${thumbOf(d.kind,d.id)}<div class="dealTx"><span class="dealTag">Deal of the day · −25%</span><b>${esc(I.name(d.id))}</b><small>${KIND_N[d.kind]} · ends in ${leftTxt(end)}</small></div>
-    <div class="dealBuy">${own?'<span class="cg">Yours</span>':lock?`<span class="lockNote">🔒 Level ${I.req(d.id)}</span>`:`<span class="price"><s>${full.toLocaleString()}</s>${now.toLocaleString()} GP<small>${R.d?R.n:'forever'}</small></span><button class="btn sm cut" data-bi="${d.kind}|${d.id}" ${profile.gp<now?'disabled':''}>${R.d?'Rent':'Buy'}</button>`}</div></div>`;}
+    <div class="dealBuy">${own?'<span class="cg">Yours</span>':lock?`<span class="lockNote">🔒 Level ${I.req(d.id)}</span>`:`${durPick(d.kind,d.id)}<span class="price"><s>${full.toLocaleString()}</s>${now.toLocaleString()} GP<small>${R.d?R.n:'forever'}</small></span><button class="btn sm cut" data-bi="${d.kind}|${d.id}" ${profile.gp<now?'disabled':''}>${R.d?'Rent':'Buy'}</button>`}</div></div>`;}
 function renderShop(){
   rentSweep();renderProfile();
   let h='';const dsc=t=>`<div style="font-family:var(--f-body);font-size:13px;color:var(--dim)">${t}</div>`,buyRow=(price,attr)=>`<div class="row" style="justify-content:space-between"><span class="price">${price.toLocaleString()} GP</span><button class="btn sm cut" ${attr} ${profile.gp<price?'disabled':''}>Buy</button></div>`;
   const usePv=!['gear','armor','skins','inv'].includes(shopTab);$('shopBody').classList.toggle('noPv',!usePv);
-  if(shopTab!=='inv')h+=dealCard();h+=durBar();
+  if(shopTab!=='inv')h+=dealCard();
   if(shopTab==='guns'){
     if(!shopPv||!shopPv.gun||shopPv.tab!=='guns')pvSet({tab:'guns',gun:profile.slots[0],camo:profile.camo,att:attOf(profile.slots[0])});
     grantLevelGuns();const lv=myLevel(),lockRow=r=>`<div class="lockNote">🔒 Opens at level ${r} · you are level ${lv}</div>`;
@@ -6310,6 +6321,7 @@ function renderShop(){
   for(const b of $('shopTabs').children)b.classList.toggle('on',b.dataset.tab===shopTab);
   renderPvInfo();if(usePv)pvStart();
 }
+$('shopGrid').addEventListener('change',e=>{const t=e.target;if(!t||!t.dataset||!t.dataset.rd)return;if(RENT.some(r=>r.k===t.value))rentPick[t.dataset.rd.replace('|',':')]=t.value;renderShop();});
 $('shopTabs').addEventListener('click',e=>{const b=e.target.closest('[data-tab]');if(b){flushSeen();shopTab=b.dataset.tab;shopPv=null;renderShop();}});
 $('shopGrid').addEventListener('click',e=>{
   // tapping a card shows it in the preview
@@ -6481,7 +6493,7 @@ function renderLB(){
     const S=ST(),acc=S.shots?Math.round(100*S.hits/S.shots):0,hs=S.kills?Math.round(100*S.heads/S.kills):0,zb=S.zbd||{};
     const t=(v,l)=>`<div class="tile"><b>${v}</b><span>${l}</span></div>`;
     h+=`<div class="tiles">${t(S.bestStreak||0,'Best kill streak')}${t(S.bestMatch||0,'Most kills in a match')}${t(S.wins||0,'Matches won')}${t(hs+'%','Headshot rate')}${t(acc+'%','Accuracy')}${t(S.nukes||0,'Nukes')}
-      ${t(zb.low||0,'Zombies · Low')}${t(zb.medium||0,'Zombies · Medium')}${t(zb.hard||0,'Zombies · Hard')}${t(zb.extreme||0,'Zombies · Extreme')}${t(S.zwins||0,'Zombie games survived')}${t(S.zkills||0,'Zombie kills')}</div>`;
+      ${t(zb.low||0,'Zombies · Low')}${t(zb.medium||0,'Zombies · Medium')}${t(zb.hard||0,'Zombies · High')}${t(zb.extreme||0,'Zombies · Extreme')}${t(S.zwins||0,'Zombie games survived')}${t(S.zkills||0,'Zombie kills')}</div>`;
   }else{
     if(!NET.mode)h+=`<div class="note">Open or join a room to see who is playing with you.</div>`;
     else h+=`<table class="lbt"><tr><th>Player</th><th>Level</th><th>Team</th><th>Skin</th></tr>`+(NET.roster||[]).map(r=>`<tr class="${r.nid===(isHost()?'P0':NET.nid)?'me':''}"><td>${r.nid==='P0'?'♛ ':''}${esc(r.name)}</td><td>${r.lv||1}</td><td class="${r.team==='blue'?'cb':'cr'}">${r.team.toUpperCase()}</td><td>${esc((CHARS[r.sk]||CHARS.std).name)}</td></tr>`).join('')+`</table>`;
@@ -6659,7 +6671,7 @@ function endMatch(byNuke){roomRegSoon();
   // rewards
   const before=levelInfo(profile.xp-(match.bx|0));
   const winBonus=won?100:draw?60:40;
-  match.gp+=won?60:draw?40:25;match.xp+=winBonus;matchPay();
+  match.xp+=winBonus;matchPay();
   chProgress('matches',1);if(won)chProgress('win',1);
   {const S=ST();S.matches++;if(won)S.wins++;S.bestMatch=Math.max(S.bestMatch||0,player.kills);S.time+=Math.max(0,MAP.time-Math.max(0,matchT));const m=S.maps[MAP.name]=S.maps[MAP.name]||{};m.m=(m.m||0)+1;
    const dt=new Date();profile.history.unshift({t:`${dt.getDate()}/${dt.getMonth()+1}`,map:MAP.name,res:won?'Win':draw?'Draw':'Loss',k:player.kills,d:player.deaths,gp:match.gp});profile.history=profile.history.slice(0,15);}
@@ -6668,7 +6680,7 @@ function endMatch(byNuke){roomRegSoon();
   $('endTitle').textContent=byNuke?'NUKED':draw?'DRAW':won?'VICTORY':'DEFEAT';
   $('endTitle').className='big '+(draw?'':won?'cb':'cr');
   $('endSub').innerHTML=(xr?xr.sub:`Blue ${scores.blue} · Red ${scores.red}`)+` · you went ${player.kills} / ${player.deaths}`;
-  let rw=`<span>Earned <b>+${match.gp.toLocaleString()} GP</b></span><span>+${match.xp.toLocaleString()} XP</span><span>Headshots ${match.heads}</span><span>Best streak ${match.best}</span>`;
+  let rw=`<span>Earned <b>+${match.gp.toLocaleString()} GP</b></span><span>${placeTxt(match.place)} place +${match.placeGp.toLocaleString()} · ${player.kills} kills +${match.killGp}${match.extra?` · bonus +${match.extra}`:''}</span><span>+${match.xp.toLocaleString()} XP</span><span>Headshots ${match.heads}</span><span>Best streak ${match.best}</span>`;
   rw+=levelUpNote(before,after);
   $('endRewards').innerHTML=rw;
   renderBoard($('endBody'));
