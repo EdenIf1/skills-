@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-0DyOAhECJE3vXFXcwNw4h8mO8gGu9ipiVydQh+qgfGc=' 'sha256-mQ+fz3NMidzR6ttqrPiuAPae9/ji1DXq2GT2J2P7Pdo=' 'unsafe-eval'; script-src-attr 'none'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; media-src 'self' data: blob:; connect-src 'self' https: wss: data: blob: http://127.0.0.1:* ws://127.0.0.1:* http://localhost:* ws://localhost:*; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'; frame-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-0DyOAhECJE3vXFXcwNw4h8mO8gGu9ipiVydQh+qgfGc=' 'sha256-7ROPHDVw5OdI5feimO3Dohq0xt3iPrzTBXmFP5394C8=' 'unsafe-eval'; script-src-attr 'none'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; media-src 'self' data: blob:; connect-src 'self' https: wss: data: blob: http://127.0.0.1:* ws://127.0.0.1:* http://localhost:* ws://localhost:*; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'; frame-src 'none'">
 <meta name="referrer" content="no-referrer">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
@@ -1566,7 +1566,7 @@ async function adminClaim(code){if(!CS||CS.guest)return 'Sign in to your own acc
   if(r.ok){CS.admin=true;cloudKeep();return '';}const e=r.j&&r.j.error;
   return !r.status?'No connection to the server.':e==='code'?'That code is not right.':e==='taken'?'This game already has its admin.':e==='guest'?'Guest accounts cannot be admins. Create your account first.':'The server said no (error '+r.status+').';}
 /* ================= version, remote settings, crash reports ================= */
-const APP_VERSION='1.0.4',BUILD_ID='a74a3b2';
+const APP_VERSION='1.0.5',BUILD_ID='25997c1';
 const verNum=v=>String(v||'0').split('.').slice(0,3).map(n=>parseInt(n)||0).reduce((a,n)=>a*1000+n,0);
 let RCFG={};try{RCFG=JSON.parse(localStorage.getItem('blockfire.rcfg')||'{}')||{};}catch(e){RCFG={};}
 const feat=k=>!(RCFG.features&&RCFG.features[k]===false);
@@ -1708,11 +1708,11 @@ function chProgress(id,n){
 }
 
 /* ================= renderer ================= */
-const canvas=$('c');
+let canvas=$('c');
 // smoothing (MSAA) only on screens below 2.5x: on 3x iPhone screens the pixels are already tiny and MSAA would make the
 // picture buffers about 4x bigger, which is what lets iOS throw the game's graphics away in a heavy moment (an airstrike)
 bootStage('graphics');
-const renderer=new THREE.WebGLRenderer({canvas,antialias:!BOOT.safe&&!isTouch&&SET.quality!=='low'&&(window.devicePixelRatio||1)<2.5,powerPreference:'high-performance'});
+let renderer=new THREE.WebGLRenderer({canvas,antialias:!BOOT.safe&&!isTouch&&SET.quality!=='low'&&(window.devicePixelRatio||1)<2.5,powerPreference:'high-performance'});
 bootStage('graphics-ready');
 renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,isTouch?1.25:1.5));
 // High = the screen's full native sharpness (3x on iPhones); the game never lowers it by itself
@@ -6442,15 +6442,17 @@ addEventListener('mousemove',e=>{
   if(state!=='play'||paused||isTouch)return;
   if(locked||mouseDown){const s=.0022*SET.sens*(1-adsK*(curW().kind==='sniper'?.75:.45))*(1+adsK*(SET.adsSens-1));player.yaw-=e.movementX*s;player.pitch-=e.movementY*s*(SET.invert?-1:1);player.pitch=clamp(player.pitch,-1.5,1.5);lookDX+=e.movementX;lookDY+=e.movementY;}
 });
-canvas.addEventListener('mousedown',e=>{
+function canvasMouseDown(e){
   if(state!=='play'||paused||isTouch)return;
   initAudio();if(!locked)tryLock();
   mouseDown=true;
   if(e.button===0){fireHeld=true;firedThisPress=false;}
   if(e.button===2&&curW().kind!=='knife')ads=true;
-});
+}
+canvas.addEventListener('mousedown',canvasMouseDown);
 addEventListener('mouseup',e=>{mouseDown=false;if(e.button===0)fireHeld=false;if(e.button===2)ads=false;});
-canvas.addEventListener('contextmenu',e=>e.preventDefault());
+function canvasCtxMenu(e){e.preventDefault();}
+canvas.addEventListener('contextmenu',canvasCtxMenu);
 addEventListener('wheel',()=>{if(state==='play'&&!paused)swapTo(cur===0?1:0);},{passive:true});
 addEventListener('keydown',e=>{
   if(e.target&&e.target.tagName==='INPUT')return;
@@ -7633,16 +7635,32 @@ function safeExit(){try{if(NET.mode)mpLeave(false);}catch(e){}state='menu';pause
   try{resetMatch(false);}catch(e){}try{renderProfile();}catch(e){}$('menu').hidden=false;toast('Something went wrong in that match (code '+(window.__bfLastCode||reportErr('exit','left the match after repeated errors'))+'). You are back in the menu and your progress is saved.');}
 // phones can drop the 3D context when the app goes to the background: wait for it to come back, then redraw the world
 let glLostAt=0;
-canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();glLost=true;glLostAt=performance.now();
-  reportErr('gl','graphics lost (state '+state+', '+(typeof RULE==='function'?RULE():'')+', map '+(MAP&&MAP.name||'')+', q '+SET.quality+', pr '+renderer.getPixelRatio()+')');},false);
-canvas.addEventListener('webglcontextrestored',()=>{glLost=false;glLostAt=0;worldDirty=true;},false);
+function glOnLost(e){e.preventDefault();glLost=true;glLostAt=performance.now();
+  reportErr('gl','graphics lost (state '+state+', '+(typeof RULE==='function'?RULE():'')+', map '+(MAP&&MAP.name||'')+', q '+SET.quality+', pr '+renderer.getPixelRatio()+', fx '+(typeof parts!=='undefined'?parts.length:0)+', prog '+renderer.info.programs.length+', sound '+AUD.live+', try '+glRebuilds+')');}
+function glOnRestored(){glLost=false;glLostAt=0;worldDirty=true;}
+canvas.addEventListener('webglcontextlost',glOnLost,false);
+canvas.addEventListener('webglcontextrestored',glOnRestored,false);
+// the phone took the graphics away and did not give them back: draw on a brand-new canvas in the same page, a step
+// softer each time. The match, the room, the connection and everything else simply carry on (no reload).
+let glRebuilds=0;
+function glRebuild(){glRebuilds++;memSafeOn();
+  const pr=Math.max(1,Math.min(renderer.getPixelRatio(),qualityRatio())-.25*glRebuilds);
+  try{renderer.dispose();}catch(e){}
+  const nc=document.createElement('canvas');for(const a of [...canvas.attributes])nc.setAttribute(a.name,a.value);
+  canvas.replaceWith(nc);canvas=nc;
+  nc.addEventListener('mousedown',canvasMouseDown);nc.addEventListener('contextmenu',canvasCtxMenu);
+  nc.addEventListener('webglcontextlost',glOnLost,false);nc.addEventListener('webglcontextrestored',glOnRestored,false);
+  renderer=new THREE.WebGLRenderer({canvas:nc,antialias:false,powerPreference:'high-performance'});
+  renderer.autoClear=false;renderer.setPixelRatio(pr);resize();
+  glLost=false;glLostAt=0;worldDirty=true;try{netLog('graphics rebuilt (try '+glRebuilds+', pr '+pr+')');}catch(e){}
+  toast('The phone dropped the graphics for a moment. The game kept going.');}
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&glLost)glLostAt=performance.now();});
 // never leave a frozen screen: save everything, then reload and say what happened
 function glReload(){memSafeOn();try{autoSave();}catch(e){}try{saveProfile();}catch(e){}try{if(NET.mode)mpLeave(false);}catch(e){}
-  try{localStorage.setItem('blockfire.glreset',window.__bfLastCode||'1');localStorage.removeItem('blockfire.alive');}catch(e){}location.reload();}
+  try{localStorage.setItem('blockfire.glreset',window.__bfLastCode||'1');localStorage.removeItem('blockfire.alive');}catch(e){}window.__reloading=true;location.reload();}
 // a match that ends without the page saying goodbye (iOS closed it for memory) is reported on the next start
 let aliveT=0;
-function aliveTick(dt){if(state==='play'){aliveT-=dt;if(aliveT<=0){aliveT=5;try{const I=renderer.info;localStorage.setItem('blockfire.alive',JSON.stringify({t:Date.now(),r:RULE(),m:MAP&&MAP.name,q:SET.quality,pr:renderer.getPixelRatio(),king:!!player.king,w:curW().id,fps:DQ.fps|0,geo:I.memory.geometries,tex:I.memory.textures,ents:ents.length,z:zombies.length,fx:typeof parts!=='undefined'&&parts.length||0,mp:NET.mode||'',sec:Math.round(matchT||0),dev:(window.devicePixelRatio||1)+'x'+screen.width+'x'+screen.height}));}catch(e){}}}
+function aliveTick(dt){if(window.__reloading)return;if(state==='play'){aliveT-=dt;if(aliveT<=0){aliveT=5;try{const I=renderer.info;localStorage.setItem('blockfire.alive',JSON.stringify({t:Date.now(),r:RULE(),m:MAP&&MAP.name,q:SET.quality,pr:renderer.getPixelRatio(),king:!!player.king,w:curW().id,fps:DQ.fps|0,geo:I.memory.geometries,tex:I.memory.textures,ents:ents.length,z:zombies.length,fx:typeof parts!=='undefined'&&parts.length||0,mp:NET.mode||'',sec:Math.round(matchT||0),dev:(window.devicePixelRatio||1)+'x'+screen.width+'x'+screen.height}));}catch(e){}}}
   else if(aliveT){aliveT=0;try{localStorage.removeItem('blockfire.alive');}catch(e){}}}
 window.addEventListener('pagehide',()=>{try{localStorage.removeItem('blockfire.alive');}catch(e){}});
 setTimeout(()=>{try{const a=localStorage.getItem('blockfire.alive');localStorage.removeItem('blockfire.alive');if(a){const o=JSON.parse(a);if(Date.now()-o.t<120000){memSafeOn();const c=reportErr('crash','page closed during a match '+a);toast('The game closed unexpectedly last time (code '+c+'). Your progress is saved.');}}
@@ -7669,7 +7687,7 @@ function frame(now){frameN++;if(!BOOT.ok){if(frameN===2)bootStage('first-frame')
       if(pr>base+.01)renderer.setPixelRatio(base);}
     else if(pr<base-.01)renderer.setPixelRatio(base);}}
   aliveTick(rdt);
-  if(glLost&&glLostAt&&!document.hidden&&performance.now()-glLostAt>3000){glLostAt=0;glReload();return;}
+  if(glLost&&glLostAt&&!document.hidden&&performance.now()-glLostAt>1200){glLostAt=0;if(glRebuilds<3){try{glRebuild();}catch(e){reportErr('glrebuild',e);glReload();}}else glReload();return;}
   if(noRender||glLost)return;
   try{renderer.clear();
   if(window.__cam){const q=window.__cam;camera.position.set(q[0],q[1],q[2]);camera.lookAt(q[3],q[4],q[5]);}
