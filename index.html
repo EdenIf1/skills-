@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-0DyOAhECJE3vXFXcwNw4h8mO8gGu9ipiVydQh+qgfGc=' 'sha256-q/NRvjUAeGJEAuSgqBWvjftAaY7PEmJ6WbXbVowdl/k=' 'unsafe-eval'; script-src-attr 'none'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; media-src 'self' data: blob:; connect-src 'self' https: wss: data: blob: http://127.0.0.1:* ws://127.0.0.1:* http://localhost:* ws://localhost:*; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'; frame-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-0DyOAhECJE3vXFXcwNw4h8mO8gGu9ipiVydQh+qgfGc=' 'sha256-HQRSal6gcCn6kpUOxjjjBmnTPW3ljgZYRhSBVNf3/L4=' 'unsafe-eval'; script-src-attr 'none'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; media-src 'self' data: blob:; connect-src 'self' https: wss: data: blob: http://127.0.0.1:* ws://127.0.0.1:* http://localhost:* ws://localhost:*; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'; frame-src 'none'">
 <meta name="referrer" content="no-referrer">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
@@ -1566,7 +1566,7 @@ async function adminClaim(code){if(!CS||CS.guest)return 'Sign in to your own acc
   if(r.ok){CS.admin=true;cloudKeep();return '';}const e=r.j&&r.j.error;
   return !r.status?'No connection to the server.':e==='code'?'That code is not right.':e==='taken'?'This game already has its admin.':e==='guest'?'Guest accounts cannot be admins. Create your account first.':'The server said no (error '+r.status+').';}
 /* ================= version, remote settings, crash reports ================= */
-const APP_VERSION='1.0.7',BUILD_ID='232b019';
+const APP_VERSION='1.0.8',BUILD_ID='9b31f55';
 const verNum=v=>String(v||'0').split('.').slice(0,3).map(n=>parseInt(n)||0).reduce((a,n)=>a*1000+n,0);
 let RCFG={};try{RCFG=JSON.parse(localStorage.getItem('blockfire.rcfg')||'{}')||{};}catch(e){RCFG={};}
 const feat=k=>!(RCFG.features&&RCFG.features[k]===false);
@@ -3016,6 +3016,9 @@ function initAudio(){
 // Every sound is a few short-lived audio nodes. Safari on iPhone keeps nodes alive while they are still
 // connected, so each sound unplugs its nodes when it ends; otherwise a long minigun burst piles up thousands
 // of them and the page runs out of memory. AUD.live counts the nodes still connected.
+// flight recorder: the last ~40 things that happened in the match, sent with a crash or a graphics loss
+const FR=[];let frSnapT=0,frShots=0,frSnd=0;
+function fr(x){try{FR.push(Math.round(performance.now()/1000)+'s '+String(x).slice(0,60));if(FR.length>40)FR.shift();}catch(e){}}
 const AUD={live:0,tok:8,tokT:0};
 let offR=false;   // true while a sound is being recorded (see gunBuf): those nodes are not counted
 const aOn=()=>!!AC&&AC.state==='running';
@@ -3033,7 +3036,7 @@ function bus(vol,dist,rev){
   return g;
 }
 // a sound's own nodes go when it ends; the bus goes with the last sound on it
-function sEnd(src,ns,out){if(offR)for(const n of ns)n._u=1;else AUD.live+=ns.length;if(out&&out._k)out._n++;
+function sEnd(src,ns,out){if(!offR)frSnd++;if(offR)for(const n of ns)n._u=1;else AUD.live+=ns.length;if(out&&out._k)out._n++;
   src.onended=()=>{unplug(ns);if(out&&out._k&&--out._n<=0){unplug(out._k);out._k=null;}};}
 function sNoise(t,dur,f0,f1,vol,type,out,q){if(!offR&&AUD.live>140)return;
   const s=AC.createBufferSource();s.buffer=noiseBuf;s.playbackRate.value=.85+Math.random()*.3;
@@ -3113,7 +3116,7 @@ const sfx={
   loop(freq){if(!aOn())return null;const s=AC.createBufferSource();s.buffer=noiseBuf;s.loop=true;const f=AC.createBiquadFilter();f.type='bandpass';f.frequency.value=freq;f.Q.value=.8;
     const g=AC.createGain();g.gain.value=0;s.connect(f);f.connect(g);g.connect(master);sEnd(s,[s,f,g]);s.start();return{s,g};},
   stopLoop(l){if(l){try{l.g.gain.value=0;l.s.stop();}catch(e){}}},
-  explosion(kind,vol,dist){if(!aOn()||vol<.02)return;const t=AC.currentTime;
+  explosion(kind,vol,dist){fr('boom '+kind+' '+Math.round(dist||0));if(!aOn()||vol<.02)return;const t=AC.currentTime;
     // at most about 8 blasts a second get their own sound (an airstrike or a nuke stays loud, the rest blend in)
     {AUD.btok=Math.min(6,(AUD.btok??6)+(t-(AUD.btokT||0))*8);AUD.btokT=t;if(AUD.btok<1&&vol<.9&&kind!=='Nuclear Strike')return;AUD.btok=Math.max(0,AUD.btok-1);}
     const big=kind==='Viper RL'?1.2:kind==='Airstrike'?1.5:kind==='Nuclear Strike'?2.4:kind==='Claymore'?.9:kind==='Flashbang'?.55:kind==='Impact Grenade'?.85:1,o=bus(vol,dist||0,.6+.2*big);
@@ -3746,7 +3749,7 @@ function addFeed(killer,victim,weapon,head){
   feedEl.prepend(d);while(feedEl.children.length>5)feedEl.lastChild.remove();
   setTimeout(()=>{d.style.opacity='0';setTimeout(()=>d.remove(),400);},5200);
 }
-function showMsg(text,small,cls){const d=document.createElement('div');d.className='msg'+(small?' small':'')+(cls?' '+cls:'');d.textContent=text;msgsEl.appendChild(d);while(msgsEl.children.length>4)msgsEl.firstChild.remove();setTimeout(()=>d.remove(),1750);}
+function showMsg(text,small,cls){fr('msg '+text);const d=document.createElement('div');d.className='msg'+(small?' small':'')+(cls?' '+cls:'');d.textContent=text;msgsEl.appendChild(d);while(msgsEl.children.length>4)msgsEl.firstChild.remove();setTimeout(()=>d.remove(),1750);}
 let hitT=0,vigT=0,nukeT=0;
 /* ===== the tactical nuke as a five-second movie: the game freezes, everyone watches the bomb fall, the map is left in ruins ===== */
 let cineT=0,cine=null,nukeSmokeT=0;
@@ -4014,7 +4017,7 @@ function onMyKill(vname,head,weapon,kind){
     if(s===3)killstreak('uav');if(!noNades()){if(s===5){if(isClient())player.airOwed=(player.airOwed|0)+1;showMsg('AIRSTRIKE READY · '+(isTouch?'TAP ✈ AIRSTRIKE':'PRESS T'),true);say('Airstrike is ready');}if(s===15){if(isClient())player.nukeOwed=(player.nukeOwed|0)+1;showMsg('NUKE READY · '+(isTouch?'TAP ☢ NUKE':'PRESS N'),true);say('Nuke is ready');}}
     if(s===5)showMsg('KILLING SPREE');if(s===10)showMsg('UNSTOPPABLE');
 }
-function killstreak(k,own,tgt){
+function killstreak(k,own,tgt){fr('streak '+k);
   own=own||player;const mine=own===player,enemy=e=>e.team!==own.team;
   if(mine)sfx.ding();
   if(k==='uav'){if(mine){uavT=5;showMsg('UAV ONLINE');}}
@@ -4995,7 +4998,7 @@ function camVectors(){
   const cy=Math.cos(player.yaw),sy=Math.sin(player.yaw),cp=Math.cos(player.pitch),sp=Math.sin(player.pitch);
   return{f:[-sy*cp,sp,-cy*cp],r:[cy,0,-sy],u:[sy*sp,cp,cy*sp]};
 }
-function startReload(){
+function startReload(){fr('reload '+(curW()&&curW().id));
   const w=curW(),a=ammo[cur];
   if(!player.alive||reloadT>0||swapT>0||a.mag>=w.mag||a.reserve<=0)return;
   reloadT=w.reload*(isZ()&&Z.perks.quick?.5:1);sfx.reload();ads=false;syncAimBtn();
@@ -7671,7 +7674,7 @@ function safeExit(){try{if(NET.mode)mpLeave(false);}catch(e){}state='menu';pause
 // phones can drop the 3D context when the app goes to the background: wait for it to come back, then redraw the world
 let glLostAt=0;
 function glOnLost(e){e.preventDefault();glLost=true;glLostAt=performance.now();
-  reportErr('gl','graphics lost (state '+state+', '+(typeof RULE==='function'?RULE():'')+', map '+(MAP&&MAP.name||'')+', q '+SET.quality+', pr '+renderer.getPixelRatio()+', fx '+(typeof parts!=='undefined'?parts.length:0)+', prog '+renderer.info.programs.length+', sound '+AUD.live+', try '+glRebuilds+')');}
+  reportErr('gl',{message:'graphics lost (state '+state+', '+(typeof RULE==='function'?RULE():'')+', map '+(MAP&&MAP.name||'')+', q '+SET.quality+', pr '+renderer.getPixelRatio()+', fx '+(typeof parts!=='undefined'?parts.length:0)+', prog '+renderer.info.programs.length+', sound '+AUD.live+', try '+glRebuilds+')',stack:FR.join(' | ')});}
 function glOnRestored(){glLost=false;glLostAt=0;worldDirty=true;}
 canvas.addEventListener('webglcontextlost',glOnLost,false);
 canvas.addEventListener('webglcontextrestored',glOnRestored,false);
@@ -7695,10 +7698,10 @@ function glReload(){memSafeOn();try{autoSave();}catch(e){}try{saveProfile();}cat
   try{localStorage.setItem('blockfire.glreset',window.__bfLastCode||'1');localStorage.removeItem('blockfire.alive');}catch(e){}window.__reloading=true;location.reload();}
 // a match that ends without the page saying goodbye (iOS closed it for memory) is reported on the next start
 let aliveT=0;
-function aliveTick(dt){if(window.__reloading)return;if(state==='play'){aliveT-=dt;if(aliveT<=0){aliveT=5;try{const I=renderer.info;localStorage.setItem('blockfire.alive',JSON.stringify({t:Date.now(),r:RULE(),m:MAP&&MAP.name,q:SET.quality,pr:renderer.getPixelRatio(),king:!!player.king,w:curW().id,fps:DQ.fps|0,geo:I.memory.geometries,tex:I.memory.textures,ents:ents.length,z:zombies.length,fx:typeof parts!=='undefined'&&parts.length||0,mp:NET.mode||'',sec:Math.round(matchT||0),dev:(window.devicePixelRatio||1)+'x'+screen.width+'x'+screen.height}));}catch(e){}}}
+function aliveTick(dt){if(window.__reloading)return;if(state==='play'){aliveT-=dt;if(aliveT<=0){aliveT=2;try{const I=renderer.info;localStorage.setItem('blockfire.alive',JSON.stringify({t:Date.now(),r:RULE(),m:MAP&&MAP.name,q:SET.quality,pr:renderer.getPixelRatio(),king:!!player.king,w:curW().id,fps:DQ.fps|0,geo:I.memory.geometries,tex:I.memory.textures,ents:ents.length,z:zombies.length,fx:typeof parts!=='undefined'&&parts.length||0,mp:NET.mode||'',sec:Math.round(matchT||0),dev:(window.devicePixelRatio||1)+'x'+screen.width+'x'+screen.height,fr:FR.slice(-24)}));}catch(e){}}}
   else if(aliveT){aliveT=0;try{localStorage.removeItem('blockfire.alive');}catch(e){}}}
 window.addEventListener('pagehide',()=>{try{localStorage.removeItem('blockfire.alive');}catch(e){}});
-setTimeout(()=>{try{const a=localStorage.getItem('blockfire.alive');localStorage.removeItem('blockfire.alive');if(a){const o=JSON.parse(a);if(Date.now()-o.t<120000){memSafeOn();const c=reportErr('crash','page closed during a match '+a);toast('The game closed unexpectedly last time (code '+c+'). Your progress is saved.');}}
+setTimeout(()=>{try{const a=localStorage.getItem('blockfire.alive');localStorage.removeItem('blockfire.alive');if(a){const o=JSON.parse(a);if(Date.now()-o.t<120000){memSafeOn();const c=reportErr('crash',{message:'page closed during a match '+a.replace(/,"fr":\[.*\]/,''),stack:(()=>{try{return (JSON.parse(a).fr||[]).join(' | ');}catch(e){return '';}})()});toast('The game closed unexpectedly last time (code '+c+'). Your progress is saved.');}}
   const g=localStorage.getItem('blockfire.glreset');if(g){localStorage.removeItem('blockfire.glreset');toast('The phone reset the graphics, so the game restarted'+(g.length>1?' (code '+g+')':'')+'. Your progress is saved.');}}catch(e){}},1500);
 const DQ={t:0,n:0,good:0,bad:0};let frameN=0;const noRender=(()=>{try{return localStorage.getItem('blockfire.norender')==='1';}catch(e){return false;}})();
 function frame(now){frameN++;if(!BOOT.ok){if(frameN===2)bootStage('first-frame');else if(frameN>10&&performance.now()>8000){BOOT.ok=true;bootStage('ok');}}animCamos(now);
@@ -7721,6 +7724,7 @@ function frame(now){frameN++;if(!BOOT.ok){if(frameN===2)bootStage('first-frame')
       else if(fps>55){DQ.good=(DQ.good|0)+1;if(DQ.good>=5&&pr<base-.01){renderer.setPixelRatio(Math.min(base,pr+.25));DQ.good=0;}}else DQ.good=0;
       if(pr>base+.01)renderer.setPixelRatio(base);}
     else if(pr<base-.01)renderer.setPixelRatio(base);}}
+  if(state==='play'){frSnapT-=rdt;if(frSnapT<=0){frSnapT=2;try{fr('fps'+DQ.fps+' fx'+parts.length+' snd'+frSnd+' live'+AUD.live+' pr'+renderer.getPixelRatio().toFixed(2)+' '+curW().id+(player.king?' KING':'')+' ents'+ents.length+' geo'+renderer.info.memory.geometries+' prog'+renderer.info.programs.length);}catch(e){}frSnd=0;}}
   aliveTick(rdt);
   if(glLost&&glLostAt&&!document.hidden&&performance.now()-glLostAt>1200){glLostAt=0;if(glRebuilds<3){try{glRebuild();}catch(e){reportErr('glrebuild',e);glReload();}}else glReload();return;}
   if(noRender||glLost)return;
@@ -8057,7 +8061,7 @@ function kgArm(on){if(on===!!player.kingArmed)return;player.kingArmed=!!on;
   nades=on?0:(noNades()?0:profile.nadeLvl);minesLeft=on?0:(noNades()?0:profile.mineLvl);try{buildViewmodels();}catch(e){}
   try{tl.querySelector('[data-b=nade]').hidden=on||noNades();tl.querySelector('[data-b=mine]').hidden=on||noNades()||!profile.mineLvl;}catch(e){}
   if(on)showMsg('MINIGUN + ROCKET LAUNCHER',true);}
-function kgSet(e,on){if(!e)return;const was=!!e.king;e.king=!!on;if(on)e.perch=null;e.ks=on?KS:1;
+function kgSet(e,on){if(!e)return;if(!!e.king!==!!on)fr('king '+(e===player?'ME':e.name)+' '+(on?'on':'off'));const was=!!e.king;e.king=!!on;if(on)e.perch=null;e.ks=on?KS:1;
   if(e===player)kgArm(!!on);else if(!e.remote&&e.baseWeapon){e.weapon=on?'King Minigun':(MM()==='knife'?'Knife':MM()==='sniper'?'Longbow .338':MM()==='boom'?'Viper RL':e.baseWeapon);}
   if(e.head&&!e.crown){e.crown=kgCrownMesh();e.head.add(e.crown);}if(e.crown)e.crown.visible=!!on;
   if(!isClient()){if(on){e.maxHp=KHP;e.hp=KHP;e.shield=0;e.maxSh=0;e.spawnProt=0;}
