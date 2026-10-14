@@ -1571,7 +1571,7 @@ async function adminClaim(code){if(!CS||CS.guest)return 'Sign in to your own acc
   if(r.ok){CS.admin=true;cloudKeep();return '';}const e=r.j&&r.j.error;
   return !r.status?'No connection to the server.':e==='code'?'That code is not right.':e==='taken'?'This game already has its admin.':e==='guest'?'Guest accounts cannot be admins. Create your account first.':'The server said no (error '+r.status+').';}
 /* ================= version, remote settings, crash reports ================= */
-const APP_VERSION='1.1.1',BUILD_ID='__BUILD_ID__';
+const APP_VERSION='1.1.2',BUILD_ID='__BUILD_ID__';
 const verNum=v=>String(v||'0').split('.').slice(0,3).map(n=>parseInt(n)||0).reduce((a,n)=>a*1000+n,0);
 let RCFG={};try{RCFG=JSON.parse(localStorage.getItem('blockfire.rcfg')||'{}')||{};}catch(e){RCFG={};}
 const feat=k=>!(RCFG.features&&RCFG.features[k]===false);
@@ -3172,15 +3172,20 @@ function recFlush(){rqT=0;if(!RQ.length)return;
       res();};
     try{off.oncomplete=e=>fin(e.renderedBuffer);const pr=off.startRendering();if(pr&&pr.then)pr.then(fin,()=>fin(null));}catch(e){fin(null);}
     setTimeout(()=>fin(null),15000);})).catch(()=>{});}
-function voicePlay(buf,vol,prio){const now=AC.currentTime;
-  if(!VOX.list.length)for(let i=0;i<12;i++){const g=AC.createGain();g.connect(master);VOX.list.push({g,src:null,end:0,prio:-1,vol:0});}
-  const L=VOX.list.slice(0,VOX.n);let v=L.find(x=>x.end<=now);
-  if(!v){let w=null,ws=1e9;for(const x of L){const sc=x.prio*10+x.vol;if(sc<ws){ws=sc;w=x;}}
-    if(!w||prio*10+vol<=ws)return;v=w;}
+// grp 'mine' = your own gun: it may hold at most 3 voices (a new shot takes over your oldest one), so rapid fire
+// never fills all 12 and silences everything else. Otherwise the least important voice gives way, and between equals
+// the one that started first (a new sound always beats an old one of the same importance).
+function voicePlay(buf,vol,prio,grp){const now=AC.currentTime;
+  if(!VOX.list.length)for(let i=0;i<12;i++){const g=AC.createGain();g.connect(master);VOX.list.push({g,src:null,end:0,start:0,prio:-1,vol:0,grp:''});}
+  const L=VOX.list.slice(0,VOX.n),live=L.filter(x=>x.end>now);let v=null;
+  if(grp){const mine=live.filter(x=>x.grp===grp);if(mine.length>=3)v=mine.reduce((a,b)=>a.start<=b.start?a:b);}
+  if(!v)v=L.find(x=>x.end<=now);
+  if(!v){let w=null,ws=1e9;for(const x of L){const sc=x.prio*10+x.vol;if(sc<ws-1e-9||(Math.abs(sc-ws)<1e-9&&w&&x.start<w.start)){ws=sc;w=x;}}
+    if(!w||prio*10+vol<ws-1e-9)return;v=w;}
   if(v.src){const o=v.src;v.src=null;try{o.onended=null;o.stop();o.disconnect();}catch(e){}}
   const s=AC.createBufferSource();s.buffer=buf;s.playbackRate.value=.96+Math.random()*.08;v.g.gain.value=vol;s.connect(v.g);
   s.onended=()=>{try{s.disconnect();}catch(e){}if(v.src===s){v.src=null;v.end=0;}};
-  v.src=s;v.prio=prio;v.vol=vol;v.end=now+buf.duration/s.playbackRate.value;s.start();frSnd++;
+  v.src=s;v.prio=prio;v.vol=vol;v.grp=grp||'';v.start=now;v.end=now+buf.duration/s.playbackRate.value;s.start();frSnd++;
   AUD.vox=L.filter(x=>x.end>now).length;}
 // how each sound's arguments read: k = kind (own recording), v = volume (played louder/softer), d = distance
 // (near/far recording), h = yes/no (own recording), s = size (own recording, rounded)
@@ -3209,14 +3214,15 @@ function sPlay(n,args){if(!AC||AC.state!=='running'||offR)return;const pat=SPEC[
   // starts per second stay bounded too (your own sounds always play)
   const now=AC.currentTime,pr=sndPrio(n,dist,own,kp[1]);if(pr<3){SB.t=Math.min(16,SB.t+(now-SB.last)*16);SB.last=now;if(SB.t<1)return;SB.t-=1;}
   const takes=n==='gun'||n==='step'?2:1,key=kp.join('|')+'#'+((Math.random()*takes)|0);
-  const buf=recSound(key,sndDur(n,kp[1]),()=>RAW[n].apply(RAW,ra));if(buf)voicePlay(buf,vol,pr);}
+  const buf=recSound(key,sndDur(n,kp[1]),()=>RAW[n].apply(RAW,ra));if(buf)voicePlay(buf,vol,pr,own?'mine':'');}
 const sfx={loop:(...a)=>RAW.loop(...a),stopLoop:(...a)=>RAW.stopLoop(...a),boom:v=>sPlay('explosion',['Grenade',v,0])};
 for(const n of Object.keys(SPEC))sfx[n]=function(){if(n==='explosion')fr('boom '+arguments[0]+' '+Math.round(arguments[2]||0));sPlay(n,arguments);};
 // record the everyday sounds right away (and the player's guns at each match start)
-function sndWarm(){if(!AC||offR)return;try{const g=new Set(['ak','m4','goliath','smg','sniper','shotgun']);for(const id of (typeof loadout!=='undefined'&&loadout)||[]){const w=WEAPONS[id];if(w&&w.snd)g.add(w.snd);}
+function sndWarm(){if(!AC||offR)return;try{const g=new Set(['ak','m4','goliath','smg','sniper','shotgun'].concat(Object.values(BOT_SND)));for(const id of (typeof loadout!=='undefined'&&loadout)||[]){const w=WEAPONS[id];if(w&&w.snd)g.add(w.snd);}
   for(const k of g)for(const d of [0,60])for(let t=0;t<2;t++)recSound(['gun',k,d?'f':'n'].join('|')+'#'+t,sndDur('gun',k),()=>RAW.gun(k,1,d));
   for(const n of ['hit','kill'])for(const h of [0,1])recSound(n+'|'+h+'#0',sndDur(n),()=>RAW[n](!!h));
-  for(const k of ['Grenade','Viper RL','Airstrike'])for(const d of [0,60])recSound(['explosion',k,d?'f':'n'].join('|')+'#0',sndDur('explosion',k),()=>RAW.explosion(k,1,d));
+  for(const h of [0,1])for(const d of [0,60])for(let t=0;t<2;t++)recSound(['step',d?'f':'n',h].join('|')+'#'+t,sndDur('step'),()=>RAW.step(1,d,!!h));
+  for(const k of ['Grenade','Viper RL','Airstrike','Claymore','Flashbang','Impact Grenade','Frag'])for(const d of [0,60])recSound(['explosion',k,d?'f':'n'].join('|')+'#0',sndDur('explosion',k),()=>RAW.explosion(k,1,d));
   for(const n of ['reload','click','ding','hurt'])recSound(n+'#0',sndDur(n),()=>RAW[n]());}catch(e){}}
 const volAt=(x,y,z,base,range)=>base*clamp(1-distAt(x,y,z)/(range||55),0,1);
 
