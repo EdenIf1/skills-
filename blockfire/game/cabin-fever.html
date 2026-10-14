@@ -1571,7 +1571,7 @@ async function adminClaim(code){if(!CS||CS.guest)return 'Sign in to your own acc
   if(r.ok){CS.admin=true;cloudKeep();return '';}const e=r.j&&r.j.error;
   return !r.status?'No connection to the server.':e==='code'?'That code is not right.':e==='taken'?'This game already has its admin.':e==='guest'?'Guest accounts cannot be admins. Create your account first.':'The server said no (error '+r.status+').';}
 /* ================= version, remote settings, crash reports ================= */
-const APP_VERSION='1.2.0',BUILD_ID='__BUILD_ID__';
+const APP_VERSION='1.3.0',BUILD_ID='__BUILD_ID__';
 const verNum=v=>String(v||'0').split('.').slice(0,3).map(n=>parseInt(n)||0).reduce((a,n)=>a*1000+n,0);
 let RCFG={};try{RCFG=JSON.parse(localStorage.getItem('blockfire.rcfg')||'{}')||{};}catch(e){RCFG={};}
 const feat=k=>!(RCFG.features&&RCFG.features[k]===false);
@@ -2744,8 +2744,22 @@ function earthTex(){const c=document.createElement('canvas');c.width=128;c.heigh
 function swirlTex(){const c=document.createElement('canvas');c.width=c.height=64;const g=c.getContext('2d');g.clearRect(0,0,64,64);
   for(let i=0;i<180;i++){const a=i*.21,r=2+i*.16;g.fillStyle=`rgba(${60+i%3*60},255,${120+i%4*30},${.25+.6*(1-i/180)})`;g.fillRect(32+Math.cos(a)*r-1.5,32+Math.sin(a)*r-1.5,3,3);}
   const gr=g.createRadialGradient(32,32,0,32,32,30);gr.addColorStop(0,'rgba(200,255,220,.7)');gr.addColorStop(1,'rgba(0,80,30,0)');g.fillStyle=gr;g.fillRect(0,0,64,64);return new THREE.CanvasTexture(c);}
-function mapFxBuild(){for(const k of['g','w'])if(SKYFX[k]){scene.remove(SKYFX[k]);try{freeAll(SKYFX[k]);}catch(e){}SKYFX[k]=null;}SKYFX.rain=[];SKYFX.portals=[];SKYFX.earth=null;
+// graphics step 2: a sky dome for every map without a special sky: the map's sky colour at the horizon (the same as its
+// haze, so the world melts into it), a deeper colour overhead and a soft glow where the sunlight comes from.
+// One draw, about 300 triangles, no lights and no effects on top.
+const SKYV='varying vec3 vD;void main(){vD=normalize(position);gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}';
+const SKYF='precision mediump float;uniform vec3 hz;uniform vec3 tp;uniform vec3 sd;uniform vec3 sc;varying vec3 vD;void main(){vec3 d=normalize(vD);float h=d.y;'+
+  'vec3 c=mix(hz,tp,smoothstep(0.02,0.75,h));c=mix(c,hz*0.92,smoothstep(0.0,-0.25,h));float s=max(dot(d,sd),0.0);'+
+  'c+=sc*(pow(s,90.0)*0.85+pow(s,10.0)*0.18);gl_FragColor=vec4(c,1.0);}';
+function skyDome(){const hz=new THREE.Color(MAP.sky),tp=hz.clone(),hsl={};tp.getHSL(hsl);
+  if(MAP.night)tp.setHSL(hsl.h,Math.min(1,hsl.s*1.1),hsl.l*.45);else if(MAP.weather==='dust')tp.setHSL(hsl.h,hsl.s,hsl.l*.82);
+  else tp.setHSL(hsl.h+.015,Math.min(1,hsl.s*1.35+.08),Math.max(.12,hsl.l*.66));
+  const m=new THREE.ShaderMaterial({vertexShader:SKYV,fragmentShader:SKYF,side:THREE.BackSide,depthWrite:false,depthTest:false,fog:false,
+    uniforms:{hz:{value:hz},tp:{value:tp},sd:{value:sun.position.clone().normalize()},sc:{value:new THREE.Color(MAP.night?0x8090b0:0xfff1d6).multiplyScalar(MAP.night?.25:1)}}});
+  const d=new THREE.Mesh(new THREE.SphereGeometry(150,20,10),m);d.renderOrder=-2;d.frustumCulled=false;return d;}
+function mapFxBuild(){for(const k of['g','w','d'])if(SKYFX[k]){scene.remove(SKYFX[k]);try{freeAll(SKYFX[k]);}catch(e){}SKYFX[k]=null;}SKYFX.rain=[];SKYFX.portals=[];SKYFX.earth=null;
   const k=MAP.sky3d;
+  if(!k){try{SKYFX.d=skyDome();scene.add(SKYFX.d);}catch(e){SKYFX.d=null;}}
   if(k==='space'){const g=new THREE.Group(),pos=[],R=rng(99);
     for(let i=0;i<1400;i++){const u=R()*2-1,a=R()*6.283,s=Math.sqrt(1-u*u);pos.push(Math.cos(a)*s*160,Math.abs(u)*150-12,Math.sin(a)*s*160);}
     const sg=new THREE.BufferGeometry();sg.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));
@@ -2761,10 +2775,10 @@ function mapFxBuild(){for(const k of['g','w'])if(SKYFX[k]){scene.remove(SKYFX[k]
     const st=swirlTex();for(const pr of MAP.portals||[])for(const [px,pz] of pr){const m=new THREE.Mesh(new THREE.PlaneGeometry(4,4),new THREE.MeshBasicMaterial({map:st,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide}));
       m.position.set(px,colTop(px|0,pz|0)+2,pz);m.rotation.y=Math.PI/2;w.add(m);SKYFX.portals.push(m);}
     scene.add(w);SKYFX.w=w;}}
-function mapFxTick(dt){SKYFX.t+=dt;
+function mapFxTick(dt){SKYFX.t+=dt;if(SKYFX.d)SKYFX.d.position.copy(camera.position);
   if(SKYFX.g){SKYFX.g.position.copy(camera.position);if(SKYFX.earth)SKYFX.earth.rotation.y+=dt*.02;}
   if(MAP.sky3d==='code'){codeTex.offset.y+=dt*.35;for(const r of SKYFX.rain)r.t.offset.y+=r.spd*dt;for(const p of SKYFX.portals)p.rotation.x-=dt*2.2;
-    SKYFX.glitch-=dt;const gl=SKYFX.glitch<0&&SKYFX.glitch>-.25;if(SKYFX.glitch<-.25)SKYFX.glitch=14+rand()*12;MATS[B.CODE].color.setHex(gl&&((SKYFX.t*30)|0)%2?0xff3355:0xffffff);}
+    SKYFX.glitch-=dt;const gl=SKYFX.glitch<0&&SKYFX.glitch>-.25;if(SKYFX.glitch<-.25)SKYFX.glitch=14+rand()*12;MATS[B.CODE].color.setHex(gl&&((SKYFX.t*30)|0)%2?0xff3355:0xffffff);{const wc=WMC.get(MATS[B.CODE]);if(wc)wc.color.copy(MATS[B.CODE].color);}}
   if(MAP.foam){for(const f of MAP.foam)if(rand()<dt*40&&parts.length<FXB.cap&&pRoom())parts.push({x:f[0]+(rand()-.5)*3.6,y:f[1],z:f[2]+(rand()-.5)*.8,vx:(rand()-.5)*1.2,vy:1.5+rand()*1.8,vz:(rand()-.5)*1.2,life:.6+rand()*.5,max:1.1,size:.1+rand()*.12,color:0xeaf6ff});}
   vehTick(dt);}
 // portals: step in and you come out at the partner portal on the far side of the map
@@ -2906,7 +2920,86 @@ function genWorld(){W=D=MAP.size||64;vox.fill(0);VEH=[];PERCHES=[];MAP.gen();ani
 
 let blockMeshes=[];
 const boxGeo=new THREE.BoxGeometry(1,1,1);
+/* World drawing (graphics step 1): the map is cut into 32x32 areas; each area is one mesh holding only the block
+   sides that can be seen (about 70% fewer triangles than drawing every cube whole), with soft corner shading
+   ("ambient occlusion") baked into its corners once. Every block keeps its own texture and material. A changed
+   block rebuilds only its area. The old way (one instanced cube per block) stays as a fallback and an off switch. */
+const WCH=32,WC={list:[],snap:null,w:0,d:0,off:false};
+try{WC.off=localStorage.getItem('blockfire.oldworld')==='1';}catch(e){}
+const WMC=new Map();
+function wmat(m){let c=WMC.get(m);if(!c){c=m.clone();c.vertexColors=true;WMC.set(m,c);}return c;}
+// every plain 16x16 block texture shares one 256x256 image, so an area draws all its plain blocks in one go
+// (glowing, see-through, animated or unusual blocks keep their own material)
+const WAT={tex:null,mat:null,cell:new Map()};
+function watPlain(m){return m&&m.type==='MeshLambertMaterial'&&m.map&&m.map!==codeTex&&!m.transparent&&!m.alphaTest&&m.side===THREE.FrontSide&&m.opacity===1&&
+  m.color.getHex()===0xffffff&&m.emissive.getHex()===0&&m.map.image&&m.map.image.width===16&&m.map.image.height===16&&!m.map.offset.x&&!m.map.offset.y&&m.map.repeat.x===1&&m.map.repeat.y===1;}
+function watBuild(){if(WAT.mat)return;const cv=document.createElement('canvas');cv.width=cv.height=256;const g=cv.getContext('2d');let n=0;
+  for(const m0 of MATS){for(const m of Array.isArray(m0)?m0:[m0]){if(!watPlain(m)||WAT.cell.has(m.map))continue;if(n>=256)break;
+    g.drawImage(m.map.image,(n%16)*16,((n/16)|0)*16);WAT.cell.set(m.map,n++);}}
+  const t=new THREE.CanvasTexture(cv);t.magFilter=THREE.NearestFilter;t.minFilter=THREE.NearestFilter;t.generateMipmaps=false;
+  WAT.tex=t;WAT.mat=new THREE.MeshLambertMaterial({map:t,vertexColors:true});}
+// the six sides in the cube's own order (+x,-x,+y,-y,+z,-z): normal and corners (bottom-left, bottom-right,
+// top-right, top-left as seen from outside, so the texture stands upright on walls)
+const WF=[[[1,0,0],[[1,0,1],[1,0,0],[1,1,0],[1,1,1]]],[[-1,0,0],[[0,0,0],[0,0,1],[0,1,1],[0,1,0]]],
+  [[0,1,0],[[0,1,1],[1,1,1],[1,1,0],[0,1,0]]],[[0,-1,0],[[0,0,0],[1,0,0],[1,0,1],[0,0,1]]],
+  [[0,0,1],[[0,0,1],[1,0,1],[1,1,1],[0,1,1]]],[[0,0,-1],[[1,0,0],[0,0,0],[0,1,0],[1,1,0]]]];
+const WUV=[0,0,1,0,1,1,0,1],AOL=[150,185,220,255];
+// for each side and corner: the two neighbours beside the corner and the one diagonal to it (in the layer outside)
+const WAO=WF.map(([n,cs])=>cs.map(c=>{const ax=[0,1,2].filter(a=>!n[a]),t=ax.map(a=>{const v=[0,0,0];v[a]=c[a]?1:-1;return v;});
+  return [n.map((v,i)=>v+t[0][i]),n.map((v,i)=>v+t[1][i]),n.map((v,i)=>v+t[0][i]+t[1][i])];}));
+function wcBuild(cx,cz){const x0=cx*WCH,z0=cz*WCH,x1=Math.min(W,x0+WCH),z1=Math.min(D,z0+WCH);
+  const groups=[new Map(),new Map()];   // [opaque, see-through]: material -> faces [x,y,z,side,a0,a1,a2,a3]
+  for(let y=0;y<H;y++)for(let z=z0;z<z1;z++)for(let x=x0;x<x1;x++){const id=vox[VI(x,y,z)];if(!id)continue;
+    const m=MATS[id];if(!m)continue;const tr=TRANSP[id]?1:0;
+    for(let f=0;f<6;f++){const n=WF[f][0],nx=x+n[0],ny=y+n[1],nz=z+n[2];
+      if(opq(nx,ny,nz))continue;
+      if(tr&&ny>=0&&ny<H&&nx>=0&&nz>=0&&nx<W&&nz<D&&vox[VI(nx,ny,nz)]===id)continue;   // inside a body of water / glass
+      const m1=Array.isArray(m)?m[f]:m,cell=WAT.cell.has(m1.map)&&watPlain(m1)?WAT.cell.get(m1.map):-1,mm=cell>=0?WAT.mat:wmat(m1),G=groups[tr];let L=G.get(mm);if(!L)G.set(mm,L=[]);
+      L.push(x,y,z,f,cell);const A=WAO[f];
+      for(let k=0;k<4;k++){const a=A[k],s1=opq(x+a[0][0],y+a[0][1],z+a[0][2])?1:0,s2=opq(x+a[1][0],y+a[1][1],z+a[1][2])?1:0,c=opq(x+a[2][0],y+a[2][1],z+a[2][2])?1:0;
+        L.push(s1&&s2?0:3-s1-s2-c);}}}
+  const out=[];
+  for(let tr=0;tr<2;tr++){const G=groups[tr];if(!G.size)continue;let nf=0;for(const L of G.values())nf+=L.length/9;
+    const P=new Int16Array(nf*12),N=new Int8Array(nf*12),U=new Float32Array(nf*8),C=new Uint8Array(nf*12),I=nf*4>65535?new Uint32Array(nf*6):new Uint16Array(nf*6);
+    const geo=new THREE.BufferGeometry(),mats=[];let fi=0;
+    for(const [mm,L] of G){const st=fi*6;
+      for(let q=0;q<L.length;q+=9){const x=L[q],y=L[q+1],z=L[q+2],f=L[q+3],cell=L[q+4],n=WF[f][0],cs=WF[f][1],v0=fi*4;
+        // texture corner: the whole texture, or its 16x16 cell in the shared image (a hair inside, so cells never bleed)
+        let u0=0,v0b=0,us=1;if(cell>=0){const e=.02/256;u0=(cell%16)/16+e;v0b=1-(((cell/16)|0)+1)/16+e;us=1/16-2*e;}
+        for(let k=0;k<4;k++){const c=cs[k],o=(v0+k)*3;P[o]=x+c[0];P[o+1]=y+c[1];P[o+2]=z+c[2];N[o]=n[0]*127;N[o+1]=n[1]*127;N[o+2]=n[2]*127;
+          const l=AOL[L[q+5+k]];C[o]=C[o+1]=C[o+2]=l;U[(v0+k)*2]=u0+WUV[k*2]*us;U[(v0+k)*2+1]=v0b+WUV[k*2+1]*us;}
+        const a0=L[q+5],a1=L[q+6],a2=L[q+7],a3=L[q+8],ii=fi*6;
+        // split the square along the brighter diagonal so the shading never shows a crease
+        if(a0+a2<a1+a3){I[ii]=v0+1;I[ii+1]=v0+2;I[ii+2]=v0+3;I[ii+3]=v0+1;I[ii+4]=v0+3;I[ii+5]=v0;}
+        else{I[ii]=v0;I[ii+1]=v0+1;I[ii+2]=v0+2;I[ii+3]=v0;I[ii+4]=v0+2;I[ii+5]=v0+3;}
+        fi++;}
+      geo.addGroup(st,fi*6-st,mats.length);mats.push(mm);}
+    geo.setAttribute('position',new THREE.BufferAttribute(P,3));geo.setAttribute('normal',new THREE.BufferAttribute(N,3,true));
+    geo.setAttribute('uv',new THREE.BufferAttribute(U,2));geo.setAttribute('color',new THREE.BufferAttribute(C,3,true));
+    geo.setIndex(new THREE.BufferAttribute(I,1));geo.computeBoundingSphere();
+    const mesh=new THREE.Mesh(geo,mats);mesh.matrixAutoUpdate=false;if(tr)mesh.renderOrder=1;out.push(mesh);}
+  return out;}
+function wcClear(){for(const c of WC.list)for(const m of c||[]){scene.remove(m);m.geometry.dispose();}WC.list=[];WC.snap=null;}
 function rebuildWorld(){
+  if(!WC.off){try{rebuildWorldNew();return;}catch(e){reportErr('world',e);WC.off=true;try{wcClear();}catch(x){}}}
+  rebuildWorldOld();}
+function rebuildWorldNew(){watBuild();
+  for(const m of blockMeshes){scene.remove(m);if(m.dispose)m.dispose();}blockMeshes=[];
+  const nx=Math.ceil(W/WCH),nz=Math.ceil(D/WCH),n=W*D*H;
+  // which areas changed since the last build (a change at an area's edge also re-shades the next area)
+  let dirty=null;
+  if(WC.snap&&WC.w===W&&WC.d===D&&WC.snap.length===n){dirty=new Uint8Array(nx*nz);const sn=WC.snap;
+    for(let i=0;i<n;i++)if(sn[i]!==vox[i]){const x=i%W,z=((i/W)|0)%D;
+      for(let dz=-1;dz<=1;dz++)for(let dx=-1;dx<=1;dx++){const cx=Math.floor((x+dx)/WCH),cz=Math.floor((z+dz)/WCH);if(cx>=0&&cz>=0&&cx<nx&&cz<nz)dirty[cx+nx*cz]=1;}}}
+  else{wcClear();}
+  for(let cz=0;cz<nz;cz++)for(let cx=0;cx<nx;cx++){const k=cx+nx*cz;if(dirty&&!dirty[k])continue;
+    for(const m of WC.list[k]||[]){scene.remove(m);m.geometry.dispose();}
+    const ms=wcBuild(cx,cz);for(const m of ms)scene.add(m);WC.list[k]=ms;}
+  WC.snap=vox.slice(0,n);WC.w=W;WC.d=D;
+  computeSY();
+  for(const a of ANIM.list)a.y=null;animTick(0);}
+function rebuildWorldOld(){
+  try{wcClear();}catch(e){}
   for(const m of blockMeshes){scene.remove(m);if(m.dispose)m.dispose();}
   blockMeshes=[];
   const lists=[];
@@ -3362,6 +3455,19 @@ function buildSkin(T){
   return{head:[ms,ms,Lm(topT),Lm(chin),Lm(back),Lm(face)],body:[mt,mt,mt,mt,mt,Lm(vest)],leg:Lm(legT),arm:[ma,ma,ma,Lm(glove),ma,ma],sleeve:ma};
 }
 const SKINS={blue:buildSkin(TEAMS.blue),red:buildSkin(TEAMS.red)};
+// graphics step 4: a soldier's head, body and arms each had a different picture on every side, which cost 6 draws per
+// box (about 26 per soldier). In a match each skin's pictures share one small image instead, so each of those boxes
+// draws once. Exactly the same look.
+const SKA=new WeakMap();
+function skinAtlas(S){let a=SKA.get(S);if(a)return a;try{const cv=document.createElement('canvas');cv.width=64;cv.height=32;const g=cv.getContext('2d');g.imageSmoothingEnabled=false;
+  [S.head,S.body,S.arm].forEach((arr,r)=>(Array.isArray(arr)?arr:[arr,arr,arr,arr,arr,arr]).forEach((m,f)=>{const im=m&&m.map&&m.map.image;if(im)g.drawImage(im,f*8,r*8,8,8);}));
+  const t=new THREE.CanvasTexture(cv);t.magFilter=THREE.NearestFilter;t.minFilter=THREE.NearestFilter;t.generateMipmaps=false;a=new THREE.MeshLambertMaterial({map:t});}
+  catch(e){a=null;}SKA.set(S,a);return a;}
+// a box whose six sides point at their own 8x8 cell in row 'row' of that image (a hair inside, so cells never bleed)
+function atlasBox(geo,row){const uv=geo.attributes.uv;for(let f=0;f<6;f++)for(let k=0;k<4;k++){const i=f*4+k;
+  uv.setXY(i,(f+.002+uv.getX(i)*.996)/8,1-(row+1)/4+(.002+uv.getY(i)*.996)/4);}uv.needsUpdate=true;geo.clearGroups();return geo;}
+const SKG={head:atlasBox(new THREE.BoxGeometry(.5,.5,.5),0),body:atlasBox(new THREE.BoxGeometry(.5,.75,.28),1),
+  arm:(()=>{const g=new THREE.BoxGeometry(.22,.7,.22);g.translate(0,-.3,0);return atlasBox(g,2);})()};
 // character skins: won from crates, shown to friends; every skin keeps a team-coloured armband and chest stripe
 const CHARS={
   std:{name:'Standard Issue',tier:0},
@@ -3431,7 +3537,10 @@ function armorParts(ar,head,body,legL,legR,armL,armR){
 // dress a soldier (a friend in multiplayer, or the preview) in a skin and armor
 function applyLook(e,sk,ar){
   if(!e.mesh||!e.head)return;const S=skinMats(sk,lookTeam(e));
-  e.head.material=S.head;if(e.body)e.body.material=S.body;e.legL.material=S.leg;e.legR.material=S.leg;if(e.armL)e.armL.material=S.arm;e.armR.material=S.arm;
+  const A=e.skA&&skinAtlas(S);
+  if(A){e.head.material=A;if(e.body)e.body.material=A;if(e.armL)e.armL.material=A;e.armR.material=A;}
+  else{e.head.material=S.head;if(e.body)e.body.material=S.body;if(e.armL)e.armL.material=S.arm;e.armR.material=S.arm;}
+  e.legL.material=S.leg;e.legR.material=S.leg;
   for(const o of e.armorP||[])o.parent&&o.parent.remove(o);
   e.armorP=armorParts(ar|0,e.head,e.body,e.legL,e.legR,e.armL,e.armR);e.sk=sk;e.ar=ar|0;
 }
@@ -3567,21 +3676,22 @@ function makeEnt(name,team,isPlayer){
     kills:0,deaths:0,respawnT:0,spawnProt:0,lastAttacker:null,lastHurt:99,firedT:0};
   if(!isPlayer){
     const S=SKINS[team]||SKINS.red;const g=new THREE.Group();g.rotation.order='YXZ';
-    const head=new THREE.Mesh(new THREE.BoxGeometry(.5,.5,.5),S.head);head.position.y=1.75;
-    const body=new THREE.Mesh(new THREE.BoxGeometry(.5,.75,.28),S.body);body.position.y=1.125;
+    const SA=skinAtlas(S);
+    const head=new THREE.Mesh(SA?SKG.head:new THREE.BoxGeometry(.5,.5,.5),SA||S.head);head.position.y=1.75;
+    const body=new THREE.Mesh(SA?SKG.body:new THREE.BoxGeometry(.5,.75,.28),SA||S.body);body.position.y=1.125;
     const lg=new THREE.BoxGeometry(.24,.75,.24);lg.translate(0,-.375,0);
     const legL=new THREE.Mesh(lg,S.leg);legL.position.set(-.125,.75,0);
     const legR=new THREE.Mesh(lg,S.leg);legR.position.set(.125,.75,0);
-    const ag=new THREE.BoxGeometry(.22,.7,.22);ag.translate(0,-.3,0);
-    const armL=new THREE.Mesh(ag,S.arm);armL.position.set(-.36,1.45,0);armL.rotation.order='YXZ';armL.rotation.set(1.42,-.5,0);
-    const armR=new THREE.Mesh(ag,S.arm);armR.position.set(.36,1.45,0);armR.rotation.order='YXZ';armR.rotation.set(1.3,.12,0);
+    let ag=SKG.arm;if(!SA){ag=new THREE.BoxGeometry(.22,.7,.22);ag.translate(0,-.3,0);}
+    const armL=new THREE.Mesh(ag,SA||S.arm);armL.position.set(-.36,1.45,0);armL.rotation.order='YXZ';armL.rotation.set(1.42,-.5,0);
+    const armR=new THREE.Mesh(ag,SA||S.arm);armR.position.set(.36,1.45,0);armR.rotation.order='YXZ';armR.rotation.set(1.3,.12,0);
     const gun=new THREE.Group();gun.position.set(.08,1.36,-.2);
     const gmod=buildGun(rand()<.5?'ak':'m4',GM.met,true);gmod.scale.setScalar(1.15);gun.add(gmod);
     const flash=new THREE.Mesh(new THREE.BoxGeometry(.16,.16,.16),flashMat);flash.position.set(0,.02,-.75);flash.visible=false;gun.add(flash);
     const sprite=nameSprite(name,TEAMS[team].tag);sprite.position.y=2.4;
     g.add(head,body,legL,legR,armL,armR,gun,sprite);g.scale.setScalar(.9);g.visible=false;scene.add(g);
     const bw=WEAP_NAMES[(rand()*WEAP_NAMES.length)|0];
-    Object.assign(e,{mesh:g,gun,head,body,legL,legR,armL,armR,flash,sprite,weapon:bw,baseWeapon:bw,meleeCD:0,
+    Object.assign(e,{skA:!!SA,mesh:g,gun,head,body,legL,legR,armL,armR,flash,sprite,weapon:bw,baseWeapon:bw,meleeCD:0,
       path:null,pathI:0,target:null,seeing:false,scanT:0,reactT:0,fireCD:0,burst:0,strafeT:0,strafeDir:1,adv:0,
       lastSeen:null,lastSeenT:0,stuckT:0,repathT:0,nadeCD:8,walk:0,deadT:0,flashT:0,aimedT:0,skill:.8+rand()*.3});
   }
@@ -3649,7 +3759,11 @@ const curW=()=>LW[cur]||WEAPONS.ak47;
 function vbox(w,h,d,mat,x,y,z,rx){const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat);m.position.set(x,y,z);if(rx)m.rotation.x=rx;return m;}
 const VM=new THREE.Group();gunScene.add(VM);
 const skinMat=new THREE.MeshLambertMaterial({color:0x2c2c2e});
-const vflash=new THREE.Mesh(new THREE.BoxGeometry(.07,.07,.07),new THREE.MeshBasicMaterial({color:0xffd98a}));vflash.visible=false;VM.add(vflash);
+// graphics step 5: the muzzle flash is a glowing star (one flat picture, 2 triangles, shown 45 ms per shot)
+const vflash=new THREE.Mesh(new THREE.PlaneGeometry(.3,.3),new THREE.MeshBasicMaterial({map:(()=>{const c=document.createElement('canvas');c.width=c.height=64;const g=c.getContext('2d');
+  const r=g.createRadialGradient(32,32,0,32,32,30);r.addColorStop(0,'rgba(255,255,235,1)');r.addColorStop(.18,'rgba(255,224,140,.95)');r.addColorStop(.45,'rgba(255,150,40,.35)');r.addColorStop(1,'rgba(255,120,20,0)');
+  g.fillStyle=r;g.fillRect(0,0,64,64);g.translate(32,32);for(let i=0;i<6;i++){g.rotate(Math.PI/3);const l=i%2?22:30;g.fillStyle='rgba(255,230,160,.85)';g.beginPath();g.moveTo(-2.2,0);g.lineTo(0,-l);g.lineTo(2.2,0);g.fill();}
+  const t=new THREE.CanvasTexture(c);return t;})(),transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,fog:false}));vflash.visible=false;VM.add(vflash);
 // one gun as you see it: its body, its own finish (when no camo is on) and its own parts
 const finMats={};
 function finishMat(hex){return finMats[hex]||(finMats[hex]=new THREE.MeshPhongMaterial({color:hex,shininess:30,specular:0x2a2a2a}));}
@@ -3667,10 +3781,26 @@ function bakeStatic(root){
       for(const g of list){arr.set(g.attributes[k].array,off);off+=g.attributes[k].array.length;}out.setAttribute(k,new THREE.BufferAttribute(arr,sz));}
     list.forEach(g=>g.dispose());out.computeBoundingSphere();root.add(new THREE.Mesh(out,mat));}
   return root;}
+// graphics step 3: a box with its edges cut at 45 degrees (a bevel), so the gun in your hands catches the light along
+// every edge like machined metal. 44 triangles instead of 12; only bigger parts of the gun you hold get it.
+function bevelBox(w,h,d,r){const a=w/2,b=h/2,c=d/2,P=[],N=[],U=[];
+  const tri=(p,q,s,n)=>{const e1=[q[0]-p[0],q[1]-p[1],q[2]-p[2]],e2=[s[0]-p[0],s[1]-p[1],s[2]-p[2]],cr=[e1[1]*e2[2]-e1[2]*e2[1],e1[2]*e2[0]-e1[0]*e2[2],e1[0]*e2[1]-e1[1]*e2[0]];
+    if(cr[0]*n[0]+cr[1]*n[1]+cr[2]*n[2]<0){const t=q;q=s;s=t;}const l=Math.hypot(n[0],n[1],n[2]),nn=[n[0]/l,n[1]/l,n[2]/l],ax=Math.abs(nn[0])>=Math.abs(nn[1])&&Math.abs(nn[0])>=Math.abs(nn[2])?0:Math.abs(nn[1])>=Math.abs(nn[2])?1:2;
+    for(const v of[p,q,s]){P.push(v[0],v[1],v[2]);N.push(nn[0],nn[1],nn[2]);const E=[a,b,c],i=ax===0?2:0,j=ax===1?2:1;U.push((v[i]+E[i])/(2*E[i]),(v[j]+E[j])/(2*E[j]));}};
+  const quad=(p,q,s,t,n)=>{tri(p,q,s,n);tri(p,s,t,n);};
+  const S=[1,-1];
+  for(const sx of S){quad([sx*a,-b+r,-c+r],[sx*a,b-r,-c+r],[sx*a,b-r,c-r],[sx*a,-b+r,c-r],[sx,0,0]);}
+  for(const sy of S){quad([-a+r,sy*b,-c+r],[a-r,sy*b,-c+r],[a-r,sy*b,c-r],[-a+r,sy*b,c-r],[0,sy,0]);}
+  for(const sz of S){quad([-a+r,-b+r,sz*c],[a-r,-b+r,sz*c],[a-r,b-r,sz*c],[-a+r,b-r,sz*c],[0,0,sz]);}
+  for(const sx of S)for(const sy of S)quad([sx*a,sy*(b-r),-c+r],[sx*(a-r),sy*b,-c+r],[sx*(a-r),sy*b,c-r],[sx*a,sy*(b-r),c-r],[sx,sy,0]);
+  for(const sx of S)for(const sz of S)quad([sx*a,-b+r,sz*(c-r)],[sx*(a-r),-b+r,sz*c],[sx*(a-r),b-r,sz*c],[sx*a,b-r,sz*(c-r)],[sx,0,sz]);
+  for(const sy of S)for(const sz of S)quad([-a+r,sy*b,sz*(c-r)],[-a+r,sy*(b-r),sz*c],[a-r,sy*(b-r),sz*c],[a-r,sy*b,sz*(c-r)],[0,sy,sz]);
+  for(const sx of S)for(const sy of S)for(const sz of S)tri([sx*a,sy*(b-r),sz*(c-r)],[sx*(a-r),sy*b,sz*(c-r)],[sx*(a-r),sy*(b-r),sz*c],[sx,sy,sz]);
+  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(P,3));g.setAttribute('normal',new THREE.Float32BufferAttribute(N,3));g.setAttribute('uv',new THREE.Float32BufferAttribute(U,2));return g;}
 function buildGun(model,cm,bot,att,vr){
   const opt=att&&att.optic&&att.optic!=='iron'?att.optic:null;
   const g=new THREE.Group();
-  const bx=(w,h,d,m,x,y,z,rx,ry,rz)=>{const o=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);o.position.set(x,y,z);o.rotation.set(rx||0,ry||0,rz||0);g.add(o);return o;};
+  const bx=(w,h,d,m,x,y,z,rx,ry,rz)=>{const big=!bot&&Math.max(w,h,d)>=.06&&Math.min(w,h,d)>=.02,o=new THREE.Mesh(big?bevelBox(w,h,d,Math.min(.006,Math.min(w,h,d)*.18)):new THREE.BoxGeometry(w,h,d),m);o.position.set(x,y,z);o.rotation.set(rx||0,ry||0,rz||0);g.add(o);return o;};
   // cylinder along the barrel axis; rF = front radius, rB = back radius
   const cy=(rF,rB,len,m,x,y,z,seg,open)=>{const o=new THREE.Mesh(new THREE.CylinderGeometry(rB,rF,len,seg||10,1,!!open),m);o.rotation.x=Math.PI/2;o.position.set(x,y,z);g.add(o);return o;};
   const pl=(w,h,m,y,z)=>{const o=new THREE.Mesh(new THREE.PlaneGeometry(w,h),m);o.position.set(0,y,z);o.renderOrder=5;g.add(o);return o;};
@@ -5150,7 +5280,7 @@ function fireBullet(w,sp,v,o,mw){
   }else if(hv){
     if(PB.has(VI(hv.x,hv.y,hv.z)))hitBlock(hv.x,hv.y,hv.z,w.dmg*.6);
     else if(BREAKABLE[hv.id])breakAt(hv.id,hv.x,hv.y,hv.z);
-    else burst(hx+hv.nx*.05,hy+hv.ny*.05,hz+hv.nz*.05,BCOL[hv.id],w.pellets?2:5,3.5,.1,.6);
+    else{burst(hx+hv.nx*.05,hy+hv.ny*.05,hz+hv.nz*.05,BCOL[hv.id],w.pellets?2:5,3.5,.1,.6);if(!w.pellets||rand()<.3)burst(hx+hv.nx*.08,hy+hv.ny*.08,hz+hv.nz*.08,0xffe39a,2,6,.045,.16);}
   }
   tracer(mw[0],mw[1],mw[2],hx,hy,hz);
   {const ev=[r1(mw[0]),r1(mw[1]),r1(mw[2]),r1(hx),r1(hy),r1(hz),w.snd];if(isClient())netOut(['t'].concat(ev));else netEv(['t','P0'].concat(ev));}
@@ -7156,7 +7286,7 @@ function hostDrop(c){
   if(!e.away){e.away=now();e.alive=false;if(e.mesh)e.mesh.visible=false;toast(e.name+' lost connection, waiting for them…');}
   netRoster();renderMP();renderMPPill();
 }
-function disposeEnt(e){if(!e||!e.mesh)return;e.mesh.traverse(o=>{if(o.geometry)o.geometry.dispose();});if(e.sprite&&e.sprite.material){if(e.sprite.material.map)e.sprite.material.map.dispose();e.sprite.material.dispose();}}
+function disposeEnt(e){if(!e||!e.mesh)return;e.mesh.traverse(o=>{if(o.geometry&&o.geometry!==SKG.head&&o.geometry!==SKG.body&&o.geometry!==SKG.arm)o.geometry.dispose();});if(e.sprite&&e.sprite.material){if(e.sprite.material.map)e.sprite.material.map.dispose();e.sprite.material.dispose();}}
 function hostRemove(e,why){roomRegSoon();
   if(e.conn){NET.conns.delete(e.conn);try{e.conn.close();}catch(err){}}
   e.alive=false;NET.remotes.delete(e.nid);if(e.mesh)scene.remove(e.mesh);disposeEnt(e);const i=ents.indexOf(e);if(i>=0)ents.splice(i,1);
