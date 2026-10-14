@@ -1571,7 +1571,7 @@ async function adminClaim(code){if(!CS||CS.guest)return 'Sign in to your own acc
   if(r.ok){CS.admin=true;cloudKeep();return '';}const e=r.j&&r.j.error;
   return !r.status?'No connection to the server.':e==='code'?'That code is not right.':e==='taken'?'This game already has its admin.':e==='guest'?'Guest accounts cannot be admins. Create your account first.':'The server said no (error '+r.status+').';}
 /* ================= version, remote settings, crash reports ================= */
-const APP_VERSION='1.1.2',BUILD_ID='__BUILD_ID__';
+const APP_VERSION='1.1.3',BUILD_ID='__BUILD_ID__';
 const verNum=v=>String(v||'0').split('.').slice(0,3).map(n=>parseInt(n)||0).reduce((a,n)=>a*1000+n,0);
 let RCFG={};try{RCFG=JSON.parse(localStorage.getItem('blockfire.rcfg')||'{}')||{};}catch(e){RCFG={};}
 const feat=k=>!(RCFG.features&&RCFG.features[k]===false);
@@ -3996,13 +3996,24 @@ function airTopMap(){const cv=document.createElement('canvas');cv.width=W;cv.hei
   for(let z=0;z<D;z++)for(let x=0;x<W;x++){let y=H-1;while(y>0&&!vox[VI(x,y,z)])y--;const id=vox[VI(x,y,z)],c=BCOL[id]||(id===B.LAVA?0xf06018:id===B.WATER?0x2860aa:0x707070),k=.55+.45*y/H,i=(x+z*W)*4;
     const r=(c>>16)&255,gg=(c>>8)&255,b=c&255,m=(r+gg+b)/3;im.data[i]=(m*.35+20)*k;im.data[i+1]=(m*.75+40)*k;im.data[i+2]=(m*.35+24)*k;im.data[i+3]=255;}
   g.putImageData(im,0,0);return cv;}
-function airDraw(){const cv=$('airCv'),g=cv.getContext('2d'),S=cv.width/W;if(!airMapC)airMapC=airTopMap();
+// King mode: a target set on the enemy king follows him until LAUNCH
+function airFollow(){const k=airSel&&airSel.k;if(!k)return;if(k.alive&&k.king&&ents.includes(k)){airSel.x=clamp(k.x,2,W-2);airSel.z=clamp(k.z,2,D-2);airSel.a=Math.atan2(airSel.z-player.z,airSel.x-player.x);}else airSel.k=null;}
+function airDraw(){const cv=$('airCv'),g=cv.getContext('2d'),S=cv.width/W;if(!airMapC)airMapC=airTopMap();airFollow();
   g.imageSmoothingEnabled=false;g.drawImage(airMapC,0,0,cv.width,cv.height);
   g.strokeStyle='rgba(120,255,160,.13)';g.lineWidth=1;for(let i=0;i<=W;i+=8){g.beginPath();g.moveTo(i*S,0);g.lineTo(i*S,cv.height);g.stroke();g.beginPath();g.moveTo(0,i*S);g.lineTo(cv.width,i*S);g.stroke();}
   const t=performance.now()/1000;let en=0;
   for(const e of ents){if(!e.alive||e.inMatch===false||e===player)continue;const foe=e.team!==player.team;if(foe)en++;
     g.fillStyle=foe?'#ff4d4d':'#5b9cf0';g.beginPath();g.arc(e.x*S,e.z*S,foe?3.4+Math.sin(t*6)*1:2.6,0,7);g.fill();
     if(foe){g.strokeStyle='rgba(255,77,77,.45)';g.beginPath();g.arc(e.x*S,e.z*S,7+(t*14%8),0,7);g.stroke();}}
+  // the kings: the enemy king big and gold with a crown and his health, yours with a small crown
+  for(const e of ents){if(!e.king||!e.alive||e.inMatch===false||e===player)continue;const foe=e.team!==player.team,x=e.x*S,z=e.z*S;
+    const crown=(cx,cy,w,fill)=>{g.fillStyle=fill;g.strokeStyle='#000';g.lineWidth=1.5;g.beginPath();g.moveTo(cx-w,cy+w*.55);g.lineTo(cx-w,cy-w*.35);g.lineTo(cx-w*.5,cy+w*.05);g.lineTo(cx,cy-w*.6);g.lineTo(cx+w*.5,cy+w*.05);g.lineTo(cx+w,cy-w*.35);g.lineTo(cx+w,cy+w*.55);g.closePath();g.fill();g.stroke();};
+    if(foe){const p=(t*1.6)%1;g.strokeStyle=`rgba(255,211,74,${1-p})`;g.lineWidth=3;g.beginPath();g.arc(x,z,8+p*22,0,7);g.stroke();
+      g.strokeStyle='#ffd34a';g.lineWidth=2;g.beginPath();g.arc(x,z,9,0,7);g.stroke();g.fillStyle='#ff4d4d';g.beginPath();g.arc(x,z,4.5,0,7);g.fill();
+      crown(x,z-19,9,'#ffd34a');
+      const hp=Math.max(0,Math.min(1,(e.hp||0)/(e.maxHp||1))),bw=34;g.fillStyle='rgba(0,0,0,.65)';g.fillRect(x-bw/2,z+12,bw,5);g.fillStyle='#ffd34a';g.fillRect(x-bw/2,z+12,bw*hp,5);
+      const ly=z+30>cv.height-4?z-33:z+30;g.font='bold 11px sans-serif';g.textAlign='center';g.lineWidth=3;g.strokeStyle='#000';g.strokeText('ENEMY KING',x,ly);g.fillStyle='#ffd34a';g.fillText('ENEMY KING',x,ly);}
+    else crown(x,z-10,5,'#9cc4ff');}
   g.save();g.translate(player.x*S,player.z*S);g.rotate(-player.yaw);g.fillStyle='#fff';g.beginPath();g.moveTo(0,-7);g.lineTo(5,6);g.lineTo(-5,6);g.closePath();g.fill();g.restore();
   if(airSel){const x=airSel.x*S,z=airSel.z*S;g.strokeStyle='#ffd34a';g.lineWidth=2;g.beginPath();g.arc(x,z,2.6*2.2*S,0,7);g.stroke();
     g.beginPath();g.moveTo(x-14,z);g.lineTo(x+14,z);g.moveTo(x,z-14);g.lineTo(x,z+14);g.stroke();
@@ -4010,10 +4021,13 @@ function airDraw(){const cv=$('airCv'),g=cv.getContext('2d'),S=cv.width/W;if(!ai
   g.fillStyle='rgba(0,0,0,.08)';for(let y=(t*40)%4;y<cv.height;y+=4)g.fillRect(0,y,cv.width,1);
   const own=player.airOwed|0,bought=airBought();
   $('airInfo').textContent=`${en} enemies tracked · ${own?`${own} earned strike${own>1?'s':''}`:''}${own&&bought?' · ':''}${bought?`bought: ${CALL.perMatch-callN} of ${CALL.perMatch} left this match`:''}`;
-  $('airGo').disabled=!airSel;const st=$('airStep');if(st){st.textContent=airSel?'② Target locked. Press LAUNCH':'① Tap the map where the bombs go';st.classList.toggle('go',!!airSel);}}
+  $('airGo').disabled=!airSel;const st=$('airStep');if(st){st.textContent=airSel?(airSel.k?'② Locked on the KING. Press LAUNCH':'② Target locked. Press LAUNCH'):(KG.on?'① Tap the map (tap the gold crown to lock on the king)':'① Tap the map where the bombs go');st.classList.toggle('go',!!airSel);}}
 $('airCv').addEventListener('pointerdown',e=>{const cv=$('airCv'),r=cv.getBoundingClientRect();const x=(e.clientX-r.left)/r.width*W,z=(e.clientY-r.top)/r.height*D;
-  airSel={x:clamp(x,2,W-2),z:clamp(z,2,D-2),a:Math.atan2(z-player.z,x-player.x)};sfx.ding&&sfx.ding();airDraw();});
-$('airGo').addEventListener('click',()=>{if(!airSel||!callReady())return;const own=(player.airOwed|0)>0,x=r1(airSel.x),z=r1(airSel.z);
+  airSel={x:clamp(x,2,W-2),z:clamp(z,2,D-2),a:Math.atan2(z-player.z,x-player.x)};
+  // a tap close to the enemy king locks onto him (and keeps following him until launch)
+  {let best=null,bd=8;for(const k of ents)if(k.king&&k.alive&&k.inMatch!==false&&k.team!==player.team){const d=Math.hypot(k.x-x,k.z-z);if(d<bd){bd=d;best=k;}}if(best){airSel.k=best;airFollow();}}
+  sfx.ding&&sfx.ding();airDraw();});
+$('airGo').addEventListener('click',()=>{airFollow();if(!airSel||!callReady())return;const own=(player.airOwed|0)>0,x=r1(airSel.x),z=r1(airSel.z);
   if(own)player.airOwed--;else{callN++;profile.calls=Math.max(0,(profile.calls|0)-1);saveProfile();}
   if(isClient())netOut(['k',own?'air':'call',x,z]);else killstreak('air',player,{x,z});
   showMsg('AIRSTRIKE CALLED IN',true);airClose();});
