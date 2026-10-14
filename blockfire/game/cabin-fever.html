@@ -1571,7 +1571,7 @@ async function adminClaim(code){if(!CS||CS.guest)return 'Sign in to your own acc
   if(r.ok){CS.admin=true;cloudKeep();return '';}const e=r.j&&r.j.error;
   return !r.status?'No connection to the server.':e==='code'?'That code is not right.':e==='taken'?'This game already has its admin.':e==='guest'?'Guest accounts cannot be admins. Create your account first.':'The server said no (error '+r.status+').';}
 /* ================= version, remote settings, crash reports ================= */
-const APP_VERSION='1.1.4',BUILD_ID='__BUILD_ID__';
+const APP_VERSION='1.2.0',BUILD_ID='__BUILD_ID__';
 const verNum=v=>String(v||'0').split('.').slice(0,3).map(n=>parseInt(n)||0).reduce((a,n)=>a*1000+n,0);
 let RCFG={};try{RCFG=JSON.parse(localStorage.getItem('blockfire.rcfg')||'{}')||{};}catch(e){RCFG={};}
 const feat=k=>!(RCFG.features&&RCFG.features[k]===false);
@@ -3018,6 +3018,7 @@ function initAudio(){
     verbIn.connect(d1);verbIn.connect(d2);d1.connect(lp);d2.connect(lp);lp.connect(fb);fb.connect(d1);lp.connect(master);
   }catch(e){AC=null;}
   setTimeout(()=>{try{sndWarm();}catch(e){}},300);
+  mixInit();
 }
 // per-sound output: loudness, distance muffling, and how much of it echoes
 // Every sound is a few short-lived audio nodes. Safari on iPhone keeps nodes alive while they are still
@@ -3145,6 +3146,18 @@ const SR=24000,RECS={},VOX={n:12,list:[]};let recQ=Promise.resolve();
 function mkVerb(c){const v=c.createGain(),d1=c.createDelay(1),d2=c.createDelay(1),fb=c.createGain(),lp=c.createBiquadFilter();
   d1.delayTime.value=.11;d2.delayTime.value=.23;fb.gain.value=.33;lp.type='lowpass';lp.frequency.value=1600;
   v.connect(d1);v.connect(d2);d1.connect(lp);d2.connect(lp);lp.connect(fb);fb.connect(d1);lp.connect(master);return v;}
+/* The mixer (mixer.js): one permanent audio node on the audio thread mixes every sound. A recording is handed to it
+   once; after that a sound is a tiny "play" message: no audio objects are made or dropped during a match at all.
+   If a browser cannot run it, sounds fall back to the 12 voices below. */
+const MIX={ok:false,node:null,nid:0};
+async function mixInit(){if(MIX.node||!AC)return;try{if(!AC.audioWorklet||typeof AudioWorkletNode==='undefined')return;
+  await AC.audioWorklet.addModule('mixer.js');
+  const n=new AudioWorkletNode(AC,'bfmix',{numberOfInputs:0,numberOfOutputs:1,outputChannelCount:[2]});n.connect(master);
+  n.port.onmessage=e=>{if(e.data&&e.data.t==='v')AUD.vox=e.data.n|0;};MIX.node=n;MIX.ok=true;fr('mixer on');
+  for(const k in RECS)if(RECS[k].buf&&RECS[k].buf.getChannelData)mixSend(k);}
+  catch(e){MIX.ok=false;fr('mixer off '+(e&&e.message||e));}}
+// hand a recording to the mixer (moved, not copied) and keep only its length here
+function mixSend(k){const r=RECS[k];try{const b=r.buf,d=b.getChannelData(0).slice(),id=++MIX.nid;MIX.node.port.postMessage({t:'b',id,d,sr:b.sampleRate},[d.buffer]);r.id=id;r.buf={duration:b.duration};}catch(e){}}
 // the recording of a sound, or null while it is being made. Requests made close together are recorded in one
 // go: one offline context lays them end to end (each built at its own start time), renders once, and is cut up.
 const RQ=[];let rqT=0;
@@ -3168,7 +3181,7 @@ function recFlush(){rqT=0;if(!RQ.length)return;
       if(!b){bad();return;}
       try{const d=b.getChannelData(0);for(const it of items){if(it.fail){RECS[it.key].no=1;continue;}
         const a=Math.floor(it.at*SR),n=Math.min(Math.ceil(it.dur*SR),d.length-a);if(n<=0){RECS[it.key].no=1;continue;}
-        const nb=AC.createBuffer(1,n,SR);if(nb.copyToChannel)nb.copyToChannel(d.subarray(a,a+n),0);else nb.getChannelData(0).set(d.subarray(a,a+n));RECS[it.key].buf=nb;}}
+        const nb=AC.createBuffer(1,n,SR);if(nb.copyToChannel)nb.copyToChannel(d.subarray(a,a+n),0);else nb.getChannelData(0).set(d.subarray(a,a+n));RECS[it.key].buf=nb;if(MIX.ok)mixSend(it.key);}}
       catch(e){for(const it of items)if(!RECS[it.key].buf)RECS[it.key].no=1;}
       res();};
     try{off.oncomplete=e=>fin(e.renderedBuffer);const pr=off.startRendering();if(pr&&pr.then)pr.then(fin,()=>fin(null));}catch(e){fin(null);}
@@ -3201,6 +3214,7 @@ function sndPrio(n,dist,own,k){if(own||OWN.has(n))return 3;if(n==='explosion'||n
 // your minigun is one looping sound while the trigger is held (instead of 22 separate shots a second)
 const MGL={src:null,g:null,t:0};
 function mgHold(vol){const buf=recSound('mgloop',1.5,()=>{for(let i=0;i<16;i++)RAW.gun('minigun',1,0,1,AC.currentTime+.001+i*.045);});if(!buf)return false;
+  if(MIX.ok&&RECS.mgloop.id){MIX.node.port.postMessage({t:'l',id:RECS.mgloop.id,vol});return true;}if(!buf.getChannelData)return false;
   MGL.t=AC.currentTime;if(MGL.src){MGL.g.gain.value=vol;return true;}
   const g=AC.createGain();g.gain.value=vol;g.connect(master);const s=AC.createBufferSource();s.buffer=buf;s.loop=true;s.loopStart=.36;s.loopEnd=.72;s.connect(g);s.start();MGL.src=s;MGL.g=g;frSnd++;
   const chk=()=>{if(!MGL.src)return;if(AC.currentTime-MGL.t>.25||state!=='play'){const s0=MGL.src,g0=MGL.g;MGL.src=null;MGL.g=null;
@@ -3215,7 +3229,9 @@ function sPlay(n,args){if(!AC||AC.state!=='running'||offR)return;const pat=SPEC[
   // starts per second stay bounded too (your own sounds always play)
   const now=AC.currentTime,pr=sndPrio(n,dist,own,kp[1]);if(pr<3){SB.t=Math.min(16,SB.t+(now-SB.last)*16);SB.last=now;if(SB.t<1)return;SB.t-=1;}
   const takes=n==='gun'||n==='step'?2:1,key=kp.join('|')+'#'+((Math.random()*takes)|0);
-  const buf=recSound(key,sndDur(n,kp[1]),()=>RAW[n].apply(RAW,ra));if(buf)voicePlay(buf,vol,pr,own?'mine':'');}
+  const buf=recSound(key,sndDur(n,kp[1]),()=>RAW[n].apply(RAW,ra));if(!buf)return;frSnd++;
+  if(MIX.ok&&RECS[key].id)MIX.node.port.postMessage({t:'p',id:RECS[key].id,vol,r:.96+Math.random()*.08,pr,g:own?'mine':''});
+  else if(buf.getChannelData){frSnd--;voicePlay(buf,vol,pr,own?'mine':'');}}
 const sfx={loop:(...a)=>RAW.loop(...a),stopLoop:(...a)=>RAW.stopLoop(...a),boom:v=>sPlay('explosion',['Grenade',v,0])};
 for(const n of Object.keys(SPEC))sfx[n]=function(){if(n==='explosion')fr('boom '+arguments[0]+' '+Math.round(arguments[2]||0));sPlay(n,arguments);};
 // record the everyday sounds right away (and the player's guns at each match start)
@@ -7771,7 +7787,7 @@ function safeExit(){try{if(NET.mode)mpLeave(false);}catch(e){}state='menu';pause
 let glLostAt=0;
 function glOnLost(e){e.preventDefault();glLost=true;glLostAt=performance.now();
   // the phone is struggling: half the effects and fewer voices for the rest of this visit
-  try{FXB.cap=Math.max(80,FXB.cap>>1);FXB.rate=Math.max(80,FXB.rate/2);FXB.mul=Math.max(.25,FXB.mul/2);VOX.n=Math.max(6,VOX.n-4);fr('cut fx '+FXB.cap+' voices '+VOX.n);}catch(x){}
+  try{FXB.cap=Math.max(80,FXB.cap>>1);FXB.rate=Math.max(80,FXB.rate/2);FXB.mul=Math.max(.25,FXB.mul/2);VOX.n=Math.max(6,VOX.n-4);try{if(MIX.ok)MIX.node.port.postMessage({t:'n',n:10});}catch(x){}fr('cut fx '+FXB.cap+' voices '+VOX.n);}catch(x){}
   reportErr('gl',{message:'graphics lost (state '+state+', '+(typeof RULE==='function'?RULE():'')+', map '+(MAP&&MAP.name||'')+', q '+SET.quality+', pr '+renderer.getPixelRatio()+', fx '+(typeof parts!=='undefined'?parts.length:0)+', prog '+renderer.info.programs.length+', voices '+(AUD.vox|0)+'/'+VOX.n+', try '+glRebuilds+')',stack:FR.join(' | ')});}
 function glOnRestored(){glLost=false;glLostAt=0;worldDirty=true;}
 canvas.addEventListener('webglcontextlost',glOnLost,false);

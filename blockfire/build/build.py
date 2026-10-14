@@ -45,7 +45,7 @@ import re,hashlib,base64
 hs=sorted({"'sha256-"+base64.b64encode(hashlib.sha256(m.encode()).digest()).decode()+"'" for m in re.findall(r'<script>(.*?)</script>',html,re.S)})
 html=html.replace('__CSP__',CSP_TPL.replace('__HASHES__',' '.join(hs)),1)
 open(page,'w').write(html)
-for f in ['three.min.js','peerjs.min.js','manifest.webmanifest','icon-192.png','icon-512.png','icon-maskable.png','apple-touch-icon.png','fonts.css']:
+for f in ['three.min.js','peerjs.min.js','mixer.js','manifest.webmanifest','icon-192.png','icon-512.png','icon-maskable.png','apple-touch-icon.png','fonts.css']:
     shutil.copy(os.path.join(A,f),d)
 shutil.copytree(os.path.join(A,'fonts'),os.path.join(d,'fonts'),dirs_exist_ok=True)
 for f in os.listdir(os.path.join(A,'legal')):shutil.copy(os.path.join(A,'legal',f),d)
