@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-0DyOAhECJE3vXFXcwNw4h8mO8gGu9ipiVydQh+qgfGc=' 'sha256-2f9HQEcou+lX5AUtl4QhCQ73LXmZIko5tHFxRDdf6YY=' 'unsafe-eval'; script-src-attr 'none'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; media-src 'self' data: blob:; connect-src 'self' https: wss: data: blob: http://127.0.0.1:* ws://127.0.0.1:* http://localhost:* ws://localhost:*; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'; frame-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-0DyOAhECJE3vXFXcwNw4h8mO8gGu9ipiVydQh+qgfGc=' 'sha256-TWFYN0z2te3Hq033zsLPNnZ3g7u7iDHZl4A1/YqR01E=' 'unsafe-eval'; script-src-attr 'none'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; media-src 'self' data: blob:; connect-src 'self' https: wss: data: blob: http://127.0.0.1:* ws://127.0.0.1:* http://localhost:* ws://localhost:*; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'; frame-src 'none'">
 <meta name="referrer" content="no-referrer">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
@@ -1589,7 +1589,7 @@ async function adminClaim(code){if(!CS||CS.guest)return 'Sign in to your own acc
   if(r.ok){CS.admin=true;cloudKeep();return '';}const e=r.j&&r.j.error;
   return !r.status?'No connection to the server.':e==='code'?'That code is not right.':e==='taken'?'This game already has its admin.':e==='guest'?'Guest accounts cannot be admins. Create your account first.':'The server said no (error '+r.status+').';}
 /* ================= version, remote settings, crash reports ================= */
-const APP_VERSION='1.3.0',BUILD_ID='a15b166';
+const APP_VERSION='1.3.1',BUILD_ID='8291409';
 const verNum=v=>String(v||'0').split('.').slice(0,3).map(n=>parseInt(n)||0).reduce((a,n)=>a*1000+n,0);
 let RCFG={};try{RCFG=JSON.parse(localStorage.getItem('blockfire.rcfg')||'{}')||{};}catch(e){RCFG={};}
 const feat=k=>!(RCFG.features&&RCFG.features[k]===false);
@@ -3734,7 +3734,7 @@ function respawn(e){
     for(const o of ents)if(o.alive&&o.team!==e.team&&o.inMatch!==false)md=Math.min(md,Math.hypot(o.x-c[0],o.z-c[2]));
     for(const o of ents)if(o.alive&&o!==e&&Math.hypot(o.x-c[0],o.z-c[2])<.8)md-=50;
     if(md>bd){bd=md;best=c;}}
-  e.x=best[0];e.y=best[1];e.z=best[2];e.vx=e.vy=e.vz=0;e.bl=64;e.hp=e.maxHp||100;e.shield=e.maxSh||0;e.alive=true;e.spawnProt=2;e.smoothY=0;e.onGround=false;e.climbFrom=null;e.clx=null;e.gT=0;e.lastAttacker=null;e.streak=0;
+  e.x=best[0];e.y=best[1];e.z=best[2];e.vx=e.vy=e.vz=0;e.hunt=false;e.idleT=0;e.ix=undefined;e.bl=64;e.hp=e.maxHp||100;e.shield=e.maxSh||0;e.alive=true;e.spawnProt=2;e.smoothY=0;e.onGround=false;e.climbFrom=null;e.clx=null;e.gT=0;e.lastAttacker=null;e.streak=0;
   e.yaw=Math.atan2(-(MAP.center[0]-e.x),-(MAP.center[2]-e.z));e.pitch=0;
   if(e.isPlayer){
     player.kingArmed=false;loadout=playerLoadout();
@@ -4458,8 +4458,23 @@ function bfs(s,g){
   if(prev[g]===-2)return null;
   const path=[];for(let c=g;c!==-1;c=prev[c])path.push(c);path.reverse();return path;
 }
+// a match must never stall on a bot that stands still: in one-life rounds with 3 or fewer enemies left, and for any
+// bot that has not moved 2 blocks in 8 s without seeing anyone, the bot hunts the nearest living enemy
+function botFoes(b){let n=0,best=null,bd=1e9;for(const e of ents){if(e===b||!e.alive||e.inMatch===false||e.team===b.team||e.xmOut)continue;n++;
+  const d=Math.hypot(e.x-b.x,e.z-b.z);if(d<bd){bd=d;best=e;}}return {n,best};}
+function botEndgame(b){return (RS.on||XM.on)&&state==='play'&&!(XM.on&&XM.rule==='prop')&&botFoes(b).n<=3;}
+function botWatch(b,dt){if(XM.on&&XM.rule==='prop')return;
+  if(b.ix===undefined||b.seeing||Math.hypot(b.x-b.ix,b.z-b.iz)>2){b.ix=b.x;b.iz=b.z;b.idleT=0;}else b.idleT=(b.idleT||0)+dt;
+  const eg=botEndgame(b);
+  if(eg&&!b.hunt){b.hunt=true;b.perch=null;b.path=null;b.repathT=0;}
+  if(b.idleT>8){b.idleT=0;b.ix=b.x;b.iz=b.z;if(b.hunt)botEscape(b);b.hunt=true;b.perch=null;b.path=null;b.repathT=0;b.lastSeenT=0;fr('unstick '+b.name);}}
+// stuck on a ledge or against a wall again and again: walk a random way for a moment (jumping or dropping off), then plan again
+function botEscape(b){b.escT=1.2+rand()*.8;b.escA=rand()*Math.PI*2;b.path=null;}
 function planPath(b){
   let gx,gz;
+  // no route to that enemy: plan as usual (an endgame bot then also walks straight at the enemy, see updateBot)
+  if(b.hunt&&!b.objRun){const f=botFoes(b).best;if(f){const s=nearestValid(Math.floor(b.x),Math.floor(b.z)),g=nearestValid(Math.floor(f.x),Math.floor(f.z));
+    const pth=s>=0&&g>=0?bfs(s,g):null;if(pth){b.repathT=2+rand();b.path=pth;b.pathI=1;b.huntDirect=false;return;}b.huntDirect=botEndgame(b);}}
   if(b.perch&&b.pph===0){const w=b.perch.wp[0],s=nearestValid(Math.floor(b.x),Math.floor(b.z)),g=nearestValid(Math.floor(w[0]),Math.floor(w[2]));b.repathT=3;b.path=s>=0&&g>=0?bfs(s,g):null;b.pathI=1;if(!b.path)b.perch=null;return;}
   const og=rsGoal(b);
   if(og&&(b.objRun||!(b.lastSeenT>0&&b.lastSeen&&rand()<.35))){gx=Math.floor(og[0]);gz=Math.floor(og[1]);}
@@ -4592,7 +4607,7 @@ function perchStep(b,dt){const P=b.perch;b.ptime=(b.ptime||0)+dt;if(b.ptime>50&&
   if(b.pph===0){const w=P.wp[0];if(Math.hypot(b.x-w[0],b.z-w[2])<.8&&Math.abs(b.y-w[1])<1.3){b.pph=1;b.pi=1;b.path=null;}return null;}
   const pts=P.wp.concat([P.dest]);
   if(b.pph===1){const w=pts[b.pi],dx=w[0]-b.x,dz=w[2]-b.z,d=Math.hypot(dx,dz);
-    if(d<.45&&b.y>w[1]-.6){if(b.pi>=pts.length-1){b.pph=2;b.pholdT=25+rand()*25;b.vx=b.vz=0;return [0,0];}b.pi++;}
+    if(d<.45&&b.y>w[1]-.6){if(b.pi>=pts.length-1){b.pph=2;b.pholdT=7+rand()*5;b.vx=b.vz=0;return [0,0];}b.pi++;}
     if(w[1]>b.y+.4&&b.onGround&&d<1.5)b.vy=JUMP_V;
     if(b.y<P.wp[0][1]+.5&&b.pi>2){b.pph=0;b.path=null;return null;}
     return [dx/(d||1),dz/(d||1)];}
@@ -4600,7 +4615,7 @@ function perchStep(b,dt){const P=b.perch;b.ptime=(b.ptime||0)+dt;if(b.ptime>50&&
   if(!b.target){const c=MAP.center;b.yaw=turnTo(b.yaw,Math.atan2(-(c[0]-b.x),-(c[2]-b.z)),2*dt);}
   return [0,0];}
 // when a bot comes back, sometimes it takes a free lookout on its own half of the map
-function perchPick(b){b.perch=null;if(!PERCHES.length||isZ()||RS.on||b.objRun||b.king||b.knifeOnly||MM()==='knife'||MM()==='boom'||state!=='play'||rand()>.45)return;
+function perchPick(b){b.perch=null;if(!PERCHES.length||isZ()||RS.on||b.objRun||b.king||b.knifeOnly||MM()==='knife'||MM()==='boom'||state!=='play'||rand()>.45||botEndgame(b))return;
   const mine=bots.filter(x=>x!==b&&x.perch&&x.team===b.team).length;if(mine>=Math.max(1,teamSize()>>2))return;
   const side=MAP.spawn[b.team]?(MAP.spawn[b.team][2]+MAP.spawn[b.team][3])/2<D/2:true;
   const L=PERCHES.filter(p=>(p.dest[2]<D/2)===side&&!bots.some(x=>x.perch===p)&&reachable(p.wp[0][0],p.wp[0][2]));if(!L.length)return;
@@ -4616,6 +4631,7 @@ function updateBot(b,dt){
   }
   b.spawnProt-=dt;b.lastSeenT-=dt;b.repathT-=dt;b.nadeCD-=dt;b.firedT-=dt;if(b.blindT>0)b.blindT-=dt;
   if(xmBotHold(b,dt))return;
+  botWatch(b,dt);
   if(b.flashT>0){b.flashT-=dt;if(b.flashT<=0)b.flash.visible=false;}
   b.scanT-=dt;
   if(b.scanT<=0){
@@ -4672,10 +4688,11 @@ function updateBot(b,dt){
       const c=b.path[b.pathI],tx=c%W+.5,tz=((c/W)|0)+.5,dx=tx-b.x,dz=tz-b.z,d=Math.hypot(dx,dz);
       if(d<.35)b.pathI++;else{mx=dx/d;mz=dz/d;}
       if(b.lastSeenT>0)speed=5;
-    }
+    }else if(b.huntDirect){const f=botFoes(b).best;if(f){const dx=f.x-b.x,dz=f.z-b.z,d=Math.hypot(dx,dz)||1;mx=dx/d;mz=dz/d;}}
     b.pitch*=.9;
   }
   if(b.perch){const pm=perchStep(b,dt);if(pm){mx=pm[0];mz=pm[1];}}
+  if(b.escT>0&&!b.seeing){b.escT-=dt;mx=Math.cos(b.escA);mz=Math.sin(b.escA);speed=4.4;if(b.escT<=0){b.path=null;b.repathT=0;}}
   const ml=Math.hypot(mx,mz);
   if(ml>0){mx/=ml;mz/=ml;if(faceYaw===null)faceYaw=Math.atan2(-mx,-mz);}
   if(faceYaw!==null)b.yaw=turnTo(b.yaw,faceYaw,(b.seeing?7:6)*dt);
@@ -4686,7 +4703,7 @@ function updateBot(b,dt){
   const ox=b.x,oz=b.z;
   const blocked=physics(b,dt);climbGround(b,dt);
   const moved=Math.hypot(b.x-ox,b.z-oz)/dt;
-  if(ml>0&&moved<.6){b.stuckT+=dt;if(b.stuckT>.4&&blocked&&b.stuckT<2){if(b.onGround)b.vy=JUMP_V;else if(climbLeft(b)){b.vy=Math.max(b.vy,4.8);b.clx=b.x;b.clz=b.z;}}if(b.stuckT>2){b.stuckT=0;b.path=null;b.lastSeenT=0;}}else b.stuckT=Math.max(0,b.stuckT-dt);
+  if(ml>0&&moved<.6){b.stuckT+=dt;if(b.stuckT>.4&&blocked&&b.stuckT<2){if(b.onGround)b.vy=JUMP_V;else if(climbLeft(b)){b.vy=Math.max(b.vy,4.8);b.clx=b.x;b.clz=b.z;}}if(b.stuckT>2){b.stuckT=0;b.path=null;b.lastSeenT=0;b.stuckN=(performance.now()-(b.stuckAt||0)<7000?(b.stuckN|0):0)+1;b.stuckAt=performance.now();if(b.stuckN>=2){b.stuckN=0;botEscape(b);}else if(b.escT>0)b.escA+=Math.PI*.6;}}else b.stuckT=Math.max(0,b.stuckT-dt);
   b.walk+=moved*dt*2.4;
   const sw=Math.sin(b.walk)*Math.min(1,moved/3)*.75;
   b.legL.rotation.x=sw;b.legR.rotation.x=-sw;b.head.rotation.x=b.pitch*.7;
