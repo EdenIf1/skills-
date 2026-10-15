@@ -1185,7 +1185,12 @@ function rotSet(){let on=false;try{on=isTouch&&innerHeight>innerWidth*1.05;}catc
 if(isTouch)document.body.classList.add('touch');
 const isIOS=/iP(hone|od|ad)/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
 const standalone=matchMedia('(display-mode: fullscreen), (display-mode: standalone)').matches||navigator.standalone===true;
-const inFrame=(()=>{try{return window.self!==window.top;}catch(e){return true;}})();
+// inWrap: inside Cubefront's own landscape frame (index.html on phones); that counts as the game's own page, not as
+// being embedded somewhere else (unless that frame itself is embedded, as on itch.io or in a Claude artifact)
+const inWrap=(()=>{try{return window.self!==window.top&&!!window.parent.__cfWrap;}catch(e){return false;}})();
+const inFrame=(()=>{try{return inWrap?window.parent!==window.top:window.self!==window.top;}catch(e){return true;}})();
+// the address people open: the frame's when the game runs inside it
+const pageUrl=()=>{try{if(inWrap)return parent.location.origin+parent.location.pathname;}catch(e){}return location.origin+location.pathname;};
 // phones go full screen and landscape when a match starts (Android; iPhone needs the home-screen icon)
 function goFull(){
   if(!isTouch||standalone)return;const d=document.documentElement,f=d.requestFullscreen||d.webkitRequestFullscreen;
@@ -1198,7 +1203,7 @@ function goFull(){
   else if(isIOS)$('rotHint').textContent='Cubefront plays in landscape only. If the screen does not turn, switch off Portrait Orientation Lock in Control Center.';
   $('rotTipT').textContent=canLock?'Tap to play sideways':'Screen not turning? Switch off Portrait Orientation Lock in Control Center.';}
 const reduceMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
-const PUBLIC_URL='https://raw.githack.com/EdenIf1/skills-/gh-pages/index.html';
+const PUBLIC_URL='https://edenif1.github.io/skills-/index.html';
 
 function rng(seed){return()=>{seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
@@ -1592,7 +1597,7 @@ async function adminClaim(code){if(!CS||CS.guest)return 'Sign in to your own acc
   if(r.ok){CS.admin=true;cloudKeep();return '';}const e=r.j&&r.j.error;
   return !r.status?'No connection to the server.':e==='code'?'That code is not right.':e==='taken'?'This game already has its admin.':e==='guest'?'Guest accounts cannot be admins. Create your account first.':'The server said no (error '+r.status+').';}
 /* ================= version, remote settings, crash reports ================= */
-const APP_VERSION='1.3.6',BUILD_ID='__BUILD_ID__';
+const APP_VERSION='1.3.7',BUILD_ID='__BUILD_ID__';
 const verNum=v=>String(v||'0').split('.').slice(0,3).map(n=>parseInt(n)||0).reduce((a,n)=>a*1000+n,0);
 let RCFG={};try{RCFG=JSON.parse(localStorage.getItem('blockfire.rcfg')||'{}')||{};}catch(e){RCFG={};}
 const feat=k=>!(RCFG.features&&RCFG.features[k]===false);
@@ -6934,7 +6939,7 @@ function peerOpts(){const o={debug:0,config:{iceServers:iceDyn||ICE,iceTransport
 const roomId=c=>'blockfire-r1-'+c.toLowerCase();
 const mpAvailable=()=>feat('multiplayer')&&typeof window.Peer==='function'&&typeof window.RTCPeerConnection==='function'&&!IN_CLAUDE;
 // friends get the exact page (and version) the host is on
-const inviteUrl=()=>(/^https?:$/.test(location.protocol)&&!inFrame&&!/^(127\.|localhost)/.test(location.hostname)?location.origin+location.pathname:PUBLIC_URL)+'#room-'+NET.code;
+const inviteUrl=()=>(/^https?:$/.test(location.protocol)&&!inFrame&&!/^(127\.|localhost)/.test(location.hostname)?pageUrl():PUBLIC_URL)+'#room-'+NET.code;
 function findNid(nid){if(!nid)return null;if(nid[0]==='B')return bots[+nid.slice(1)]||null;if(nid[0]==='Z')return zombies.find(z=>z.nid===nid)||null;if(nid===NET.nid)return player;if(nid==='P0'&&isHost())return player;return NET.remotes.get(nid)||null;}
 const teamCount=t=>ents.filter(e=>(e.isPlayer||e.remote)&&e.team===t).length;
 const mpAllReady=()=>[...NET.remotes.values()].every(e=>e.ready||e.away);

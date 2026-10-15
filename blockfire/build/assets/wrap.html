@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; frame-src 'self'; connect-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#0d1116">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Cubefront">
+<meta name="description" content="Blocky team shooter: build cover, team up with friends, 12v12 Warzone, zombies, crates and a full store.">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<title>Cubefront</title>
+<style>
+/* Cubefront on phones: the game always gets a landscape screen. Held upright (or with rotation lock on), the frame
+   with the game is turned 90 degrees, so it looks and plays exactly as on a phone turned sideways. */
+html,body{margin:0;height:100%;overflow:hidden;background:#0d1116;overscroll-behavior:none;touch-action:none;-webkit-user-select:none;user-select:none}
+#game{position:fixed;top:0;left:0;width:100%;height:100%;border:0;display:block;background:#0d1116;transform-origin:0 0}
+#sa{position:fixed;inset:0;visibility:hidden;pointer-events:none;padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px)}
+</style>
+</head>
+<body>
+<div id="sa"></div>
+<script src="wrap.js"></script>
+</body>
+</html>

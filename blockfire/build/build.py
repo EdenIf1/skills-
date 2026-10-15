@@ -39,7 +39,11 @@ html='<!doctype html>\n<html lang="en">\n<head>\n'+csp+meta+head+'\n</head>\n<bo
 if out.endswith('.html'):
     page,d=out,os.path.dirname(out)
 else:
-    os.makedirs(out,exist_ok=True);page,d=os.path.join(out,'index.html'),out
+    # web: the game is play.html; index.html is the small frame that keeps it landscape on phones (wrap.html/wrap.js).
+    # The iPhone app (--native) is landscape by itself and opens the game as index.html.
+    os.makedirs(out,exist_ok=True);page,d=os.path.join(out,'index.html' if native else 'play.html'),out
+    if not native:
+        shutil.copy(os.path.join(A,'wrap.html'),os.path.join(out,'index.html'));shutil.copy(os.path.join(A,'wrap.js'),out)
 html=html.replace('__BUILD_ID__',os.environ.get('BUILD','dev')[:7])
 import re,hashlib,base64
 hs=sorted({"'sha256-"+base64.b64encode(hashlib.sha256(m.encode()).digest()).decode()+"'" for m in re.findall(r'<script>(.*?)</script>',html,re.S)})
