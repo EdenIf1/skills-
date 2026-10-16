@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-0DyOAhECJE3vXFXcwNw4h8mO8gGu9ipiVydQh+qgfGc=' 'sha256-ruP/6b/cLrzEkdGMmwM9sTekFVeXcW7M027/21MAH+E=' 'unsafe-eval'; script-src-attr 'none'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; media-src 'self' data: blob:; connect-src 'self' https: wss: data: blob: http://127.0.0.1:* ws://127.0.0.1:* http://localhost:* ws://localhost:*; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'; frame-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-0DyOAhECJE3vXFXcwNw4h8mO8gGu9ipiVydQh+qgfGc=' 'sha256-QnNfDFoCZhKm0sypY2GVDwq9MQRL3v0WQ2w3jgArCkk=' 'unsafe-eval'; script-src-attr 'none'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; media-src 'self' data: blob:; connect-src 'self' https: wss: data: blob: http://127.0.0.1:* ws://127.0.0.1:* http://localhost:* ws://localhost:*; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'; frame-src 'none'">
 <meta name="referrer" content="no-referrer">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
@@ -1615,7 +1615,7 @@ async function adminClaim(code){if(!CS||CS.guest)return 'Sign in to your own acc
   if(r.ok){CS.admin=true;cloudKeep();return '';}const e=r.j&&r.j.error;
   return !r.status?'No connection to the server.':e==='code'?'That code is not right.':e==='taken'?'This game already has its admin.':e==='guest'?'Guest accounts cannot be admins. Create your account first.':'The server said no (error '+r.status+').';}
 /* ================= version, remote settings, crash reports ================= */
-const APP_VERSION='1.3.7',BUILD_ID='255d261';
+const APP_VERSION='1.3.8',BUILD_ID='0d4fdd8';
 const verNum=v=>String(v||'0').split('.').slice(0,3).map(n=>parseInt(n)||0).reduce((a,n)=>a*1000+n,0);
 let RCFG={};try{RCFG=JSON.parse(localStorage.getItem('blockfire.rcfg')||'{}')||{};}catch(e){RCFG={};}
 const feat=k=>!(RCFG.features&&RCFG.features[k]===false);
@@ -3986,9 +3986,31 @@ function buildGun(model,cm,bot,att,vr){
 let vmGuns=[];
 // free the GPU memory of an object we throw away: its geometry, and the texture of a label sprite (shared materials stay)
 function freeObj(o){if(!o)return;o.traverse(m=>{if(m.geometry&&m.geometry!==boxGeo)m.geometry.dispose();if(m.isSprite&&m.material){if(m.material.map)m.material.map.dispose();m.material.dispose();}});}
+// First-person guns are kept and reused (at most VMC_MAX). A mystery box or wall buy then only swaps a ready model:
+// building a gun and compiling its shaders in the middle of a busy fight was the moment an iPhone died (Oct 15).
+const VMC=new Map(),VMC_MAX=16;
+const vmKey=id=>[id,profile.camo,profile.skin||'std',player.team,JSON.stringify(attOf(id))].join('|');
+// only Zombies keeps guns (the box swaps them all the time); other modes build and free as before
+function vmFlush(keep){for(const [k,g] of VMC){if(keep&&keep.has(g)){g.userData.vmOwn=1;}else{VM.remove(g);freeObj(g);}VMC.delete(k);}}
+function vmGet(id,used){if(!isZ()){const g=gunMesh(id,profile.camo,false,attOf(id));g.userData.vmOwn=1;return g;}
+  const k=vmKey(id);let g=VMC.get(k);
+  if(g&&!used.has(g)){VMC.delete(k);VMC.set(k,g);return g;}            // most recently used last
+  g=gunMesh(id,profile.camo,false,attOf(id));
+  if(!VMC.has(k))VMC.set(k,g);else g.userData.vmOwn=1;                  // the same gun twice: the second is not kept
+  return g;}
+function vmTrim(keep){for(const [k,g] of VMC){if(VMC.size<=VMC_MAX)break;if(keep.has(g))continue;VMC.delete(k);VM.remove(g);freeObj(g);}}
+// Zombies: build every gun the box and the walls can give once, while the match starts, and compile their shaders
+function vmWarm(ids){try{const used=new Set(vmGuns),add=[];
+  for(const id of ids){if(!WEAPONS[id])continue;const g=vmGet(id,used);used.add(g);if(!g.parent){g.visible=true;VM.add(g);add.push(g);}}
+  // compile the shaders and hand every shape to the graphics chip now (drawn once while the loading screen covers it)
+  try{renderer.compile(gunScene,gunCam);const vis=VM.visible;VM.visible=true;renderer.render(gunScene,gunCam);VM.visible=vis;}catch(e){}
+  for(const g of add){VM.remove(g);if(g.userData.vmOwn)freeObj(g);}vmTrim(new Set(vmGuns));fr('vm warm '+ids.length+' kept '+VMC.size);}catch(e){}}
 function buildViewmodels(){
-  for(const g of vmGuns){VM.remove(g);freeObj(g);}
-  vmGuns=loadout.map(id=>{const g=gunMesh(id,profile.camo,false,attOf(id));VM.add(g);return g;});
+  for(const g of vmGuns){VM.remove(g);if(g.userData.vmOwn)freeObj(g);}
+  if(!isZ()&&VMC.size)vmFlush();
+  const used=new Set();
+  vmGuns=loadout.map(id=>{const g=vmGet(id,used);used.add(g);g.visible=true;VM.add(g);return g;});
+  vmTrim(used);
   refreshPills();
 }
 let vmKick=0,vmBob=0,vmSwayX=0,vmSwayY=0,flashT=0;
@@ -4878,6 +4900,7 @@ function zReset(){
   zBuildStations();
   if(!isZ())return;
   zStairs3(Z.diff==='extreme');worldDirty=true;topLight.intensity=Z.diff==='extreme'?1.2:0;
+  vmWarm(['mp5','spas','m4a1','ak47','m249','awm','rpg','minigun','flamer'].concat(STATIONS.filter(st=>st.kind==='gun').map(st=>st.id)).filter((x,i,a)=>a.indexOf(x)===i));
   player.maxHp=100+armorHp(armorBits());
   zRebuildNav();
   ZSPAWN=[];
@@ -8022,7 +8045,9 @@ function aliveSave(){if(window.__reloading||state!=='play')return;try{const I=re
 function aliveTick(dt){if(window.__reloading)return;if(state==='play'){aliveT-=dt;if(aliveT<=0){aliveT=2;aliveSave();}}
   else if(aliveT){aliveT=0;try{localStorage.removeItem('blockfire.alive');}catch(e){}}}
 window.addEventListener('pagehide',()=>{try{localStorage.removeItem('blockfire.alive');}catch(e){}});
-setTimeout(()=>{try{const a=localStorage.getItem('blockfire.alive');localStorage.removeItem('blockfire.alive');if(a){const o=JSON.parse(a),ago=Math.round((Date.now()-o.t)/1000);if(ago<7*86400){if(ago<600)memSafeOn();const c=reportErr('crash',{message:'page closed during a match (reopened '+ago+'s later) '+a.replace(/,"fr":\[.*\]/,''),stack:(()=>{try{return (JSON.parse(a).fr||[]).join(' | ');}catch(e){return '';}})()});toast('The game closed unexpectedly last time (code '+c+'). Your progress is saved.');}}
+// the black box notes when the game goes to the background: a phone may close a game left there, which is not a crash
+document.addEventListener('visibilitychange',()=>{try{frNow(document.hidden?'page hidden':'page visible');}catch(e){}});
+setTimeout(()=>{try{const a=localStorage.getItem('blockfire.alive');localStorage.removeItem('blockfire.alive');if(a){const o=JSON.parse(a),ago=Math.round((Date.now()-o.t)/1000);if(ago<7*86400){if(ago<600)memSafeOn();const bg=/page hidden$/.test((o.fr||[]).slice(-1)[0]||'');const c=reportErr('crash',{message:(bg?'page closed while the game was in the background':'page closed during a match')+' (reopened '+ago+'s later) '+a.replace(/,"fr":\[.*\]/,''),stack:(()=>{try{return (JSON.parse(a).fr||[]).join(' | ');}catch(e){return '';}})()});toast('The game closed unexpectedly last time (code '+c+'). Your progress is saved.');}}
   const g=localStorage.getItem('blockfire.glreset');if(g){localStorage.removeItem('blockfire.glreset');toast('The phone reset the graphics, so the game restarted'+(g.length>1?' (code '+g+')':'')+'. Your progress is saved.');}}catch(e){}},1500);
 const DQ={t:0,n:0,good:0,bad:0};let frameN=0;const noRender=(()=>{try{return localStorage.getItem('blockfire.norender')==='1';}catch(e){return false;}})();
 function frame(now){frameN++;if(!BOOT.ok){if(frameN===2)bootStage('first-frame');else if(frameN>10&&performance.now()>8000){BOOT.ok=true;bootStage('ok');}}animCamos(now);
