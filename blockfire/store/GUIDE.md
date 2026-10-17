@@ -66,3 +66,8 @@
 - Check that the name "Cubefront" is free as a trademark and in the store.
 - Create a test account in the game and put its details only in the reviewer notes in App Store Connect.
 - **The server stays awake:** a GitHub Action (Supabase keep-alive, on the main branch) writes to the database once a day, so the free project is not paused. If it fails, GitHub emails you; then open supabase.com/dashboard and press Restore. Pro ($25/month) is still recommended once there are many players, for daily backups.
+
+## App preview video (ready)
+`preview/preview-1920x886.mp4`: 28 seconds of real gameplay at 30 fps, H.264 with a silent stereo track, 1920×886 (the 6.9-inch iPhone landscape size).
+Upload it in App Store Connect under the 6.9" iPhone media, next to the screenshots. Pick a poster frame from the battle scene.
+To record it again after changes: run a local build on port 8765, then `node preview/record.mjs` and the ffmpeg line in that file's notes.

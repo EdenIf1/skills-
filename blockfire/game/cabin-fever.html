@@ -789,6 +789,21 @@ body.cine #hud>*:not(#nukeFlash),body.cine #touch,body.cine #airTab{visibility:h
 .inMsg b{font:500 17px var(--f-hud);letter-spacing:.03em}.inMsg.new b::after{content:" NEW";color:var(--amber);font-size:11px;letter-spacing:.1em}
 .inMsg small{font:11px var(--f-body);color:var(--dim);text-align:right}.inMsg p{grid-column:2/4;margin:0;font:13px var(--f-body);color:var(--dim)}
 .inMsg .row{grid-column:2/4;gap:6px;margin-top:3px}.inDel{background:none;border:0;color:var(--dim);font-size:16px;cursor:pointer;padding:0 4px}
+#friends .sheet{width:min(560px,100%)}.frAdd{display:flex;gap:8px;margin-top:6px}.frAdd input{flex:1;min-width:0;background:rgba(0,0,0,.35);border:1px solid var(--line);color:#fff;font:15px var(--f-body);padding:7px 10px}
+#frList{display:flex;flex-direction:column;gap:6px;margin-top:8px;max-height:min(56vh,420px);overflow:auto}
+.frRow{display:flex;align-items:center;gap:8px;padding:7px 10px;background:rgba(0,0,0,.3);border:1px solid var(--line)}.frRow.inc{border-color:rgba(243,181,74,.6);background:rgba(243,181,74,.07)}
+.frRow b{flex:1;min-width:0;font:500 17px var(--f-hud);letter-spacing:.03em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.frRow small{font:12px var(--f-body);color:var(--dim)}
+.frDot{width:9px;height:9px;border-radius:50%;background:#55606b;flex:none}.frDot.on{background:#3ddc84;box-shadow:0 0 6px #3ddc84}
+.frX{background:none;border:0;color:var(--dim);font-size:16px;cursor:pointer;padding:0 4px}
+#season .sheet{width:min(760px,100%)}.seaSub{font:14px var(--f-body);color:var(--dim);margin:4px 0 6px}
+.seaBar{height:8px;background:rgba(255,255,255,.08);border:1px solid var(--line)}.seaBar b{display:block;height:100%;background:linear-gradient(90deg,#f3b54a,#ffd27a);width:0}
+#seaGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:6px;margin-top:8px;max-height:min(58vh,440px);overflow:auto;padding-bottom:2px}
+.sea{position:relative;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 4px;background:rgba(0,0,0,.3);border:1px solid var(--line);min-height:96px;text-align:center}
+.sea .dn{position:absolute;left:5px;top:3px;font:600 11px var(--f-body);color:var(--dim)}.sea .cdi{height:34px;display:flex;align-items:center;justify-content:center;font-size:22px}.sea .cdi img{max-height:34px;max-width:84px}
+.sea .cdl{font:12px/1.15 var(--f-body)}.sea.lock{opacity:.55}.sea.got{opacity:.5}.sea.got::after{content:"✓";position:absolute;right:6px;top:2px;color:#6fd08c;font-weight:700}
+.sea.now{border-color:rgba(243,181,74,.8);background:rgba(243,181,74,.1)}.sea.big{border-width:2px}
+.seaStrip{display:flex;align-items:center;gap:8px;margin-bottom:6px;cursor:pointer;background:none;border:1px solid var(--line);padding:4px 8px;width:100%;color:inherit;text-align:left}.seaStrip .lbl2{white-space:nowrap}.seaStrip .seaBar{flex:1}
+.seaStrip em{font-style:normal;font:600 12px var(--f-body);color:var(--amber);white-space:nowrap}
 .inEmpty{padding:18px;text-align:center;font:14px var(--f-body);color:var(--dim)}
 #inDot{width:auto!important;min-width:14px;height:14px!important;border-radius:7px!important;font:600 10px/14px var(--f-body);color:#fff;font-style:normal;text-align:center;padding:0 3px;animation:none!important}
 .rentChip{display:inline-block;font:600 11px var(--f-body);color:#b9d6ff;background:rgba(91,156,240,.2);border:1px solid rgba(91,156,240,.6);padding:1px 6px;margin-left:4px;white-space:nowrap}
@@ -874,7 +889,7 @@ body.cine #hud>*:not(#nukeFlash),body.cine #touch,body.cine #airTab{visibility:h
 #shopTabs::-webkit-scrollbar{display:none}
 #shopTabs .chip{flex:none;border:0;border-bottom:3px solid transparent;background:none;border-radius:0;color:var(--dim);font:500 19px/1 var(--f-hud);letter-spacing:.08em;text-transform:uppercase;padding:8px 12px 7px;transition:color .15s,border-color .15s}
 #shopTabs .chip:hover{color:var(--ink)}
-#shopTabs .chip.on{color:#fff;border-bottom-color:var(--amber);background:linear-gradient(0deg,rgba(243,181,74,.14),transparent)}
+#shopTabs .tabBox{color:#f3b54a}#shopTabs .chip.on{color:#fff;border-bottom-color:var(--amber);background:linear-gradient(0deg,rgba(243,181,74,.14),transparent)}
 #shop .shopBody{margin:0;padding:14px 18px 22px;gap:16px}
 #shopGrid{gap:12px}
 #shopGrid .item{border:1px solid rgba(255,255,255,.09);background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.015) 45%,rgba(0,0,0,.25));padding:12px 14px 12px;gap:6px}
@@ -943,6 +958,28 @@ body.cine #hud>*:not(#nukeFlash),body.cine #touch,body.cine #airTab{visibility:h
 #end .eBtns .btn{letter-spacing:.06em;padding-left:4px!important;padding-right:4px!important;text-overflow:clip!important}
 .setHint{display:block;font:400 12px/1.25 var(--f-body);color:var(--dim);letter-spacing:0;text-transform:none;margin-top:2px;max-width:340px}
 .cnRow{display:flex;gap:6px;align-items:center}.cnRow input{flex:1;min-width:0}.cnRow input[readonly]{border-bottom-color:transparent;cursor:default}.cnRow .btn{flex:none;padding:3px 8px;font-size:13px;white-space:nowrap}.cnRow .btn.go{background:var(--amber,#f4b545);color:#1b1305}
+
+.gcls{display:inline-block;font:600 10px/1 var(--f-body);letter-spacing:.08em;text-transform:uppercase;padding:3px 6px 2px;border:1px solid currentColor;margin-right:4px;vertical-align:1px}
+.gcls.g-weak{color:#9aa3ad}.gcls.g-medium{color:#5b9cf0}.gcls.g-epic{color:#c98cf5;background:rgba(185,108,240,.14)}
+.boxCard .boxArt{height:84px;display:grid;place-items:center;background:radial-gradient(circle at 50% 60%,color-mix(in srgb,var(--bc) 30%,transparent),transparent 70%)}
+.boxCard .boxArt span{width:54px;height:54px;display:grid;place-items:center;font:600 34px/1 var(--f-hud);color:#0d1116;background:var(--bc);clip-path:polygon(8px 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%,0 8px);box-shadow:0 0 22px var(--bc)}
+.boxCard .boxT{font:500 13px/1.3 var(--f-body);color:var(--ink);margin:2px 0}.boxCard .boxOdds{font:400 11px/1.3 var(--f-body);color:var(--dim);margin-bottom:6px}
+#boxReveal{position:absolute;inset:0;z-index:30;display:grid;place-items:center;background:rgba(4,6,9,.72);padding:12px}#boxReveal[hidden]{display:none}
+#boxReveal .bxCard{width:min(440px,100%);max-height:100%;overflow:auto;background:#121820;border:2px solid var(--bc);box-shadow:0 0 40px color-mix(in srgb,var(--bc) 40%,transparent);padding:14px 16px;display:flex;flex-direction:column;gap:8px;animation:bxIn .35s ease-out}
+@keyframes bxIn{from{transform:scale(.85);opacity:0}to{transform:none;opacity:1}}
+#boxReveal .bxHead{font:500 22px/1 var(--f-hud);letter-spacing:.08em;text-transform:uppercase;color:var(--bc);padding-top:4px}
+#boxReveal .bxRow{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.04);padding:6px 8px}
+#boxReveal .bxImg{width:72px;height:44px;flex:none;display:grid;place-items:center}#boxReveal .bxImg img{max-width:100%;max-height:100%}#boxReveal .bxIc{font-size:26px}
+#boxReveal .bxTx{flex:1;min-width:0}#boxReveal .bxTx b{display:block;font:500 19px/1.1 var(--f-hud);letter-spacing:.04em;color:#fff}#boxReveal .bxTx small{font:400 12px var(--f-body);color:var(--dim)}
+#boxReveal .bxOk{align-self:stretch;margin-top:4px}
+.hQuick{font-size:22px;padding:8px 18px 3px;margin-right:8px;border-color:var(--amber,#f3b54a)!important;color:#f3b54a}.hBottom .hQuick{align-self:center}
+@media (max-height:500px){.hQuick{font-size:17px;padding:5px 12px 2px}}
+#tutBox{position:fixed;left:50%;top:calc(var(--st,0px) + 96px);transform:translateX(-50%);z-index:70;min-width:260px;max-width:min(440px,70vw);background:rgba(10,14,20,.88);border:2px solid #f3b54a;padding:8px 14px 8px;display:flex;flex-direction:column;gap:2px;pointer-events:auto;animation:bxIn .3s ease-out}
+#tutBox[hidden]{display:none}body.tutOn #tip{display:none!important}#tutBox .tutN{font:600 11px var(--f-body);letter-spacing:.12em;text-transform:uppercase;color:#f3b54a}
+#tutBox b{font:500 26px/1 var(--f-hud);letter-spacing:.06em;text-transform:uppercase;color:#fff;padding-top:3px}#tutBox span{font:400 14px/1.3 var(--f-body);color:#dfe5ec}
+#tutBox .tutSkip{position:absolute;right:6px;top:6px;background:rgba(243,181,74,.12);border:1px solid rgba(243,181,74,.7);color:#f3b54a;font:600 13px var(--f-body);letter-spacing:.04em;min-height:34px;padding:6px 12px;cursor:pointer}#tutBox .tutSkip:active{background:rgba(243,181,74,.3)}#tutBox .tutN{padding-right:110px}
+#tutBox.tutOk{border-color:#6fd08c}#tutBox.tutOk b{color:#6fd08c}
+@media (max-height:420px){#tutBox{top:calc(var(--st,0px) + 70px);padding:6px 12px}#tutBox b{font-size:21px}#tutBox span{font-size:12.5px}}
 </style>
 
 <canvas id="c" aria-label="Cubefront game view"></canvas>
@@ -1048,6 +1085,7 @@ body.cine #hud>*:not(#nukeFlash),body.cine #touch,body.cine #airTab{visibility:h
     <div class="hRight">
       <span class="hNet" id="hNet"><i></i><span>Online</span></span>
       <span class="gp" id="pGp">0 GP</span>
+      <button class="hIcon calBtn" id="openFriends" title="Friends" aria-label="Friends">👥<i id="frDot" hidden></i></button>
       <button class="hIcon calBtn" id="openInbox" title="Inbox" aria-label="Inbox">✉<i id="inDot" hidden></i></button>
       <button class="hIcon calBtn" id="openCal" title="Daily gifts" aria-label="Daily gifts">🎁<i id="calDot" hidden></i></button>
       <button class="hIcon" id="openSet" title="Settings" aria-label="Settings">⚙</button>
@@ -1077,6 +1115,7 @@ body.cine #hud>*:not(#nukeFlash),body.cine #touch,body.cine #airTab{visibility:h
   </main>
   <footer class="hBottom">
     <div class="hSel"><span class="lbl2" id="modeTag">Team Deathmatch · 6 v 6</span><b id="hSelMap">Old Town</b></div>
+    <button class="btn ghost cut hQuick" id="quickPlay" title="Join an open room, or play with bots if none is open">⚡ Quick play</button>
     <button class="btn cut hPlay" id="play">Play</button>
   </footer>
 </div>
@@ -1086,6 +1125,7 @@ body.cine #hud>*:not(#nukeFlash),body.cine #touch,body.cine #airTab{visibility:h
     <div class="shopHead"><h2>SHOP</h2><div class="gp" id="shopGp">0 GP</div><button class="btn sm ghost cut" id="shopClose">Close</button></div>
     <div class="tabs" id="shopTabs">
       <button class="chip on" data-tab="guns">Weapons</button>
+      <button class="chip tabBox" data-tab="boxes">🎁 Mystery Boxes</button>
       <button class="chip" data-tab="armor">Gear</button>
       <button class="chip" data-tab="att">Attachments</button>
       <button class="chip" data-tab="gear">Equipment</button>
@@ -1114,9 +1154,23 @@ body.cine #hud>*:not(#nukeFlash),body.cine #touch,body.cine #airTab{visibility:h
     <div id="inList"></div>
   </div>
 </div>
+<div id="friends" class="overlay" hidden>
+  <div class="sheet cut">
+    <div class="shopHead"><h2>FRIENDS</h2><button class="btn sm ghost cut" id="frClose">Close</button></div>
+    <div class="frAdd"><input id="frName" maxlength="14" placeholder="Player name" autocomplete="off" autocapitalize="off" spellcheck="false"><button class="btn sm cut" id="frAddBtn">Add friend</button></div>
+    <div id="frList"></div>
+  </div>
+</div>
+<div id="season" class="overlay" hidden>
+  <div class="sheet cut">
+    <div class="shopHead"><h2 id="seaTitle">SEASON</h2><div class="row" style="gap:8px"><button class="btn sm cut" id="seaAll" hidden>Claim all</button><button class="btn sm ghost cut" id="seaClose">Close</button></div></div>
+    <div id="seaSub" class="seaSub"></div><div class="seaBar"><b id="seaBar"></b></div>
+    <div id="seaGrid"></div>
+  </div>
+</div>
 <div id="cal" class="overlay" hidden>
   <div class="sheet cut">
-    <div class="shopHead"><h2 id="calTitle">DAILY GIFTS</h2><button class="btn ghost cut" id="calClose">Close</button></div>
+    <div class="shopHead"><h2 id="calTitle">DAILY GIFTS</h2><div class="row" style="gap:8px"><button class="btn sm cut calBtn" id="calSea">Season pass<i id="seaDot" hidden></i></button><button class="btn ghost cut" id="calClose">Close</button></div></div>
     <div class="note" id="calSub"></div>
     <div id="calGrid"></div>
   </div>
@@ -1252,9 +1306,11 @@ body.cine #hud>*:not(#nukeFlash),body.cine #touch,body.cine #airTab{visibility:h
 // START-UP GUARD: each stage of loading is noted on the phone. If the last load never got to "running" (the phone
 // closed the page while it was starting), this load starts in safe mode (plain sharpness) and tells us where it stopped.
 const BOOT=(()=>{let prev=null;try{prev=JSON.parse(localStorage.getItem('blockfire.boot')||'null');}catch(e){}
-  const safe=!!(prev&&prev.s!=='ok'&&Date.now()-(+prev.t||0)<15*60e3);
+  // 'left' = the player switched apps or closed the game themselves while it loaded: not a crash, no safe mode
+  const safe=!!(prev&&prev.s!=='ok'&&prev.s!=='left'&&Date.now()-(+prev.t||0)<15*60e3);
   try{localStorage.setItem('blockfire.boot',JSON.stringify({t:Date.now(),s:'start'}));}catch(e){}return {prev,safe,ok:false};})();
 function bootStage(st){try{localStorage.setItem('blockfire.boot',JSON.stringify({t:Date.now(),s:st}));}catch(e){}}
+try{const left=()=>{if(!BOOT.ok)bootStage('left');};document.addEventListener('visibilitychange',()=>{if(document.hidden)left();});window.addEventListener('pagehide',left);}catch(e){}
 const $=id=>document.getElementById(id);
 const isTouch=matchMedia('(pointer: coarse)').matches||('ontouchstart' in window);
 // phone upright: draw the game sideways (see html.rot). A solo match pauses; after a while a small line explains orientation lock.
@@ -1369,7 +1425,7 @@ function mergeProfiles(a,b){
   o.gp=Math.max(o.gp,p.gp,o.gp+p.gp-1500);o.xp+=p.xp;
   o.owned=uni(o.owned,p.owned);o.camos=uni(o.camos,p.camos);o.equipOwn=uni(o.equipOwn,p.equipOwn);
   for(const g in p.attOwn)o.attOwn[g]=uni(o.attOwn[g],p.attOwn[g]);
-  o.skins=uni(o.skins,p.skins);o.armorOwn=uni(o.armorOwn,p.armorOwn);o.knives=uni(o.knives,p.knives);o.hitfxs=uni(o.hitfxs,p.hitfxs);o.keys=Math.max(o.keys|0,p.keys|0);if(p.cal&&(!o.cal||(o.cal.m===p.cal.m&&(p.cal.n|0)>(o.cal.n|0))))o.cal=Object.assign({},p.cal);o.gearOwn=uni(o.gearOwn,p.gearOwn);if(!Object.keys(o.gear||{}).length)o.gear=Object.assign({},p.gear||{});o.calls=Math.min(3,Math.max(o.calls|0,p.calls|0));
+  o.skins=uni(o.skins,p.skins);o.armorOwn=uni(o.armorOwn,p.armorOwn);o.knives=uni(o.knives,p.knives);o.hitfxs=uni(o.hitfxs,p.hitfxs);o.keys=Math.max(o.keys|0,p.keys|0);if(p.cal&&(!o.cal||(o.cal.m===p.cal.m&&(p.cal.n|0)>(o.cal.n|0))))o.cal=Object.assign({},p.cal);o.season=seasonMerge(o.season,p.season);o.gearOwn=uni(o.gearOwn,p.gearOwn);if(!Object.keys(o.gear||{}).length)o.gear=Object.assign({},p.gear||{});o.calls=Math.min(3,Math.max(o.calls|0,p.calls|0));
   if(p.stats&&p.stats.zbd){o.stats.zbd=o.stats.zbd||{};for(const k in p.stats.zbd)o.stats.zbd[k]=Math.max(o.stats.zbd[k]||0,p.stats.zbd[k]);}
   for(const g in p.att)if(!o.att[g])o.att[g]=p.att[g];
   // rentals: a forever copy on either side wins; otherwise keep the later end time
@@ -1500,6 +1556,7 @@ function syncMerge(loc,cl,B){const L=fillProfile(JSON.parse(JSON.stringify(loc))
   L.rent=L.rent||{};for(const k in C.rent||{}){const x=C.rent[k];if(x&&(!L.rent[k]||(L.rent[k].e||0)<(x.e||0)))L.rent[k]=x;}
   if(C.stats&&L.stats)for(const k in C.stats)if(typeof C.stats[k]==='number')L.stats[k]=Math.max(+L.stats[k]||0,C.stats[k]);
   if(C.cal&&(!L.cal||(L.cal.m===C.cal.m&&(C.cal.n|0)>(L.cal.n|0))))L.cal=Object.assign({},C.cal);
+  L.season=seasonMerge(L.season,C.season);
   if(C.daily&&(!L.daily||L.daily.date!==C.daily.date&&(C.daily.dn|0)>(L.daily.dn|0)))L.daily=C.daily;else if(C.daily&&L.daily&&L.daily.date===C.daily.date&&!C.daily.freeCrate)L.daily.freeCrate=false;
   L.calls=Math.max(L.calls|0,C.calls|0);L.best=Math.max(L.best|0,C.best|0);L.tmax=Math.max(+L.tmax||0,+C.tmax||0);
   L.pity=L.pity||{};return fillProfile(L,loc.name);}
@@ -1680,7 +1737,7 @@ async function adminClaim(code){if(!CS||CS.guest)return 'Sign in to your own acc
   if(r.ok){CS.admin=true;cloudKeep();return '';}const e=r.j&&r.j.error;
   return !r.status?'No connection to the server.':e==='code'?'That code is not right.':e==='taken'?'This game already has its admin.':e==='guest'?'Guest accounts cannot be admins. Create your account first.':'The server said no (error '+r.status+').';}
 /* ================= version, remote settings, crash reports ================= */
-const APP_VERSION='1.4.3',BUILD_ID='__BUILD_ID__';
+const APP_VERSION='1.5.0',BUILD_ID='__BUILD_ID__';
 const verNum=v=>String(v||'0').split('.').slice(0,3).map(n=>parseInt(n)||0).reduce((a,n)=>a*1000+n,0);
 let RCFG={};try{RCFG=JSON.parse(localStorage.getItem('blockfire.rcfg')||'{}')||{};}catch(e){RCFG={};}
 const feat=k=>!(RCFG.features&&RCFG.features[k]===false);
@@ -1806,7 +1863,7 @@ function renderCal(){const s=calState();$('calTitle').textContent='DAILY GIFTS �
     const prize=now?calPrize(i):null;
     h+=`<div class="cd ${got?'got':''} ${now?'now':''} ${big?'big':''}"><span class="dn">${i+1}</span><div class="cdi">${calIcon(prize,k)}</div><div class="cdl" style="${k!=='gp'&&k!=='key'?'color:'+RAR[Math.min(5,v)].c:''}">${esc(prize?prize.label:lab)}</div>${now?'<button class="btn sm cut" id="calGo">Claim</button>':''}</div>`;}
   $('calGrid').innerHTML=h;}
-function renderCalDot(){const s=calState();$('calDot').hidden=!s.can;}
+function renderCalDot(){const s=calState();let sc=0;try{sc=seasonState().can.length;}catch(e){}$('calDot').hidden=!s.can&&!sc;const d=$('seaDot');if(d)d.hidden=!sc;}
 function rollDaily(){
   const t=today();if(profile.daily&&(profile.daily.date===t||(profile.daily.dn|0)>dayNum()))return null;
   const r=rng([...t].reduce((a,c)=>a*31+c.charCodeAt(0),7));
@@ -3285,7 +3342,32 @@ const GUN={
   talon:{c:[3700,280,.15],b:[128,46,.11],cv:.98,bv:.9,snap:.62,rev:.33},
   striker:{c:[4300,400,.11],b:[180,62,.07],cv:.9,bv:.7,snap:.78,rev:.24},
   goliath:{c:[2500,170,.21],b:[82,28,.19],cv:1.12,bv:1.35,snap:.55,rev:.48},   // big slow thump
-  hawk:{c:[4700,150,.62],b:[72,22,.46],cv:1.42,bv:1.62,snap:.95,rev:.95,after:'bolt'}
+  hawk:{c:[4700,150,.62],b:[72,22,.46],cv:1.42,bv:1.62,snap:.95,rev:.95,after:'bolt'},
+  viper9:{c:[6000,820,.07],b:[240,110,.05],cv:.66,bv:.42,snap:.5,rev:.16},
+  scout:{c:[4100,320,.12],b:[150,55,.09],cv:.92,bv:.7,snap:.68,rev:.27},
+  pug:{c:[1800,100,.42],b:[75,26,.3],cv:1.3,bv:1.5,snap:.45,rev:.5,after:'pump'},
+  brass:{c:[2600,180,.32],b:[130,32,.22],cv:1.2,bv:1.3,snap:.82,rev:.55},
+  ranger:{c:[4400,200,.4],b:[100,30,.28],cv:1.2,bv:1.2,snap:.9,rev:.65},
+  cobra:{c:[2000,560,.07],b:[150,85,.04],cv:.5,bv:.32,snap:.15,rev:.1},
+  warden:{c:[2900,210,.2],b:[96,36,.16],cv:1.04,bv:1.1,snap:.56,rev:.38},
+  mauler:{c:[2300,140,.32],b:[95,32,.24],cv:1.18,bv:1.3,snap:.5,rev:.46},
+  sabre:{c:[4800,240,.3],b:[115,36,.2],cv:1.12,bv:1.05,snap:.88,rev:.58},
+  ironside:{c:[3500,220,.17],b:[105,36,.14],cv:1.08,bv:1.12,snap:.58,rev:.4},
+  wasp:{c:[7000,1100,.05],b:[300,160,.035],cv:.58,bv:.34,snap:.44,rev:.12},
+  jackal:{c:[3900,300,.13],b:[140,50,.1],cv:.96,bv:.82,snap:.66,rev:.3},
+  eagle:{c:[3000,220,.27],b:[155,40,.18],cv:1.1,bv:1.18,snap:.78,rev:.45},
+  reaper:{c:[4300,140,.66],b:[66,20,.5],cv:1.48,bv:1.7,snap:1,rev:1,after:'bolt'},
+  tempest:{c:[3300,250,.15],b:[118,42,.12],cv:1.02,bv:.98,snap:.62,rev:.34},
+  banshee:{c:[1600,420,.08],b:[140,80,.05],cv:.48,bv:.34,snap:.1,rev:.12},
+  titan:{c:[2300,150,.23],b:[76,26,.2],cv:1.16,bv:1.42,snap:.52,rev:.52},
+  judge:{c:[2100,120,.34],b:[86,28,.26],cv:1.2,bv:1.36,snap:.48,rev:.5},
+  phantom:{c:[2400,300,.2],b:[90,40,.16],cv:.7,bv:.8,snap:.2,rev:.3,after:'bolt'},
+  nova:{c:[5800,500,.1],b:[190,70,.07],cv:.88,bv:.62,snap:.74,rev:.26},
+  stinger:{c:[6200,900,.06],b:[260,120,.04],cv:.6,bv:.36,snap:.5,rev:.14},
+  duke:{c:[3400,260,.2],b:[160,48,.14],cv:1,bv:1.02,snap:.74,rev:.36},
+  twin:{c:[4600,460,.11],b:[210,72,.07],cv:.82,bv:.56,snap:.68,rev:.22},
+  dragon:{c:[3800,300,.15],b:[170,50,.1],cv:.95,bv:.86,snap:.72,rev:.3},
+  sunflare:{c:[2700,190,.3],b:[135,34,.22],cv:1.18,bv:1.3,snap:.84,rev:.5}
 };
 const BOT_SND={'King Minigun':'goliath','KV-47':'ak','MK-4':'m4','PX-9':'smg','Raptor AR':'scar','Talon AR':'talon','Striker AR':'striker','B7 Bullpup':'aug','Hornet SMG':'hornet','Vandal SMG':'supp','Longbow .338':'sniper'};
 const distAt=(x,y,z)=>Math.hypot(x-camera.position.x,y-camera.position.y,z-camera.position.z);
@@ -3591,7 +3673,20 @@ const CHARS={
   night:{name:'Night Stalker',tier:3,camo:[[26,28,32],[40,42,48],[18,20,24],[56,58,66]],helm:[30,32,36],pants:[[24,26,30],[36,38,44],[18,18,22]],skin:[40,40,44],mask:true},
   hazmat:{name:'Hazmat',tier:3,camo:[[226,196,46],[240,214,70],[200,170,36],[180,150,30]],helm:[230,200,50],pants:[[210,180,40],[226,196,56],[190,160,34]],skin:[60,64,60],mask:true},
   crimson:{name:'Crimson Guard',tier:3,camo:[[120,26,30],[150,40,40],[90,18,22],[60,14,16]],helm:[110,24,28],pants:[[60,20,22],[80,26,28],[44,14,16]],skin:[190,140,104],mask:false},
-  gold:{name:'Gold Elite',tier:4,camo:[[212,166,54],[236,196,90],[180,136,40],[250,220,130]],helm:[220,176,60],pants:[[60,52,30],[80,68,40],[44,38,22]],skin:[206,156,116],mask:true}
+  gold:{name:'Gold Elite',tier:4,camo:[[212,166,54],[236,196,90],[180,136,40],[250,220,130]],helm:[220,176,60],pants:[[60,52,30],[80,68,40],[44,38,22]],skin:[206,156,116],mask:true},
+  // original characters (October 2026): our own designs, no outside heroes or brands
+  astro:{name:'Astronaut',tier:2,camo:[[232,236,240],[210,216,224],[60,110,200],[245,247,250]],helm:[236,240,244],pants:[[220,224,230],[200,206,214],[60,110,200]],skin:[214,170,136],mask:true},
+  pirate:{name:'Sea Pirate',tier:2,camo:[[120,30,30],[30,30,34],[200,180,140],[90,22,22]],helm:[30,30,34],pants:[[60,50,40],[80,66,50],[40,34,28]],skin:[200,150,110],mask:false},
+  viking:{name:'Frost Viking',tier:2,camo:[[110,90,70],[170,180,190],[80,64,48],[200,210,220]],helm:[160,166,172],pants:[[90,72,54],[110,88,66],[70,56,42]],skin:[226,184,150],mask:false},
+  mummy:{name:'Mummy',tier:2,camo:[[214,200,168],[190,176,144],[230,218,190],[170,156,126]],helm:[214,200,168],pants:[[200,186,154],[176,162,132],[214,200,168]],skin:[214,200,168],mask:true},
+  ninja:{name:'Shadow Ninja',tier:3,camo:[[24,24,28],[36,36,42],[150,20,30],[18,18,22]],helm:[24,24,28],pants:[[22,22,26],[34,34,40],[18,18,22]],skin:[24,24,28],mask:true},
+  samurai:{name:'Red Samurai',tier:3,camo:[[160,30,34],[200,160,60],[110,20,24],[30,28,30]],helm:[150,28,32],pants:[[40,36,40],[60,54,58],[30,28,30]],skin:[214,170,136],mask:true},
+  robot:{name:'Steel Robot',tier:3,camo:[[170,178,186],[120,128,136],[60,220,240],[200,206,212]],helm:[150,158,166],pants:[[110,118,126],[140,148,156],[90,96,104]],skin:[60,220,240],mask:true},
+  alien:{name:'Green Alien',tier:3,camo:[[80,200,90],[60,160,70],[120,230,120],[40,120,50]],helm:[80,200,90],pants:[[50,130,60],[70,160,80],[40,100,48]],skin:[110,220,110],mask:true},
+  comet:{name:'Captain Comet',tier:4,camo:[[30,150,160],[220,226,232],[20,110,120],[240,200,80]],helm:[30,150,160],pants:[[20,110,120],[30,140,150],[16,90,98]],skin:[214,170,136],mask:true},
+  cyber:{name:'Neon Cyber',tier:4,camo:[[120,40,200],[240,60,170],[40,20,70],[60,230,250]],helm:[90,30,160],pants:[[40,20,70],[70,30,120],[30,14,52]],skin:[240,60,170],mask:true},
+  magma:{name:'Magma Golem',tier:4,camo:[[40,30,30],[240,110,30],[70,40,30],[255,190,60]],helm:[50,36,34],pants:[[40,30,30],[70,44,34],[240,110,30]],skin:[255,150,40],mask:true},
+  tiger:{name:'Jungle Tiger',tier:3,camo:[[230,130,30],[30,26,24],[250,170,60],[200,100,20]],helm:[230,130,30],pants:[[30,26,24],[230,130,30],[22,20,18]],skin:[240,150,50],mask:true}
 };
 const TIERS=['Standard','Common','Rare','Epic','Legendary'];
 const SKIN_PRICE=[0,40000,90000,220000,600000];for(const k in CHARS)CHARS[k].price=SKIN_PRICE[CHARS[k].tier]|0;
@@ -3741,7 +3836,37 @@ const WEAPONS={
 };
 // the Store lists guns in the order they open up
 WEAPONS.minigun={req:99,snd:'goliath',name:'King Minigun',kind:'lmg',model:'lmg',auto:true,mag:240,reserve:960,rate:.05,dmg:24,head:1.8,spread:.03,move:.012,bloom:.002,recoil:.008,reload:3.6,adsFov:54,price:0,speed:.9,stats:[70,98,58,30],finish:0xc9a227,vs:[1.15,1.15,1.15]};
-const WORDER=['ak47','p9','m4a1','mp5','spas','deagle','hornet','falcon','m249','raptor','awm','vandal','thunder','talon','hammer','hawk','goliath','striker','b7','rpg'];
+// 20 more guns (October 2026): each reuses a body, with its own handling, finish, parts and voice
+Object.assign(WEAPONS,{
+  viper9:{req:4,snd:'viper9',name:'Viper 9',kind:'smg',model:'smg',auto:true,mag:25,reserve:125,rate:.064,dmg:18,head:1.9,spread:.019,move:.002,bloom:.0045,recoil:.0075,reload:1.7,adsFov:58,price:0,speed:1.12,stats:[44,90,40,92],finish:0x5a4632,vs:[.95,.95,.9]},
+  scout:{req:6,snd:'scout',name:'Scout Carbine',kind:'rifle',model:'m4',auto:true,mag:25,reserve:100,rate:.1,dmg:25,head:2.3,spread:.011,move:.006,bloom:.007,recoil:.013,reload:2.0,adsFov:52,price:0,stats:[66,62,70,70],finish:0x6b6f5a,vs:[1,1,.92]},
+  pug:{req:8,snd:'pug',name:'Pug 12',kind:'shotgun',model:'shotgun',auto:false,mag:6,reserve:30,rate:.8,dmg:17,pellets:9,head:1.5,spread:.06,move:.004,bloom:0,recoil:.052,reload:2.5,adsFov:58,price:0,stats:[92,20,28,70],finish:0x4b3a2a,vs:[.95,.95,.85]},
+  brass:{req:10,snd:'brass',name:'Brass Revolver',kind:'pistol',model:'pistol',auto:false,mag:6,reserve:30,rate:.38,dmg:55,head:2.0,spread:.008,move:.004,bloom:.028,recoil:.046,reload:2.0,adsFov:62,price:0,speed:1.1,stats:[90,32,62,92],finish:0x9a7a3a,vs:[1,1,1.2],extra:'cyl'},
+  ranger:{req:12,snd:'ranger',name:'Ranger LR',kind:'sniper',model:'sniper',auto:false,mag:8,reserve:32,rate:.45,dmg:64,head:2.0,spread:.04,adsSpread:.001,move:.009,bloom:.012,recoil:.035,reload:2.5,adsFov:26,price:0,speed:.96,stats:[84,34,90,56],finish:0x55603e,extra:'mag'},
+  cobra:{req:14,snd:'cobra',name:'Cobra SMG',kind:'smg',model:'smg',auto:true,mag:35,reserve:175,rate:.062,dmg:19,head:2.0,spread:.016,move:.002,bloom:.004,recoil:.0072,reload:1.8,adsFov:58,price:0,speed:1.1,stats:[48,92,48,90],finish:0x2f3b2f,extra:'supp'},
+  warden:{req:16,snd:'warden',name:'Warden AR',kind:'rifle',model:'ak',auto:true,mag:30,reserve:120,rate:.1,dmg:30,head:2.2,spread:.013,move:.007,bloom:.008,recoil:.017,reload:2.3,adsFov:52,price:0,stats:[80,62,66,60],finish:0x473a2c,furn:1},
+  mauler:{req:18,snd:'mauler',name:'Mauler 20',kind:'shotgun',model:'shotgun',auto:true,mag:10,reserve:30,rate:.3,dmg:13,pellets:9,head:1.5,spread:.062,move:.004,bloom:0,recoil:.034,reload:2.9,adsFov:62,price:0,stats:[84,56,22,62],finish:0x3a2f2f,extra:'drum'},
+  sabre:{req:19,snd:'sabre',name:'Sabre DMR',kind:'sniper',model:'sniper',auto:false,mag:12,reserve:48,rate:.3,dmg:60,head:2.0,spread:.028,adsSpread:.0014,move:.008,bloom:.012,recoil:.03,reload:2.4,adsFov:30,price:0,speed:.97,stats:[82,44,88,62],finish:0x50565e,vs:[1,1,.9],extra:'mag'},
+  ironside:{req:21,snd:'ironside',name:'Ironside LMG',kind:'lmg',model:'lmg',auto:true,mag:100,reserve:200,rate:.08,dmg:26,head:2.0,spread:.022,move:.01,bloom:.003,recoil:.013,reload:4.6,adsFov:52,price:0,speed:.87,stats:[68,76,58,36],finish:0x404a3c,vs:[1.04,1.04,1.04]},
+  wasp:{req:22,snd:'wasp',name:'Wasp PDW',kind:'smg',model:'smg',auto:true,mag:40,reserve:200,rate:.055,dmg:18,head:1.9,spread:.02,move:.002,bloom:.0045,recoil:.007,reload:1.8,adsFov:58,price:0,speed:1.14,stats:[46,98,38,96],finish:0xc8a02a,vs:[.92,.92,.88]},
+  jackal:{req:24,snd:'jackal',name:'Jackal AR',kind:'rifle',model:'m4',auto:true,mag:30,reserve:120,rate:.088,dmg:27,head:2.3,spread:.011,move:.006,bloom:.006,recoil:.012,reload:2.1,adsFov:52,price:0,stats:[72,70,72,64],finish:0x7a5a3a,vs:[1.02,1.02,1]},
+  eagle:{req:25,snd:'eagle',name:'Iron Eagle',kind:'pistol',model:'pistol',auto:false,mag:9,reserve:45,rate:.26,dmg:50,head:2.2,spread:.008,move:.004,bloom:.02,recoil:.036,reload:1.6,adsFov:62,price:0,speed:1.1,stats:[88,44,64,94],finish:0xb8bcc4,vs:[1.04,1.04,1.08]},
+  reaper:{req:28,snd:'reaper',name:'Reaper .50',kind:'sniper',model:'sniper',auto:false,mag:5,reserve:20,rate:1.15,dmg:110,head:2.0,spread:.06,adsSpread:.0004,move:.01,bloom:0,recoil:.062,reload:3.0,adsFov:18,price:0,speed:.92,stats:[100,14,100,42],finish:0x1f2226,vs:[1.04,1.04,1.1]},
+  tempest:{req:31,snd:'tempest',name:'Tempest AR',kind:'rifle',model:'ak',auto:true,mag:35,reserve:140,rate:.083,dmg:28,head:2.3,spread:.011,move:.006,bloom:.006,recoil:.012,reload:2.2,adsFov:52,price:0,stats:[74,76,72,62],finish:0x2c3e55,vs:[1,1,1.04],furn:1},
+  banshee:{req:33,snd:'banshee',name:'Banshee SMG',kind:'smg',model:'smg',auto:true,mag:36,reserve:180,rate:.056,dmg:21,head:2.0,spread:.015,move:.002,bloom:.0035,recoil:.007,reload:1.8,adsFov:58,price:0,speed:1.12,stats:[54,96,52,92],finish:0x4b2a5a,extra:'supp'},
+  titan:{req:36,snd:'titan',name:'Titan LMG',kind:'lmg',model:'lmg',auto:true,mag:150,reserve:300,rate:.075,dmg:30,head:2.0,spread:.024,move:.011,bloom:.0035,recoil:.015,reload:5.2,adsFov:52,price:0,speed:.82,stats:[78,80,60,28],finish:0x5a2a22,vs:[1.12,1.12,1.1],extra:'drum'},
+  judge:{req:39,snd:'judge',name:'Judge Auto',kind:'shotgun',model:'shotgun',auto:true,mag:14,reserve:42,rate:.24,dmg:14,pellets:9,head:1.5,spread:.06,move:.004,bloom:0,recoil:.033,reload:2.8,adsFov:62,price:0,stats:[88,62,24,60],finish:0x2a2a2a,vs:[1.05,1.05,1.05],extra:'drum'},
+  phantom:{req:42,snd:'phantom',name:'Phantom Bolt',kind:'sniper',model:'sniper',auto:false,mag:6,reserve:24,rate:.85,dmg:115,head:2.2,spread:.05,adsSpread:.0003,move:.009,bloom:0,recoil:.055,reload:2.6,adsFov:18,price:0,speed:.97,stats:[100,22,100,58],finish:0x14161a,extra:'supp'},
+  stinger:{req:7,snd:'stinger',name:'Stinger MP',kind:'pistol',model:'pistol',auto:true,mag:20,reserve:100,rate:.06,dmg:15,head:1.9,spread:.022,move:.002,bloom:.005,recoil:.008,reload:1.5,adsFov:62,price:0,speed:1.14,stats:[34,96,34,96],finish:0x3b3326,vs:[.95,.95,1.1]},
+  duke:{req:11,snd:'duke',name:'Duke .45',kind:'pistol',model:'pistol',auto:false,mag:8,reserve:40,rate:.24,dmg:38,head:2.1,spread:.009,move:.003,bloom:.018,recoil:.03,reload:1.5,adsFov:62,price:0,speed:1.12,stats:[72,52,52,94],finish:0x5c5f66,vs:[1.03,1.03,1.05]},
+  twin:{req:14,snd:'twin',name:'Twin Vipers',desc:'A pistol in each hand: they fire one after the other.',kind:'pistol',model:'pistol',dual:true,auto:false,mag:30,reserve:120,rate:.12,dmg:24,head:2.0,spread:.016,move:.003,bloom:.012,recoil:.016,reload:2.2,adsFov:64,price:0,speed:1.1,stats:[46,84,44,92],finish:0x2a2d31},
+  dragon:{req:34,snd:'dragon',name:'Dragon Duals',desc:'Two heavy pistols, one in each hand, fired in turn.',kind:'pistol',model:'pistol',dual:true,auto:false,mag:36,reserve:144,rate:.1,dmg:27,head:2.1,spread:.013,move:.003,bloom:.01,recoil:.015,reload:2.1,adsFov:64,price:0,speed:1.1,stats:[56,90,50,92],finish:0x7a1f1f,vs:[1.04,1.04,1.04]},
+  sunflare:{req:37,snd:'sunflare',name:'Sunflare',kind:'pistol',model:'pistol',auto:false,mag:7,reserve:35,rate:.3,dmg:64,head:2.1,spread:.007,move:.004,bloom:.026,recoil:.048,reload:1.9,adsFov:62,price:0,speed:1.08,stats:[96,36,70,90],finish:0xd09a2a,vs:[1.05,1.05,1.15],extra:'cyl'},
+  nova:{req:45,snd:'nova',name:'Nova Pulse',kind:'rifle',model:'m4',auto:true,mag:40,reserve:160,rate:.075,dmg:29,head:2.4,spread:.009,move:.005,bloom:.005,recoil:.01,reload:2.0,adsFov:52,price:0,speed:1.02,stats:[78,84,80,70],finish:0x1d5f6a,vs:[1.03,1.03,1.02],extra:'drum'}
+});
+// the Store lists guns in the order they open up (the rocket launcher stays last)
+const WORDER=['ak47','p9','m4a1','mp5','spas','deagle','hornet','falcon','m249','raptor','awm','vandal','thunder','talon','hammer','hawk','goliath','striker','b7','viper9','scout','pug','brass','ranger','cobra','warden','mauler','sabre','ironside','wasp','jackal','eagle','reaper','tempest','banshee','titan','judge','phantom','nova','stinger','duke','twin','dragon','sunflare'].sort((a,b)=>gunReqOf(a)-gunReqOf(b)).concat(['rpg']);
+function gunReqOf(id){return (WEAPONS[id]&&WEAPONS[id].req)||1;}
 const KNIVES=['knife','machete','karambit'];
 const isKnife=id=>!!WEAPONS[id]&&WEAPONS[id].kind==='knife';
 const myKnife=()=>KNIVES.includes(profile.knife)&&(profile.knives||[]).includes(profile.knife)?profile.knife:'knife';
@@ -3887,7 +4012,11 @@ const vflash=new THREE.Mesh(new THREE.PlaneGeometry(.3,.3),new THREE.MeshBasicMa
 const finMats={};
 function finishMat(hex){return finMats[hex]||(finMats[hex]=new THREE.MeshPhongMaterial({color:hex,shininess:30,specular:0x2a2a2a}));}
 function gunMesh(id,camo,bot,att){const w=WEAPONS[id]||WEAPONS.ak47,c=camo||'none';
-  return buildGun(w.model,c==='none'&&w.finish?finishMat(w.finish):camoMat(c),bot,att,w);}
+  const g=buildGun(w.model,c==='none'&&w.finish?finishMat(w.finish):camoMat(c),bot,att,w);
+  // dual pistols: the same pistol again in the left hand (shares the shapes, so it costs no extra memory)
+  if(w.dual&&!bot&&g.userData&&g.userData.hip){try{const l=new THREE.Group();for(const ch of g.children)if(ch.isMesh)l.add(new THREE.Mesh(ch.geometry,ch.material).copy(ch,false));
+    l.position.set(-g.userData.hip[0]*1.9,0,.03);l.userData.dualL=1;g.add(l);g.userData.dualX=-g.userData.hip[0]*1.9;}catch(e){}}
+  return g;}
 // merge every solid part under root into one mesh per material: looks the same, but the GPU draws a gun in a few calls instead of ~25
 function bakeStatic(root){
   root.updateMatrixWorld(true);const inv=new THREE.Matrix4().copy(root.matrixWorld).invert(),by=new Map(),gone=[];
@@ -4087,7 +4216,7 @@ function buildViewmodels(){
   vmTrim(used);
   refreshPills();
 }
-let vmKick=0,vmBob=0,vmSwayX=0,vmSwayY=0,flashT=0;
+let vmKick=0,vmBob=0,vmSwayX=0,vmSwayY=0,flashT=0,dualSide=false;
 
 /* ================= HUD helpers ================= */
 const feedEl=$('feed'),msgsEl=$('msgs');
@@ -4248,7 +4377,7 @@ function toast(text){const d=document.createElement('div');d.className='toast cu
 let scores={blue:0,red:0},matchT=360,state='menu',paused=false,GOAL=60;
 let streakT=0,streakN=0,match={gp:0,xp:0,heads:0,best:0,kills:0};
 // GP and XP earned in a match go into the profile right away (match.bg/bx = how much is already in it)
-function bankMatch(){const dg=match.gp-(match.bg|0),dx=match.xp-(match.bx|0);if(!dg&&!dx)return false;profile.gp+=dg;profile.xp+=dx;match.bg=match.gp;match.bx=match.xp;return true;}
+function bankMatch(){const dg=match.gp-(match.bg|0),dx=match.xp-(match.bx|0);if(!dg&&!dx)return false;profile.gp+=dg;profile.xp+=dx;if(dx>0)seasonAdd(dx);match.bg=match.gp;match.bx=match.xp;return true;}
 let uavT=0,matchId=0,callN=0,callToldT=0;
 const CALL={price:2500,req:10,max:3,kills:0,perMatch:2};
 const airBought=()=>(profile.calls|0)>0&&callN<CALL.perMatch;
@@ -5498,6 +5627,7 @@ function fireWeapon(){
   vmKick=Math.min(1,vmKick+(w.kind==='pistol'||w.kind==='shotgun'||w.kind==='sniper'?1:.55));flashT=.045;
   const g=vmGuns[cur],ud=g.userData;
   vflash.position.set(ud.hip[0]*(1-adsK)+ud.ads[0]*adsK,(ud.hip[1]*(1-adsK)+ud.ads[1]*adsK)+.02,(ud.hip[2]*(1-adsK)+ud.ads[2]*adsK)+ud.muzzle);
+  if(w.dual&&ud.dualX){dualSide=!dualSide;if(dualSide)vflash.position.x+=ud.dualX;}
   if(w.kind==='rpg')sfx.rpg(.6,0);else sfx.gun(w.snd,.5,0,1);
   if(w.kind==='sniper'&&a.mag>0){/* bolt cycle drops the scope briefly */}
 }
@@ -5745,7 +5875,7 @@ function renderProfile(){try{renderInboxDot();}catch(e){}
   const d=profile.daily;
   let h=`<div class="row" style="justify-content:space-between"><span class="lbl2">Daily challenges · login streak ${profile.login.streak} day${profile.login.streak===1?'':'s'}</span>${d&&d.freeCrate?'<span class="cg" style="font-family:var(--f-hud);font-size:17px">FREE CRATE READY</span>':''}</div>`;
   if(d)for(const c of d.list){const def=CHALLENGES.find(x=>x.id===c.id);h+=`<div class="ch ${c.done?'done':''}"><span>${esc(def.text)} · <b class="cg">${def.gp} GP</b></span><i>${c.p} / ${def.goal}</i></div>`;}
-  $('daily').innerHTML=h;
+  $('daily').innerHTML=seasonStrip()+h;
   $('openCrate').textContent=(d&&d.freeCrate)||(profile.keys|0)>0?'Free crate':'Crates';renderCalDot();renderNewDots();
   renderHome();
   {const mk=isClient()?(NET.mapKey||MAP.key):MAP.key,md=modeOf(mk);for(const b of $('mapPick').querySelectorAll('[data-map]')){b.classList.toggle('on',b.dataset.map===mk);b.hidden=!md.maps.includes(b.dataset.map);b.disabled=isClient();}}
@@ -5912,7 +6042,7 @@ $('admBody').addEventListener('click',async e=>{const b=e.target.closest('button
 const PUSH={busy:false,on:null};
 const HQ_URL='https://cubefront-hq.floot.app/';
 const pushFn=()=>cloudCfg().url.replace(/\/$/,'')+'/functions/v1/push';
-const PUSH_READY=false; // turned on once the offline helper (sw.js) shows notifications
+const PUSH_READY=true; // the offline helper (sw.js) shows the notifications
 function pushOk(){try{return PUSH_READY&&!CAP&&!IN_CLAUDE&&cloudOn()&&location.protocol==='https:'&&'serviceWorker' in navigator&&'PushManager' in window&&'Notification' in window;}catch(e){return false;}}
 const pushIOSHint=()=>{try{return PUSH_READY&&!CAP&&/iPhone|iPad|iPod/.test(navigator.userAgent)&&!('PushManager' in window);}catch(e){return false;}};
 function b64uBytes(s){s=String(s).replace(/-/g,'+').replace(/_/g,'/');s+='='.repeat((4-s.length%4)%4);const b=atob(s),u=new Uint8Array(b.length);for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i);return u;}
@@ -5945,6 +6075,7 @@ function extraSetRows(){let h='';
   if(pushOk()){if(PUSH.on===null){PUSH.on=false;pushState().then(v=>{PUSH.on=v;if(v&&!$('settings').hidden)renderSettings();});}
     h+=`<div class="setrow"><span>Notifications<small class="setHint">Rental ending, daily gift, friend invites</small></span><div class="opts"><button class="chip ${PUSH.on?'on':''}" id="pushTog" data-v="1">On</button><button class="chip ${PUSH.on?'':'on'}" id="pushTog0">Off</button></div></div>`;}
   else if(pushIOSHint())h+=`<div class="setrow"><span>Notifications<small class="setHint">On iPhone: tap Share → Add to Home Screen, open the game from there, then turn them on here.</small></span></div>`;
+  {const on=!profile.tutDone;h+=`<div class="setrow"><span>First-match guide<small class="setHint">Short how-to-play steps at the start of a match</small></span><div class="opts"><button class="chip ${on?'on':''}" data-tut="1">Show next match</button><button class="chip ${on?'':'on'}" data-tut="0">Off</button></div></div>`;}
   h+=`<div class="setrow"><span>Website<small class="setHint">Leaderboards, patch notes and news</small></span><div class="opts"><a class="chip" href="${HQ_URL}" target="_blank" rel="noopener">Open Cubefront HQ</a></div></div>`;
   if(cloudOn()&&CS&&CS.uid){const hide=!!profile.hideLb;
     h+=`<div class="setrow"><span>Public leaderboard<small class="setHint">Show my name and stats on the game's website</small></span><div class="opts"><button class="chip ${hide?'':'on'}" data-lb="0">Show</button><button class="chip ${hide?'on':''}" data-lb="1">Hide</button></div></div>`;}
@@ -5970,6 +6101,7 @@ $('setBody').addEventListener('click',e=>{
   {const u=e.target.closest('[data-unblk]');if(u){const b=blocked()[+u.dataset.unblk];if(b&&confirm(`Unblock ${b.n}?`)){blocked().splice(+u.dataset.unblk,1);saveProfile();renderSettings();toast(`${b.n} is unblocked.`);}return;}}
   if(e.target.closest('#layEdit')){layOpen();return;}
   {const t=e.target.closest('#pushTog,#pushTog0');if(t){if((t.id==='pushTog')!==!!PUSH.on)pushToggle();return;}}
+  {const t=e.target.closest('[data-tut]');if(t){const on=t.dataset.tut==='1';profile.tutDone=!on;profile.tutForce=on;saveProfile();renderSettings();toast(on?'The guide will show at the start of your next match.':'The guide is off.');return;}}
   {const t=e.target.closest('[data-lb]');if(t){profile.hideLb=t.dataset.lb==='1';saveProfile();renderSettings();toast(profile.hideLb?'You are hidden from the public leaderboard.':'You will show on the public leaderboard.');return;}}
   if(e.target.closest('#setAdm')){$('settings').hidden=true;openAdmin();return;}
   if(e.target.closest('#layDef')){SET.lay={};saveSettings();layApply();renderSettings();return;}
@@ -6289,7 +6421,7 @@ function pvLoop(){if($('shop').hidden||!shopPv){pvRun=false;return;}requestAnima
   const g=cv.getContext('2d');g.clearRect(0,0,cv.width,cv.height);g.drawImage(T.c,0,0,cv.width,cv.height);}
 function pvStart(){if(!pvRun){pvRun=true;requestAnimationFrame(pvLoop);}}
 /* ================= inbox: rentals running out, news, friends' invites ================= */
-const NEWS_ID='2026-10-12c';
+const NEWS_ID='v150';
 const INBOX_MAX=40,IN_ICON={rent:'⏳',news:'✨',invite:'🎮',gift:'🎁',info:'ℹ️'};
 function inboxAdd(k,title,body,act){if(!profile)return;const a=profile.inbox=Array.isArray(profile.inbox)?profile.inbox:[];if(k==='news'&&a.some(m=>m.title===String(title).slice(0,90)))return;
   const id=Date.now().toString(36)+Math.random().toString(36).slice(2,6);
@@ -6318,6 +6450,7 @@ $('inList').addEventListener('click',e=>{
 function inboxNews(){if(!profile)return;
   if(profile.newsSeen!==NEWS_ID){const first=!profile.newsSeen&&!(profile.stats&&profile.stats.matches);profile.newsSeen=NEWS_ID;
     if(first)inboxAdd('info','Welcome to Cubefront','Your progress saves by itself. Open a free crate every day, pick a mode and press Play. Invite friends from the lobby.');
+    inboxAdd('news','1.5: 25 new guns, mystery boxes and a season pass','Twin pistols and 24 more guns, each marked Rookie, Veteran or Elite. Mystery boxes have their own tab in the Store. A free season pass every month (tap 🎁 then Season pass). Add friends with 👥 and see who is online. Quick play joins a game in one tap.',{go:'shop',tab:'boxes'});
     inboxAdd('news','New: rent anything, sell what you own','Rent any gun, skin or gear for 1 day up to 90 days, or buy it forever. Sell forever items for 70% of what you paid. Kill the King, a new airstrike tablet and a much bigger nuke are in too.',{go:'shop',tab:'guns'});
     inboxAdd('news','9 new modes','Gun Game, Capture the Flag, Domination, Free-for-All, Infected, Hardpoint, Battle Royale, One in the Chamber and Build Battle. Also new: bot difficulty (Easy, Medium, Hard) in the lobby, and a secret weapons stash hidden on the map in every match.',{go:'lobby'});
     inboxAdd('news','Zombies: hounds and a third floor','From round 11 zombie hounds attack in packs and blow up when they reach you, and more zombies come every round. On Extreme the safehouse has a third floor with ammo crates and a second mystery box. The stairs are now marked in yellow.',{go:'lobby'});
@@ -6339,6 +6472,101 @@ async function invSend(name){name=String(name||'').trim();if(!name)return;
   if(!NET.code){toast('Open a room first');return;}
   const r=await cloudReq('/rest/v1/rpc/invite_send',{method:'POST',body:{p_to:name,p_code:NET.code,p_mode:modeOf(MAP.key).name}});
   const v=r.ok?r.j:'';toast(v==='ok'?`Invite sent to ${name}`:v==='nouser'?`No player called ${name}`:v==='self'?'That is you':v==='limit'?'Too many invites. Try again later':'Could not send the invite');}
+/* ================= friends: add by name, see who is online, join or invite in one tap ================= */
+// the server only shares a friend's room code with accepted friends who are online; nobody sees anyone's IP
+const FRI={rows:[],busy:false,msg:'',t:0,pingT:0};
+const frSigned=()=>!!(CS&&CS.uid&&cloudOn());
+async function frLoad(){if(!frSigned()||FRI.busy)return;FRI.busy=true;
+  try{if(!await cloudFresh())return;const r=await cloudReq('/rest/v1/rpc/friends_list',{method:'POST',body:{}});
+    if(r.ok&&Array.isArray(r.j)){FRI.rows=r.j.filter(x=>x&&typeof x.name==='string'&&!isBlocked(x.name)).slice(0,200);FRI.t=Date.now();}
+    else if(!$('friends').hidden)FRI.msg='!Could not load your friends (code FR-'+(r.status|0)+'). Try again soon.';}
+  catch(e){FRI.msg='!Could not reach the server (code FR-NET).';}
+  finally{FRI.busy=false;frDot();if(!$('friends').hidden)frRender();}}
+function frDot(){const d=$('frDot');if(!d)return;const n=FRI.rows.filter(x=>x.status==='incoming').length;d.hidden=!n;}
+function frRender(){const L=$('frList');if(!L)return;
+  if(!frSigned()){L.innerHTML=`<div class="inEmpty">Sign in to add friends, see who is online and join their games.<div class="row" style="justify-content:center;margin-top:8px"><button class="btn sm cut" id="frSignIn">Sign in</button></div></div>`;return;}
+  const m=FRI.msg?`<div class="inEmpty" style="padding:6px;color:${FRI.msg[0]==='!'?'#ff8a8a':'var(--amber)'}">${esc(FRI.msg.replace(/^!/,''))}</div>`:'';
+  const row=x=>{const n=esc(x.name),lv=`<small>Lv ${x.level|0}</small>`;
+    if(x.status==='incoming')return `<div class="frRow inc"><span class="frDot"></span><b>${n}</b><small>wants to be friends</small><button class="btn sm cut" data-fracc="${n}">Accept</button><button class="btn sm ghost cut" data-frdec="${n}">Decline</button></div>`;
+    if(x.status==='outgoing')return `<div class="frRow"><span class="frDot"></span><b>${n}</b><small>request sent</small><button class="frX" data-frrm="${n}" aria-label="Cancel request">✕</button></div>`;
+    const room=typeof x.room==='string'&&/^[A-Za-z0-9]{4,8}$/.test(x.room)?x.room:'';
+    const act=room&&room!==NET.code?`<button class="btn sm cut" data-frjoin="${esc(room)}">Join</button>`:(x.online&&NET.code&&room!==NET.code?`<button class="btn sm ghost cut" data-frinv="${n}">Invite</button>`:'');
+    return `<div class="frRow"><span class="frDot ${x.online?'on':''}" title="${x.online?'Online':'Offline'}"></span><b>${n}</b>${lv}<small>${x.online?(room?'in a game':'online'):'offline'}</small>${act}<button class="frX" data-frrm="${n}" aria-label="Remove friend">✕</button></div>`;};
+  L.innerHTML=m+(FRI.rows.length?FRI.rows.map(row).join(''):`<div class="inEmpty">No friends yet. Type a player's name above and tap Add friend. When they accept, you will see when they are online.</div>`);}
+function openFriends(){FRI.msg='';frRender();$('friends').hidden=false;frLoad();frPing(true);}
+async function frAct(fn,body,ok){if(!frSigned())return;try{if(!await cloudFresh())return;const r=await cloudReq('/rest/v1/rpc/'+fn,{method:'POST',body});
+  const v=r.ok&&typeof r.j==='string'?r.j:'';FRI.msg=ok(v)||('!Something went wrong (code FR-'+(r.status|0)+').');}catch(e){FRI.msg='!Could not reach the server (code FR-NET).';}
+  frRender();frLoad();}
+function frAdd(){const nm=String($('frName').value||'').trim().slice(0,14);if(!nm)return;
+  if(!frSigned()){frRender();return;}
+  if(CS.guest){FRI.msg='!Create a free account in Profile to add friends.';frRender();return;}
+  if(nm.toLowerCase()===String(profile.name||'').toLowerCase()){FRI.msg='!That is you.';frRender();return;}
+  $('frName').value='';
+  frAct('friend_request',{p_name:nm},v=>({sent:`Request sent to ${nm}.`,accepted:`You and ${nm} are now friends.`,not_found:`!No player called ${nm}.`,self:'!That is you.',banned:'!Your account cannot add friends right now.',full:'!You have 100 friends, the most allowed.',exists:`You already added ${nm}.`,slow_down:'!Too many requests. Try again in an hour.'})[v]);}
+$('openFriends').addEventListener('click',openFriends);
+$('frClose').addEventListener('click',()=>{$('friends').hidden=true;});
+$('frAddBtn').addEventListener('click',frAdd);
+$('frName').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();frAdd();}});
+$('frList').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const d=b.dataset;
+  if(b.id==='frSignIn'){$('friends').hidden=true;acMsg='';renderAcct();$('acct').hidden=false;return;}
+  if(d.fracc)return frAct('friend_respond',{p_name:d.fracc,p_accept:true},v=>v==='accepted'?`You and ${d.fracc} are now friends.`:v==='no_request'?'!That request is gone.':'');
+  if(d.frdec)return frAct('friend_respond',{p_name:d.frdec,p_accept:false},v=>v==='declined'?'Request declined.':v==='no_request'?'!That request is gone.':'');
+  if(d.frrm){if(!confirm(`Remove ${d.frrm}?`))return;return frAct('friend_remove',{p_name:d.frrm},v=>v==='removed'?`${d.frrm} removed.`:'');}
+  if(d.frjoin){$('friends').hidden=true;openLobby();mpJoin(d.frjoin);return;}
+  if(d.frinv){invSend(d.frinv);return;}});
+// tell friends you are online (and which room you are in) about once a minute while the game is open
+async function frPing(now){if(!frSigned()||!navigator.onLine||document.hidden)return;if(!now&&Date.now()-FRI.pingT<55000)return;FRI.pingT=Date.now();
+  try{if(!await cloudFresh())return;await cloudReq('/rest/v1/rpc/presence_ping',{method:'POST',body:{p_room:NET.mode&&NET.code?String(NET.code):null}});}catch(e){}}
+setInterval(()=>{frPing();if(state!=='play'&&Date.now()-FRI.t>120000)frLoad();},60000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)frPing();});
+setTimeout(()=>{frPing(true);frLoad();},8000);
+/* ================= season pass: a free reward track that starts over every month ================= */
+// season XP is the XP your matches pay; 30 tiers; claim each reward once; nothing to buy
+const SEA_N=30,SEA_XP=2000;
+const SEA=[['gp',500],['camo',2],['key',1],['gp',800],['blk',2],['title',2],['gp',1000],['skin',2],['key',2],['card',2],
+  ['gp',1500],['camo',3],['fx',2],['gp',2000],['blk',3],['key',2],['title',3],['gp',2500],['skin',3],['card',3],
+  ['gp',3000],['camo',3],['key',3],['fx',3],['gp',4000],['blk',4],['title',4],['camo',4],['gp',6000],['skin',4]];
+const seasonId=()=>{const d=new Date(gNow());return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');};
+function seasonState(){const id=seasonId();let S=profile.season;
+  if(!S||typeof S!=='object'||S.id!==id||!Array.isArray(S.got))S=profile.season={id,xp:0,got:[]};
+  S.xp=Math.max(0,Math.min(1e7,+S.xp||0));const tier=Math.min(SEA_N,Math.floor(S.xp/SEA_XP));
+  const can=[];for(let i=0;i<tier;i++)if(!S.got.includes(i))can.push(i);
+  const d=new Date(gNow()),end=new Date(d.getFullYear(),d.getMonth()+1,1).getTime();
+  return{S,tier,can,into:tier>=SEA_N?SEA_XP:S.xp-tier*SEA_XP,left:Math.max(0,Math.ceil((end-gNow())/864e5)),month:d.toLocaleString('en',{month:'long'})};}
+function seasonMerge(a,b){const ok=x=>x&&typeof x==='object'&&typeof x.id==='string'&&Array.isArray(x.got);
+  if(!ok(b))return ok(a)?a:b;if(!ok(a))return Object.assign({},b,{got:b.got.slice()});
+  if(a.id!==b.id)return a.id>b.id?a:Object.assign({},b,{got:b.got.slice()});
+  return{id:a.id,xp:Math.max(+a.xp||0,+b.xp||0),got:[...new Set(a.got.concat(b.got))].filter(i=>Number.isInteger(i)&&i>=0&&i<SEA_N)};}
+function seasonAdd(dx){try{const was=seasonState().tier;profile.season.xp+=Math.max(0,Math.min(20000,dx|0));const now=seasonState().tier;
+  if(now>was)pendingToasts.push(`Season tier ${now} reached · claim your reward on the main screen`);}catch(e){}}
+// the exact prize for a tier: a cosmetic you do not own yet (same pick all season), or GP if you own them all
+function seasonPrize(i){const [k,v]=SEA[i]||['gp',1000];
+  if(k==='gp')return{kind:'gp',v,label:v.toLocaleString()+' GP',tier:0};
+  if(k==='key')return{kind:'key',v,label:v+' free crate'+(v>1?'s':''),tier:Math.min(4,v)};
+  const P=cratePool(v).filter(p=>p.kind===k&&!p.dupe);
+  if(!P.length)return{kind:'gp',v:DUPE_GP[v]*2,label:(DUPE_GP[v]*2).toLocaleString()+' GP',tier:v,was:k};
+  const sd=[...seasonId()].reduce((a,c)=>a*31+c.charCodeAt(0),i*13+5)>>>0;return Object.assign({},P[sd%P.length],{tier:v});}
+function seasonClaim(i){const st=seasonState();if(!st.can.includes(i))return null;const w=seasonPrize(i);
+  if(w.kind==='key')profile.keys=(profile.keys|0)+w.v;else giveReward(w);st.S.got.push(i);saveProfile();return w;}
+function seasonStrip(){try{const st=seasonState();const pct=st.tier>=SEA_N?100:100*st.into/SEA_XP;
+  return `<button class="seaStrip" id="seaOpen" type="button"><span class="lbl2">Season · tier ${st.tier}/${SEA_N}</span><span class="seaBar"><b style="width:${pct.toFixed(1)}%"></b></span>${st.can.length?`<em>${st.can.length} to claim</em>`:`<small class="dim">${st.left}d left</small>`}</button>`;}catch(e){return '';}}
+function renderSeason(){const st=seasonState();
+  $('seaTitle').textContent='SEASON · '+st.month.toUpperCase();
+  $('seaSub').textContent=st.tier>=SEA_N?'You finished every tier. A new season starts on the 1st.':`Tier ${st.tier} of ${SEA_N} · ${(SEA_XP-st.into).toLocaleString()} XP to the next tier · ${st.left} day${st.left===1?'':'s'} left. Every match you play earns season XP. All rewards are free.`;
+  $('seaBar').style.width=(st.tier>=SEA_N?100:100*st.into/SEA_XP).toFixed(1)+'%';$('seaAll').hidden=st.can.length<2;
+  let h='';for(let i=0;i<SEA_N;i++){const [k,v]=SEA[i],got=st.S.got.includes(i),now=st.can.includes(i),lock=i>=st.tier,big=(i+1)%10===0;
+    const lab=k==='gp'?v.toLocaleString()+' GP':k==='key'?v+' crate'+(v>1?'s':''):`${RAR[Math.min(5,v)].n} ${CALNAME[k]}`;
+    const prize=now?seasonPrize(i):null;
+    h+=`<div class="sea ${got?'got':''} ${now?'now':''} ${lock?'lock':''} ${big?'big':''}"><span class="dn">${i+1}</span><div class="cdi">${calIcon(prize,k)}</div><div class="cdl" style="${k!=='gp'&&k!=='key'?'color:'+RAR[Math.min(5,v)].c:''}">${esc(prize?prize.label:lab)}</div>${now?`<button class="btn sm cut" data-sea="${i}">Claim</button>`:''}</div>`;}
+  $('seaGrid').innerHTML=h;}
+function openSeason(){renderSeason();$('cal').hidden=true;$('season').hidden=false;}
+$('calSea').addEventListener('click',openSeason);
+$('daily').addEventListener('click',e=>{if(e.target.closest('#seaOpen'))openSeason();});
+$('seaClose').addEventListener('click',()=>{$('season').hidden=true;renderProfile();});
+$('seaGrid').addEventListener('click',e=>{const b=e.target.closest('[data-sea]');if(!b)return;const w=seasonClaim(+b.dataset.sea);if(!w)return;
+  try{initAudio();sfx.ding&&sfx.ding();}catch(x){}toast('Season reward: '+w.label+(PRIZEWHERE[w.kind]?' · in '+PRIZEWHERE[w.kind]:''));renderSeason();renderProfile();});
+$('seaAll').addEventListener('click',()=>{const st=seasonState();const got=[];for(const i of st.can.slice()){const w=seasonClaim(i);if(w)got.push(w.label);}
+  if(got.length){try{initAudio();sfx.ding&&sfx.ding();}catch(x){}toast(`Claimed ${got.length} season rewards`);}renderSeason();renderProfile();});
 const rentChip=(kind,id)=>{try{const r=itOk(kind,id)&&rentInfo(kind,id);return r?`<span class="rentChip">⏳ ${leftTxt(r.e-rNow())}</span>`:'';}catch(e){return '';}};
 
 /* ================= store: rentals and selling ================= */
@@ -6478,14 +6706,14 @@ function renderSheet(){const el=$('buySheet');if(!el)return;if(!SH||$('shop').hi
 function renderShop(){
   rentSweep();renderProfile();
   let h='';const dsc=t=>`<div style="font-family:var(--f-body);font-size:13px;color:var(--dim)">${t}</div>`,buyRow=(price,attr)=>`<div class="row" style="justify-content:space-between"><span class="price">${price.toLocaleString()} GP</span><button class="btn sm cut" ${attr} ${profile.gp<price?'disabled':''}>Buy</button></div>`;
-  const usePv=!['gear','armor','skins','inv'].includes(shopTab);$('shopBody').classList.toggle('noPv',!usePv);
-  if(shopTab!=='inv')h+=dealCard();
+  const usePv=!['gear','armor','skins','inv','boxes'].includes(shopTab);$('shopBody').classList.toggle('noPv',!usePv);
+  if(shopTab!=='inv'&&shopTab!=='boxes')h+=dealCard();
   if(shopTab==='guns'){
     if(!shopPv||!shopPv.gun||shopPv.tab!=='guns')pvSet({tab:'guns',gun:profile.slots[0],camo:profile.camo,att:attOf(profile.slots[0])});
     grantLevelGuns();const lv=myLevel(),lockRow=r=>`<div class="lockNote">🔒 Opens at level ${r} · you are level ${lv}</div>`;
-    h+=`<div class="lbl2" style="grid-column:1/-1">Guns · a new one opens every few levels</div>`;
+    h+=`<div class="lbl2" style="grid-column:1/-1">Guns · a new one opens every few levels · <span class="gcls g-weak">Rookie</span> <span class="gcls g-medium">Veteran</span> <span class="gcls g-epic">Elite</span></div>`;
     for(const id of WORDER){const w=WEAPONS[id],own=profile.owned.includes(id),slot=profile.slots.indexOf(id),lock=!own&&gunReq(id)>lv;
-      h+=`<div class="item ${slot>=0?'eq':''} ${lock?'locked':''} ${shopPv.gun===id?'pv':''}" data-pv="gun:${id}">${tierTop(gunTier(id))}${img(gunThumb(id,own?profile.camo:'none',own?attOf(id):null))}<div class="ty">${w.kind==='rpg'?'launcher':w.kind} · level ${gunReq(id)}</div><h3>${w.name}</h3>
+      h+=`<div class="item ${slot>=0?'eq':''} ${lock?'locked':''} ${shopPv.gun===id?'pv':''}" data-pv="gun:${id}">${tierTop(gunTier(id))}${img(gunThumb(id,own?profile.camo:'none',own?attOf(id):null))}<div class="ty">${gclsTag(id)} ${w.kind==='rpg'?'launcher':w.kind} · level ${gunReq(id)}</div><h3>${w.name}</h3>
       ${bar('DAMAGE',w.stats[0])}${bar('FIRE RATE',w.stats[1])}${bar('RANGE',w.stats[2])}${bar('MOBILITY',w.stats[3])}
       ${own?`<div class="row"><button class="btn sm ${slot===0?'':'ghost'} cut" data-eq="${id}" data-slot="0">Slot 1</button><button class="btn sm ${slot===1?'':'ghost'} cut" data-eq="${id}" data-slot="1">Slot 2</button></div>${ownExtra('gun',id)}`:lock?lockRow(gunReq(id)):buyBox('gun',id,`data-buy="${id}"`)}</div>`;}
     h+=`<div class="lbl2" style="grid-column:1/-1">Knives · used in Knives Only and after you drop your gun</div>`;
@@ -6493,6 +6721,8 @@ function renderShop(){
       h+=`<div class="item ${on?'eq':''} ${lock?'locked':''} ${shopPv.gun===id?'pv':''}" data-pv="gun:${id}">${img(gunThumb(id,'none',null))}<div class="ty">knife · level ${gunReq(id)}</div><h3>${w.name}</h3>${dsc(w.desc)}
       ${bar('DAMAGE',w.stats[0])}${bar('SPEED',w.stats[1])}
       ${own?`<button class="btn sm ${on?'':'ghost'} cut" data-knife="${id}">${on?'Equipped':'Equip'}</button>${ownExtra('knife',id)}`:lock?lockRow(gunReq(id)):buyBox('knife',id,`data-buyknife="${id}"`)}</div>`;}
+  }else if(shopTab==='boxes'){
+    h+=`<div class="lbl2" style="grid-column:1/-1">Mystery boxes · a random gun from any level, yours to keep · the odds are on every box</div>`+Object.keys(BOXES).map(boxCard).join('');
   }else if(shopTab==='armor'){
     h+=gearCards('item',false);
   }else if(shopTab==='att'){
@@ -6570,9 +6800,62 @@ $('shopGrid').addEventListener('click',e=>{
     for(const c of $('shopGrid').querySelectorAll('[data-pv]'))c.classList.toggle('pv',c===card);return;}
   const b=e.target.closest('button');if(!b||b.disabled)return;
   if(b.dataset.go==='shop'){return;}
+  if(b.dataset.box){openBox(b.dataset.box);return;}
   if(b.dataset.sheet){openSheet(b);return;}
   shopBtn(b);
 });
+
+/* ================= gun classes and mystery boxes =================
+   Every gun is labelled by strength: Rookie (opens by level 12), Veteran (13-30), Elite (31+).
+   Three boxes in the Store, paid with GP:
+     Rookie  50,000  a random Weak gun: forever (35%) or for 90 days (65%)
+     Veteran 150,000 a random Medium gun, forever
+     Elite   300,000 a random Epic gun + a Rare/Epic/Legendary skin + an Epic/Legendary title, all forever
+   A box only gives things you do not already own forever; a part with nothing left to give pays its share back in GP. */
+const GCLS={weak:{n:'Rookie',c:'#9aa3ad'},medium:{n:'Veteran',c:'#5b9cf0'},epic:{n:'Elite',c:'#b96cf0'}};
+const gunClass=id=>{const r=gunReq(id);return r<=12?'weak':r<=30?'medium':'epic';};
+const gclsTag=id=>{const k=gunClass(id);return `<span class="gcls g-${k}">${GCLS[k].n}</span>`;};
+const BOXES={
+  rookie:{n:'Rookie Box',price:50000,cls:'weak',permP:.35,col:'#9aa3ad',t:'A Rookie gun · forever or 90 days',refund:25000},
+  veteran:{n:'Veteran Box',price:150000,cls:'medium',permP:1,col:'#5b9cf0',t:'A Veteran gun · forever',refund:75000},
+  elite:{n:'Elite Box',price:300000,cls:'epic',permP:1,col:'#b96cf0',t:'An Elite gun + a top skin + a top title · all forever',refund:100000,extra:true}
+};
+const permGun=id=>profile.owned.includes(id)&&!rentInfo('gun',id);
+function boxPools(k){const B=BOXES[k];
+  const guns=WORDER.filter(id=>id!=='ak47'&&id!=='p9'&&id!=='rpg'&&gunClass(id)===B.cls&&!permGun(id));
+  const skins=B.extra?Object.keys(CHARS).filter(id=>(CHARS[id].tier|0)>=3&&!(profile.skins||[]).includes(id)):[];
+  const titles=B.extra?Object.keys(TITLES).filter(id=>TITLES[id].t>=3&&TITLES[id].t<=4&&!(profile.titles||[]).includes(id)):[];
+  return {guns,skins,titles};}
+const boxEmpty=k=>{const P=boxPools(k);return !P.guns.length&&!P.skins.length&&!P.titles.length;};
+const boxPick=a=>a[Math.floor(Math.random()*a.length)];
+function boxCard(k){const B=BOXES[k],P=boxPools(k),empty=boxEmpty(k),poor=profile.gp<B.price;
+  const odds=P.guns.length?`Each gun 1 in ${P.guns.length}`+(B.permP<1?` · forever ${Math.round(B.permP*100)}%, 90 days ${Math.round((1-B.permP)*100)}%`:''):'You own every gun in it';
+  return `<div class="item boxCard" style="--bc:${B.col}"><div class="tierline" style="background:${B.col}"></div><div class="boxArt"><span>?</span></div>
+    <div class="ty">mystery box · ${GCLS[B.cls].n.toLowerCase()} guns</div><h3>${B.n}</h3><div class="boxT">${B.t}</div><div class="boxOdds">${odds}</div>
+    <div class="row buyRow"><span class="price">${B.price.toLocaleString()} GP</span><button class="btn sm cut buyOpen" data-box="${k}" ${empty?'disabled':''}>${empty?'All owned':'Open ›'}</button></div></div>`;}
+function openBox(k){const B=BOXES[k];if(!B)return;
+  if(boxEmpty(k)){toast('You already own everything in the '+B.n+'.');return;}
+  if(profile.gp<B.price){toast('The '+B.n+' costs '+B.price.toLocaleString()+' GP. You need '+(B.price-profile.gp).toLocaleString()+' more.');return;}
+  if(!confirm('Open the '+B.n+' for '+B.price.toLocaleString()+' GP?'))return;
+  const P=boxPools(k),got=[];let refund=0;profile.gp-=B.price;profile.rent=profile.rent||{};
+  if(P.guns.length){const id=boxPick(P.guns),perm=Math.random()<B.permP,key=ikey('gun',id);
+    if(!profile.owned.includes(id))profile.owned.push(id);
+    if(perm){delete profile.rent[key];got.push({kind:'gun',id,txt:WEAPONS[id].name,sub:'Forever'});}
+    else{const now=rNow(),r=profile.rent[key]||{e:now,d:0,p:0};r.e=Math.max(r.e||now,now)+90*DAY;r.d=(r.d||0)+90*DAY;profile.rent[key]=r;got.push({kind:'gun',id,txt:WEAPONS[id].name,sub:'90 days'});}
+    try{markNew('gun',id);}catch(e){}}
+  else refund+=B.refund;
+  if(B.extra){
+    if(P.skins.length){const id=boxPick(P.skins);(profile.skins=profile.skins||[]).push(id);got.push({kind:'skin',id,txt:CHARS[id].name+' skin',sub:'Forever'});try{markNew('skin',id);}catch(e){}}else refund+=B.refund;
+    if(P.titles.length){const id=boxPick(P.titles);(profile.titles=profile.titles||[]).push(id);got.push({kind:'title',id,txt:'“'+TITLES[id].n+'” title',sub:'Forever'});try{markNew('title',id);}catch(e){}}else refund+=B.refund;}
+  if(refund){profile.gp+=refund;got.push({kind:'gp',txt:'+'+refund.toLocaleString()+' GP',sub:'for parts you already own'});}
+  saveProfile();try{sfx.ding();}catch(e){}renderShop();showBoxReveal(k,got);}
+function showBoxReveal(k,got){const B=BOXES[k];let el=$('boxReveal');
+  if(!el){el=document.createElement('div');el.id='boxReveal';el.setAttribute('role','dialog');el.setAttribute('aria-modal','true');$('shop').appendChild(el);
+    el.addEventListener('click',e=>{const b=e.target.closest('button');if(e.target===el||(b&&b.dataset.bxclose!==undefined)){el.hidden=true;el.innerHTML='';return;}
+      if(b&&b.dataset.bxeq){const id=b.dataset.bxeq;const o=profile.slots[1]===id?1:0;profile.slots[o]=id;saveProfile();renderShop();b.textContent='Equipped ✓';b.disabled=true;}});}
+  const row=g=>`<div class="bxRow">${g.kind==='gun'?`<div class="bxImg">${(()=>{try{return `<img src="${gunThumb(g.id,'none')}" alt="">`;}catch(e){return '';}})()}</div>`:`<div class="bxImg bxIc">${g.kind==='skin'?'🧍':g.kind==='title'?'🏷':'💰'}</div>`}
+    <div class="bxTx"><b>${esc(g.txt)}</b><small>${g.kind==='gun'?GCLS[gunClass(g.id)].n+' · ':''}${esc(g.sub)}</small></div>${g.kind==='gun'?`<button class="btn sm cut" data-bxeq="${g.id}">Equip</button>`:''}</div>`;
+  el.innerHTML=`<div class="bxCard" style="--bc:${B.col}"><div class="bxHead">${B.n} · you got</div>${got.map(row).join('')}<button class="btn cut bxOk" data-bxclose>Great</button></div>`;el.hidden=false;}
 // every store action (cards and the purchase window run the same code)
 function shopBtn(b){
   if(b.dataset.dur){rentSel=b.dataset.dur;renderShop();return;}
@@ -6874,7 +7157,7 @@ $('crateOpen').addEventListener('click',()=>{
 });
 
 /* ================= match flow ================= */
-function resetMatch(inMatch){REACH.key='';
+function resetMatch(inMatch){REACH.key='';try{if(TUT.on){TUT.on=false;document.body.classList.remove('tutOn');$('tutBox').hidden=true;}}catch(e){}
   xmStop();
   $('zTip').hidden=true;PB.clear();buildHeld=false;ghost.visible=false;
   genWorld();rebuildWorld();
@@ -6897,9 +7180,41 @@ function resetMatch(inMatch){REACH.key='';
   $('score').hidden=isZ();$('zhud').hidden=!isZ();$('streak').hidden=isZ();$('gas').hidden=true;$('tmHp').hidden=true;mateOn=null;
   if(!inMatch)player.alive=false;
 }
+
+/* ================= first match: a short guided start for brand-new players =================
+   Four quick steps on top of a normal match (move, look, shoot, build). You cannot die while it runs,
+   it can be skipped, and finishing it pays 1,000 GP. Players who already played never see it. */
+const TUT={on:false,step:0,t:0,x:0,z:0,yaw:0,turn:0,shots:0,build:0};
+const TUT_STEPS=()=>[
+  {h:'Move',b:isTouch?'Drag the left stick to walk.':'Walk with W A S D.'},
+  {h:'Look around',b:isTouch?'Drag on the right side of the screen to turn.':'Move the mouse to turn.'},
+  {h:'Shoot',b:isTouch?'Hold FIRE to shoot. Aim at a red enemy.':'Click to shoot. Aim at a red enemy.'},
+  {h:'Build cover',b:isTouch?'Tap BUILD to see the block, then tap BUILD again to place it.':'Press Q to see the block, then Q again to place it.'}];
+function tutEl(){let d=$('tutBox');if(!d){d=document.createElement('div');d.id='tutBox';d.setAttribute('role','status');document.body.appendChild(d);
+  d.addEventListener('click',e=>{if(e.target.closest('[data-tskip]'))tutEnd(false);});}return d;}
+function tutStart(){try{if(profile.tutDone)return;if(!profile.tutForce&&((ST().matches|0)>0||(profile.xp|0)>0)){profile.tutDone=true;return;}
+  if(NET.mode||isZ()||XM.on||RS.on||KG.on||MM()==='knife'||MM()==='sniper'||MM()==='boom')return;
+  Object.assign(TUT,{on:true,step:0,t:0,x:player.x,z:player.z,yaw:player.yaw,turn:0,shots:ST().shots|0,build:buildLeft});player.spawnProt=1e9;document.body.classList.add('tutOn');tutShow();}catch(e){reportErr('tut',e);}}
+function tutShow(){const S=TUT_STEPS()[TUT.step],d=tutEl();if(!S){d.hidden=true;return;}
+  d.innerHTML=`<div class="tutN">Step ${TUT.step+1} of 4</div><b>${S.h}</b><span>${S.b}</span><button class="tutSkip" data-tskip aria-label="Skip the guide">Skip guide ✕</button>`;d.hidden=false;d.classList.remove('tutOk');}
+function tutNext(){TUT.step++;try{sfx.ding();}catch(e){}if(TUT.step>=4){tutEnd(true);return;}
+  TUT.x=player.x;TUT.z=player.z;TUT.yaw=player.yaw;TUT.turn=0;TUT.shots=ST().shots|0;TUT.build=buildLeft;tutShow();}
+function tutEnd(done){if(!TUT.on)return;TUT.on=false;document.body.classList.remove('tutOn');profile.tutDone=true;profile.tutForce=false;player.spawnProt=1.5;
+  if(done){const pay=!profile.tutPaid;if(pay){profile.gp+=1000;profile.tutPaid=true;}const d=tutEl();d.innerHTML=`<b>Nice work!</b><span>That is all you need.${pay?' +1,000 GP.':''} Now win the match.</span>`;d.classList.add('tutOk');d.hidden=false;setTimeout(()=>{d.hidden=true;},3500);}
+  else{const d=$('tutBox');if(d)d.hidden=true;try{toast('Guide skipped. You can turn it back on in Settings.');}catch(e){}}
+  saveProfile();}
+function tutTick(dt){if(!TUT.on)return;if(state!=='play'){TUT.on=false;document.body.classList.remove('tutOn');const d=$('tutBox');if(d)d.hidden=true;return;}
+  TUT.t+=dt;player.spawnProt=Math.max(player.spawnProt||0,1);
+  let a=player.yaw-TUT.yaw;a=Math.atan2(Math.sin(a),Math.cos(a));TUT.turn+=Math.abs(a);TUT.yaw=player.yaw;
+  if(TUT.step===0&&Math.hypot(player.x-TUT.x,player.z-TUT.z)>3)tutNext();
+  else if(TUT.step===1&&TUT.turn>1.4)tutNext();
+  else if(TUT.step===2&&(ST().shots|0)-TUT.shots>=5)tutNext();
+  else if(TUT.step===3&&buildLeft<TUT.build)tutNext();
+  if(TUT.t>150)tutEnd(false);}
 function startMatch(){roomRegSoon();try{gfxSpare();}catch(e){}try{sndWarm();}catch(e){}
   initAudio();loadHide();
   state='play';paused=false;player.name=isClient()&&NET.myName?NET.myName:profile.name;
+  TUT.on=false;setTimeout(()=>{if(state==='play'&&!paused)tutStart();},2500);
   ['menu','end','shop','crate','mp','acct','settings','char','lb'].forEach(id=>$(id).hidden=true);$('hud').hidden=false;$('touch').hidden=!isTouch;
   if(isZ()){player.team='blue';if(isHost())for(const r of [...NET.remotes.values()])hostSetTeam(r,'blue');}
   resetMatch(true);setSprintLock(false);touch.sprintId=null;setCrouch(false);tipStart();
@@ -6984,6 +7299,17 @@ function openLobby(browse){NET.err='';if(browse&&!NET.mode&&mpAvailable()){NET.b
 function toggleReady(){if(!isClient())return;NET.ready=!NET.ready;try{NET.host.send({t:'rdy',v:NET.ready});}catch(e){}renderMPPill();renderMP();renderHome();}
 function lobbyStart(){goFull();if(isClient()){toggleReady();return;}if(isHost()&&!mpAllReady()){toast('Waiting for everyone to press Ready');return;}if(LD.on)return;loadThen(startMatch);}
 $('play').addEventListener('click',()=>{goFull();openLobby(true);});
+// one tap into a match: the fullest open public room that still has a seat, or a bot match right away
+const QP={busy:false};
+async function quickPlay(){if(QP.busy||state==='play')return;QP.busy=true;goFull();
+  try{if(mpAvailable()&&!isKid()&&cloudOn()&&navigator.onLine!==false&&!NET.mode){
+      $('quickPlay').textContent='Searching…';await roomsFetch(true);
+      const R=(NET.rooms||[]).filter(r=>!r.locked&&(r.players|0)>0&&(r.players|0)<(r.max|0)&&!roomLate(r)&&r.state!=='ended'&&!isBlocked(r.host_name)).sort((a,b)=>(b.players|0)-(a.players|0));
+      if(R.length){toast('Joining '+String(R[0].host_name||'a room').slice(0,16)+'…');mpJoin(R[0].code);return;}}
+    toast('No open room right now: starting a match with bots.');loadThen(startMatch);}
+  catch(e){reportErr('quickplay',e);loadThen(startMatch);}
+  finally{QP.busy=false;try{$('quickPlay').textContent='⚡ Quick play';}catch(e){}}}
+$('quickPlay').addEventListener('click',quickPlay);
 $('navPlay').addEventListener('click',()=>{for(const id of['char','lb','shop','crate','acct','settings','mp'])$(id).hidden=true;renderProfile();});
 function backToMenu(){roomRegSoon();$('end').hidden=true;state='menu';if(isHost())setTimeout(()=>{try{netRoster();}catch(e){}},0);if(isClient()&&MAPS[NET.mapKey])MAP=MAPS[NET.mapKey];const lm=rollDaily();if(lm)toast(lm);resetMatch(false);renderProfile();$('menu').hidden=false;}
 $('again').addEventListener('click',()=>{if(NET.mode){backToMenu();openLobby();if(isClient()&&!NET.ready)toggleReady();}else{$('end').hidden=true;state='menu';resetMatch(false);loadThen(startMatch);}});
@@ -8141,7 +8467,7 @@ function modeInfoKey(){const m=modeOf(MAP.key),r=RULE();if(XRULES.includes(r))re
 function loadShow(){const I=MODE_INFO[modeInfoKey()]||MODE_INFO.tdm;LD.on=true;LD.t=0;LD.shot=I.shot;LD.fx=1.2;LD.a0=rand()*Math.PI*2;LD.end=performance.now()+LOADMS;
   $('ldTag').textContent=I.tag;$('ldH').textContent=I.h;$('ldT').textContent=I.t;$('ldB').innerHTML=I.b.map(x=>`<li>${esc(x)}</li>`).join('');
   $('ldMap').textContent=MAP.name;$('ldBar').style.transition='none';$('ldBar').style.width='0%';
-  ['menu','end','shop','crate','mp','acct','settings','char','lb','inbox','cal'].forEach(id=>{const el=$(id);if(el)el.hidden=true;});
+  ['menu','end','shop','crate','mp','acct','settings','char','lb','inbox','cal','friends','season'].forEach(id=>{const el=$(id);if(el)el.hidden=true;});
   $('load').hidden=false;void $('load').offsetWidth;$('ldBar').style.transition=`width ${LOADMS/1000}s linear`;$('ldBar').style.width='100%';
   // the hero of the scene: a giant king for King mode
   if(LD.shot==='king'){const L=bots.filter(b=>b.alive&&b.inMatch!==false&&b.mesh);LD.king=L[(rand()*L.length)|0]||null;
@@ -8799,7 +9125,7 @@ function step(dt,now){
   }else if(!paused){
     matchT-=dt;if(streakT>0)streakT-=dt;
     updatePlayer(dt);
-    for(const b of bots)updateBot(b,dt);liquidTick(dt);rsTick(dt);kgTick(dt);kgAnim(dt);crAnim(dt);xmTick(dt);
+    for(const b of bots)updateBot(b,dt);liquidTick(dt);rsTick(dt);kgTick(dt);kgAnim(dt);tutTick(dt);crAnim(dt);xmTick(dt);
     if(isHost())hostTick(dt);
     if(isZ()){zUpdate(dt);if(state==='play')zTick(dt);}
     if(state!=='play')return;
