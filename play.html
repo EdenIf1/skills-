@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-0DyOAhECJE3vXFXcwNw4h8mO8gGu9ipiVydQh+qgfGc=' 'sha256-wIregKOVlon/79hlul1NRRb6XtJesbbsKM1/qOOYu4k=' 'unsafe-eval'; script-src-attr 'none'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; media-src 'self' data: blob:; connect-src 'self' https: wss: data: blob: http://127.0.0.1:* ws://127.0.0.1:* http://localhost:* ws://localhost:*; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'; frame-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-0DyOAhECJE3vXFXcwNw4h8mO8gGu9ipiVydQh+qgfGc=' 'sha256-ywq4bEiSp4rcG8rnMQqoU/wd9p1jlXpSLegg8d4pTq4=' 'unsafe-eval'; script-src-attr 'none'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; media-src 'self' data: blob:; connect-src 'self' https: wss: data: blob: http://127.0.0.1:* ws://127.0.0.1:* http://localhost:* ws://localhost:*; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'; frame-src 'none'">
 <meta name="referrer" content="no-referrer">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
@@ -185,7 +185,7 @@ body.touch #blocksHud{display:none}
 #streak span.on{border-color:var(--amber);color:#1a1206;background:var(--amber)}
 
 #dmgDir{position:absolute;left:50%;top:50%;width:0;height:0;pointer-events:none}
-#dmgDir i{position:absolute;left:-130px;top:-130px;width:260px;height:260px;border-radius:50%;border-top:7px solid rgba(255,40,30,.9);filter:drop-shadow(0 0 6px rgba(255,0,0,.7));-webkit-mask:linear-gradient(90deg,transparent 28%,#000 42%,#000 58%,transparent 72%);mask:linear-gradient(90deg,transparent 28%,#000 42%,#000 58%,transparent 72%)}
+#dmgDir i{position:absolute;left:-130px;top:-130px;width:260px;height:260px;box-sizing:border-box;border-radius:50%;border:7px solid transparent;border-top-color:rgba(255,40,30,.92);display:none;will-change:transform,opacity}#dmgDir i.on{display:block}
 body.touch #dmgDir i{left:-100px;top:-100px;width:200px;height:200px}
 #vig{position:absolute;inset:0;background:radial-gradient(ellipse at center,transparent 45%,rgba(200,20,20,.75) 100%);opacity:0}
 #death{position:absolute;left:50%;top:40%;transform:translate(-50%,-50%);text-align:center;background:var(--panel);padding:12px 26px 8px;min-width:240px}
@@ -1698,7 +1698,7 @@ async function adminClaim(code){if(!CS||CS.guest)return 'Sign in to your own acc
   if(r.ok){CS.admin=true;cloudKeep();return '';}const e=r.j&&r.j.error;
   return !r.status?'No connection to the server.':e==='code'?'That code is not right.':e==='taken'?'This game already has its admin.':e==='guest'?'Guest accounts cannot be admins. Create your account first.':'The server said no (error '+r.status+').';}
 /* ================= version, remote settings, crash reports ================= */
-const APP_VERSION='1.4.1',BUILD_ID='4a08bd7';
+const APP_VERSION='1.4.2',BUILD_ID='573e9ba';
 const verNum=v=>String(v||'0').split('.').slice(0,3).map(n=>parseInt(n)||0).reduce((a,n)=>a*1000+n,0);
 let RCFG={};try{RCFG=JSON.parse(localStorage.getItem('blockfire.rcfg')||'{}')||{};}catch(e){RCFG={};}
 const feat=k=>!(RCFG.features&&RCFG.features[k]===false);
@@ -5271,14 +5271,21 @@ function zGameOver(win){
 }
 
 /* ================= feel: where hits come from, footsteps, touch aim assist ================= */
-const dmgArcs=[];
-function showDmgDir(x,z){
-  const box=$('dmgDir');if(!box)return;while(dmgArcs.length>=4){const o=dmgArcs.shift();o.el.remove();}
-  const el=document.createElement('i');box.appendChild(el);dmgArcs.push({el,x,z,t:1.1});
+// four arcs made once and reused: a stream of hits (a king under minigun fire) only refreshes them,
+// it never builds new screen layers (that churn is what made iPhones drop the graphics)
+const dmgArcs=[];let dmgPool=null;
+function dmgArcPool(){if(dmgPool)return dmgPool;const box=$('dmgDir');if(!box)return null;dmgPool=[];for(let i=0;i<4;i++){const el=document.createElement('i');box.appendChild(el);dmgPool.push({el,x:0,z:0,t:0,live:false,rot:'',op:''});}return dmgPool;}
+function showDmgDir(x,z){const P=dmgArcPool();if(!P)return;
+  const ang=Math.atan2(-(x-player.x),-(z-player.z));
+  // same direction as a live arc: just keep it lit
+  for(const a of P){if(!a.live)continue;const d=Math.abs(((Math.atan2(-(a.x-player.x),-(a.z-player.z))-ang+Math.PI*3)%(Math.PI*2))-Math.PI);if(d<.45){a.x=x;a.z=z;a.t=1.1;return;}}
+  let a=P.find(q=>!q.live);if(!a){a=P.reduce((m,q)=>q.t<m.t?q:m,P[0]);}
+  a.x=x;a.z=z;a.t=1.1;if(!a.live){a.live=true;a.el.classList.add('on');dmgArcs.push(a);}
 }
 function updateDmgDir(dt){
-  for(let i=dmgArcs.length-1;i>=0;i--){const a=dmgArcs[i];a.t-=dt;if(a.t<=0){a.el.remove();dmgArcs.splice(i,1);continue;}
-    const w=Math.atan2(-(a.x-player.x),-(a.z-player.z)),rel=w-player.yaw;a.el.style.transform=`rotate(${(-rel*180/Math.PI).toFixed(1)}deg)`;a.el.style.opacity=Math.min(1,a.t*1.6).toFixed(2);}
+  for(let i=dmgArcs.length-1;i>=0;i--){const a=dmgArcs[i];a.t-=dt;if(a.t<=0){a.live=false;a.el.classList.remove('on');dmgArcs.splice(i,1);continue;}
+    const w=Math.atan2(-(a.x-player.x),-(a.z-player.z)),rel=w-player.yaw,rot=`rotate(${(-rel*180/Math.PI).toFixed(0)}deg)`,op=Math.min(1,a.t*1.6).toFixed(1);
+    if(rot!==a.rot){a.rot=rot;a.el.style.transform=rot;}if(op!==a.op){a.op=op;a.el.style.opacity=op;}}
 }
 // footsteps: yours quietly, others' from their direction (the 4 closest only)
 let myStep=0;
@@ -6890,7 +6897,7 @@ function resetMatch(inMatch){REACH.key='';
   try{if(bankMatch())saveProfile();}catch(e){}match={gp:0,xp:0,heads:0,best:0,kills:0};callN=0;callToldT=0;for(const e of ents){e.airOwed=0;e.nukeOwed=0;}blindT=0;
   $('goalTxt').textContent=`First to ${GOAL}`;
   for(const g of projs){scene.remove(g.m);if(g.snd)sfx.stopLoop(g.snd);}projs.length=0;parts.length=0;tracers.length=0;
-  clearDrops();stashReset();for(const a of dmgArcs)a.el.remove();dmgArcs.length=0;fires.length=0;for(const s of smokes){for(const p of s.sp)scene.remove(p);s.mat.dispose();}smokes.length=0;for(const m of mines)scene.remove(m.m);mines.length=0;
+  clearDrops();stashReset();for(const a of dmgArcs){a.live=false;a.el.classList.remove('on');}dmgArcs.length=0;fires.length=0;for(const s of smokes){for(const p of s.sp)scene.remove(p);s.mat.dispose();}smokes.length=0;for(const m of mines)scene.remove(m.m);mines.length=0;
   cineClear();fkClear();recReset();
   matchId++;
   feedEl.innerHTML='';msgsEl.innerHTML='';
