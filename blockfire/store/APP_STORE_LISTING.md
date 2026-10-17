@@ -32,7 +32,7 @@ BUILD COVER MID-FIGHT
 Pinned down? Throw up a wall. Place dirt, wood, glass, sandbags, brick, concrete or steel blocks wherever you aim. Every block you build can be shot or blown up, even on the Indestructible map, so the battlefield keeps changing.
 
 6V6 AND 12V12 BLOCK WAR
-Elimination, Elimination Pro (one life a round), Search & Destroy (plant or defuse the bomb at site A or B), Kill the King (one giant king a side), Knives Only, Snipers Only, Indestructible and the giant 12v12 Frontline across eleven hand-built maps: frozen pines with slippery ice, a glass city, a lava forge, a harbor with deep water, a throne hall and more. Bots fill every empty spot at the difficulty you pick (easy, medium or hard), so a match is always ready.
+Elimination, Elimination Pro (one life a round), Search & Destroy (plant or defuse the bomb at site A or B), Kill the King (one giant king a side), Knives Only, Snipers Only, Indestructible and the giant 12v12 Frontline across nine battle maps: Old Town, Rail Yard, Outpost with its sniper houses, a farm full of animals, a Giant House, Moon Base, Deep Forest, burning Downtown and The Code. Every map plays every mode. Bots fill every empty spot at the difficulty you pick (easy, medium or hard), so a match is always ready.
 
 9 PARTY MODES
 Gun Game, Capture the Flag, Domination, Free-for-All, Infected, Hardpoint, Battle Royale, One in the Chamber and Build Battle. Every match ends on a Game Over screen with the winners' podium, and when you are out you watch your teammates live until the next round.
@@ -47,7 +47,7 @@ A FULL ARMORY
 20 guns that unlock as you level up: rifles, SMGs, shotguns, LMGs, snipers, pistols and a rocket launcher, each with its own sound. Five grenade types, three knives, an airstrike you aim from a tablet and a nuclear strike for a 15-kill streak. Find the secret weapons stash hidden somewhere on every map. Fit scopes, grips and extended mags, and see every attachment and camo in a live 3D preview before you buy.
 
 RENT IT OR OWN IT
-Not sure about a gun? Rent it for 1 day, 3 days, a week, a month or 90 days, or buy it forever. Skins, gear, camos and attachments work the same way. Changed your mind? Sell anything you own forever back for 70% of what you paid. One item is 25% off every day.
+Not sure about a gun? Tap it and pick 1 day, 3 days, a week, a month or 90 days, or buy it forever, with every price and the end date shown before you pay. Skins, gear, camos and attachments work the same way. Changed your mind? Sell anything you own forever back for 70% of what you paid. One item is 25% off every day.
 
 GEAR UP
 Helmets, vests, gloves, boots and more add health, a regenerating shield or extra speed. Build a tank or a runner.
@@ -56,7 +56,7 @@ LOOT WITH SIX RARITIES
 Open supply crates for camos, character skins, building blocks, titles, banners and kill effects, from Common to Mythic. Odds are always shown, duplicates turn into GP, and a pity counter guarantees an Epic or better within 30 crates.
 
 MAKE IT YOURS
-Skins, camos, hit-effect colors, titles, banners and loadouts. Move every touch button where you like it. Level up, earn GP, open a gift every day of the month, finish daily challenges and climb the leaderboards.
+Skins (your gear takes your skin's colors), camos, hit-effect colors, titles, banners and loadouts. Pick your callsign once; changing it later costs 500,000 GP. Move every touch button where you like it. Level up, earn GP, open a gift every day of the month, finish daily challenges and climb the leaderboards.
 
 Built for iPhone: smooth touch controls with a second fire button, aim assist, haptics, and full offline single-player.
 
@@ -64,7 +64,7 @@ Built for iPhone: smooth touch controls with a second fire button, aim assist, h
 block,shooter,fps,pixel,voxel,multiplayer,zombies,build,sniper,cubes,friends,battle royale,arena
 
 ## What's new (version 1.0.0)
-First release on the App Store: 9 party modes, Kill the King, Search & Destroy, Zombies with hounds and a three-storey safehouse, a live lobby of open rooms, eleven maps including 12v12 Frontline, 20 guns, bot difficulty, a secret weapons stash, gear with shields, a daily gift calendar, building, six-rarity crates, online accounts and much more.
+First release on the App Store: 9 party modes, Kill the King, Search & Destroy, Zombies with hounds and a three-storey safehouse, a live lobby of open rooms, nine battle maps plus the Zombies safehouse, 12v12 Frontline, 20 guns, bot difficulty, a secret weapons stash, gear with shields, a daily gift calendar, building, six-rarity crates, online accounts and much more.
 
 ## Age rating answers (Apple's 2025 questionnaire; expect 13+)
 | Question | Answer |

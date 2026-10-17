@@ -22,10 +22,12 @@
 6. **Test in TestFlight** on your phone and your friends' phones.
 7. **Fill in the store page** from store/APP_STORE_LISTING.md, upload the screenshots from store/screenshots, and Submit for Review.
 
-## Open items (as of 12 October 2026)
+## Open items (updated 17 October 2026)
+- [x] Game version 1.4.1 is inside the app; store screenshots retaken on 17 Oct with the new store, gold gear and current maps.
+- [x] Store description matches the game (nine battle maps + Zombies safehouse).
 - [x] GitHub Pages is on: edenif1.github.io/skills-/privacy.html and support.html open for everyone (checked in a private tab).
-- [ ] **Final app name**: still being decided. When it is picked, change it in the game title and logo, Info.plist (CFBundleDisplayName), capacitor.config.json (appName), the App Store listing, the legal pages and the icon. Check that the name is free in the App Store and as a trademark.
-- [ ] **Support email**: add it to support.html, privacy.html and terms.html (Apple wants a published contact).
+- [x] **App name: Cubefront** (in the game, Info.plist, capacitor.config.json and the listing). A web search on 17 Oct 2026 found no app or game with this name; still check the App Store search and a trademark database (USPTO / EUIPO) yourself before submitting. Old note: When it is picked, change it in the game title and logo, Info.plist (CFBundleDisplayName), capacitor.config.json (appName), the App Store listing, the legal pages and the icon. Check that the name is free in the App Store and as a trademark.
+- [x] **Support contact**: support.html has a contact form (messages land in the admin panel) and a deletion section. No personal email is published. If Apple asks for an email, add a dedicated support address (not a personal one).
 - [ ] **Apple Developer account** ($99/year), then create the app in App Store Connect and add the 4 GitHub secrets.
 - [ ] **Test account** for the App Review notes (never in the repository).
 
