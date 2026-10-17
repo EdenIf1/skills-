@@ -44,7 +44,7 @@ HOLD THE HOUSE
 Team up against waves of zombies in a three-storey safehouse. Board the windows, buy weapons off the walls, hit the mystery box, grab the gas mask upstairs, see your teammates' health at a glance, and hold out against brutes, venom spitters and packs of exploding hounds across four difficulty levels.
 
 A FULL ARMORY
-20 guns that unlock as you level up: rifles, SMGs, shotguns, LMGs, snipers, pistols and a rocket launcher, each with its own sound. Five grenade types, three knives, an airstrike you aim from a tablet and a nuclear strike for a 15-kill streak. Find the secret weapons stash hidden somewhere on every map. Fit scopes, grips and extended mags, and see every attachment and camo in a live 3D preview before you buy.
+40 guns that unlock as you level up: rifles, SMGs, shotguns, LMGs, snipers, pistols and a rocket launcher, each with its own sound and labelled Rookie, Veteran or Elite. Or try your luck with Rookie, Veteran and Elite mystery boxes (bought with in-game GP, odds always shown). Five grenade types, three knives, an airstrike you aim from a tablet and a nuclear strike for a 15-kill streak. Find the secret weapons stash hidden somewhere on every map. Fit scopes, grips and extended mags, and see every attachment and camo in a live 3D preview before you buy.
 
 RENT IT OR OWN IT
 Not sure about a gun? Tap it and pick 1 day, 3 days, a week, a month or 90 days, or buy it forever, with every price and the end date shown before you pay. Skins, gear, camos and attachments work the same way. Changed your mind? Sell anything you own forever back for 70% of what you paid. One item is 25% off every day.
@@ -64,7 +64,7 @@ Built for iPhone: smooth touch controls with a second fire button, aim assist, h
 block,shooter,fps,pixel,voxel,multiplayer,zombies,build,sniper,cubes,friends,battle royale,arena
 
 ## What's new (version 1.0.0)
-First release on the App Store: 9 party modes, Kill the King, Search & Destroy, Zombies with hounds and a three-storey safehouse, a live lobby of open rooms, nine battle maps plus the Zombies safehouse, 12v12 Frontline, 20 guns, bot difficulty, a secret weapons stash, gear with shields, a daily gift calendar, building, six-rarity crates, online accounts and much more.
+First release on the App Store: 9 party modes, Kill the King, Search & Destroy, Zombies with hounds and a three-storey safehouse, a live lobby of open rooms, nine battle maps plus the Zombies safehouse, 12v12 Frontline, 40 guns, mystery boxes, bot difficulty, a secret weapons stash, gear with shields, a daily gift calendar, building, six-rarity crates, online accounts and much more.
 
 ## Age rating answers (Apple's 2025 questionnaire; expect 13+)
 | Question | Answer |
