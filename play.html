@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-0DyOAhECJE3vXFXcwNw4h8mO8gGu9ipiVydQh+qgfGc=' 'sha256-AmH0FM4C0bIxcKhVVPU1xM/eOX/lqFXM4euE889q1ZI=' 'unsafe-eval'; script-src-attr 'none'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; media-src 'self' data: blob:; connect-src 'self' https: wss: data: blob: http://127.0.0.1:* ws://127.0.0.1:* http://localhost:* ws://localhost:*; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'; frame-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-0DyOAhECJE3vXFXcwNw4h8mO8gGu9ipiVydQh+qgfGc=' 'sha256-wIregKOVlon/79hlul1NRRb6XtJesbbsKM1/qOOYu4k=' 'unsafe-eval'; script-src-attr 'none'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; media-src 'self' data: blob:; connect-src 'self' https: wss: data: blob: http://127.0.0.1:* ws://127.0.0.1:* http://localhost:* ws://localhost:*; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'; frame-src 'none'">
 <meta name="referrer" content="no-referrer">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
@@ -955,6 +955,9 @@ body.cine #hud>*:not(#nukeFlash),body.cine #touch,body.cine #airTab{visibility:h
 @media (max-height:500px) and (max-width:700px){.bsChips{grid-template-columns:repeat(3,minmax(0,1fr))}.bsChip{min-height:40px}}
 #shop .btn.sm.isOn{background:transparent;color:#f4b545;box-shadow:inset 0 0 0 2px #f4b545}
 #shop .btn.sm.isOn::before{content:'✓ '}
+#end .eBtns .btn{letter-spacing:.06em;padding-left:4px!important;padding-right:4px!important;text-overflow:clip!important}
+.setHint{display:block;font:400 12px/1.25 var(--f-body);color:var(--dim);letter-spacing:0;text-transform:none;margin-top:2px;max-width:340px}
+.cnRow{display:flex;gap:6px;align-items:center}.cnRow input{flex:1;min-width:0}.cnRow input[readonly]{border-bottom-color:transparent;cursor:default}.cnRow .btn{flex:none;padding:3px 8px;font-size:13px;white-space:nowrap}.cnRow .btn.go{background:var(--amber,#f4b545);color:#1b1305}
 </style>
 </head>
 <body>
@@ -1119,6 +1122,7 @@ body.cine #hud>*:not(#nukeFlash),body.cine #touch,body.cine #airTab{visibility:h
   <div class="sheet cut">
     <div class="shopHead"><h2>ADMIN</h2><button class="btn sm ghost cut" id="admClose">Close</button></div>
     <div class="tabs" id="admTabs"><button class="chip on" data-adt="cfg">Game settings</button><button class="chip" data-adt="msg">Player messages</button><button class="chip" data-adt="err">Crash reports</button><button class="chip" data-adt="ban">Bans</button></div>
+    <div class="row" style="margin:6px 0"><a class="btn sm ghost cut" id="admHQ" href="https://cubefront-hq.floot.app/admin" target="_blank" rel="noopener">Open full dashboard ↗</a></div>
     <div id="admBody"></div>
   </div>
 </div>
@@ -1160,7 +1164,7 @@ body.cine #hud>*:not(#nukeFlash),body.cine #touch,body.cine #airTab{visibility:h
     <div class="shopHead"><h2>CHARACTER</h2><div class="gp" id="charGp">0 GP</div><button class="btn sm cut" id="charClose">Done</button></div>
     <div class="charMain">
       <div class="charPrev"><canvas id="charCv" width="320" height="400"></canvas>
-        <div class="charName"><input id="callsign" maxlength="14" autocomplete="off" spellcheck="false" aria-label="Callsign"><small id="charSub"></small></div></div>
+        <div class="charName"><div class="cnRow"><input id="callsign" maxlength="14" autocomplete="off" spellcheck="false" aria-label="Callsign" readonly><button class="btn sm ghost cut" id="renameBtn" type="button">Rename</button><button class="btn sm ghost cut" id="renameNo" type="button" hidden>✕</button></div><small id="charSub"></small></div></div>
       <div class="charRight"><div class="tabs" id="charTabs">
         <button class="chip on" data-ct="bag">Loadout</button><button class="chip" data-ct="skins">Skins</button><button class="chip" data-ct="armor">Gear</button><button class="chip" data-ct="gear">Equipment</button><button class="chip" data-ct="style">Style</button></div>
         <div id="charBody"></div></div>
@@ -1249,7 +1253,7 @@ body.cine #hud>*:not(#nukeFlash),body.cine #touch,body.cine #airTab{visibility:h
     <div class="row eBtns" style="margin-top:16px">
       <button class="btn cut" id="again">Play again</button>
       <button class="btn ghost cut" id="toLobby">Back to lobby</button>
-      <button class="btn ghost cut" id="endBoardBtn">Scoreboard</button>
+      <button class="btn ghost cut" id="endBoardBtn">Scores</button>
       <button class="btn ghost cut" id="share">Challenge</button>
       <button class="btn ghost cut" id="toMenu">Menu</button>
     </div>
@@ -1694,7 +1698,7 @@ async function adminClaim(code){if(!CS||CS.guest)return 'Sign in to your own acc
   if(r.ok){CS.admin=true;cloudKeep();return '';}const e=r.j&&r.j.error;
   return !r.status?'No connection to the server.':e==='code'?'That code is not right.':e==='taken'?'This game already has its admin.':e==='guest'?'Guest accounts cannot be admins. Create your account first.':'The server said no (error '+r.status+').';}
 /* ================= version, remote settings, crash reports ================= */
-const APP_VERSION='1.4.0',BUILD_ID='5df5254';
+const APP_VERSION='1.4.1',BUILD_ID='4a08bd7';
 const verNum=v=>String(v||'0').split('.').slice(0,3).map(n=>parseInt(n)||0).reduce((a,n)=>a*1000+n,0);
 let RCFG={};try{RCFG=JSON.parse(localStorage.getItem('blockfire.rcfg')||'{}')||{};}catch(e){RCFG={};}
 const feat=k=>!(RCFG.features&&RCFG.features[k]===false);
@@ -3647,8 +3651,14 @@ const armorBits=()=>gearStats().bits;
 const armorHp=()=>gearStats().hp;
 const armorMat=new THREE.MeshLambertMaterial({color:0x3b4232}),armorMat2=new THREE.MeshLambertMaterial({color:0x23272b});
 const gloveMat=new THREE.MeshLambertMaterial({color:0x2a2c2f}),bootMat=new THREE.MeshLambertMaterial({color:0x3a2e22}),beltMat=new THREE.MeshLambertMaterial({color:0x4a3a26}),tagMat=new THREE.MeshPhongMaterial({color:0xffd060,emissive:0x3a2600,shininess:90});
-function armorParts(ar,head,body,legL,legR,armL,armR){
-  const out=[],add=(par,w,h,d,x,y,z,m)=>{const o=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m||armorMat);o.position.set(x,y,z);par.add(o);out.push(o);};
+// armor takes the colour of the skin you wear (a gold skin gets gold plates), so a skin never disappears under its gear
+const armorTints={};
+function armorTint(sk){const c=CHARS[sk];if(!c||!c.helm||sk==='default')return null;if(armorTints[sk])return armorTints[sk];
+  const [r,g,b]=c.helm,col=(k)=>new THREE.Color(Math.min(255,r*k)/255,Math.min(255,g*k)/255,Math.min(255,b*k)/255);
+  return armorTints[sk]={m:new THREE.MeshLambertMaterial({color:col(.92)}),m2:new THREE.MeshLambertMaterial({color:col(.55)})};}
+function armorParts(ar,head,body,legL,legR,armL,armR,sk){
+  const T=armorTint(sk),M1=T?T.m:armorMat,M2=T?T.m2:armorMat2;
+  const out=[],add=(par,w,h,d,x,y,z,m)=>{if(m===armorMat2)m=M2;const o=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m||M1);o.position.set(x,y,z);par.add(o);out.push(o);};
   if(ar&1){add(head,.58,.17,.58,0,.27,0);add(head,.58,.06,.14,0,.2,-.27,armorMat2);}
   if(ar&2){add(body,.58,.58,.36,0,.04,0);add(body,.2,.12,.04,-.14,.08,-.2,armorMat2);add(body,.2,.12,.04,.14,.08,-.2,armorMat2);}
   if(ar&4){for(const l of[legL,legR]){add(l,.29,.2,.29,0,-.4,-.01);add(l,.22,.14,.06,0,-.4,-.15,armorMat2);}}
@@ -3666,7 +3676,7 @@ function applyLook(e,sk,ar){
   else{e.head.material=S.head;if(e.body)e.body.material=S.body;if(e.armL)e.armL.material=S.arm;e.armR.material=S.arm;}
   e.legL.material=S.leg;e.legR.material=S.leg;
   for(const o of e.armorP||[])o.parent&&o.parent.remove(o);
-  e.armorP=armorParts(ar|0,e.head,e.body,e.legL,e.legR,e.armL,e.armR);e.sk=sk;e.ar=ar|0;
+  e.armorP=armorParts(ar|0,e.head,e.body,e.legL,e.legR,e.armL,e.armR,sk);e.sk=sk;e.ar=ar|0;
 }
 const gunMat=new THREE.MeshLambertMaterial({color:0x26282b});
 const gunMat2=new THREE.MeshLambertMaterial({color:0x3b3f44});
@@ -5389,7 +5399,9 @@ function pickUp(){
 function throwWeapon(){
   if(!player.alive||!dropsOn()||state!=='play')return;const w=curW();if(w.kind==='knife')return;
   let x=player.x-Math.sin(player.yaw)*1.3,z=player.z-Math.cos(player.yaw)*1.3;if(collides(x,player.y,z)){x=player.x;z=player.z;}
-  if(isClient())netOut(['dw',w.id,r2(x),r2(player.y),r2(z)]);else spawnDrop(w.id,x,player.y,z);
+  // the king's minigun and rocket launcher belong to the crown: throwing one away never leaves it on the ground
+  const kingGun=RULE()==='king'&&(w.id==='minigun'||w.id==='rpg');
+  if(!kingGun){if(isClient())netOut(['dw',w.id,r2(x),r2(player.y),r2(z)]);else spawnDrop(w.id,x,player.y,z);}
   giveWeapon(myKnife());showMsg('WEAPON DROPPED',true);
 }
 
@@ -5714,7 +5726,7 @@ function endShow(win,cls){
     return `<div class="pc p${i+1} ${tc}"><div class="pn">${esc(e.name)}${e===player?'<span class="you">YOU</span>':''}</div><div class="pk">${e.kills} ${zm?'zombie kill':'kill'}${e.kills===1?'':'s'} · ${e.deaths} death${e.deaths===1?'':'s'}</div><div class="pb" style="--h:${[100,74,54][i]}%"><b>${i+1}</b></div></div>`;};
   const me=list.indexOf(player);
   $('endPod').innerHTML=col(top[1],1)+col(top[0],0)+col(top[2],2)+(me>2?`<div class="eMe">You: #${me+1} of ${list.length}</div>`:'');
-  $('endPod').hidden=false;$('endBody').hidden=true;$('endBoardBtn').textContent='Scoreboard';
+  $('endPod').hidden=false;$('endBody').hidden=true;$('endBoardBtn').textContent='Scores';
   $('toLobby').hidden=isHost();document.querySelector('#end .eBtns').classList.toggle('noLob',isHost());
   const e=$('end');e.classList.remove('play');e.classList.toggle('rm',reduceMotion);void e.offsetWidth;e.classList.add('play');
   setTimeout(()=>{if(state==='end')say('Game over');},150);
@@ -5724,7 +5736,7 @@ function endFit(){const e=$('end');e.classList.remove('t1','t2','t3','t4');const
   const over=()=>{const r=e.querySelector('.eBtns').getBoundingClientRect(),s=sh.getBoundingClientRect();return r.bottom>Math.min(innerHeight,s.bottom)+1||sh.scrollHeight>sh.clientHeight+1;};
   for(const c of['t1','t2','t3','t4']){if(!over())break;e.classList.add(c);}}
 addEventListener('resize',()=>{if(!$('end').hidden)endFit();});
-$('endBoardBtn').addEventListener('click',()=>{const show=$('endBody').hidden;$('endBody').hidden=!show;$('endPod').hidden=show;$('endBoardBtn').textContent=show?'Podium':'Scoreboard';});
+$('endBoardBtn').addEventListener('click',()=>{const show=$('endBody').hidden;$('endBody').hidden=!show;$('endPod').hidden=show;$('endBoardBtn').textContent=show?'Podium':'Scores';});
 $('toLobby').addEventListener('click',()=>{backToMenu();openLobby(!NET.mode);});
 function toggleBoard(show){const b=$('board');const s=show===undefined?b.hidden:show;if(s)renderBoard($('boardBody'));b.hidden=!s;}
 function closeBoard(e){if(e){e.preventDefault();e.stopPropagation();}toggleBoard(false);if(!isTouch&&state==='play'&&!locked){paused=false;$('pause').hidden=true;tryLock();}}
@@ -5795,7 +5807,22 @@ $('hLB').addEventListener('click',e=>{if(e.target.closest('[data-open=lb]'))open
 $('hCard').addEventListener('click',()=>$('openAcct').click());
 addEventListener('online',()=>renderHome());addEventListener('offline',()=>renderHome());
 $('callsign').value=profile.name;
-$('callsign').addEventListener('input',e=>{const v=e.target.value.replace(/[^\w \-.]/g,'').slice(0,14);if(v&&nameBad(v)){e.target.classList.add('bad');return;}e.target.classList.remove('bad');profile.name=v||'Recruit';player.name=profile.name;saveProfile();$('hName').textContent=profile.name;});
+// changing your callsign costs GP: the field stays locked until you tap Rename, and the new name is only kept when you pay
+const RENAME_GP=500000;
+const renameEnd=()=>{const i=$('callsign');i.readOnly=true;i.classList.remove('bad');i.value=profile.name;$('renameBtn').textContent='Rename';$('renameBtn').classList.remove('go');$('renameNo').hidden=true;};
+$('callsign').addEventListener('input',e=>{if(e.target.readOnly)return;const v=e.target.value.replace(/[^\w \-.]/g,'').slice(0,14);if(v!==e.target.value)e.target.value=v;e.target.classList.toggle('bad',!!v&&nameBad(v));});
+$('callsign').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.target.readOnly){e.preventDefault();$('renameBtn').click();}if(e.key==='Escape')renameEnd();});
+$('renameNo').addEventListener('click',renameEnd);
+$('renameBtn').addEventListener('click',()=>{const i=$('callsign');
+  if(i.readOnly){i.readOnly=false;i.focus();try{i.select();}catch(e){}$('renameBtn').textContent='Save · '+RENAME_GP.toLocaleString()+' GP';$('renameBtn').classList.add('go');$('renameNo').hidden=false;return;}
+  const v=i.value.trim().replace(/\s+/g,' ');
+  if(!v||v===profile.name){renameEnd();return;}
+  if(v.length<3){toast('A callsign needs at least 3 letters.');return;}
+  if(nameBad(v)){i.classList.add('bad');toast('That name is not allowed. Try another one.');return;}
+  if((profile.gp|0)<RENAME_GP){toast('Changing your name costs '+RENAME_GP.toLocaleString()+' GP. You need '+(RENAME_GP-(profile.gp|0)).toLocaleString()+' more.');return;}
+  if(!confirm('Change your name to "'+v+'" for '+RENAME_GP.toLocaleString()+' GP?'))return;
+  profile.gp-=RENAME_GP;profile.name=v;player.name=v;saveProfile();try{$('hName').textContent=v;}catch(e){}renameEnd();try{renderProfile();renderChar();}catch(e){}
+  toast('Your name is now '+v+'. '+RENAME_GP.toLocaleString()+' GP paid.');});
 function selectMap(k){if(isClient()||!MAPS[k])return;profile.map=k;saveProfile();MAP=MAPS[k];renderProfile();resetMatch(false);if(isHost()){netRoster();renderMP();renderMPPill();}}
 {const NEWM=['moon','forest','city','code','town','rail','outpost','farm','house'];$('mapPick').innerHTML=NEWM.concat(Object.keys(MAPS).filter(k=>!NEWM.includes(k))).map(k=>`<button class="chip" data-map="${k}">${esc(MAPS[k].name)}</button>`).join('');}
 $('mapPick').addEventListener('click',e=>{const b=e.target.closest('[data-map]');if(b)selectMap(b.dataset.map);});
@@ -5889,11 +5916,53 @@ $('admBody').addEventListener('click',async e=>{const b=e.target.closest('button
   if(b.dataset.unban){const r=await cloudReq('/rest/v1/rpc/admin_unban',{method:'POST',body:{p_uid:b.dataset.unban}});admMsg=r.ok&&r.j==='ok'?'Ban lifted.':'!Could not lift (error '+r.status+').';admLoad();return;}
   if(b.dataset.admdel){const r=await cloudReq('/rest/v1/support_messages?id=eq.'+(b.dataset.admdel|0),{method:'DELETE',headers:{Prefer:'return=representation'}});admMsg=r.ok?'Message deleted.':'!Could not delete (error '+r.status+').';admLoad();return;}
   if(b.id==='admClear'){if(!confirm('Delete every crash report?'))return;const r=await cloudReq('/rest/v1/client_errors?id=gt.0',{method:'DELETE'});admMsg=r.ok?'Crash reports cleared.':'!Could not clear (error '+r.status+').';admLoad();}});
+/* push notifications (web build only): rental ending, daily gift, friend invite. The iPhone app needs Apple push later. */
+const PUSH={busy:false,on:null};
+const HQ_URL='https://cubefront-hq.floot.app/';
+const pushFn=()=>cloudCfg().url.replace(/\/$/,'')+'/functions/v1/push';
+const PUSH_READY=false; // turned on once the offline helper (sw.js) shows notifications
+function pushOk(){try{return PUSH_READY&&!CAP&&!IN_CLAUDE&&cloudOn()&&location.protocol==='https:'&&'serviceWorker' in navigator&&'PushManager' in window&&'Notification' in window;}catch(e){return false;}}
+const pushIOSHint=()=>{try{return PUSH_READY&&!CAP&&/iPhone|iPad|iPod/.test(navigator.userAgent)&&!('PushManager' in window);}catch(e){return false;}};
+function b64uBytes(s){s=String(s).replace(/-/g,'+').replace(/_/g,'/');s+='='.repeat((4-s.length%4)%4);const b=atob(s),u=new Uint8Array(b.length);for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i);return u;}
+async function pushReg(){return await Promise.race([navigator.serviceWorker.ready,new Promise((_,rj)=>setTimeout(()=>rj(new Error('service worker not ready')),8000))]);}
+async function pushState(){if(!pushOk())return false;try{const reg=await pushReg(),s=await reg.pushManager.getSubscription();return !!s&&Notification.permission==='granted';}catch(e){return false;}}
+const pushFail=(why,e)=>{const c=reportErr('push',why+': '+String(e&&e.message||e||''));toast(why+' (code '+c+')');};
+async function pushEnable(){
+  if(!CS||!CS.at||!CS.uid){toast('Sign in (or play once online) to turn on notifications.');return;}
+  let perm='default';try{perm=await Notification.requestPermission();}catch(e){perm=Notification.permission;}
+  if(perm!=='granted'){toast(perm==='denied'?'Notifications are blocked. Allow them for this site in your browser settings.':'Notifications stay off.');return;}
+  let reg,sub;
+  try{reg=await pushReg();}catch(e){pushFail('Notifications need the game installed or opened from its web link',e);return;}
+  try{const r=await fetch(pushFn());const j=await r.json();if(!j||!j.key)throw new Error('no key');
+    sub=await reg.pushManager.getSubscription();if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64uBytes(j.key)});}
+  catch(e){pushFail('Could not turn on notifications',e);return;}
+  const k=sub.toJSON();const body={endpoint:k.endpoint,user_id:CS.uid,p256dh:k.keys&&k.keys.p256dh,auth:k.keys&&k.keys.auth,tz_offset:-new Date().getTimezoneOffset()};
+  const r=await cloudReq('/rest/v1/push_subs?on_conflict=endpoint',{method:'POST',headers:{Prefer:'resolution=merge-duplicates,return=minimal'},body}).catch(e=>({ok:false,status:0}));
+  if(!r||!r.ok){pushFail('Could not save notification settings',new Error('status '+(r&&r.status)));try{await sub.unsubscribe();}catch(e){}return;}
+  PUSH.on=true;toast('Notifications are on. A test one is on its way.');
+  cloudReq('/functions/v1/push',{method:'POST',body:{op:'test'}}).catch(()=>{});
+}
+async function pushDisable(){
+  try{const reg=await pushReg(),sub=await reg.pushManager.getSubscription();
+    if(sub){if(CS&&CS.at)await cloudReq('/rest/v1/push_subs?endpoint=eq.'+encodeURIComponent(sub.endpoint),{method:'DELETE',headers:{Prefer:'return=minimal'}}).catch(()=>{});await sub.unsubscribe().catch(()=>{});}}
+  catch(e){reportErr('push','off: '+String(e&&e.message||e));}
+  PUSH.on=false;toast('Notifications are off.');
+}
+async function pushToggle(){if(PUSH.busy)return;PUSH.busy=true;try{if(PUSH.on)await pushDisable();else await pushEnable();}catch(e){pushFail('Notifications problem',e);}finally{PUSH.busy=false;if(!$('settings').hidden)renderSettings();}}
+function extraSetRows(){let h='';
+  if(pushOk()){if(PUSH.on===null){PUSH.on=false;pushState().then(v=>{PUSH.on=v;if(v&&!$('settings').hidden)renderSettings();});}
+    h+=`<div class="setrow"><span>Notifications<small class="setHint">Rental ending, daily gift, friend invites</small></span><div class="opts"><button class="chip ${PUSH.on?'on':''}" id="pushTog" data-v="1">On</button><button class="chip ${PUSH.on?'':'on'}" id="pushTog0">Off</button></div></div>`;}
+  else if(pushIOSHint())h+=`<div class="setrow"><span>Notifications<small class="setHint">On iPhone: tap Share → Add to Home Screen, open the game from there, then turn them on here.</small></span></div>`;
+  h+=`<div class="setrow"><span>Website<small class="setHint">Leaderboards, patch notes and news</small></span><div class="opts"><a class="chip" href="${HQ_URL}" target="_blank" rel="noopener">Open Cubefront HQ</a></div></div>`;
+  if(cloudOn()&&CS&&CS.uid){const hide=!!profile.hideLb;
+    h+=`<div class="setrow"><span>Public leaderboard<small class="setHint">Show my name and stats on the game's website</small></span><div class="opts"><button class="chip ${hide?'':'on'}" data-lb="0">Show</button><button class="chip ${hide?'on':''}" data-lb="1">Hide</button></div></div>`;}
+  return h;}
 function renderSettings(){
   $('setBody').innerHTML=SET_ROWS.map(r=>{
     if(r[2]==='range')return `<label class="setrow"><span>${r[1]}</span><input type="range" id="set_${r[0]}" min="${r[3]}" max="${r[4]}" step="${r[5]}" value="${SET[r[0]]}"><output id="out_${r[0]}">${r[6](+SET[r[0]])}</output></label>`;
     return `<div class="setrow"><span>${r[1]}</span><div class="opts">${r[3].map(v=>`<button class="chip ${SET[r[0]]===v?'on':''}" data-set="${r[0]}" data-val="${v}">${r[4][v]}</button>`).join('')}</div></div>`;
   }).join('')+(blocked().length?`<div class="setrow"><span>Blocked players</span><div class="opts">${blocked().map((b,i)=>`<button class="chip" data-unblk="${i}" title="Unblock">${esc(b.n)} ✕</button>`).join('')}</div></div>`:'')+(CS&&CS.admin?`<div class="setrow"><span>Admin</span><div class="opts"><button class="chip" id="setAdm">Open admin panel</button></div></div>`:'')+(isTouch?`<div class="setrow"><span>Button layout</span><div class="opts"><button class="chip" id="layEdit">Move buttons</button><button class="chip" id="layDef" ${SET.lay&&Object.keys(SET.lay).length?'':'disabled'}>Reset</button></div></div>`:'');
+  try{$('setBody').insertAdjacentHTML('beforeend',extraSetRows());}catch(e){reportErr('settings',e);}
 }
 function applySettings(){
   if(master)master.gain.value=.75*SET.vol;
@@ -5908,6 +5977,8 @@ $('setBody').addEventListener('input',e=>{const el=e.target;if(!el.id||!el.id.st
 $('setBody').addEventListener('click',e=>{
   {const u=e.target.closest('[data-unblk]');if(u){const b=blocked()[+u.dataset.unblk];if(b&&confirm(`Unblock ${b.n}?`)){blocked().splice(+u.dataset.unblk,1);saveProfile();renderSettings();toast(`${b.n} is unblocked.`);}return;}}
   if(e.target.closest('#layEdit')){layOpen();return;}
+  {const t=e.target.closest('#pushTog,#pushTog0');if(t){if((t.id==='pushTog')!==!!PUSH.on)pushToggle();return;}}
+  {const t=e.target.closest('[data-lb]');if(t){profile.hideLb=t.dataset.lb==='1';saveProfile();renderSettings();toast(profile.hideLb?'You are hidden from the public leaderboard.':'You will show on the public leaderboard.');return;}}
   if(e.target.closest('#setAdm')){$('settings').hidden=true;openAdmin();return;}
   if(e.target.closest('#layDef')){SET.lay={};saveSettings();layApply();renderSettings();return;}
   const b=e.target.closest('[data-set]');if(!b)return;const k=b.dataset.set,r=SET_ROWS.find(x=>x[0]===k);SET[k]=r[3].find(v=>String(v)===b.dataset.val);applySettings();saveSettings();renderSettings();});
@@ -6637,7 +6708,7 @@ function renderChar(){
   }
   $('charBody').innerHTML=h;tagNew($('charBody'));renderNewDots();charPreview();
 }
-function openChar(){rentSweep();$('callsign').value=profile.name;renderChar();$('char').hidden=false;charPreview();}
+function openChar(){rentSweep();renameEnd();renderChar();$('char').hidden=false;charPreview();}
 $('openChar').addEventListener('click',openChar);
 $('charTabs').addEventListener('click',e=>{const b=e.target.closest('[data-ct]');if(b){flushSeen();charTab=b.dataset.ct;renderChar();}});
 $('charBody').addEventListener('click',e=>{
@@ -7491,7 +7562,7 @@ function hostClientEv(e,ev){
     else if(ev[1]==='call'&&!isZ()&&!noNades()){if(e.callMid!==matchId){e.callMid=matchId;e.callN=0;}if(e.callN<CALL.perMatch){e.callN++;killstreak('air',e,tg);}}}
   else if(k==='sx'){stashTake(e);}
   else if(k==='pk'){const d=drops.find(x=>x.id===ev[1]);if(d&&e.alive&&Math.hypot(d.x-e.x,d.z-e.z)<3.2){removeDrop(d);if(ev[2]&&!isKnife(ev[2]))spawnDrop(ev[2],d.x,d.y,d.z);netSendTo(e,{t:'pk',w:d.w});}}
-  else if(k==='dw'){if(e.alive&&WEAPONS[ev[1]]&&now()-(e.lastDw||0)>700&&Math.hypot(fin(ev[2],0)-e.x,fin(ev[4],0)-e.z)<5){e.lastDw=now();spawnDrop(ev[1],fin(ev[2],e.x,0,W),fin(ev[3],e.y,0,H),fin(ev[4],e.z,0,D));}}
+  else if(k==='dw'){if(e.alive&&WEAPONS[ev[1]]&&!(RULE()==='king'&&(ev[1]==='minigun'||ev[1]==='rpg'))&&now()-(e.lastDw||0)>700&&Math.hypot(fin(ev[2],0)-e.x,fin(ev[4],0)-e.z)<5){e.lastDw=now();spawnDrop(ev[1],fin(ev[2],e.x,0,W),fin(ev[3],e.y,0,H),fin(ev[4],e.z,0,D));}}
   else if(k==='pb'){if(isZ()||!e.alive||now()-(e.lastPb||0)<110||(e.bl|0)<=0)return;const x=ev[1]|0,y=ev[2]|0,z=ev[3]|0;if(Math.hypot(x+.5-e.x,y+.5-e.y-1.5,z+.5-e.z)>7.5)return;e.lastPb=now();if(hostPlace(e,x,y,z,String(ev[4])))e.bl--;}
   else if(k==='bd'){if(!e.alive||now()-(e.lastBd||0)<35)return;e.lastBd=now();const x=ev[1]|0,y=ev[2]|0,z=ev[3]|0;if(Math.hypot(x-e.x,z-e.z)>160)return;hitBlock(x,y,z,fin(ev[4],0,0,150));}
   else if(k==='fl'){flameFX(ev[1],ev[2],ev[3],ev[4],ev[5],ev[6],10);if(rand()<.4)sfx.crackle(volAt(ev[1],ev[2],ev[3],.5,40),distAt(ev[1],ev[2],ev[3]));e.firedT=1.2;netEv(['fl',e.nid].concat(ev.slice(1)));}
