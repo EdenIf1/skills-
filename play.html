@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-0DyOAhECJE3vXFXcwNw4h8mO8gGu9ipiVydQh+qgfGc=' 'sha256-QnNfDFoCZhKm0sypY2GVDwq9MQRL3v0WQ2w3jgArCkk=' 'unsafe-eval'; script-src-attr 'none'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; media-src 'self' data: blob:; connect-src 'self' https: wss: data: blob: http://127.0.0.1:* ws://127.0.0.1:* http://localhost:* ws://localhost:*; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'; frame-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-0DyOAhECJE3vXFXcwNw4h8mO8gGu9ipiVydQh+qgfGc=' 'sha256-AmH0FM4C0bIxcKhVVPU1xM/eOX/lqFXM4euE889q1ZI=' 'unsafe-eval'; script-src-attr 'none'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; media-src 'self' data: blob:; connect-src 'self' https: wss: data: blob: http://127.0.0.1:* ws://127.0.0.1:* http://localhost:* ws://localhost:*; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'; frame-src 'none'">
 <meta name="referrer" content="no-referrer">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
@@ -877,6 +877,84 @@ body.cine #hud>*:not(#nukeFlash),body.cine #touch,body.cine #airTab{visibility:h
   #mp .lobCfg>.lbl2{display:none}#mp .lobCfg{grid-template-columns:1fr}#mp .lobSideH small{display:none}#mp .lobBar{margin-top:1px;padding-top:1px}
   #acct .note,#acct #acSub{display:none}#acct .tabs{margin:1px 0 3px}
 }
+
+/* ================= Store v2 ================= */
+#shop .sheet>*{flex:none}
+#shop .sheet{width:min(1180px,100%);padding:0;display:flex;flex-direction:column;background:linear-gradient(180deg,#131b25 0%,#0b0f14 60%);border:1px solid rgba(255,255,255,.09);box-shadow:0 30px 90px rgba(0,0,0,.65)}
+#shop .shopHead{position:sticky;top:0;z-index:6;display:flex;align-items:center;gap:14px;margin:0;padding:12px 18px 10px;background:linear-gradient(180deg,rgba(14,19,26,.98),rgba(14,19,26,.93));border-bottom:1px solid rgba(255,255,255,.07)}
+#shop .shopHead h2{margin:0;font:400 24px/1 var(--f-pix);letter-spacing:.14em;color:#fff;text-shadow:2px 2px 0 #6b4b2a}
+#shop .shopHead .gp{margin-left:auto;padding:5px 16px 2px;border:1px solid rgba(111,208,140,.45);background:rgba(111,208,140,.1);border-radius:999px;font-size:24px;line-height:1.1;color:var(--green);white-space:nowrap}
+#shop .shopHead .gp::before{content:'◆ ';font-size:.7em;vertical-align:2px;color:#9fe8b6}
+#shopTabs{position:sticky;top:58px;z-index:5;display:flex;gap:4px;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;margin:0;padding:8px 18px 0;background:rgba(14,19,26,.94);border-bottom:1px solid rgba(255,255,255,.07)}
+#shopTabs::-webkit-scrollbar{display:none}
+#shopTabs .chip{flex:none;border:0;border-bottom:3px solid transparent;background:none;border-radius:0;color:var(--dim);font:500 19px/1 var(--f-hud);letter-spacing:.08em;text-transform:uppercase;padding:8px 12px 7px;transition:color .15s,border-color .15s}
+#shopTabs .chip:hover{color:var(--ink)}
+#shopTabs .chip.on{color:#fff;border-bottom-color:var(--amber);background:linear-gradient(0deg,rgba(243,181,74,.14),transparent)}
+#shop .shopBody{margin:0;padding:14px 18px 22px;gap:16px}
+#shopGrid{gap:12px}
+#shopGrid .item{border:1px solid rgba(255,255,255,.09);background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.015) 45%,rgba(0,0,0,.25));padding:12px 14px 12px;gap:6px}
+#shopGrid .item .tierline{height:3px}
+#shopGrid .item h3{font-size:24px}
+.buyRow{margin-top:auto;padding-top:8px;border-top:1px solid rgba(255,255,255,.07);gap:8px}
+.buyRow .price{font-size:22px}
+.btn.buyOpen{min-width:92px;font-size:18px;padding:8px 14px 5px;letter-spacing:.08em}
+.dealCard{min-height:0;padding:8px 14px;gap:14px;border-color:rgba(255,77,109,.5)}
+.dealCard .dealTx{flex:1;min-width:0}.dealCard .dealTx b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:22px}
+.dealCard .dealTag{display:inline-block;white-space:nowrap}
+.dealBuy{flex:none}
+/* the purchase window */
+#buySheet{position:fixed;inset:0;z-index:40;display:flex;align-items:center;justify-content:center;background:rgba(4,6,9,.66);padding:calc(var(--st) + 10px) calc(var(--sr) + 12px) calc(var(--sb) + 10px) calc(var(--sl) + 12px);animation:bsFade .16s ease-out}
+#buySheet[hidden]{display:none}
+@keyframes bsFade{from{opacity:0}}@keyframes bsUp{from{transform:translateY(18px);opacity:.4}}
+.bsCard{position:relative;width:min(780px,100%);max-height:100%;overflow-y:auto;display:grid;grid-template-columns:minmax(210px,40%) minmax(0,1fr);background:linear-gradient(155deg,#1a2430,#0d1218 70%);border:1px solid rgba(255,255,255,.12);border-top:3px solid var(--rc);box-shadow:0 26px 70px rgba(0,0,0,.7);animation:bsUp .2s cubic-bezier(.2,.8,.2,1)}
+.bsArt{position:relative;display:flex;align-items:center;justify-content:center;min-height:200px;padding:28px 12px 18px;background:radial-gradient(ellipse at 50% 50%,color-mix(in srgb,var(--rc) 30%,transparent),transparent 68%),#0a0e13;border-right:1px solid rgba(255,255,255,.07)}
+.bsArt .thumb{width:100%;max-width:300px;height:auto;max-height:190px;object-fit:contain;filter:drop-shadow(0 10px 18px rgba(0,0,0,.55))}
+.bsArt .sw2{width:80%;height:60px}
+.bsRar{position:absolute;left:10px;top:10px;font:600 12px var(--f-body);letter-spacing:.12em;text-transform:uppercase;color:#0b0f14;background:var(--rc);padding:3px 9px}
+.bsDeal{position:absolute;right:10px;top:10px;font:600 12px var(--f-body);color:#fff;background:#ff4d6d;padding:3px 9px}
+.bsInfo{position:relative;padding:16px 18px 14px;display:flex;flex-direction:column;gap:9px;min-width:0}
+.bsX{position:absolute;right:8px;top:8px;width:40px;height:40px;border:1px solid rgba(255,255,255,.14);background:rgba(0,0,0,.35);color:var(--ink);font-size:18px;cursor:pointer}
+.bsHead{display:flex;flex-direction:column;gap:3px;padding-right:44px}
+.bsHead small{font:600 12px var(--f-body);letter-spacing:.16em;text-transform:uppercase;color:var(--dim)}
+.bsName{font:500 34px/1 var(--f-hud);letter-spacing:.03em;color:#fff}
+.bsState{font:600 13px var(--f-body)}.bsState.rent{color:#9cc8ff}.bsState.own{color:var(--green)}
+.bsLbl{font:600 12px var(--f-body);letter-spacing:.16em;text-transform:uppercase;color:var(--dim);margin-top:2px}
+.bsChips{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.bsChip{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-height:50px;padding:6px 4px 5px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.14);color:var(--ink);cursor:pointer;transition:background .12s,border-color .12s,transform .08s}
+.bsChip:active{transform:scale(.97)}
+.bsChip b{font:500 19px/1 var(--f-hud);letter-spacing:.05em}.bsChip span{font:600 12px/1 var(--f-body);color:var(--green)}.bsChip s{color:var(--dim);font-weight:500}
+.bsChip.fv{border-top:2px solid #ffd34a}
+.bsChip.on{background:rgba(243,181,74,.18);border-color:var(--amber);box-shadow:inset 0 0 0 1px var(--amber)}.bsChip.on b{color:var(--amber)}
+.bsChip.poor span{color:#e07a72}
+.bsWhen{font:500 13px var(--f-body);color:var(--dim)}.bsWhen b{color:var(--ink)}
+.bsMsg{font:600 13px var(--f-body);color:#ff9a8f}
+.bsGo{width:100%;display:flex;justify-content:center;align-items:baseline;gap:12px;font-size:23px;letter-spacing:.08em;padding:12px 0 8px;margin-top:2px}
+.bsGo em{font-style:normal;opacity:.85}
+.bsGo:disabled{background:rgba(255,255,255,.07);color:#ff9a8f;opacity:1;cursor:default}
+.bsNudge{align-self:center;background:none;border:0;color:#9cc8ff;font:600 14px var(--f-body);text-decoration:underline;text-underline-offset:3px;cursor:pointer;padding:6px}
+/* phones held sideways: one clear column of tiles, no side preview, compact window */
+@media (max-height:500px){
+  #shop .sheet{width:100%;height:100%;border:0}
+  #shop .shopHead{padding:6px 14px 5px;gap:10px}#shop .shopHead h2{font-size:17px}#shop .shopHead .gp{font-size:18px;padding:3px 12px 1px}
+  #shop .shopHead .btn{padding:4px 12px 2px;font-size:15px}
+  #shopTabs{top:40px;padding:2px 10px 0}#shopTabs .chip{font-size:15px;padding:7px 9px 5px}
+  #shop .shopBody{padding:8px 12px 14px;grid-template-columns:1fr}#shop .shopPv{display:none}
+  #shopGrid{grid-template-columns:repeat(auto-fill,minmax(176px,1fr));gap:8px}
+  #shopGrid .item{padding:8px 10px}#shopGrid .item h3{font-size:19px}
+  .buyRow{padding-top:6px}.buyRow .price{font-size:18px}.btn.buyOpen{min-width:74px;font-size:15px;padding:7px 10px 4px}
+  .dealCard{padding:5px 10px;gap:10px}.dealCard .thumb{height:38px;width:76px}.dealCard .dealTx small{display:none}.dealCard .dealTx b{font-size:18px}.dealTag{font-size:11px;padding:1px 6px}
+  .dealCard .price{font-size:17px;flex-direction:row;align-items:baseline;gap:6px}
+  .bsCard{grid-template-columns:minmax(150px,34%) minmax(0,1fr)}
+  .bsArt{min-height:0;padding:24px 8px 10px}.bsArt .thumb{max-height:120px}
+  .bsInfo{padding:9px 12px 8px;gap:5px}.bsX{width:36px;height:36px}
+  .bsName{font-size:24px}.bsHead small{font-size:11px}
+  .bsChips{grid-template-columns:repeat(6,minmax(0,1fr));gap:4px}.bsChip{min-height:44px;padding:4px 2px}.bsChip b{font-size:15px}.bsChip span{font-size:11px}
+  .bsLbl{display:none}.bsWhen{font-size:12px}
+  .bsGo{font-size:19px;padding:9px 0 6px}.bsNudge{padding:2px;font-size:13px}
+}
+@media (max-height:500px) and (max-width:700px){.bsChips{grid-template-columns:repeat(3,minmax(0,1fr))}.bsChip{min-height:40px}}
+#shop .btn.sm.isOn{background:transparent;color:#f4b545;box-shadow:inset 0 0 0 2px #f4b545}
+#shop .btn.sm.isOn::before{content:'✓ '}
 </style>
 </head>
 <body>
@@ -1034,6 +1112,7 @@ body.cine #hud>*:not(#nukeFlash),body.cine #touch,body.cine #airTab{visibility:h
     <div class="shopBody" id="shopBody"><div class="shopPv" id="shopPv"><canvas id="shopCv" width="480" height="260"></canvas><div class="pvInfo" id="pvInfo"></div></div>
     <div class="grid" id="shopGrid"></div></div>
   </div>
+  <div id="buySheet" hidden role="dialog" aria-modal="true" aria-label="Buy or rent"></div>
 </div>
 
 <div id="adm" class="overlay" hidden>
@@ -1615,7 +1694,7 @@ async function adminClaim(code){if(!CS||CS.guest)return 'Sign in to your own acc
   if(r.ok){CS.admin=true;cloudKeep();return '';}const e=r.j&&r.j.error;
   return !r.status?'No connection to the server.':e==='code'?'That code is not right.':e==='taken'?'This game already has its admin.':e==='guest'?'Guest accounts cannot be admins. Create your account first.':'The server said no (error '+r.status+').';}
 /* ================= version, remote settings, crash reports ================= */
-const APP_VERSION='1.3.8',BUILD_ID='0d4fdd8';
+const APP_VERSION='1.4.0',BUILD_ID='5df5254';
 const verNum=v=>String(v||'0').split('.').slice(0,3).map(n=>parseInt(n)||0).reduce((a,n)=>a*1000+n,0);
 let RCFG={};try{RCFG=JSON.parse(localStorage.getItem('blockfire.rcfg')||'{}')||{};}catch(e){RCFG={};}
 const feat=k=>!(RCFG.features&&RCFG.features[k]===false);
@@ -6291,20 +6370,48 @@ function thumbOf(kind,id){try{
   if(kind==='hit')return `<div class="sw2 blood" style="background:linear-gradient(90deg,${HITFX[id].c.map(hexC).join(',')})"></div>`;}catch(e){}return '';}
 const gunTier=id=>{const r=gunReq(id);return r<6?1:r<14?2:r<24?3:r<34?4:5;};
 const tierTop=t=>t>0?`<div class="tierline" style="background:${RAR[Math.min(5,t)].c}"></div>`:'';
-// every item picks its own time: 1 day up to forever, each with its price
-function durPick(kind,id){const sel=pickOf(kind,id);return `<select class="durSel" data-rd="${kind}|${id}" aria-label="Time">${RENT.map(r=>`<option value="${r.k}" ${r.k===sel?'selected':''}>${r.d?'Rent · ':'Buy · '}${r.s}</option>`).join('')}</select>`;}
-function buyBox(kind,id,attr){const d=pickOf(kind,id),R=rentOf(d),c=costOf(kind,id,d),full=costOf(kind,id,d,true),r=rentInfo(kind,id);
-  const lab=r?(R.d?'Extend':'Buy'):(R.d?'Rent':'Buy');
-  return `<div class="durRow">${durPick(kind,id)}</div><div class="row buyRow"><span class="price">${full!==c?`<s>${full.toLocaleString()}</s>`:''}${c.toLocaleString()} GP<small>${R.d?R.n:'forever'}</small></span><button class="btn sm cut" ${attr} ${profile.gp<c?'disabled':''}>${lab}</button></div>`;}
+// Store v2: a card shows the price and one button; choosing the time (1 day … forever) and paying happens in the
+// purchase window (renderSheet). data-hook keeps the card's original buy action, which the window's main button runs.
+const sheetOpenBtn=(kind,id,attr,lab)=>`<button class="btn sm cut buyOpen" data-sheet="${kind}|${id}" data-hook="${esc(attr)}">${lab} ›</button>`;
+function buyBox(kind,id,attr){const r=rentInfo(kind,id),c=costOf(kind,id,'perm'),full=costOf(kind,id,'perm',true),lo=costOf(kind,id,'1d');
+  return `<div class="row buyRow"><span class="price">${full!==c?`<s>${full.toLocaleString()}</s>`:''}${c.toLocaleString()} GP<small>${r?'rented':'rent from '+lo.toLocaleString()}</small></span>${sheetOpenBtn(kind,id,attr,r?'Extend':'Get')}</div>`;}
 const sellBtn=(kind,id,v)=>`<button class="btn sm ghost cut sellBtn" data-sell="${kind}|${id}" data-v="${v}">Sell · +${v.toLocaleString()} GP</button>`;
 function ownExtra(kind,id){if(!itOk(kind,id))return '';const r=rentInfo(kind,id);
   if(r)return `<span class="rentTag">⏳ ${leftTxt(r.e-rNow())}</span>`+buyBox(kind,id,`data-bi="${kind}|${id}"`);
   const v=sellValue(kind,id);return v?sellBtn(kind,id,v):'';}
 const durBar=()=>{const R=rentOf(rentSel);return `<div class="durBar"><span class="lbl2">Time</span><div class="durSeg">${RENT.map(r=>`<button data-dur="${r.k}" class="${rentSel===r.k?'on':''}">${r.s}</button>`).join('')}</div><small>${R.d?`Try it for ${R.n} · ${Math.round(R.f*100)}% of the forever price`:`Yours forever · sells back for ${Math.round(SELL_PCT*100)}%`}</small></div>`;};
-function dealCard(){const d=dealToday();if(!d||!itOk(d.kind,d.id))return '';const I=IT[d.kind],dd=pickOf(d.kind,d.id),R=rentOf(dd),full=costOf(d.kind,d.id,dd,true),now=costOf(d.kind,d.id,dd);
+function dealCard(){const d=dealToday();if(!d||!itOk(d.kind,d.id))return '';const I=IT[d.kind],full=costOf(d.kind,d.id,'perm',true),now=costOf(d.kind,d.id,'perm');
   const end=(Math.floor(gNow()/DAY)+1)*DAY-gNow(),own=hasIt(d.kind,d.id)&&!rentInfo(d.kind,d.id),lock=I.req&&I.req(d.id)>myLevel();
   return `<div class="dealCard">${thumbOf(d.kind,d.id)}<div class="dealTx"><span class="dealTag">Deal of the day · −25%</span><b>${esc(I.name(d.id))}</b><small>${KIND_N[d.kind]} · ends in ${leftTxt(end)}</small></div>
-    <div class="dealBuy">${own?'<span class="cg">Yours</span>':lock?`<span class="lockNote">🔒 Level ${I.req(d.id)}</span>`:`${durPick(d.kind,d.id)}<span class="price"><s>${full.toLocaleString()}</s>${now.toLocaleString()} GP<small>${R.d?R.n:'forever'}</small></span><button class="btn sm cut" data-bi="${d.kind}|${d.id}" ${profile.gp<now?'disabled':''}>${R.d?'Rent':'Buy'}</button>`}</div></div>`;}
+    <div class="dealBuy">${own?'<span class="cg">Yours</span>':lock?`<span class="lockNote">🔒 Level ${I.req(d.id)}</span>`:`<span class="price"><s>${full.toLocaleString()}</s>${now.toLocaleString()} GP</span>${sheetOpenBtn(d.kind,d.id,`data-bi="${d.kind}|${d.id}"`,'View')}`}</div></div>`;}
+// ---- the purchase window ----
+let SH=null;   // {kind,id,hook}
+const fmtEnd=ms=>{try{return new Date(ms).toLocaleString('en-GB',{weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});}catch(e){return '';}};
+function openSheet(b){const v=b.dataset.sheet,i=v.indexOf('|');SH={kind:v.slice(0,i),id:v.slice(i+1),hook:b.dataset.hook||''};SH.msg='';renderSheet();}
+function closeSheet(){SH=null;const el=$('buySheet');if(el){el.hidden=true;el.innerHTML='';}}
+function renderSheet(){const el=$('buySheet');if(!el)return;if(!SH||$('shop').hidden||!itOk(SH.kind,SH.id)){closeSheet();return;}
+  const {kind,id}=SH,I=IT[kind],d=pickOf(kind,id),R=rentOf(d),c=costOf(kind,id,d),r=rentInfo(kind,id),own=hasIt(kind,id)&&!r;
+  const t=I.tier(id),rar=t>0?RAR[Math.min(5,t)]:null,lock=!!(I.req&&I.req(id)>myLevel()),gp=profile.gp|0,broke=gp<c,deal=dealPct(kind,id)>0;
+  const chips=RENT.map(o=>{const p=costOf(kind,id,o.k),pf=costOf(kind,id,o.k,true);
+    return `<button class="bsChip${o.k===d?' on':''}${gp<p?' poor':''}${o.d?'':' fv'}" data-dur-pick="${o.k}" aria-pressed="${o.k===d}"><b>${o.s}</b><span>${pf!==p?`<s>${pf.toLocaleString()}</s> `:''}${p.toLocaleString()}</span></button>`;}).join('');
+  const when=R.d?`${r?'New end':'Ends'} ${fmtEnd(Math.max(r?r.e:0,rNow())+R.d*DAY)}`:`Yours forever · sells back for ${Math.round(SELL_PCT*100)}%`;
+  let cta,dis=false;
+  if(own){cta='Owned forever';dis=true;}
+  else if(lock){cta=`Unlocks at level ${I.req(id)}`;dis=true;}
+  else if(broke){cta=`Need ${(c-gp).toLocaleString()} more GP`;dis=true;}
+  else cta=`${R.d?(r?'Extend':'Rent'):'Buy'} · ${R.d?R.s:'Forever'}<em>${c.toLocaleString()} GP</em>`;
+  let nudge='';if(broke&&!own&&!lock){const ok=RENT.filter(o=>o.d&&costOf(kind,id,o.k)<=gp).pop();if(ok)nudge=`<button class="bsNudge" data-dur-pick="${ok.k}">Try it: rent ${ok.n} · ${costOf(kind,id,ok.k).toLocaleString()} GP ›</button>`;}
+  const status=r?`<span class="bsState rent">⏳ Rented · ${leftTxt(r.e-rNow())} left</span>`:own?'<span class="bsState own">✓ Yours</span>':'';
+  el.innerHTML=`<div class="bsCard" style="--rc:${rar?rar.c:'#5b9cf0'}">
+    <div class="bsArt">${thumbOf(kind,id)}${rar?`<span class="bsRar">${rar.n}</span>`:''}${deal?'<span class="bsDeal">−25% today</span>':''}</div>
+    <div class="bsInfo"><button class="bsX" data-close="1" aria-label="Close">✕</button>
+      <div class="bsHead"><small>${esc(KIND_N[kind]||kind)}</small><b class="bsName">${esc(I.name(id))}</b>${status}</div>
+      <div class="bsLbl">How long?</div><div class="bsChips" role="radiogroup">${chips}</div>
+      <div class="bsWhen">${when}${!dis?` · Balance after: <b>${(gp-c).toLocaleString()} GP</b>`:''}</div>
+      ${SH.msg?`<div class="bsMsg">${esc(SH.msg)}</div>`:''}
+      <button class="btn cut bsGo" ${SH.hook} ${dis?'disabled':''}>${cta}</button>${nudge}
+    </div></div>`;
+  el.hidden=false;}
 function renderShop(){
   rentSweep();renderProfile();
   let h='';const dsc=t=>`<div style="font-family:var(--f-body);font-size:13px;color:var(--dim)">${t}</div>`,buyRow=(price,attr)=>`<div class="row" style="justify-content:space-between"><span class="price">${price.toLocaleString()} GP</span><button class="btn sm cut" ${attr} ${profile.gp<price?'disabled':''}>Buy</button></div>`;
@@ -6384,12 +6491,12 @@ function renderShop(){
       h+=`<div class="item ${profile.camo===id?'eq':''} ${shopPv.camo===id?'pv':''}" data-pv="camo:${id}">${img(gunThumb(profile.slots[0],id,attOf(profile.slots[0])))}<div class="ty">weapon camo</div><h3>${c.name}</h3>
       ${own?`<button class="btn sm ${profile.camo===id?'':'ghost'} cut" data-camo="${id}">${profile.camo===id?'Equipped':'Equip'}</button>${ownExtra('camo',id)}`:c.crate?'<div class="note">Found in crates</div>':buyBox('camo',id,`data-buycamo="${id}"`)}</div>`;}
   }
-  $('shopGrid').innerHTML=h;tagNew($('shopGrid'));renderNewDots();
+  $('shopGrid').innerHTML=h;tagNew($('shopGrid'));for(const x of $('shopGrid').querySelectorAll('.btn.sm'))if(x.textContent==='Equipped')x.classList.add('isOn');renderNewDots();
   for(const b of $('shopTabs').children)b.classList.toggle('on',b.dataset.tab===shopTab);
   renderPvInfo();if(usePv)pvStart();
 }
 $('shopGrid').addEventListener('change',e=>{const t=e.target;if(!t||!t.dataset||!t.dataset.rd)return;if(RENT.some(r=>r.k===t.value))rentPick[t.dataset.rd.replace('|',':')]=t.value;renderShop();});
-$('shopTabs').addEventListener('click',e=>{const b=e.target.closest('[data-tab]');if(b){flushSeen();shopTab=b.dataset.tab;shopPv=null;renderShop();}});
+$('shopTabs').addEventListener('click',e=>{const b=e.target.closest('[data-tab]');if(b){closeSheet();flushSeen();shopTab=b.dataset.tab;shopPv=null;renderShop();}});
 $('shopGrid').addEventListener('click',e=>{
   // tapping a card shows it in the preview
   const card=e.target.closest('[data-pv]');if(card&&!e.target.closest('button')){const [k,v]=card.dataset.pv.split(':');
@@ -6400,6 +6507,11 @@ $('shopGrid').addEventListener('click',e=>{
     for(const c of $('shopGrid').querySelectorAll('[data-pv]'))c.classList.toggle('pv',c===card);return;}
   const b=e.target.closest('button');if(!b||b.disabled)return;
   if(b.dataset.go==='shop'){return;}
+  if(b.dataset.sheet){openSheet(b);return;}
+  shopBtn(b);
+});
+// every store action (cards and the purchase window run the same code)
+function shopBtn(b){
   if(b.dataset.dur){rentSel=b.dataset.dur;renderShop();return;}
   if(b.dataset.sell){const [kind,id]=b.dataset.sell.split('|');
     if(b.dataset.arm!=='1'){b.dataset.arm='1';b.classList.add('danger');b.textContent=`Tap again to sell · +${(+b.dataset.v||0).toLocaleString()}`;setTimeout(()=>{if(b.isConnected&&b.dataset.arm==='1')renderShop();},5000);return;}
@@ -6428,9 +6540,16 @@ $('shopGrid').addEventListener('click',e=>{
   if(b.dataset.equip)profile.equip=b.dataset.equip;
   if(b.dataset.mine){if(profile.gp>=1500&&profile.mineLvl<2){profile.gp-=1500;profile.mineLvl++;}}
   saveProfile();renderShop();
-});
+}
+$('buySheet').addEventListener('click',e=>{if(!SH)return;const b=e.target.closest('button');
+  if(!b){if(e.target.id==='buySheet')closeSheet();return;}
+  if(b.dataset.close){closeSheet();return;}
+  if(b.dataset.durPick){if(RENT.some(r=>r.k===b.dataset.durPick))rentPick[SH.kind+':'+SH.id]=b.dataset.durPick;SH.msg='';renderSheet();return;}
+  if(b.disabled||!b.classList.contains('bsGo'))return;
+  const gp0=profile.gp;shopBtn(b);
+  if(profile.gp<gp0)closeSheet();else{SH.msg='That did not go through. Check your GP and level.';renderSheet();}});
 $('openShop').addEventListener('click',()=>{renderShop();$('shop').hidden=false;});
-$('shopClose').addEventListener('click',()=>{flushSeen();$('shop').hidden=true;gfxSpare();renderProfile();});
+$('shopClose').addEventListener('click',()=>{closeSheet();flushSeen();$('shop').hidden=true;gfxSpare();renderProfile();});
 
 /* ================= character: skins, bag, armor, equipment ================= */
 let charTab='bag',CP=null;
