@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-0DyOAhECJE3vXFXcwNw4h8mO8gGu9ipiVydQh+qgfGc=' 'sha256-BiNtH+BcksEGBqv+ZnzOEg9OkCR1Uno54EF027EUTP8=' 'unsafe-eval'; script-src-attr 'none'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; media-src 'self' data: blob:; connect-src 'self' https: wss: data: blob: http://127.0.0.1:* ws://127.0.0.1:* http://localhost:* ws://localhost:*; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'; frame-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-0DyOAhECJE3vXFXcwNw4h8mO8gGu9ipiVydQh+qgfGc=' 'sha256-HQkcEu2TVrVlQK15uSG4JfxGKLnZ6hyNgegrdTSEWSI=' 'unsafe-eval'; script-src-attr 'none'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; media-src 'self' data: blob:; connect-src 'self' https: wss: data: blob: http://127.0.0.1:* ws://127.0.0.1:* http://localhost:* ws://localhost:*; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'; frame-src 'none'">
 <meta name="referrer" content="no-referrer">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
@@ -447,6 +447,27 @@ html.rot.rotLate #rotTip span{opacity:1}
 .slotbar{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .slotc{background:rgba(243,181,74,.1);border:1px solid rgba(243,181,74,.55);padding:6px 10px}.slotc .lbl2{color:var(--amber)}.slotc b{display:block;font-family:var(--f-hud);font-weight:400;font-size:22px}
 .citem{background:rgba(0,0,0,.32);border:1px solid var(--line);padding:8px 10px;display:flex;flex-direction:column;gap:5px}.citem.eq{border-color:var(--amber)}.citem h3{margin:0;font-family:var(--f-hud);font-weight:400;font-size:21px;line-height:1}.citem .ty{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim)}
+#charBody{grid-auto-rows:max-content}
+.kitBar{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.kitSlot{position:relative;display:grid;grid-template-columns:1fr;justify-items:center;padding:6px 8px 7px;border:1px solid rgba(243,181,74,.65);background:radial-gradient(ellipse at 50% 42%,color-mix(in srgb,var(--gc) 26%,transparent),transparent 72%),linear-gradient(180deg,rgba(243,181,74,.10),rgba(0,0,0,.35));overflow:hidden}
+.kitSlot::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--amber)}
+.kitLab{justify-self:start;font:600 11px var(--f-body);letter-spacing:.16em;text-transform:uppercase;color:var(--amber)}
+.kitImg{width:100%;max-width:220px;height:62px;object-fit:contain;filter:drop-shadow(0 6px 8px rgba(0,0,0,.55))}
+.kitName{font:400 22px/1 var(--f-hud);letter-spacing:.03em;color:#fff;text-align:center}.kitTy{font:600 10px var(--f-body);letter-spacing:.12em;text-transform:uppercase;color:var(--dim);margin-top:2px}
+.citem.wcard{padding:0 0 8px;gap:4px;overflow:hidden;position:relative;transition:transform .12s,border-color .12s}
+.citem.wcard>*:not(.wpic){margin:0 10px}.citem.wcard:active{transform:scale(.985)}
+.wpic{position:relative;height:74px;display:grid;place-items:center;background:radial-gradient(ellipse at 50% 60%,color-mix(in srgb,var(--gc) 30%,transparent),transparent 70%),linear-gradient(180deg,rgba(255,255,255,.04),rgba(0,0,0,.2));border-bottom:1px solid color-mix(in srgb,var(--gc) 45%,transparent)}
+.wpic::after{content:"";position:absolute;left:0;right:0;top:0;height:2px;background:var(--gc)}
+.wpic img{max-width:92%;height:66px;object-fit:contain;filter:drop-shadow(0 5px 6px rgba(0,0,0,.6))}.wpic img:not([src]){visibility:hidden}
+.wOn{position:absolute;right:0;top:2px;z-index:1;font:600 10px var(--f-body);letter-spacing:.12em;text-transform:uppercase;color:#0d1116;background:var(--amber);padding:2px 7px 2px 9px;clip-path:polygon(6px 0,100% 0,100% 100%,0 100%)}
+.citem.wcard.eq{border-color:var(--amber);box-shadow:0 0 0 1px rgba(243,181,74,.35),0 0 18px rgba(243,181,74,.12)}
+.wsbs{display:grid;grid-template-columns:1fr 1fr;gap:8px}.wsb{display:flex;align-items:center;gap:5px;font:600 10px var(--f-body);letter-spacing:.1em;color:var(--dim)}
+.wsb b{flex:1;height:4px;background:rgba(255,255,255,.1)}.wsb i{display:block;height:100%;background:linear-gradient(90deg,#cfd6df,#fff)}
+.lockGrid{grid-column:1/-1;display:grid;grid-template-columns:repeat(auto-fill,minmax(86px,1fr));gap:5px}
+.lockT{display:flex;flex-direction:column;align-items:center;gap:1px;padding:4px 3px 5px;background:rgba(0,0,0,.3);border:1px solid var(--line);opacity:.75}
+.lockT img{width:100%;height:30px;object-fit:contain;filter:grayscale(1) brightness(.75)}.lockT img:not([src]){visibility:hidden}
+.lockT b{font:400 14px/1 var(--f-hud);letter-spacing:.03em;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}.lockT small{font:600 10px var(--f-body);color:var(--dim)}
+@media (max-height:500px){.wpic{height:60px}.wpic img{height:54px}.kitImg{height:50px}.kitName{font-size:19px}}
 .citem.lock{opacity:.55}.citem .row{gap:5px}.citem .btn.sm{font-size:15px;padding:4px 10px 1px}
 .sw2{height:30px;border:1px solid rgba(0,0,0,.4)}
 .t0{color:var(--dim)}.t1{color:#9fb4c8}.t2{color:#6c9eff}.t3{color:#c07bf0}.t4{color:var(--amber)}
@@ -1755,7 +1776,7 @@ async function adminClaim(code){if(!CS||CS.guest)return 'Sign in to your own acc
   if(r.ok){CS.admin=true;cloudKeep();return '';}const e=r.j&&r.j.error;
   return !r.status?'No connection to the server.':e==='code'?'That code is not right.':e==='taken'?'This game already has its admin.':e==='guest'?'Guest accounts cannot be admins. Create your account first.':'The server said no (error '+r.status+').';}
 /* ================= version, remote settings, crash reports ================= */
-const APP_VERSION='1.5.0',BUILD_ID='e0e1f51';
+const APP_VERSION='1.5.1',BUILD_ID='da65ba0';
 const verNum=v=>String(v||'0').split('.').slice(0,3).map(n=>parseInt(n)||0).reduce((a,n)=>a*1000+n,0);
 let RCFG={};try{RCFG=JSON.parse(localStorage.getItem('blockfire.rcfg')||'{}')||{};}catch(e){RCFG={};}
 const feat=k=>!(RCFG.features&&RCFG.features[k]===false);
@@ -6361,7 +6382,7 @@ function thumbR(){if(TH!==null)return TH;
   try{const c=document.createElement('canvas');c.width=360;c.height=180;const r=new THREE.WebGLRenderer({canvas:c,antialias:true,alpha:true,preserveDrawingBuffer:true});r.setPixelRatio(1);
     const sc=new THREE.Scene();sc.add(new THREE.HemisphereLight(0xffffff,0x40404a,1.1));const dl=new THREE.DirectionalLight(0xfff2dd,.85);dl.position.set(1.5,3,4);sc.add(dl);
     TH={r,c,sc,cam:new THREE.PerspectiveCamera(24,2,.05,60)};}catch(e){TH=false;}return TH;}
-function gfxSpare(){try{if(TH){TH.r.dispose();TH.r.forceContextLoss();}}catch(e){}TH=null;
+function gfxSpare(){try{thumbJob++;}catch(e){}try{if(TH){TH.r.dispose();TH.r.forceContextLoss();}}catch(e){}TH=null;
   try{if(CP&&$('char').hidden){CP.r.dispose();CP.r.forceContextLoss();const cv=$('charCv');cv.replaceWith(cv.cloneNode(false));CP=null;}}catch(e){CP=null;}}
 function disposeObj(o){o.traverse(m=>{if(m.geometry&&m.geometry!==boxGeo)m.geometry.dispose();});}
 // free everything a removed object owns on the graphics card (its shapes and its own colours), but never the block
@@ -6953,6 +6974,14 @@ function charPreview(){
     CP.r.render(CP.sc,CP.cam);};
   tick();
 }
+// weapon pictures fill in a few per frame, so the screen opens at once even on a slow phone
+let thumbJob=0;
+function fillThumbs(root){const job=++thumbJob,todo=[...root.querySelectorAll('img[data-gth]')];
+  const put=im=>{const id=im.dataset.gth;let u='';try{u=gunThumb(id,im.dataset.own?profile.camo:'none',im.dataset.own&&!isKnife(id)?attOf(id):null);}catch(e){}if(u)im.src=u;else im.classList.add('noPic');im.removeAttribute('data-gth');};
+  for(const im of todo){const id=im.dataset.gth,key='g|'+id+'|'+(im.dataset.own?profile.camo:'none')+'|'+JSON.stringify((im.dataset.own&&!isKnife(id)?attOf(id):null)||{});if(thumbCache.has(key))put(im);}
+  const rest=todo.filter(im=>im.hasAttribute('data-gth'));let i=0;
+  const step=()=>{if(job!==thumbJob||!root.isConnected||root.closest('.overlay[hidden]'))return;const t0=performance.now();while(i<rest.length&&performance.now()-t0<12){const im=rest[i++];if(im.isConnected)put(im);}if(i<rest.length)requestAnimationFrame(step);};
+  if(rest.length)requestAnimationFrame(step);}
 function renderChar(){
   const gs0=gearStats(),hp=100+gs0.hp,sk=CHARS[profile.skin]||CHARS.std;
   $('charGp').textContent=profile.gp.toLocaleString()+' GP';
@@ -6960,15 +6989,22 @@ function renderChar(){
   for(const b of $('charTabs').children)b.classList.toggle('on',b.dataset.ct===charTab);
   const dsc=t=>`<div style="font-family:var(--f-body);font-size:12px;color:var(--dim)">${t}</div>`;let h='';
   if(charTab==='bag'){
-    h+=`<div class="slotbar"><div class="slotc"><span class="lbl2">Primary${rentChip('gun',profile.slots[0])}</span><b>${esc(WEAPONS[profile.slots[0]].name)}</b></div><div class="slotc"><span class="lbl2">Secondary${rentChip('gun',profile.slots[1])}</span><b>${esc(WEAPONS[profile.slots[1]].name)}</b></div></div>`;
-    h+=`<div class="lbl2" style="grid-column:1/-1">Your bag · ${profile.owned.length} weapon${profile.owned.length===1?'':'s'}</div>`;
-    for(const id of WORDER){if(!profile.owned.includes(id))continue;const w=WEAPONS[id],sl=profile.slots.indexOf(id);
-      h+=`<div class="citem ${sl>=0?'eq':''}"><div class="ty">${w.kind==='rpg'?'launcher':w.kind}${rentChip('gun',id)}</div><h3>${esc(w.name)}</h3>${bar('DAMAGE',w.stats[0])}${bar('FIRE RATE',w.stats[1])}
+    // the two guns you carry, big, with your camo and attachments
+    const slotCard=(i)=>{const id=profile.slots[i],w=WEAPONS[id];if(!w)return '';const k=gunClass(id);
+      return `<div class="kitSlot" style="--gc:${GCLS[k].c}"><div class="kitLab">${i?'Secondary':'Primary'}${rentChip('gun',id)}</div><img class="kitImg" data-gth="${id}" data-own="1" alt=""><div class="kitName">${esc(w.name)}</div><div class="kitTy">${gclsTag(id)} ${w.kind==='rpg'?'launcher':w.kind}</div></div>`;};
+    h+=`<div class="kitBar">${slotCard(0)}${slotCard(1)}</div>`;
+    h+=`<div class="lbl2" style="grid-column:1/-1">Your bag · ${profile.owned.length} weapon${profile.owned.length===1?'':'s'} · tap Primary or Secondary to carry it</div>`;
+    const mini=(l,v)=>`<div class="wsb"><span>${l}</span><b><i style="width:${Math.max(4,Math.min(100,v|0))}%"></i></b></div>`;
+    for(const id of WORDER){if(!profile.owned.includes(id))continue;const w=WEAPONS[id],sl=profile.slots.indexOf(id),k=gunClass(id);
+      h+=`<div class="citem wcard ${sl>=0?'eq':''}" style="--gc:${GCLS[k].c}"><div class="wpic">${sl>=0?`<span class="wOn">${sl?'Secondary':'Primary'}</span>`:''}<img data-gth="${id}" data-own="1" alt="${esc(w.name)}"></div>
+        <h3>${esc(w.name)}</h3><div class="ty">${gclsTag(id)} ${w.kind==='rpg'?'launcher':w.kind}${w.dual?' · twin':''}${rentChip('gun',id)}</div>
+        <div class="wsbs">${mini('DMG',w.stats[0])}${mini('RATE',w.stats[1])}</div>
         <div class="row"><button class="btn sm ${sl===0?'':'ghost'} cut" data-cslot="0" data-w="${id}">Primary</button><button class="btn sm ${sl===1?'':'ghost'} cut" data-cslot="1" data-w="${id}">Secondary</button></div></div>`;}
     for(const id of KNIVES){if(!(profile.knives||['knife']).includes(id))continue;const w=WEAPONS[id],on=myKnife()===id;
-      h+=`<div class="citem ${on?'eq':''}"><div class="ty">knife${rentChip('knife',id)}</div><h3>${esc(w.name)}</h3>${dsc(w.desc)}<button class="btn sm ${on?'':'ghost'} cut" data-cknife="${id}">${on?'Equipped':'Equip'}</button></div>`;}
+      h+=`<div class="citem wcard ${on?'eq':''}" style="--gc:#e0e6ee"><div class="wpic">${on?'<span class="wOn">Equipped</span>':''}<img data-gth="${id}" alt="${esc(w.name)}"></div><h3>${esc(w.name)}</h3><div class="ty">knife${rentChip('knife',id)}</div>${dsc(w.desc)}<button class="btn sm ${on?'':'ghost'} cut" data-cknife="${id}">${on?'Equipped':'Equip'}</button></div>`;}
     const locked=WORDER.filter(id=>!profile.owned.includes(id));
-    if(locked.length)h+=`<div class="citem lock" style="grid-column:1/-1"><div class="ty">Not in your bag yet</div>${dsc(locked.map(id=>WEAPONS[id].name+' (Lv '+gunReq(id)+')').join(' · ')+'. Each opens in the Store at its level. Very rarely one drops from a crate early.')}<div class="row"><button class="btn sm ghost cut" data-go="shop">Store</button><button class="btn sm ghost cut" data-go="crate">Crates</button></div></div>`;
+    if(locked.length)h+=`<div class="lbl2" style="grid-column:1/-1">Not in your bag yet · ${locked.length}</div><div class="lockGrid">${locked.map(id=>`<div class="lockT" title="${esc(WEAPONS[id].name)}"><img data-gth="${id}" alt=""><b>${esc(WEAPONS[id].name)}</b><small>🔒 Lv ${gunReq(id)}</small></div>`).join('')}</div>
+      <div class="citem lock" style="grid-column:1/-1">${dsc('Each gun opens in the Store at its level. Mystery boxes and crates can give one early.')}<div class="row"><button class="btn sm ghost cut" data-go="shop">Store</button><button class="btn sm ghost cut" data-go="crate">Crates</button></div></div>`;
   }else if(charTab==='skins'){
     for(const id in CHARS){const c=CHARS[id],own=(profile.skins||['std']).includes(id),on=(profile.skin||'std')===id;
       const sw=c.camo?`background:linear-gradient(90deg,${c.camo.map(t=>`rgb(${t})`).join(',')})`:`background:linear-gradient(90deg,#3a4e66,#4a607a,#283648)`;
@@ -6999,7 +7035,7 @@ function renderChar(){
     for(const id of profile.camos){const c=CAMOS[id],on=profile.camo===id;const sw=c.tex?`background:linear-gradient(90deg,${c.tex.map(t=>`rgb(${t})`).join(',')})`:`background:#${c.color.toString(16).padStart(6,'0')}`;
       h+=`<div class="citem ${on?'eq':''}"><div class="ty">weapon camo${rentChip('camo',id)}</div><h3>${c.name}</h3><div class="sw2" style="${sw}"></div><button class="btn sm ${on?'':'ghost'} cut" data-ccamo="${id}">${on?'Equipped':'Equip'}</button></div>`;}
   }
-  $('charBody').innerHTML=h;tagNew($('charBody'));renderNewDots();charPreview();
+  $('charBody').innerHTML=h;fillThumbs($('charBody'));tagNew($('charBody'));renderNewDots();charPreview();
 }
 function openChar(){rentSweep();renameEnd();renderChar();$('char').hidden=false;charPreview();}
 $('openChar').addEventListener('click',openChar);

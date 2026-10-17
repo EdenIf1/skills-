@@ -1,7 +1,7 @@
 // Offline cache for Cubefront. The page is fetched network-first so updates arrive;
 // the game's own files (engine, icons, fonts) are served from cache first.
 // Requests to other sites (the save server, relays, updates) are never cached: progress must always be live.
-const CACHE='blockfire-e0e1f51b3f';
+const CACHE='blockfire-da65ba0b72';
 const CORE=['./','index.html','play.html','wrap.js','three.min.js','peerjs.min.js','mixer.js','manifest.webmanifest','icon-192.png','icon-512.png','icon-maskable.png','apple-touch-icon.png','fonts.css',
   'fonts/teko-latin-400-normal.woff2','fonts/teko-latin-500-normal.woff2','fonts/teko-latin-600-normal.woff2','fonts/silkscreen-latin-400-normal.woff2','fonts/silkscreen-latin-700-normal.woff2',
   'fonts/chakra-petch-latin-400-normal.woff2','fonts/chakra-petch-latin-600-normal.woff2'];
