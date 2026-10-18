@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-0DyOAhECJE3vXFXcwNw4h8mO8gGu9ipiVydQh+qgfGc=' 'sha256-ZS10n5if0vhiQmiUfgwzLx3kNJpP74kgP91TqaU6bJQ=' 'unsafe-eval'; script-src-attr 'none'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; media-src 'self' data: blob:; connect-src 'self' https: wss: data: blob: http://127.0.0.1:* ws://127.0.0.1:* http://localhost:* ws://localhost:*; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'; frame-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-0DyOAhECJE3vXFXcwNw4h8mO8gGu9ipiVydQh+qgfGc=' 'sha256-avctiEcCrohx0ZV3rxPcWmCc/vTs34ZCueBmBijjIHY=' 'unsafe-eval'; script-src-attr 'none'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; media-src 'self' data: blob:; connect-src 'self' https: wss: data: blob: http://127.0.0.1:* ws://127.0.0.1:* http://localhost:* ws://localhost:*; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'; frame-src 'none'">
 <meta name="referrer" content="no-referrer">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
@@ -1841,7 +1841,7 @@ async function adminClaim(code){if(!CS||CS.guest)return 'Sign in to your own acc
   if(r.ok){CS.admin=true;cloudKeep();return '';}const e=r.j&&r.j.error;
   return !r.status?'No connection to the server.':e==='code'?'That code is not right.':e==='taken'?'This game already has its admin.':e==='guest'?'Guest accounts cannot be admins. Create your account first.':'The server said no (error '+r.status+').';}
 /* ================= version, remote settings, crash reports ================= */
-const APP_VERSION='1.8.0',BUILD_ID='2c563ac';
+const APP_VERSION='1.8.0',BUILD_ID='0701f40';
 const verNum=v=>String(v||'0').split('.').slice(0,3).map(n=>parseInt(n)||0).reduce((a,n)=>a*1000+n,0);
 let RCFG={};try{RCFG=JSON.parse(localStorage.getItem('blockfire.rcfg')||'{}')||{};}catch(e){RCFG={};}
 const feat=k=>!(RCFG.features&&RCFG.features[k]===false);
@@ -1901,7 +1901,9 @@ async function liveUpdate(){const U=capPlug('CapacitorUpdater');if(!U)return;upd
   try{const r=await fetch(UPDATE_URL+'?t='+Date.now(),{cache:'no-store'});if(!r.ok)return;const m=await r.json();
     if(!m||!m.version||!m.url||!/^[0-9a-f]{64}$/i.test(String(m.checksum||''))||verNum(m.version)<=verNum(APP_VERSION))return;
     if(!/^https:\/\/raw\.githubusercontent\.com\/EdenIf1\/skills-\/gh-pages\/app\/bundle-[\d.]+\.zip$/.test(m.url)||!await updVerify(m)){reportErr('update','unsigned or wrongly signed update refused');return;}
-    const A=capPlug('App');if(m.minNative&&A){const info=await A.getInfo();if(verNum(m.minNative)>verNum(info.version))return;}
+    // over the air only fixes for the version Apple reviewed (same major.minor); new features ship as an App Store update
+    const A=capPlug('App');if(!A)return;const info=await A.getInfo(),mm=v=>String(v||'').split('.').slice(0,2).join('.');
+    if(mm(m.version)!==mm(info.version))return;if(m.minNative&&verNum(m.minNative)>verNum(info.version))return;
     const b=await U.download({url:m.url,version:m.version,checksum:m.checksum});await U.next({id:b.id});toast('Update downloaded · it installs next time you open the game');try{inboxAdd('news',`Version ${m.version} is ready`,'It installs the next time you open the game.');}catch(e){}}
   catch(e){reportErr('update',e);}}
 function haptic(style){const H=capPlug('Haptics');if(!H||SET.haptics===false)return;try{H.impact({style:style||'LIGHT'});}catch(e){}}
@@ -6855,11 +6857,11 @@ function frRender(){const L=$('frList');if(!L)return;
   if(!frSigned()){L.innerHTML=`<div class="inEmpty">Sign in to add friends, see who is online and join their games.<div class="row" style="justify-content:center;margin-top:8px"><button class="btn sm cut" id="frSignIn">Sign in</button></div></div>`;return;}
   const m=FRI.msg?`<div class="inEmpty" style="padding:6px;color:${FRI.msg[0]==='!'?'#ff8a8a':'var(--amber)'}">${esc(FRI.msg.replace(/^!/,''))}</div>`:'';
   const row=x=>{const n=esc(x.name),lv=`<small>Lv ${x.level|0}</small>`;
-    if(x.status==='incoming')return `<div class="frRow inc"><span class="frDot"></span><b>${n}</b><small>wants to be friends</small><button class="btn sm cut" data-fracc="${n}">Accept</button><button class="btn sm ghost cut" data-frdec="${n}">Decline</button></div>`;
+    if(x.status==='incoming')return `<div class="frRow inc"><span class="frDot"></span><b>${n}</b><small>wants to be friends</small><button class="btn sm cut" data-fracc="${n}">Accept</button><button class="btn sm ghost cut" data-frdec="${n}">Decline</button><button class="frX" data-frblk="${n}" data-frin="1" aria-label="Block ${n}" title="Block">⊘</button></div>`;
     if(x.status==='outgoing')return `<div class="frRow"><span class="frDot"></span><b>${n}</b><small>request sent</small><button class="frX" data-frrm="${n}" aria-label="Cancel request">✕</button></div>`;
     const room=typeof x.room==='string'&&/^[A-Za-z0-9]{4,8}$/.test(x.room)?x.room:'';
     const act=room&&room!==NET.code?`<button class="btn sm cut" data-frjoin="${esc(room)}">Join</button>`:(x.online&&NET.code&&room!==NET.code?`<button class="btn sm ghost cut" data-frinv="${n}">Invite</button>`:'');
-    return `<div class="frRow"><span class="frDot ${x.online?'on':''}" title="${x.online?'Online':'Offline'}"></span><b>${n}</b>${lv}<small>${x.online?(room?'in a game':'online'):'offline'}</small>${act}<button class="frX" data-frrm="${n}" aria-label="Remove friend">✕</button></div>`;};
+    return `<div class="frRow"><span class="frDot ${x.online?'on':''}" title="${x.online?'Online':'Offline'}"></span><b>${n}</b>${lv}<small>${x.online?(room?'in a game':'online'):'offline'}</small>${act}<button class="frX" data-frblk="${n}" aria-label="Block ${n}" title="Block">⊘</button><button class="frX" data-frrm="${n}" aria-label="Remove friend">✕</button></div>`;};
   L.innerHTML=m+(FRI.rows.length?FRI.rows.map(row).join(''):`<div class="inEmpty">No friends yet. Type a player's name above and tap Add friend. When they accept, you will see when they are online.</div>`);}
 function openFriends(){FRI.msg='';frRender();$('friends').hidden=false;frLoad();frPing(true);}
 async function frAct(fn,body,ok){if(!frSigned())return;try{if(!await cloudFresh())return;const r=await cloudReq('/rest/v1/rpc/'+fn,{method:'POST',body});
@@ -6880,6 +6882,9 @@ $('frList').addEventListener('click',e=>{const b=e.target.closest('button');if(!
   if(d.fracc)return frAct('friend_respond',{p_name:d.fracc,p_accept:true},v=>v==='accepted'?`You and ${d.fracc} are now friends.`:v==='no_request'?'!That request is gone.':'');
   if(d.frdec)return frAct('friend_respond',{p_name:d.frdec,p_accept:false},v=>v==='declined'?'Request declined.':v==='no_request'?'!That request is gone.':'');
   if(d.frrm){if(!confirm(`Remove ${d.frrm}?`))return;return frAct('friend_remove',{p_name:d.frrm},v=>v==='removed'?`${d.frrm} removed.`:'');}
+  if(d.frblk){const who=d.frblk;if(!confirm(`Block ${who}? They can't send you friend requests or invites, or join your rooms. Undo it in Settings › Blocked players.`))return;
+    if(!isBlocked(who))blocked().push({k:nameKey(who),n:String(who).slice(0,20)});saveProfile();FRI.rows=FRI.rows.filter(x=>!isBlocked(x.name));
+    return d.frin?frAct('friend_respond',{p_name:who,p_accept:false},()=>`${who} is blocked.`):frAct('friend_remove',{p_name:who},()=>`${who} is blocked.`);}
   if(d.frjoin){$('friends').hidden=true;openLobby();mpJoin(d.frjoin);return;}
   if(d.frinv){invSend(d.frinv);return;}});
 // tell friends you are online (and which room you are in) about once a minute while the game is open
