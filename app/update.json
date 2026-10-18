@@ -1,8 +1,8 @@
 {
-  "version": "1.8.3",
-  "url": "https://raw.githubusercontent.com/EdenIf1/skills-/gh-pages/app/bundle-1.8.3.zip",
-  "checksum": "3bd9bf81a5ee21d11ece898d48a7d94b30d0d12998f4dcd4baa90d7421e1b139",
-  "minNative": "1.8.0",
-  "sig": "uq7QMu70UDj6sv/NdjcRjf9adO8s7+8V6V9DVi7//FXHprOKqCpp3zdVH+5KimhjpgcX014l1H3CiZmbbNf79Q==",
-  "date": "2026-10-18T21:47:16.978Z"
+  "version": "1.9.0",
+  "url": "https://raw.githubusercontent.com/EdenIf1/skills-/gh-pages/app/bundle-1.9.0.zip",
+  "checksum": "512afedb61b3d82597c7c6c2cb25902e6aa8154924b79e5b19366f1b0ab28113",
+  "minNative": "1.9.0",
+  "sig": "ijU4nbL0IkMneJ/xEL8YGldXMNo+AMkuXMB+4+mofL/EbcpZjqT3SeA0U8yfF54emLW8vc6AlV0sY744onIA5Q==",
+  "date": "2026-10-18T23:22:42.819Z"
 }
