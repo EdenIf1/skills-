@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-0DyOAhECJE3vXFXcwNw4h8mO8gGu9ipiVydQh+qgfGc=' 'sha256-OTXYks5d8mXqpNxAqLNQ3muLv90axHGaLu4dIByrQlc=' 'unsafe-eval'; script-src-attr 'none'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; media-src 'self' data: blob:; connect-src 'self' https: wss: data: blob: http://127.0.0.1:* ws://127.0.0.1:* http://localhost:* ws://localhost:*; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'; frame-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-0DyOAhECJE3vXFXcwNw4h8mO8gGu9ipiVydQh+qgfGc=' 'sha256-oNevDLlhdC8c8MGkYz8QP9FtPUer/g+sMyBR468bxqs=' 'unsafe-eval'; script-src-attr 'none'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; media-src 'self' data: blob:; connect-src 'self' https: wss: data: blob: http://127.0.0.1:* ws://127.0.0.1:* http://localhost:* ws://localhost:*; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'; frame-src 'none'">
 <meta name="referrer" content="no-referrer">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
@@ -1892,7 +1892,7 @@ async function adminClaim(code){if(!CS||CS.guest)return 'Sign in to your own acc
   if(r.ok){CS.admin=true;cloudKeep();return '';}const e=r.j&&r.j.error;
   return !r.status?'No connection to the server.':e==='code'?'That code is not right.':e==='taken'?'This game already has its admin.':e==='guest'?'Guest accounts cannot be admins. Create your account first.':'The server said no (error '+r.status+').';}
 /* ================= version, remote settings, crash reports ================= */
-const APP_VERSION='1.8.2',BUILD_ID='7d91643';
+const APP_VERSION='1.8.3',BUILD_ID='86ad188';
 const verNum=v=>String(v||'0').split('.').slice(0,3).map(n=>parseInt(n)||0).reduce((a,n)=>a*1000+n,0);
 let RCFG={};try{RCFG=JSON.parse(localStorage.getItem('blockfire.rcfg')||'{}')||{};}catch(e){RCFG={};}
 const feat=k=>!(RCFG.features&&RCFG.features[k]===false);
@@ -4746,12 +4746,12 @@ function toast(text){text=String(text==null?'':text);if(!text)return;const now=D
 // the score feed beside the crosshair: each kill or objective shows what it earned, with a running total for the burst
 const RF={xp:0,gp:0,cash:0,t:0};
 function rfPush(amt,cur,label,sub){try{const box=$('rfeed'),tot=$('rftot');if(!box||!tot)return;amt=Math.round(+amt||0);if(amt<=0)return;
-  cur=cur==='gp'||cur==='cash'?cur:'xp';const now=performance.now();if(now-RF.t>3200){RF.xp=0;RF.gp=0;RF.cash=0;}RF.t=now;RF[cur]+=amt;
+  cur=cur==='gp'||cur==='cash'?cur:'xp';const now=performance.now();if(now-RF.t>2240){RF.xp=0;RF.gp=0;RF.cash=0;}RF.t=now;RF[cur]+=amt;
   tot.innerHTML=(RF.xp?`+${RF.xp.toLocaleString()}<i>XP</i>`:'')+(RF.gp?`<em>+${RF.gp.toLocaleString()}<i>GP</i></em>`:'')+(RF.cash?`<em class="c">+$${RF.cash.toLocaleString()}</em>`:'');tot.classList.add('on');tot.classList.remove('bump');void tot.offsetWidth;tot.classList.add('bump');
   const d=document.createElement('div');d.className='rf '+cur;d.innerHTML=`<b>+${cur==='cash'?'$':''}${amt.toLocaleString()}</b><i>${cur==='gp'?'GP':cur==='xp'?'XP':''}</i><span>${esc(String(label||''))}</span>${sub?`<small>${esc(String(sub))}</small>`:''}`;
   tot.after(d);const L=box.querySelectorAll('.rf');for(let i=4;i<L.length;i++)L[i].remove();
-  setTimeout(()=>{d.classList.add('out');setTimeout(()=>d.remove(),360);},2400);
-  clearTimeout(RF.h);RF.h=setTimeout(()=>{tot.classList.remove('on');},3200);}catch(e){}}
+  setTimeout(()=>{d.classList.add('out');setTimeout(()=>d.remove(),360);},1680);
+  clearTimeout(RF.h);RF.h=setTimeout(()=>{tot.classList.remove('on');},2240);}catch(e){}}
 
 /* ================= events: double XP on the 1st and 3rd weekend of each month, and a featured mode each week (+50% GP) ================= */
 const EV_MODES=['king','gun','ctf','inf','oitc','dom','hp','br','build','boom','snd','ffa'];
