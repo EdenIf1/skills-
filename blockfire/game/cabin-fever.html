@@ -19,6 +19,7 @@ html,body{height:100%;margin:0;overflow:hidden;background:var(--bg);color:var(--
 body{font-family:var(--f-body);touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
 #c{position:fixed;inset:0;width:100%;height:100%;display:block}
 #hud{position:fixed;inset:0;pointer-events:none;font-family:var(--f-hud);text-shadow:0 1px 2px rgba(0,0,0,.6)}
+#vign{position:fixed;inset:0;pointer-events:none;z-index:0;background:radial-gradient(ellipse 75% 70% at 50% 48%,transparent 58%,rgba(6,8,12,.18) 82%,rgba(4,6,10,.42) 100%)}
 .cut{clip-path:polygon(10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%,0 10px)}
 .cb{color:var(--blue)} .cr{color:var(--red)} .ca{color:var(--amber)} .cg{color:var(--green)}
 
@@ -578,6 +579,7 @@ body.touch #tip{top:calc(var(--st) + 94px);max-width:52vw}body.touch #tip b{font
   color:#e9eef3;font:500 14px/1.38 var(--f-body);letter-spacing:.01em;text-align:left;pointer-events:auto;cursor:pointer;overflow:hidden;z-index:auto;
   clip-path:polygon(0 0,calc(100% - 12px) 0,100% 12px,100% 100%,0 100%);animation:tkIn .38s cubic-bezier(.2,.9,.25,1.15) both}
 .toast.tk.out{animation:tkOut .26s ease-in forwards}
+#toasts.play .toast.tk{pointer-events:none;cursor:default}
 .tk.info{--tk:#5b9cf0}.tk.gp{--tk:#f3b54a}.tk.lvl{--tk:#c98cf5}.tk.bad{--tk:#ff6b5e}.tk.ok{--tk:#6fd08c}
 .tkIc{flex:none;width:28px;height:30px;display:grid;place-items:center;font:700 15px/1 var(--f-body);font-style:normal;color:#0b0f15;background:var(--tk);
   clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);filter:drop-shadow(0 0 8px var(--tk))}
@@ -1103,7 +1105,7 @@ body.cine #hud>*:not(#nukeFlash),body.cine #touch,body.cine #airTab{visibility:h
 <canvas id="c" aria-label="Cubefront game view"></canvas>
 <div id="rotTip" aria-hidden="true"><span id="rotTipT"></span></div>
 
-<div id="hud" hidden>
+<div id="hud" hidden><div id="vign" aria-hidden="true"></div>
   <canvas id="radar" width="132" height="132"></canvas>
   <div id="uavTag" hidden>UAV ONLINE</div>
   <div id="protTag" hidden>SPAWN PROTECTION</div>
@@ -1874,7 +1876,7 @@ async function adminClaim(code){if(!CS||CS.guest)return 'Sign in to your own acc
   if(r.ok){CS.admin=true;cloudKeep();return '';}const e=r.j&&r.j.error;
   return !r.status?'No connection to the server.':e==='code'?'That code is not right.':e==='taken'?'This game already has its admin.':e==='guest'?'Guest accounts cannot be admins. Create your account first.':'The server said no (error '+r.status+').';}
 /* ================= version, remote settings, crash reports ================= */
-const APP_VERSION='1.8.3',BUILD_ID='__BUILD_ID__';
+const APP_VERSION='1.9.0',BUILD_ID='__BUILD_ID__';
 const verNum=v=>String(v||'0').split('.').slice(0,3).map(n=>parseInt(n)||0).reduce((a,n)=>a*1000+n,0);
 let RCFG={};try{RCFG=JSON.parse(localStorage.getItem('blockfire.rcfg')||'{}')||{};}catch(e){RCFG={};}
 const feat=k=>!(RCFG.features&&RCFG.features[k]===false);
@@ -3089,14 +3091,66 @@ function swirlTex(){const c=document.createElement('canvas');c.width=c.height=64
 // haze, so the world melts into it), a deeper colour overhead and a soft glow where the sunlight comes from.
 // One draw, about 300 triangles, no lights and no effects on top.
 const SKYV='varying vec3 vD;void main(){vD=normalize(position);gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}';
-const SKYF='precision mediump float;uniform vec3 hz;uniform vec3 tp;uniform vec3 sd;uniform vec3 sc;varying vec3 vD;void main(){vec3 d=normalize(vD);float h=d.y;'+
+// sky with drifting clouds: the clouds come from a tiny noise picture read at three sizes (safe on every phone GPU)
+const SKYF='precision mediump float;uniform vec3 hz;uniform vec3 tp;uniform vec3 sd;uniform vec3 sc;uniform float ct;uniform float cq;uniform sampler2D nz;varying vec3 vD;void main(){vec3 d=normalize(vD);float h=d.y;'+
   'vec3 c=mix(hz,tp,smoothstep(0.02,0.75,h));c=mix(c,hz*0.92,smoothstep(0.0,-0.25,h));float s=max(dot(d,sd),0.0);'+
-  'c+=sc*(pow(s,90.0)*0.85+pow(s,10.0)*0.18);gl_FragColor=vec4(c,1.0);}';
+  'if(cq>0.0&&h>0.0){vec2 uv=d.xz/(h+0.25)*0.045+vec2(ct*0.0007,ct*0.00025);'+
+  'float n=texture2D(nz,uv).r*0.62+texture2D(nz,uv*2.07+0.37).r*0.26+texture2D(nz,uv*4.13+0.71).r*0.12;'+
+  'float m=smoothstep(0.47,0.68,n)*cq*smoothstep(0.02,0.3,h);float lit=0.74+0.26*smoothstep(0.5,0.8,n)+pow(s,3.0)*0.35;'+
+  'vec3 cc=mix(hz*0.86+vec3(0.06),vec3(1.0,0.99,0.97),0.62)*lit;c=mix(c,cc,m*0.9);}'+
+  'c+=sc*(pow(s,90.0)*0.85+pow(s,10.0)*0.18+pow(s,3.0)*0.05);gl_FragColor=vec4(c,1.0);}';
+let SKYNZ=null;
+function skyNoise(){if(SKYNZ)return SKYNZ;const N=64,a=new Uint8Array(N*N*4);let r=12345;const R=()=>(r=(r*1103515245+12345)&0x7fffffff)/0x7fffffff;
+  for(let i=0;i<N*N;i++){const v=(R()*255)|0;a[i*4]=a[i*4+1]=a[i*4+2]=v;a[i*4+3]=255;}
+  const t=new THREE.DataTexture(a,N,N,THREE.RGBAFormat);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.magFilter=t.minFilter=THREE.LinearFilter;t.generateMipmaps=false;t.needsUpdate=true;return SKYNZ=t;}
+/* atmosphere (graphics 1.9): soft contact shadows under everyone, dust drifting in the light, and real light from
+   muzzle flashes and explosions. One draw call each; all off on Low graphics, and the dust also goes when the phone
+   is struggling. */
+const VFX={blob:null,dust:null,flash:null,boom:null,boomT:0,lite:false,ok:false};
+const vfxQ=()=>SET.quality!=='low'&&!BOOT.safe;
+function vfxInit(){if(VFX.ok)return;VFX.ok=true;try{
+  const c=document.createElement('canvas');c.width=c.height=64;const g=c.getContext('2d'),gr=g.createRadialGradient(32,32,2,32,32,31);
+  gr.addColorStop(0,'rgba(0,0,0,.85)');gr.addColorStop(.55,'rgba(0,0,0,.45)');gr.addColorStop(1,'rgba(0,0,0,0)');g.fillStyle=gr;g.fillRect(0,0,64,64);
+  const tex=new THREE.CanvasTexture(c),geo=new THREE.PlaneGeometry(1,1);geo.rotateX(-Math.PI/2);
+  const m=new THREE.MeshBasicMaterial({map:tex,transparent:true,depthWrite:false,opacity:.5,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2});
+  VFX.blob=new THREE.InstancedMesh(geo,m,64);VFX.blob.count=0;VFX.blob.frustumCulled=false;VFX.blob.renderOrder=0;scene.add(VFX.blob);
+  const N=180,pos=new Float32Array(N*3);for(let i=0;i<N*3;i++)pos[i]=(Math.random()-.5)*24;
+  const dg=new THREE.BufferGeometry();dg.setAttribute('position',new THREE.BufferAttribute(pos,3));
+  VFX.dust=new THREE.Points(dg,new THREE.PointsMaterial({color:0xfff1d0,size:.04,transparent:true,opacity:.32,depthWrite:false,blending:THREE.AdditiveBlending}));VFX.dust.frustumCulled=false;VFX.dust.visible=false;scene.add(VFX.dust);
+  // one light does both jobs (every extra light costs something on every corner of the world)
+  if(vfxQ()){VFX.flash=new THREE.PointLight(0xffb866,0,9,2);VFX.boom=VFX.flash;scene.add(VFX.flash);}
+}catch(e){reportErr('vfx',e);}}
+const VM_=new THREE.Matrix4(),VQ_=new THREE.Quaternion(),VS_=new THREE.Vector3(),VP_=new THREE.Vector3();
+function vfxGround(x,y,z){const ix=Math.floor(x),iz=Math.floor(z);for(let yy=Math.floor(y+.3);yy>Math.floor(y)-7;yy--){if(opq(ix,yy-1,iz))return yy;}return null;}
+function tstSync(){if(TST.box){const pl=state==='play';if(TST.box._pl!==pl){TST.box._pl=pl;TST.box.classList.toggle('play',pl);}}}
+function vfxTick(dt){if(!VFX.ok)vfxInit();const q=vfxQ();
+  // notifications never take a tap during a match (the airstrike button sits just under them)
+  tstSync();
+  // contact shadows
+  const B=VFX.blob;if(B){let n=0;if(q&&(state==='play'||state==='menu'||LD.on)){
+    const add=(x,y,z,s)=>{if(n>=64)return;const gy=vfxGround(x,y,z);if(gy===null)return;const h=Math.max(0,y-gy),k=s*Math.max(.25,1-h/4);if(k<=.05)return;
+      VP_.set(x,gy+.02,z);VS_.set(k,1,k);VM_.compose(VP_,VQ_,VS_);B.setMatrixAt(n++,VM_);};
+    for(const e of ents){if(!e.alive||e.inMatch===false||(e===player&&!KC.on&&!PD.on))continue;if(e.mesh&&!e.mesh.visible)continue;add(e.x,e.y,e.z,.95*(e.ksv||1));}
+    if(isZ())for(const z of zombies)if(z.alive)add(z.x,z.y,z.z,z.type==='brute'?1.4:z.type==='hound'?.8:1);
+    for(const a of ANIM.list)if(a.alive&&a.y!=null)add(a.x,a.y,a.z,a.T.legs?1.3:.6);}
+    B.count=n;B.instanceMatrix.needsUpdate=true;B.visible=n>0;}
+  // dust in the light (High only, not in weather or space)
+  const D_=VFX.dust;if(D_){const on=SET.quality==='high'&&!VFX.lite&&!BOOT.safe&&MAP.weather==='none'&&MAP.sky3d!=='space'&&MAP.sky3d!=='code'&&(state==='play'||LD.on);D_.visible=on;
+    if(on){const P=D_.geometry.attributes.position,a=P.array,cx=camera.position.x,cy=camera.position.y,cz=camera.position.z,t=performance.now()*.00025;
+      for(let i=0;i<a.length;i+=3){a[i]+=Math.sin(t+i)*dt*.12;a[i+1]+=(Math.cos(t*1.3+i*.7)*.08-.02)*dt;a[i+2]+=Math.cos(t+i*1.7)*dt*.12;
+        for(let k=0;k<3;k++){const c=k===0?cx:k===1?cy:cz;let v=a[i+k]-c;if(v>12)v-=24;else if(v<-12)v+=24;a[i+k]=c+v;}}
+      P.needsUpdate=true;D_.position.set(0,0,0);D_.material.color.setHex(MAP.night?0x9fb4d8:0xfff1d0);}}
+  // light from your gun and from explosions
+  const L=VFX.flash;if(L){if(VFX.boomT>0){VFX.boomT-=dt;L.position.copy(VFX.boomP);L.color.setHex(0xff8a3a);L.distance=26;L.intensity=Math.max(0,VFX.boomT/.45)*VFX.boomI;}
+    else if(flashT>0&&state==='play'&&player.alive){const v=camVectors();L.position.set(camera.position.x+v.f[0]*1.1,camera.position.y+v.f[1]*1.1-.15,camera.position.z+v.f[2]*1.1);L.color.setHex(0xffb866);L.distance=9;L.intensity=1.9;}
+    else L.intensity=0;}}
+function vfxBoom(x,y,z,r){if(!VFX.flash)return;VFX.boomP=new THREE.Vector3(x,y+1.2,z);VFX.boomI=Math.min(6,2.2+r*.8);VFX.boomT=.45;}
+const skyClouds=()=>{if(SET.quality==='low'||MAP.night||MAP.sky3d)return 0;return MAP.weather==='dust'?.35:MAP.key==='forest'?.55:.8;};
 function skyDome(){const hz=new THREE.Color(MAP.sky),tp=hz.clone(),hsl={};tp.getHSL(hsl);
   if(MAP.night)tp.setHSL(hsl.h,Math.min(1,hsl.s*1.1),hsl.l*.45);else if(MAP.weather==='dust')tp.setHSL(hsl.h,hsl.s,hsl.l*.82);
   else tp.setHSL(hsl.h+.015,Math.min(1,hsl.s*1.35+.08),Math.max(.12,hsl.l*.66));
   const m=new THREE.ShaderMaterial({vertexShader:SKYV,fragmentShader:SKYF,side:THREE.BackSide,depthWrite:false,depthTest:false,fog:false,
-    uniforms:{hz:{value:hz},tp:{value:tp},sd:{value:sun.position.clone().normalize()},sc:{value:new THREE.Color(MAP.night?0x8090b0:0xfff1d6).multiplyScalar(MAP.night?.25:1)}}});
+    uniforms:{hz:{value:hz},tp:{value:tp},sd:{value:sun.position.clone().normalize()},sc:{value:new THREE.Color(MAP.night?0x8090b0:0xfff1d6).multiplyScalar(MAP.night?.25:1)},ct:{value:0},cq:{value:skyClouds()},nz:{value:skyNoise()}}});
   const d=new THREE.Mesh(new THREE.SphereGeometry(150,20,10),m);d.renderOrder=-2;d.frustumCulled=false;return d;}
 function mapFxBuild(){for(const k of['g','w','d'])if(SKYFX[k]){scene.remove(SKYFX[k]);try{freeAll(SKYFX[k]);}catch(e){}SKYFX[k]=null;}SKYFX.rain=[];SKYFX.portals=[];SKYFX.earth=null;
   const k=MAP.sky3d;
@@ -3116,7 +3170,7 @@ function mapFxBuild(){for(const k of['g','w','d'])if(SKYFX[k]){scene.remove(SKYF
     const st=swirlTex();for(const pr of MAP.portals||[])for(const [px,pz] of pr){const m=new THREE.Mesh(new THREE.PlaneGeometry(4,4),new THREE.MeshBasicMaterial({map:st,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide}));
       m.position.set(px,colTop(px|0,pz|0)+2,pz);m.rotation.y=Math.PI/2;w.add(m);SKYFX.portals.push(m);}
     scene.add(w);SKYFX.w=w;}}
-function mapFxTick(dt){SKYFX.t+=dt;if(SKYFX.d)SKYFX.d.position.copy(camera.position);
+function mapFxTick(dt){SKYFX.t+=dt;if(SKYFX.d){SKYFX.d.position.copy(camera.position);const u=SKYFX.d.material.uniforms;if(u&&u.ct)u.ct.value=(u.ct.value+dt)%2000;}
   if(SKYFX.g){SKYFX.g.position.copy(camera.position);if(SKYFX.earth)SKYFX.earth.rotation.y+=dt*.02;}
   if(MAP.sky3d==='code'){codeTex.offset.y+=dt*.35;for(const r of SKYFX.rain)r.t.offset.y+=r.spd*dt;for(const p of SKYFX.portals)p.rotation.x-=dt*2.2;
     SKYFX.glitch-=dt;const gl=SKYFX.glitch<0&&SKYFX.glitch>-.25;if(SKYFX.glitch<-.25)SKYFX.glitch=14+rand()*12;MATS[B.CODE].color.setHex(gl&&((SKYFX.t*30)|0)%2?0xff3355:0xffffff);{const wc=WMC.get(MATS[B.CODE]);if(wc)wc.color.copy(MATS[B.CODE].color);}}
@@ -3256,7 +3310,7 @@ function poiList(){if(MAP.poi&&MAP.poi.length)return MAP.poi;const a=reachMap();
   for(let z=5;z<D-3;z+=8)for(let x=5;x<W-3;x+=8){let f=-1;for(let r=0;r<3&&f<0;r++)for(let dz=-r;dz<=r&&f<0;dz++)for(let dx=-r;dx<=r;dx++){const c=(x+dx)+W*(z+dz);if(a[c]){f=c;break;}}if(f>=0)p.push([f%W,(f/W)|0]);}
   POIC={a,p:p.length?p:[[MAP.center[0]|0,MAP.center[2]|0]]};return POIC.p;}
 function genWorld(){W=D=MAP.size||64;vox.fill(0);VEH=[];PERCHES=[];MAP.gen();animSpawn();mapFxBuild();if(MAP.light){hemi.intensity=MAP.light[0];sun.intensity=MAP.light[1];}
-  hemi.intensity=MAP.light?MAP.light[0]:MAP.night?.42:.88;sun.intensity=MAP.light?MAP.light[1]:MAP.night?.16:.5;
+  hemi.intensity=MAP.light?MAP.light[0]:MAP.night?.42:.8;sun.intensity=MAP.light?MAP.light[1]:MAP.night?.16:.74;sun.color.setHex(MAP.night||MAP.sky3d?0xfff0dc:0xffe6c4);
   for(const l of[houseLight,yardLight,topLight]){if(MAP.night&&!l.parent)scene.add(l);if(!MAP.night&&l.parent)scene.remove(l);}scene.background.setHex(MAP.sky);scene.fog.color.setHex(MAP.sky);scene.fog.near=MAP.fog[0];scene.fog.far=MAP.fog[1];hemi.color.setHex(MAP.hemi[0]);hemi.groundColor.setHex(MAP.hemi[1]);setWeather(MAP.weather);}
 
 let blockMeshes=[];
@@ -3288,6 +3342,19 @@ const WUV=[0,0,1,0,1,1,0,1],AOL=[150,185,220,255];
 // for each side and corner: the two neighbours beside the corner and the one diagonal to it (in the layer outside)
 const WAO=WF.map(([n,cs])=>cs.map(c=>{const ax=[0,1,2].filter(a=>!n[a]),t=ax.map(a=>{const v=[0,0,0];v[a]=c[a]?1:-1;return v;});
   return [n.map((v,i)=>v+t[0][i]),n.map((v,i)=>v+t[1][i]),n.map((v,i)=>v+t[0][i]+t[1][i])];}));
+/* sunlight (graphics 1.9): every corner of the world checks once, when its area is built, whether a block stands
+   between it and the sun. Corners in shade and sides facing away from the sun are darker, so buildings and trees
+   throw real shadows across streets and roofs. It costs nothing while playing: the result is baked into the corner
+   colours together with the soft corner shading. Big flat ground gets a gentle colour drift so it never looks tiled. */
+const SUNL={on:true,top:0,dir:[0,1,0],k:.68,cool:true};
+function sunPrep(){try{const v=sun.position.clone().normalize();SUNL.dir=[v.x,v.y,v.z];
+  SUNL.on=SET.quality!=='low'&&!BOOT.safe;SUNL.cool=!MAP.night&&!MAP.sky3d;SUNL.k=MAP.night?.86:MAP.sky3d==='code'?.8:MAP.sky3d==='space'?.5:.57;
+  let top=0;const n=W*D;for(let y=H-1;y>=0&&!top;y--){const o=y*n;for(let i=0;i<n;i++){const id=vox[o+i];if(id&&!TRANSP[id]){top=y+1;break;}}}SUNL.top=top;}catch(e){SUNL.on=false;}}
+function sunHit(px,py,pz){const d=SUNL.dir,top=SUNL.top;if(d[1]<=.05)return false;const maxT=Math.min(40,(top-py)/d[1]);
+  for(let t=.35;t<maxT;t+=.55){const x=Math.floor(px+d[0]*t),y=Math.floor(py+d[1]*t),z=Math.floor(pz+d[2]*t);if(opq(x,y,z))return true;}return false;}
+function gVar(x,z){const h=(a,b)=>{let n=(a*374761393+b*668265263)|0;n=(n^(n>>>13))*1274126177|0;return((n^(n>>>16))>>>0)/4294967296;};
+  const fx=x*.19,fz=z*.19,ix=Math.floor(fx),iz=Math.floor(fz),tx=fx-ix,tz=fz-iz,sx=tx*tx*(3-2*tx),sz=tz*tz*(3-2*tz);
+  const a=h(ix,iz),b=h(ix+1,iz),c=h(ix,iz+1),e=h(ix+1,iz+1);return .93+.11*((a+(b-a)*sx)*(1-sz)+(c+(e-c)*sx)*sz);}
 function wcBuild(cx,cz){const x0=cx*WCH,z0=cz*WCH,x1=Math.min(W,x0+WCH),z1=Math.min(D,z0+WCH);
   const groups=[new Map(),new Map()];   // [opaque, see-through]: material -> faces [x,y,z,side,a0,a1,a2,a3]
   for(let y=0;y<H;y++)for(let z=z0;z<z1;z++)for(let x=x0;x<x1;x++){const id=vox[VI(x,y,z)];if(!id)continue;
@@ -3296,9 +3363,11 @@ function wcBuild(cx,cz){const x0=cx*WCH,z0=cz*WCH,x1=Math.min(W,x0+WCH),z1=Math.
       if(opq(nx,ny,nz))continue;
       if(tr&&ny>=0&&ny<H&&nx>=0&&nz>=0&&nx<W&&nz<D&&vox[VI(nx,ny,nz)]===id)continue;   // inside a body of water / glass
       const m1=Array.isArray(m)?m[f]:m,cell=WAT.cell.has(m1.map)&&watPlain(m1)?WAT.cell.get(m1.map):-1,mm=cell>=0?WAT.mat:wmat(m1),G=groups[tr];let L=G.get(mm);if(!L)G.set(mm,L=[]);
-      L.push(x,y,z,f,cell);const A=WAO[f];
+      L.push(x,y,z,f,cell);const A=WAO[f],sd=SUNL.dir,ndl=n[0]*sd[0]+n[1]*sd[1]+n[2]*sd[2],cs=WF[f][1],gv=n[1]>0&&SUNL.on?gVar(x,z):1;
       for(let k=0;k<4;k++){const a=A[k],s1=opq(x+a[0][0],y+a[0][1],z+a[0][2])?1:0,s2=opq(x+a[1][0],y+a[1][1],z+a[1][2])?1:0,c=opq(x+a[2][0],y+a[2][1],z+a[2][2])?1:0;
-        L.push(s1&&s2?0:3-s1-s2-c);}}}
+        const ao=s1&&s2?0:3-s1-s2-c;let lt=AOL[ao]*gv;
+        let sh=0;if(SUNL.on){if(ndl<=0)sh=1;else{const q=cs[k];if(sunHit(x+q[0]+n[0]*.03,y+q[1]+n[1]*.03,z+q[2]+n[2]*.03))sh=1;}if(sh)lt*=SUNL.k;}
+        L.push(sh*10000+ao*1000+Math.min(255,Math.round(lt)));}}}
   const out=[];
   for(let tr=0;tr<2;tr++){const G=groups[tr];if(!G.size)continue;let nf=0;for(const L of G.values())nf+=L.length/9;
     const P=new Int16Array(nf*12),N=new Int8Array(nf*12),U=new Float32Array(nf*8),C=new Uint8Array(nf*12),I=nf*4>65535?new Uint32Array(nf*6):new Uint16Array(nf*6);
@@ -3308,8 +3377,8 @@ function wcBuild(cx,cz){const x0=cx*WCH,z0=cz*WCH,x1=Math.min(W,x0+WCH),z1=Math.
         // texture corner: the whole texture, or its 16x16 cell in the shared image (a hair inside, so cells never bleed)
         let u0=0,v0b=0,us=1;if(cell>=0){const e=.02/256;u0=(cell%16)/16+e;v0b=1-(((cell/16)|0)+1)/16+e;us=1/16-2*e;}
         for(let k=0;k<4;k++){const c=cs[k],o=(v0+k)*3;P[o]=x+c[0];P[o+1]=y+c[1];P[o+2]=z+c[2];N[o]=n[0]*127;N[o+1]=n[1]*127;N[o+2]=n[2]*127;
-          const l=AOL[L[q+5+k]];C[o]=C[o+1]=C[o+2]=l;U[(v0+k)*2]=u0+WUV[k*2]*us;U[(v0+k)*2+1]=v0b+WUV[k*2+1]*us;}
-        const a0=L[q+5],a1=L[q+6],a2=L[q+7],a3=L[q+8],ii=fi*6;
+          const lv=L[q+5+k],l=lv%1000;if(lv>=10000&&SUNL.cool){C[o]=Math.round(l*.9);C[o+1]=Math.round(l*.96);C[o+2]=Math.min(255,Math.round(l*1.1));}else C[o]=C[o+1]=C[o+2]=l;U[(v0+k)*2]=u0+WUV[k*2]*us;U[(v0+k)*2+1]=v0b+WUV[k*2+1]*us;}
+        const a0=L[q+5]%1000,a1=L[q+6]%1000,a2=L[q+7]%1000,a3=L[q+8]%1000,ii=fi*6;
         // split the square along the brighter diagonal so the shading never shows a crease
         if(a0+a2<a1+a3){I[ii]=v0+1;I[ii+1]=v0+2;I[ii+2]=v0+3;I[ii+3]=v0+1;I[ii+4]=v0+3;I[ii+5]=v0;}
         else{I[ii]=v0;I[ii+1]=v0+1;I[ii+2]=v0+2;I[ii+3]=v0;I[ii+4]=v0+2;I[ii+5]=v0+3;}
@@ -3324,14 +3393,16 @@ function wcClear(){for(const c of WC.list)for(const m of c||[]){scene.remove(m);
 function rebuildWorld(){
   if(!WC.off){try{rebuildWorldNew();return;}catch(e){reportErr('world',e);WC.off=true;try{wcClear();}catch(x){}}}
   rebuildWorldOld();}
-function rebuildWorldNew(){watBuild();
+function rebuildWorldNew(){watBuild();sunPrep();
   for(const m of blockMeshes){scene.remove(m);if(m.dispose)m.dispose();}blockMeshes=[];
   const nx=Math.ceil(W/WCH),nz=Math.ceil(D/WCH),n=W*D*H;
   // which areas changed since the last build (a change at an area's edge also re-shades the next area)
   let dirty=null;
   if(WC.snap&&WC.w===W&&WC.d===D&&WC.snap.length===n){dirty=new Uint8Array(nx*nz);const sn=WC.snap;
     for(let i=0;i<n;i++)if(sn[i]!==vox[i]){const x=i%W,z=((i/W)|0)%D;
-      for(let dz=-1;dz<=1;dz++)for(let dx=-1;dx<=1;dx++){const cx=Math.floor((x+dx)/WCH),cz=Math.floor((z+dz)/WCH);if(cx>=0&&cz>=0&&cx<nx&&cz<nz)dirty[cx+nx*cz]=1;}}}
+      for(let dz=-1;dz<=1;dz++)for(let dx=-1;dx<=1;dx++){const cx=Math.floor((x+dx)/WCH),cz=Math.floor((z+dz)/WCH);if(cx>=0&&cz>=0&&cx<nx&&cz<nz)dirty[cx+nx*cz]=1;}
+      // its shadow can reach into the next area away from the sun
+      if(SUNL.on){const sd=SUNL.dir,y=(i/(W*D))|0,L=Math.min(40,(y+1)/Math.max(.2,sd[1]));for(const t of [L*.5,L]){const cx=Math.floor((x-sd[0]*t)/WCH),cz=Math.floor((z-sd[2]*t)/WCH);if(cx>=0&&cz>=0&&cx<nx&&cz<nz)dirty[cx+nx*cz]=1;}}}}
   else{wcClear();}
   for(let cz=0;cz<nz;cz++)for(let cx=0;cx<nx;cx++){const k=cx+nx*cz;if(dirty&&!dirty[k])continue;
     for(const m of WC.list[k]||[]){scene.remove(m);m.geometry.dispose();}
@@ -4721,7 +4792,7 @@ function toast(text){text=String(text==null?'':text);if(!text)return;const now=D
   try{const box=tkBox(),k=tkKind(text),d=document.createElement('div');d.className='toast tk '+k;d.setAttribute('role',k==='bad'?'alert':'status');
     const m=text.match(/^([^:.!?·]{3,40})(:| ·)\s+([\s\S]+)$/);const ms=Math.min(7500,2600+text.length*40);
     d.innerHTML=`<i class="tkIc" aria-hidden="true">${TK_ICON[k]}</i><div class="tkTx">${m?`<b class="tkT">${esc(m[1])}</b><span class="tkSep">${m[2]===':'?': ':' · '}</span><span class="tkB">${tkFmt(m[3])}</span>`:`<span class="tkB">${tkFmt(text)}</span>`}</div><em class="tkBar" style="animation-duration:${ms}ms"></em>`;
-    box.appendChild(d);while(box.children.length>3)box.firstChild.remove();
+    box.classList.toggle('play',state==='play');box.appendChild(d);while(box.children.length>3)box.firstChild.remove();
     const out=()=>{if(!d.isConnected||d.classList.contains('out'))return;d.classList.add('out');setTimeout(()=>d.remove(),260);};
     d.addEventListener('click',out);setTimeout(out,ms);}
   catch(e){const d=document.createElement('div');d.className='toast cut';d.textContent=text;document.body.appendChild(d);setTimeout(()=>d.remove(),3200);}}
@@ -6826,7 +6897,7 @@ function pvLoop(){if($('shop').hidden||!shopPv){pvRun=false;return;}requestAnima
   const g=cv.getContext('2d');g.clearRect(0,0,cv.width,cv.height);g.drawImage(T.c,0,0,cv.width,cv.height);}
 function pvStart(){if(!pvRun){pvRun=true;requestAnimationFrame(pvLoop);}}
 /* ================= inbox: rentals running out, news, friends' invites ================= */
-const NEWS_ID='v180';
+const NEWS_ID='v190';
 const INBOX_MAX=40,IN_ICON={rent:'⏳',news:'✨',invite:'🎮',gift:'🎁',info:'ℹ️'};
 function inboxAdd(k,title,body,act){if(!profile)return;const a=profile.inbox=Array.isArray(profile.inbox)?profile.inbox:[];if(k==='news'&&a.some(m=>m.title===String(title).slice(0,90)))return;
   const id=Date.now().toString(36)+Math.random().toString(36).slice(2,6);
@@ -6855,6 +6926,7 @@ $('inList').addEventListener('click',e=>{
 function inboxNews(){if(!profile)return;
   if(profile.newsSeen!==NEWS_ID){const first=!profile.newsSeen&&!(profile.stats&&profile.stats.matches);profile.newsSeen=NEWS_ID;
     if(first)inboxAdd('info','Welcome to Cubefront','Your progress saves by itself. Open a free crate every day, pick a mode and press Play. Invite friends from the lobby.');
+    inboxAdd('news','1.9: a new look','Real sunlight: buildings, trees and walls now throw shadows, and the side away from the sun sits in shade. Soft clouds drift across the sky, everyone has a shadow at their feet, dust floats in the light, and muzzle flashes and explosions light up the world around them. Low graphics in Settings keeps the old, lighter look for older phones.',{go:'lobby'});
     inboxAdd('news','1.8: music, events and a world ranking','New music on the menu and in matches, and you now hear which side shots come from. Double XP on the 1st and 3rd weekend of each month, plus a featured mode every week with +50% GP. See the world Ranked top 50 in Leaderboards › Ranked. Share your invite link from 👥 Friends: you both get 5,000 GP and a free crate. Game controllers work, there is a Colorblind mode in Settings, and if your phone closes the game in the middle of a match you can continue it.',{go:'lobby'});
     inboxAdd('news','1.7: Ranked, kill-cam and more','Turn on Ranked on the main screen and climb from Bronze to Master (new season each month). When you go down, the kill-cam shows how it happened. 100 kills with a gun earns its Mastery camo. Tap the gun you hold to inspect it. Top 3 stand on a podium after each match. Weekly challenges are in 🎁 › Season pass.',{go:'lobby'});
     inboxAdd('news','1.6: the boxes never run dry','Mystery boxes now hold box-only camos that flow along your gun, kill effects, banners and gun charms that swing as you move. A gun you already own earns a star (up to 3): faster reload, more spare ammo. The box items change every season, and owning every gun of a box earns a Collector title.',{go:'shop',tab:'boxes'});
@@ -8739,7 +8811,7 @@ function netPuppetMines(M){
   for(const [id,x,y,z] of M){keep.add(id);if(!pMine.has(id)){const g=new THREE.Group();const b=new THREE.Mesh(new THREE.BoxGeometry(.32,.16,.08),mineMat);b.position.y=.14;g.add(b);const led=new THREE.Mesh(new THREE.BoxGeometry(.03,.03,.03),mineLed);led.position.y=.24;g.add(led);g.position.set(x,y,z);scene.add(g);pMine.set(id,g);}}
   for(const [id,g] of pMine)if(!keep.has(id)){scene.remove(g);pMine.delete(id);}
 }
-function explodeFX(x,y,z,r,weapon){
+function explodeFX(x,y,z,r,weapon){try{vfxBoom(x,y,z,r);}catch(e){}
   burst(x,y,z,0x555a60,20,5,.35,1.4);burst(x,y,z,0xffa040,12,9,.18,.4);boomFlash(x,y+.2,z,(r||2.7)/2.7);
   sfx.explosion(weapon,volAt(x,y,z,1,120),distAt(x,y,z));
   const dc=distAt(x,y,z);if(!reduceMotion)shake=Math.max(shake,clamp(1-dc/22,0,1));
@@ -9189,7 +9261,7 @@ function frame(now){frameN++;if(!BOOT.ok){if(frameN===2)bootStage('first-frame')
   if((state==='play'||state==='menu')&&!document.hidden){DQ.t+=rdt;DQ.n++;if(DQ.t>=2){const fps=DQ.n/DQ.t;DQ.t=0;DQ.n=0;DQ.fps=Math.round(fps);const base=qualityRatio();let pr=renderer.getPixelRatio();
     // phones: smooth play comes first. When frames get slow the picture gets a little softer at once (before the phone
     // overheats or gives up); when it runs smoothly again for a while, sharpness comes back. Computers keep full sharpness.
-    if(isTouch){if(fps<40&&pr>1.25){renderer.setPixelRatio(Math.max(1.25,pr-.25));DQ.good=0;}
+    if(isTouch){if(fps<34)VFX.lite=true;else if(fps>56&&DQ.good>=4)VFX.lite=false;if(fps<40&&pr>1.25){renderer.setPixelRatio(Math.max(1.25,pr-.25));DQ.good=0;}
       else if(fps>55){DQ.good=(DQ.good|0)+1;if(DQ.good>=5&&pr<base-.01){renderer.setPixelRatio(Math.min(base,pr+.25));DQ.good=0;}}else DQ.good=0;
       if(pr>base+.01)renderer.setPixelRatio(base);}
     else if(pr<base-.01)renderer.setPixelRatio(base);}}
@@ -9197,7 +9269,7 @@ function frame(now){frameN++;if(!BOOT.ok){if(frameN===2)bootStage('first-frame')
   aliveTick(rdt);
   if(glLost&&glLostAt&&!document.hidden&&performance.now()-glLostAt>1200){glLostAt=0;if(glRebuilds<3){try{glRebuild();}catch(e){reportErr('glrebuild',e);glReload();}}else glReload();return;}
   if(noRender||glLost)return;
-  try{renderer.clear();
+  try{try{vfxTick(Math.min(.05,rdt));}catch(e){}renderer.clear();
   if(window.__cam){const q=window.__cam;camera.position.set(q[0],q[1],q[2]);camera.lookAt(q[3],q[4],q[5]);}
   renderer.render(scene,camera);
   if(state==='play'&&!cineT&&!FK.on&&!KC.on){renderer.clearDepth();renderer.render(gunScene,gunCam);}}catch(e){
@@ -9728,7 +9800,7 @@ function rsHud(){const el=$('rsHud');if(!RS.on||state!=='play'){if(!el.hidden)el
   if(isClient()&&rsHeld!==rsHeldSent){rsHeldSent=rsHeld;netOut(['act',rsHeld?1:0]);}
   {const B=RS.bomb,tt=Math.max(0,Math.ceil(B&&B.st==='planted'?B.t:RS.t));setText('timer',`${Math.floor(tt/60)}:${String(tt%60).padStart(2,'0')}`);}
   rsDrawBomb();}
-function step(dt,now){
+function step(dt,now){try{tstSync();}catch(e){}
   if(PD.on){if(state==='end'){pdSafe(dt);return;}pdEnd(true);}
   if(isClient()){stepClient(dt,now);return;}
   if(state!=='play'){

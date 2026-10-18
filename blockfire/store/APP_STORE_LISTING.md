@@ -14,7 +14,7 @@ Everything to paste into App Store Connect, field by field. Lengths are within A
 | Content rights | Contains no third-party content (all art and code are original or open source; see licenses.html) |
 | Price | Free · no in-app purchases |
 | Devices | iPhone only, landscape (runs on iPad in iPhone mode). Game controllers supported |
-| Version | 1.8.0 (build 1) · same as the game version shown in Settings |
+| Version | 1.9.0 (build 1) · same as the game version shown in Settings |
 
 ## URLs
 | Field | Value |
@@ -67,8 +67,8 @@ Built for iPhone: smooth touch controls with a second fire button, aim assist, h
 ## Keywords (100)
 block,shooter,fps,pixel,voxel,multiplayer,zombies,build,sniper,cubes,friends,battle royale,ranked
 
-## What's new (version 1.8.0, first App Store release)
-First release on the App Store. 19 modes on 9 maps plus the Zombies safehouse, 45 guns, Ranked seasons with a world top 100, double XP weekends and a weekly featured mode, music and directional sound, friends with online status and invite rewards, game controller support, a Colorblind mode, mystery boxes and crates with odds shown, a free monthly season pass, and offline play with bots.
+## What's new (version 1.9.0, first App Store release)
+First release on the App Store. Real sunlight and shadows, drifting clouds and light from every muzzle flash and explosion. 19 modes on 9 maps plus the Zombies safehouse, 45 guns, Ranked seasons with a world top 100, double XP weekends and a weekly featured mode, music and directional sound, friends with online status and invite rewards, game controller support, a Colorblind mode, mystery boxes and crates with odds shown, a free monthly season pass, and offline play with bots.
 
 ## Age rating answers (Apple's 2025 questionnaire; expect 13+)
 | Question | Answer |
