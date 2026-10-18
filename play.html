@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-0DyOAhECJE3vXFXcwNw4h8mO8gGu9ipiVydQh+qgfGc=' 'sha256-HQkcEu2TVrVlQK15uSG4JfxGKLnZ6hyNgegrdTSEWSI=' 'unsafe-eval'; script-src-attr 'none'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; media-src 'self' data: blob:; connect-src 'self' https: wss: data: blob: http://127.0.0.1:* ws://127.0.0.1:* http://localhost:* ws://localhost:*; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'; frame-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-0DyOAhECJE3vXFXcwNw4h8mO8gGu9ipiVydQh+qgfGc=' 'sha256-CXhKRmQXyLMHVH/H/SFteZxd8aZr+9iolRoVwIxfv/M=' 'unsafe-eval'; script-src-attr 'none'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; media-src 'self' data: blob:; connect-src 'self' https: wss: data: blob: http://127.0.0.1:* ws://127.0.0.1:* http://localhost:* ws://localhost:*; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'; frame-src 'none'">
 <meta name="referrer" content="no-referrer">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
@@ -1776,7 +1776,7 @@ async function adminClaim(code){if(!CS||CS.guest)return 'Sign in to your own acc
   if(r.ok){CS.admin=true;cloudKeep();return '';}const e=r.j&&r.j.error;
   return !r.status?'No connection to the server.':e==='code'?'That code is not right.':e==='taken'?'This game already has its admin.':e==='guest'?'Guest accounts cannot be admins. Create your account first.':'The server said no (error '+r.status+').';}
 /* ================= version, remote settings, crash reports ================= */
-const APP_VERSION='1.5.1',BUILD_ID='da65ba0';
+const APP_VERSION='1.5.2',BUILD_ID='2c8867a';
 const verNum=v=>String(v||'0').split('.').slice(0,3).map(n=>parseInt(n)||0).reduce((a,n)=>a*1000+n,0);
 let RCFG={};try{RCFG=JSON.parse(localStorage.getItem('blockfire.rcfg')||'{}')||{};}catch(e){RCFG={};}
 const feat=k=>!(RCFG.features&&RCFG.features[k]===false);
@@ -4032,7 +4032,9 @@ const DEF_OPTIC={m4a1:'holo',spas:'red',thunder:'red'};
 function attOf(id){const a=profile.att[id]||{};return{mag:!!a.mag,grip:!!a.grip,optic:a.optic||DEF_OPTIC[id]||'iron'};}
 function effW(id){
   const b=WEAPONS[id],a=attOf(id),w=Object.assign({},b,{id,optic:a.optic});
-  if(a.mag&&b.mag>1){w.mag=Math.round(b.mag*1.5);w.reserve=Math.round(b.reserve*1.5);w.reload=b.reload*1.1;}
+  // every gun carries 30% more spare ammo
+  w.reserve=Math.round(b.reserve*1.3);
+  if(a.mag&&b.mag>1){w.mag=Math.round(b.mag*1.5);w.reserve=Math.round(b.reserve*1.3*1.5);w.reload=b.reload*1.1;}
   if(a.grip){w.recoil=b.recoil*.7;w.spread=b.spread*.8;w.move=b.move*.85;}
   if(a.optic==='acog')w.adsFov=30;
   return w;
@@ -4050,11 +4052,15 @@ const vflash=new THREE.Mesh(new THREE.PlaneGeometry(.3,.3),new THREE.MeshBasicMa
 // one gun as you see it: its body, its own finish (when no camo is on) and its own parts
 const finMats={};
 function finishMat(hex){return finMats[hex]||(finMats[hex]=new THREE.MeshPhongMaterial({color:hex,shininess:30,specular:0x2a2a2a}));}
+// twin pistols come 22% closer together while aiming
+function dualGap(ud){return ud.dualX*(1-.22*adsK);}
 function gunMesh(id,camo,bot,att){const w=WEAPONS[id]||WEAPONS.ak47,c=camo||'none';
   const g=buildGun(w.model,c==='none'&&w.finish?finishMat(w.finish):camoMat(c),bot,att,w);
   // dual pistols: the same pistol again in the left hand (shares the shapes, so it costs no extra memory)
   if(w.dual&&!bot&&g.userData&&g.userData.hip){try{const l=new THREE.Group();for(const ch of g.children)if(ch.isMesh)l.add(new THREE.Mesh(ch.geometry,ch.material).copy(ch,false));
-    l.position.set(-g.userData.hip[0]*1.9,0,.03);l.userData.dualL=1;g.add(l);g.userData.dualX=-g.userData.hip[0]*1.9;}catch(e){}}
+    l.position.set(-g.userData.hip[0]*1.9,0,.03);l.userData.dualL=1;g.add(l);g.userData.dualX=-g.userData.hip[0]*1.9;g.userData.dualG=l;
+    // aiming centres the pair: the pistols come in a little closer and sit just below the crosshair, one each side
+    const ud=g.userData;if(ud.ads)ud.ads=[-ud.dualX*.78/2,ud.ads[1]-.045,ud.ads[2]-.1];}catch(e){}}
   return g;}
 // merge every solid part under root into one mesh per material: looks the same, but the GPU draws a gun in a few calls instead of ~25
 function bakeStatic(root){
@@ -5666,7 +5672,7 @@ function fireWeapon(){
   vmKick=Math.min(1,vmKick+(w.kind==='pistol'||w.kind==='shotgun'||w.kind==='sniper'?1:.55));flashT=.045;
   const g=vmGuns[cur],ud=g.userData;
   vflash.position.set(ud.hip[0]*(1-adsK)+ud.ads[0]*adsK,(ud.hip[1]*(1-adsK)+ud.ads[1]*adsK)+.02,(ud.hip[2]*(1-adsK)+ud.ads[2]*adsK)+ud.muzzle);
-  if(w.dual&&ud.dualX){dualSide=!dualSide;if(dualSide)vflash.position.x+=ud.dualX;}
+  if(w.dual&&ud.dualX){dualSide=!dualSide;if(dualSide)vflash.position.x+=dualGap(ud);}
   if(w.kind==='rpg')sfx.rpg(.6,0);else sfx.gun(w.snd,.5,0,1);
   if(w.kind==='sniper'&&a.mag>0){/* bolt cycle drops the scope briefly */}
 }
@@ -5775,6 +5781,7 @@ function updateViewmodel(dt,lookDX,lookDY){
   vmKick*=Math.exp(-dt*16);
   vmSwayX+=(clamp(-lookDX*.0006,-.04,.04)-vmSwayX)*Math.min(1,10*dt);vmSwayY+=(clamp(lookDY*.0006,-.04,.04)-vmSwayY)*Math.min(1,10*dt);
   const bobA=(1-adsK)*(reduceMotion?0:1);
+  if(ud.dualG)ud.dualG.position.x=dualGap(ud);
   const x=ud.hip[0]+(ud.ads[0]-ud.hip[0])*adsK+Math.sin(vmBob)*.012*bobA+vmSwayX*(1-adsK*.8);
   let y=ud.hip[1]+(ud.ads[1]-ud.hip[1])*adsK-Math.abs(Math.cos(vmBob))*.01*bobA+vmSwayY*(1-adsK*.8);
   const z=ud.hip[2]+(ud.ads[2]-ud.hip[2])*adsK+vmKick*.05;
@@ -6868,7 +6875,7 @@ function boxPools(k){const B=BOXES[k];
 const boxEmpty=k=>{const P=boxPools(k);return !P.guns.length&&!P.skins.length&&!P.titles.length;};
 const boxPick=a=>a[Math.floor(Math.random()*a.length)];
 function boxCard(k){const B=BOXES[k],P=boxPools(k),empty=boxEmpty(k),poor=profile.gp<B.price;
-  const odds=P.guns.length?`Each gun 1 in ${P.guns.length}`+(B.permP<1?` · forever ${Math.round(B.permP*100)}%, 90 days ${Math.round((1-B.permP)*100)}%`:''):'You own every gun in it';
+  const odds=P.guns.length?`Each gun 1 in ${P.guns.length}`+(B.permP<1?` · forever ${Math.round(B.permP*100)}%, 90 days ${Math.round((1-B.permP)*100)}%`:''):(empty?'You own everything in this box':'You own every gun in it · '+B.refund.toLocaleString()+' GP back for the gun');
   return `<div class="item boxCard" style="--bc:${B.col}"><div class="tierline" style="background:${B.col}"></div><div class="boxArt"><span>?</span></div>
     <div class="ty">mystery box · ${GCLS[B.cls].n.toLowerCase()} guns</div><h3>${B.n}</h3><div class="boxT">${B.t}</div><div class="boxOdds">${odds}</div>
     <div class="row buyRow"><span class="price">${B.price.toLocaleString()} GP</span><button class="btn sm cut buyOpen" data-box="${k}" ${empty?'disabled':''}>${empty?'All owned':'Open ›'}</button></div></div>`;}
