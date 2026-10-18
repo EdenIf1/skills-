@@ -14,19 +14,19 @@ const cap=async(t,sub)=>{curCap=[t,sub];};
 const _unused=async(t,sub)=>p.evaluate(([t,sub])=>{let d=document.getElementById('__cap');if(!d){d=document.createElement('div');d.id='__cap';document.body.appendChild(d);}
   d.style.cssText='position:fixed;left:0;right:0;top:0;z-index:9999;padding:14px 22px 26px;background:linear-gradient(180deg,rgba(7,9,13,.86),rgba(7,9,13,0));pointer-events:none;font-family:Teko,sans-serif;color:#fff;text-align:center';
   d.innerHTML=`<div style="font-size:40px;line-height:1;letter-spacing:.04em">${t}</div>${sub?`<div style="font-family:'Chakra Petch',sans-serif;font-size:15px;color:#f3b54a;letter-spacing:.06em;margin-top:2px">${sub}</div>`:''}`;},[t,sub]);
-const hideToasts=()=>p.evaluate(()=>{for(const id of ['toast','msgs','feed'])if(document.getElementById(id))document.getElementById(id).style.visibility='hidden';});
+const hideToasts=()=>p.evaluate(()=>{document.querySelectorAll('.toast').forEach(t=>t.remove());for(const el of document.querySelectorAll('#tip,#protTag'))el.style.visibility='hidden';for(const id of ['toast','msgs','feed'])if(document.getElementById(id))document.getElementById(id).style.visibility='hidden';});
 const shot=async n=>{await p.screenshot({path:`${OUT}/_game-${n}.png`});await capStrip(n,curCap[0],curCap[1]);console.log('shot',n);};
 // 1 battle
-await p.evaluate(()=>window.__bf.start('cabin'));await p.waitForTimeout(2500);
+await p.evaluate(()=>window.__bf.start('town'));await p.waitForTimeout(2500);
 await ev(`(()=>{player.spawnProt=999;player.hp=100;for(const b of bots)if(b.team==='blue'){b.inMatch=false;b.alive=false;b.mesh.visible=false;}
   {const cx=Math.floor(MAP.center[0]),cz=Math.floor(MAP.center[2])+9;player.x=cx+.5;player.z=cz+.5;player.y=SY[cx+W*cz];}
   // look down the most open lane and put the enemy team in it
   const eye=player.y+1.6;let by=player.yaw,bl=0;for(let a=-Math.PI;a<Math.PI;a+=.05){const dx=-Math.sin(a),dz=-Math.cos(a),h=rayVoxel(player.x,eye,player.z,dx,-.02,dz,40,false),L=h?h.t:40;if(L>bl){bl=L;by=a;}}
   player.yaw=by;player.pitch=-.06;const dx=-Math.sin(by),dz=-Math.cos(by),rx=Math.cos(by),rz=-Math.sin(by);
   const e=bots.filter(b=>b.team==='red'&&b.alive).slice(0,4);const D=Math.min(bl-2,16);
-  e.forEach((b,i)=>{const d=D*(.55+.15*i),s=(i%2?1:-1)*(1+i*.8);b.x=player.x+dx*d+rx*s;b.z=player.z+dz*d+rz*s;const g=SY[Math.floor(b.x)+W*Math.floor(b.z)];if(g>=0)b.y=g;b.path=null;b.target=player;b.alive=true;b.mesh.visible=true;b.spawnProt=99;b.yaw=Math.atan2(-(player.x-b.x),-(player.z-b.z));b.mesh.position.set(b.x,b.y,b.z);});
-  window.__lane=[by,bl];})();1`);
-await p.waitForTimeout(1200);await hideToasts();await cap('SEARCH & DESTROY, 6V6 TO 12V12','Plant the bomb or wipe them out · ten maps · 20 guns');await shot('1-battle');
+  e.forEach((b,i)=>{const d=D*(.55+.15*i),s=(i%2?1:-1)*(1+i*.8);b.x=player.x+dx*d+rx*s;b.z=player.z+dz*d+rz*s;const g=SY[Math.floor(b.x)+W*Math.floor(b.z)];if(g>=0)b.y=g;b.path=null;b.target=player;b.alive=true;b.mesh.visible=true;b.spawnProt=0;b.yaw=Math.atan2(-(player.x-b.x),-(player.z-b.z));b.mesh.position.set(b.x,b.y,b.z);});
+  scores.blue=23;scores.red=19;matchT=252;window.__lane=[by,bl];})();1`);
+await p.waitForTimeout(1200);await hideToasts();await cap('6V6 TO 12V12 BLOCK WAR','19 modes · 9 maps · 45 guns · bots fill every spot');await shot('1-battle');
 // 2 building
 await ev("(()=>{buildLeft=60;const by=player.yaw,dx=-Math.sin(by),dz=-Math.cos(by),rx=Math.cos(by),rz=-Math.sin(by),y=Math.floor(player.y);for(let s=-2;s<=2;s++)for(let dy=0;dy<2;dy++){const x=Math.floor(player.x+dx*3.6+rx*s),z=Math.floor(player.z+dz*3.6+rz*s);if(!getV(x,y+dy,z))hostPlace(player,x,y+dy,z,dy?'brick':'concrete');}player.yaw=by+.5;player.pitch=-.22;worldDirty=true;buildHeld=true;})();1");
 await p.waitForTimeout(1200);await cap('BUILD COVER MID-FIGHT','Dirt, glass, brick, concrete, steel · everything you build can be blown up');await shot('2-build');await ev('buildHeld=false;1');

@@ -2,7 +2,7 @@
 
 ## What is already done
 - iPhone app (Capacitor) with icon, launch screen, full-screen landscape, privacy manifest (PrivacyInfo.xcprivacy) and encryption declaration.
-- Live updates: fixes and new content reach players without waiting for Apple's review.
+- Live updates: signed fixes for the version Apple approved (same major.minor, e.g. 1.8.x) reach players without waiting for review. New features (1.9, 2.0…) only install from an App Store update: bump MARKETING_VERSION and app/package.json, build, and submit.
 - Remote "update required", home-screen messages and feature switches through the app_config table.
 - In-game account deletion (Apple requirement), privacy policy, terms of use, support page, licenses.
 - Crash reports and player messages are saved in the database.
