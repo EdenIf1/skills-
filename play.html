@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-0DyOAhECJE3vXFXcwNw4h8mO8gGu9ipiVydQh+qgfGc=' 'sha256-5IVWux5cAL2V3MQpcn6gQVnU4oztWjgLU1QpbOW5ijs=' 'unsafe-eval'; script-src-attr 'none'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; media-src 'self' data: blob:; connect-src 'self' https: wss: data: blob: http://127.0.0.1:* ws://127.0.0.1:* http://localhost:* ws://localhost:*; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'; frame-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-0DyOAhECJE3vXFXcwNw4h8mO8gGu9ipiVydQh+qgfGc=' 'sha256-OTXYks5d8mXqpNxAqLNQ3muLv90axHGaLu4dIByrQlc=' 'unsafe-eval'; script-src-attr 'none'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; media-src 'self' data: blob:; connect-src 'self' https: wss: data: blob: http://127.0.0.1:* ws://127.0.0.1:* http://localhost:* ws://localhost:*; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'; frame-src 'none'">
 <meta name="referrer" content="no-referrer">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
@@ -88,10 +88,38 @@ body{font-family:var(--f-body);touch-action:none;user-select:none;-webkit-user-s
 #hitm.hs{color:var(--red)}
 
 #msgs{position:absolute;left:50%;top:27%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:2px}
-.msg{font-size:34px;letter-spacing:.08em;color:var(--amber);animation:pop 1.7s ease-out forwards;white-space:nowrap}
-.msg.small{font-size:22px;color:var(--ink)}
-.msg.gp{font-size:22px;color:var(--green)}
-.msg.big{font-size:52px;color:var(--red)}
+.msg{font-size:34px;letter-spacing:.1em;color:var(--amber);animation:pop 1.7s cubic-bezier(.2,.9,.3,1) forwards;white-space:nowrap;line-height:1;
+  text-shadow:0 2px 0 rgba(0,0,0,.55),0 0 22px rgba(243,181,74,.35)}
+.msg.small{font:600 14px var(--f-body);letter-spacing:.16em;color:#eef3f7;text-transform:uppercase;text-shadow:0 1px 3px rgba(0,0,0,.8);padding:3px 12px 2px;
+  background:linear-gradient(90deg,transparent,rgba(8,11,16,.55) 18%,rgba(8,11,16,.55) 82%,transparent)}
+.msg.gp,.msg.ann{font-size:30px;color:#ffd27a;letter-spacing:.14em;text-shadow:0 2px 0 rgba(0,0,0,.6),0 0 24px rgba(243,181,74,.5)}
+.msg.gp::before,.msg.gp::after,.msg.ann::before,.msg.ann::after{content:"";display:inline-block;width:34px;height:2px;margin:0 12px;vertical-align:middle;background:linear-gradient(90deg,transparent,#ffd27a)}
+.msg.gp::after,.msg.ann::after{background:linear-gradient(270deg,transparent,#ffd27a)}
+.msg.medal{font-size:40px;color:#fff;letter-spacing:.12em;text-shadow:0 2px 0 rgba(0,0,0,.6),0 0 26px rgba(255,120,80,.7);animation-name:slam}
+.msg.big{font-size:52px;color:var(--red);text-shadow:0 3px 0 rgba(0,0,0,.6),0 0 30px rgba(239,90,79,.55);animation-name:slam}
+@keyframes slam{0%{transform:scale(2.2);opacity:0;filter:blur(4px)}10%{transform:scale(.94);opacity:1;filter:none}16%{transform:scale(1)}78%{opacity:1}100%{opacity:0;transform:translateY(-12px)}}
+/* score feed beside the crosshair: what each kill or objective just earned */
+#rfeed{position:absolute;left:calc(50% + 54px);top:calc(50% - 6px);display:flex;flex-direction:column;align-items:flex-start;gap:3px;pointer-events:none;z-index:4}
+#rftot{font:600 30px/1 var(--f-hud);letter-spacing:.04em;color:#fff;text-shadow:0 2px 0 rgba(0,0,0,.6),0 0 16px rgba(143,208,255,.45);font-variant-numeric:tabular-nums;opacity:0;transition:opacity .3s}
+#rftot.on{opacity:1}#rftot.bump{animation:rfBump .28s ease-out}
+#rftot i{font-style:normal;font-size:17px;color:#8fd0ff;margin-left:4px;letter-spacing:.1em}#rftot em{font-style:normal;color:#ffd27a;font-size:22px;margin-left:10px}#rftot em i{color:#ffd27a}
+.rf{display:flex;align-items:baseline;gap:6px;padding:1px 10px 0 8px;border-left:2px solid var(--rc);background:linear-gradient(90deg,rgba(8,11,16,.62),rgba(8,11,16,0));
+  animation:rfIn .26s cubic-bezier(.2,.9,.3,1.2) both;white-space:nowrap}
+.rf.xp{--rc:#8fd0ff}.rf.gp{--rc:#ffd27a}.rf.cash{--rc:#7ee0a0}#rftot em.c{color:#7ee0a0}
+.rf b{font:600 22px/1.15 var(--f-hud);color:var(--rc);font-variant-numeric:tabular-nums;text-shadow:0 1px 0 rgba(0,0,0,.6)}
+.rf i{font:600 11px var(--f-body);font-style:normal;color:var(--rc);opacity:.85;letter-spacing:.1em}
+.rf span{font:600 12px var(--f-body);letter-spacing:.14em;text-transform:uppercase;color:#f1f4f7;text-shadow:0 1px 2px rgba(0,0,0,.8)}
+.rf small{font:500 11px var(--f-body);color:rgba(238,242,244,.65);letter-spacing:.04em}
+.rf.out{animation:rfOut .35s ease-in forwards}
+@keyframes rfIn{from{opacity:0;transform:translateX(-14px)}to{opacity:1;transform:none}}
+@keyframes rfOut{to{opacity:0;transform:translateX(10px)}}
+@keyframes rfBump{40%{transform:scale(1.14)}}
+body.touch #rfeed{left:calc(50% + 34px);top:calc(50% - 36px);gap:1px}body.touch #rftot{font-size:21px}body.touch #rftot i{font-size:12px}body.touch #rftot em{font-size:16px}
+body.touch .rf{padding:0 8px 0 6px;gap:4px}body.touch .rf b{font-size:15px}body.touch .rf i{font-size:9px}body.touch .rf span{font-size:9px;letter-spacing:.12em}body.touch .rf small{font-size:9px}
+body.touch .rf:nth-of-type(n+5){display:none}
+body.touch .msg.medal{font-size:28px}body.touch .msg.gp,body.touch .msg.ann{font-size:22px}body.touch .msg.big{font-size:38px}
+body.ghost #rfeed{display:none}
+@media (prefers-reduced-motion:reduce){.rf,.rf.out,#rftot.bump{animation:none}.msg.medal,.msg.big{animation-name:pop}}
 @keyframes pop{0%{transform:scale(1.5);opacity:0}12%{transform:scale(1);opacity:1}75%{opacity:1}100%{opacity:0;transform:translateY(-10px)}}
 #zhud{position:absolute;top:calc(var(--st) + 8px);left:50%;transform:translateX(-50%);text-align:center;background:var(--panel);padding:4px 18px 2px;line-height:1}
 #zRound{font-family:var(--f-pix);font-size:22px;color:#e04a3a;letter-spacing:.06em}
@@ -231,7 +259,7 @@ body.touch #wname{font-size:14px}
 body.touch #res{font-size:17px}
 body.touch #nades{font-size:13px}
 body.touch #reloadTxt{font-size:14px}
-body.touch #msgs{top:38%}
+body.touch #msgs{top:29%}
 body.touch .msg{font-size:26px}
 body.touch .msg.small,body.touch .msg.gp{font-size:18px}
 body.touch #score .tm{font-size:30px;min-width:48px}
@@ -557,6 +585,28 @@ body.touch .ctrl.desk{display:none} body:not(.touch) .ctrl.mob{display:none}
 body.touch #tip{top:calc(var(--st) + 94px);max-width:52vw}body.touch #tip b{font-size:13px}
 .btn.armed{background:#e5484d!important;color:#fff!important;border-color:#e5484d!important}
 .toast.errnote{background:#ffcf5a;color:#2a1c00;font-family:system-ui,-apple-system,sans-serif;font-size:15px;letter-spacing:0;line-height:1.35;padding:8px 14px;max-width:min(560px,92vw)}
+/* notifications: dark glass cards with a coloured edge by kind (reward, level, problem, info), amounts highlighted */
+#toasts{position:fixed;left:50%;top:calc(var(--st) + 10px);transform:translateX(-50%);z-index:60;display:flex;flex-direction:column;align-items:center;gap:6px;pointer-events:none;width:min(560px,92vw)}
+.toast.tk{position:relative;left:auto;top:auto;transform:none;display:flex;align-items:center;gap:12px;max-width:100%;padding:9px 18px 11px 10px;
+  background:linear-gradient(100deg,rgba(13,18,26,.95),rgba(22,29,40,.92));border:1px solid rgba(255,255,255,.08);border-left:3px solid var(--tk);
+  box-shadow:0 12px 30px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.06);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
+  color:#e9eef3;font:500 14px/1.38 var(--f-body);letter-spacing:.01em;text-align:left;pointer-events:auto;cursor:pointer;overflow:hidden;z-index:auto;
+  clip-path:polygon(0 0,calc(100% - 12px) 0,100% 12px,100% 100%,0 100%);animation:tkIn .38s cubic-bezier(.2,.9,.25,1.15) both}
+.toast.tk.out{animation:tkOut .26s ease-in forwards}
+.tk.info{--tk:#5b9cf0}.tk.gp{--tk:#f3b54a}.tk.lvl{--tk:#c98cf5}.tk.bad{--tk:#ff6b5e}.tk.ok{--tk:#6fd08c}
+.tkIc{flex:none;width:28px;height:30px;display:grid;place-items:center;font:700 15px/1 var(--f-body);font-style:normal;color:#0b0f15;background:var(--tk);
+  clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);filter:drop-shadow(0 0 8px var(--tk))}
+.tkTx{min-width:0}
+.tkT{display:block;font:700 11px/1.15 var(--f-body);letter-spacing:.16em;text-transform:uppercase;color:var(--tk);margin-bottom:2px}
+.tkSep{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:pre}
+.tkGp{color:#ffd27a;font-weight:700;white-space:nowrap;text-shadow:0 0 10px rgba(243,181,74,.45)}
+.tkGp::before{content:"◆ ";font-size:.8em}
+.tkXp{color:#8fd0ff;font-weight:700;white-space:nowrap}
+.tkBar{position:absolute;left:0;bottom:0;height:2px;width:100%;background:var(--tk);opacity:.65;transform-origin:left;animation:tkBar linear forwards}
+@keyframes tkIn{from{opacity:0;transform:translateY(-14px) scale(.96)}to{opacity:1;transform:none}}
+@keyframes tkOut{to{opacity:0;transform:translateY(-8px) scale(.97)}}
+@keyframes tkBar{from{transform:scaleX(1)}to{transform:scaleX(0)}}
+@media (prefers-reduced-motion:reduce){.toast.tk,.toast.tk.out{animation:none}.tkBar{display:none}}
 .toast{position:fixed;left:50%;top:calc(var(--st) + 14px);transform:translateX(-50%);background:var(--green);color:#08200f;font-family:var(--f-hud);font-size:22px;padding:6px 16px 2px;z-index:50;letter-spacing:.06em;max-width:90vw;text-align:center}
 
 #board,#pause,#end,#shop,#crate,#acct,#settings,#mp{background:rgba(9,12,16,.78)}
@@ -1085,7 +1135,7 @@ body.cine #hud>*:not(#nukeFlash),body.cine #touch,body.cine #airTab{visibility:h
   <div id="cross"><i class="t"></i><i class="b"></i><i class="l"></i><i class="r"></i></div>
   <div id="dot" hidden></div>
   <div id="hitm"></div>
-  <div id="msgs"></div>
+  <div id="msgs"></div><div id="rfeed"><div id="rftot"></div></div>
   <div id="tip" hidden><i>TIP</i><b></b></div>
   <div id="nadeWarn" hidden>GRENADE</div>
   <div id="zhud" hidden><div id="zRound">ROUND 1</div><div id="zLeft">0 zombies left</div><div id="zCash">$500</div></div>
@@ -1842,7 +1892,7 @@ async function adminClaim(code){if(!CS||CS.guest)return 'Sign in to your own acc
   if(r.ok){CS.admin=true;cloudKeep();return '';}const e=r.j&&r.j.error;
   return !r.status?'No connection to the server.':e==='code'?'That code is not right.':e==='taken'?'This game already has its admin.':e==='guest'?'Guest accounts cannot be admins. Create your account first.':'The server said no (error '+r.status+').';}
 /* ================= version, remote settings, crash reports ================= */
-const APP_VERSION='1.8.1',BUILD_ID='1894d5e';
+const APP_VERSION='1.8.2',BUILD_ID='7d91643';
 const verNum=v=>String(v||'0').split('.').slice(0,3).map(n=>parseInt(n)||0).reduce((a,n)=>a*1000+n,0);
 let RCFG={};try{RCFG=JSON.parse(localStorage.getItem('blockfire.rcfg')||'{}')||{};}catch(e){RCFG={};}
 const feat=k=>!(RCFG.features&&RCFG.features[k]===false);
@@ -1863,8 +1913,7 @@ const errCode=s=>{let h=5381;for(let i=0;i<s.length;i++)h=((h<<5)+h+s.charCodeAt
 // Every one of them is still reported to the server, so the owner sees them in the crash reports.
 function ownerNote(){try{return !!(CS&&CS.admin);}catch(e){return false;}}
 function errTell(code){if(!ownerNote())return;const now=Date.now();if(now-errToldT<60000)return;errToldT=now;
-  try{const d=document.createElement('div');d.className='toast cut errnote';d.setAttribute('role','alert');
-    d.textContent='Something went wrong (code '+code+'). The game kept going. If it keeps happening, close and reopen the game.';document.body.appendChild(d);setTimeout(()=>d.remove(),6000);}catch(x){}}
+  try{toast('Something went wrong (code '+code+'). The game kept going. If it keeps happening, close and reopen the game.');}catch(x){}}
 function reportErr(where,e){try{const msg0=String(e&&e.message||e||'?').slice(0,400);
   // a browser extension or another site's script: nothing of ours broke
   if(where==='window'&&/^Script error\.?$/.test(msg0))return;
@@ -4481,7 +4530,8 @@ function addFeed(killer,victim,weapon,head){
   feedEl.prepend(d);while(feedEl.children.length>5)feedEl.lastChild.remove();
   setTimeout(()=>{d.style.opacity='0';setTimeout(()=>d.remove(),400);},5200);
 }
-function showMsg(text,small,cls){fr('msg '+text);const d=document.createElement('div');d.className='msg'+(small?' small':'')+(cls?' '+cls:'');d.textContent=text;msgsEl.appendChild(d);while(msgsEl.children.length>4)msgsEl.firstChild.remove();setTimeout(()=>d.remove(),1750);}
+function showMsg(text,small,cls){fr('msg '+text);
+  if(cls==='gp'){const m=String(text).match(/^\+([\d,]+) (GP|XP) · (.+)$/);if(m){rfPush(+m[1].replace(/,/g,''),m[2].toLowerCase(),m[3]);return;}cls='ann';}const d=document.createElement('div');d.className='msg'+(small?' small':'')+(cls?' '+cls:'');d.textContent=text;msgsEl.appendChild(d);while(msgsEl.children.length>4)msgsEl.firstChild.remove();setTimeout(()=>d.remove(),1750);}
 let hitT=0,vigT=0,nukeT=0;
 /* ===== the tactical nuke as a five-second movie: the game freezes, everyone watches the bomb fall, the map is left in ruins ===== */
 let cineT=0,cine=null,nukeSmokeT=0;
@@ -4676,7 +4726,32 @@ function cineClear(keepSmoke){if(cine){if(cine.fog){scene.fog.near=MAP.fog[0];sc
 function nukeSmokeTick(dt){const el=$('nukeSmoke');if(nukeSmokeT>0){nukeSmokeT=Math.max(0,nukeSmokeT-dt);const k=nukeSmokeT/5;el.style.opacity=String(.5*k);
     scene.fog.near=MAP.fog[0]*(1-k*.85);scene.fog.far=MAP.fog[1]*(1-k*.6);}else if(el.style.opacity!=='0'){el.style.opacity='0';scene.fog.near=MAP.fog[0];scene.fog.far=MAP.fog[1];}}
 function hitmarker(head){const h=$('hitm');h.className=head?'hs':'';hitT=.18;sfx.hit(head);haptic(head?'MEDIUM':'LIGHT');}
-function toast(text){const d=document.createElement('div');d.className='toast cut';d.textContent=text;document.body.appendChild(d);setTimeout(()=>d.remove(),3200);}
+const TST={box:null,last:'',lastT:0};
+function tkBox(){if(TST.box&&TST.box.isConnected)return TST.box;const b=document.createElement('div');b.id='toasts';b.setAttribute('aria-live','polite');document.body.appendChild(b);return TST.box=b;}
+function tkKind(t){if(/\b(error|could not|couldn'?t|failed|cannot|can'?t|not enough|problem|refused|went wrong|blocked|banned|expired|offline)\b|\(code [A-Z]/i.test(t))return 'bad';
+  if(/\blevel\s*\d+|\blevel up|promoted|mastered|rank(ed)? (up|season)/i.test(t))return 'lvl';
+  if(/\+\s?[\d,]+\s?(GP|XP)\b|[\d,]+\s?GP\b|free crate|\bcrates?\b|gift|reward|challenge done|claim/i.test(t))return 'gp';
+  if(/\b(saved|sent|now friends|accepted|connected|copied|shared|unlocked|equipped|bought|rented|done|ready|joined|welcome)\b/i.test(t))return 'ok';
+  return 'info';}
+const TK_ICON={bad:'!',lvl:'★',gp:'◆',ok:'✓',info:'i'};
+const tkFmt=t=>esc(t).replace(/(\+\s?)?([\d][\d,.]*\s?GP)\b/g,'<b class="tkGp">$1$2</b>').replace(/(\+\s?)?([\d][\d,.]*\s?XP)\b/g,'<b class="tkXp">$1$2</b>');
+function toast(text){text=String(text==null?'':text);if(!text)return;const now=Date.now();if(text===TST.last&&now-TST.lastT<1500)return;TST.last=text;TST.lastT=now;
+  try{const box=tkBox(),k=tkKind(text),d=document.createElement('div');d.className='toast tk '+k;d.setAttribute('role',k==='bad'?'alert':'status');
+    const m=text.match(/^([^:.!?·]{3,40})(:| ·)\s+([\s\S]+)$/);const ms=Math.min(7500,2600+text.length*40);
+    d.innerHTML=`<i class="tkIc" aria-hidden="true">${TK_ICON[k]}</i><div class="tkTx">${m?`<b class="tkT">${esc(m[1])}</b><span class="tkSep">${m[2]===':'?': ':' · '}</span><span class="tkB">${tkFmt(m[3])}</span>`:`<span class="tkB">${tkFmt(text)}</span>`}</div><em class="tkBar" style="animation-duration:${ms}ms"></em>`;
+    box.appendChild(d);while(box.children.length>3)box.firstChild.remove();
+    const out=()=>{if(!d.isConnected||d.classList.contains('out'))return;d.classList.add('out');setTimeout(()=>d.remove(),260);};
+    d.addEventListener('click',out);setTimeout(out,ms);}
+  catch(e){const d=document.createElement('div');d.className='toast cut';d.textContent=text;document.body.appendChild(d);setTimeout(()=>d.remove(),3200);}}
+// the score feed beside the crosshair: each kill or objective shows what it earned, with a running total for the burst
+const RF={xp:0,gp:0,cash:0,t:0};
+function rfPush(amt,cur,label,sub){try{const box=$('rfeed'),tot=$('rftot');if(!box||!tot)return;amt=Math.round(+amt||0);if(amt<=0)return;
+  cur=cur==='gp'||cur==='cash'?cur:'xp';const now=performance.now();if(now-RF.t>3200){RF.xp=0;RF.gp=0;RF.cash=0;}RF.t=now;RF[cur]+=amt;
+  tot.innerHTML=(RF.xp?`+${RF.xp.toLocaleString()}<i>XP</i>`:'')+(RF.gp?`<em>+${RF.gp.toLocaleString()}<i>GP</i></em>`:'')+(RF.cash?`<em class="c">+$${RF.cash.toLocaleString()}</em>`:'');tot.classList.add('on');tot.classList.remove('bump');void tot.offsetWidth;tot.classList.add('bump');
+  const d=document.createElement('div');d.className='rf '+cur;d.innerHTML=`<b>+${cur==='cash'?'$':''}${amt.toLocaleString()}</b><i>${cur==='gp'?'GP':cur==='xp'?'XP':''}</i><span>${esc(String(label||''))}</span>${sub?`<small>${esc(String(sub))}</small>`:''}`;
+  tot.after(d);const L=box.querySelectorAll('.rf');for(let i=4;i<L.length;i++)L[i].remove();
+  setTimeout(()=>{d.classList.add('out');setTimeout(()=>d.remove(),360);},2400);
+  clearTimeout(RF.h);RF.h=setTimeout(()=>{tot.classList.remove('on');},3200);}catch(e){}}
 
 /* ================= events: double XP on the 1st and 3rd weekend of each month, and a featured mode each week (+50% GP) ================= */
 const EV_MODES=['king','gun','ctf','inf','oitc','dom','hp','br','build','boom','snd','ffa'];
@@ -4842,16 +4917,17 @@ function onMyKill(vname,head,weapon,kind){
     const s=player.streak;match.best=Math.max(match.best,s);
     streakN=streakT>0?streakN+1:1;streakT=3.5;
     const names=['','','DOUBLE KILL','TRIPLE KILL','MULTI KILL','MEGA KILL','ULTRA KILL','MONSTER KILL'];
-    if(streakN>=2)showMsg(names[Math.min(streakN,7)]);else showMsg(head?'HEADSHOT':'ENEMY DOWN');
-    showMsg(vname,true);sfx.kill(head);
-    award(10+(head?5:0)+Math.min(15,streakN>=2?5*(streakN-1):0),null,25+(head?10:0)+Math.min(15,streakN>=2?5*(streakN-1):0));
+    if(streakN>=2)showMsg(names[Math.min(streakN,7)],false,'medal');sfx.kill(head);
+    const kxp=25+(head?10:0)+Math.min(15,streakN>=2?5*(streakN-1):0);
+    award(10+(head?5:0)+Math.min(15,streakN>=2?5*(streakN-1):0),null,kxp);
+    rfPush(kxp,'xp',kind==='knife'?'KNIFE KILL':head?'HEADSHOT':'ELIMINATION',vname);
     try{const wid=loadout[cur];if(WEAPONS[wid]&&WEAPONS[wid].name===weapon&&!isKnife(wid)){const g=profile.gk=cleanCounts(profile.gk);g[wid]=(g[wid]|0)+1;
       if(g[wid]===MASTERY_K){showMsg('WEAPON MASTERED',false,'big');pendingToasts.push(WEAPONS[wid].name+' mastered · it now wears the Mastery camo');try{markNew('camo','mastery');}catch(e){}buildViewmodels();}}}catch(e){}
     chProgress('kills',1);if(head)chProgress('heads',1);
     if(kind==='boom')chProgress('boom',1);if(kind==='sniper')chProgress('sniper',1);if(kind==='shotgun')chProgress('shotgun',1);
     if(s===5)chProgress('streak',1);
     if(s===3)killstreak('uav');if(!noNades()){if(s===5){if(isClient())player.airOwed=(player.airOwed|0)+1;showMsg('AIRSTRIKE READY · '+(isTouch?'TAP ✈ AIRSTRIKE':'PRESS T'),true);say('Airstrike is ready');}if(s===15){if(isClient())player.nukeOwed=(player.nukeOwed|0)+1;showMsg('NUKE READY · '+(isTouch?'TAP ☢ NUKE':'PRESS N'),true);say('Nuke is ready');}}
-    if(s===5)showMsg('KILLING SPREE');if(s===10)showMsg('UNSTOPPABLE');
+    if(s===5)showMsg('KILLING SPREE',false,'medal');if(s===10)showMsg('UNSTOPPABLE',false,'medal');
 }
 function killstreak(k,own,tgt){fr('streak '+k);
   own=own||player;const mine=own===player,enemy=e=>e.team!==own.team;
@@ -5475,7 +5551,7 @@ function zHurt(z,amt,att,head,weapon,kind){
     Z.money+=Math.round((head?90:50)*cm);player.kills++;match.kills++;if(head)match.heads++;
     const S=ST();S.zkills=(S.zkills||0)+1;S.weap[weapon]=(S.weap[weapon]||0)+1;
     chProgress('kills',1);if(head)chProgress('heads',1);if(kind==='boom')chProgress('boom',1);if(kind==='sniper')chProgress('sniper',1);if(kind==='shotgun')chProgress('shotgun',1);
-    if(head)showMsg('HEADSHOT',true);
+    rfPush(Math.round((head?90:50)*cm),'cash',head?'HEADSHOT':'ZOMBIE KILL');
   }
   if(z.type==='boomer')zBoom(z);
 }
@@ -8588,7 +8664,7 @@ function clientRecv0(d){
   if(d.t==='kg'){KG.on=true;$('kgHud').hidden=false;const me=nidOf(player),k=(player.team==='blue'?d.b:d.r)[0];player.king=k===me;player.ks=player.king?KS:1;kgView(d);return;}
   if(d.t==='king'){kgArm(!!d.on);if(d.on&&isFinite(d.x)){player.x=+d.x;player.y=+d.y;player.z=+d.z;player.vx=player.vy=player.vz=0;player.smoothY=0;}if(d.on){player.king=true;player.ks=KS;player.maxHp=KHP;player.hp=KHP;player.shield=0;player.maxSh=0;}else{player.king=false;player.ks=1;applyGear(true);player.hp=Math.min(player.hp,player.maxHp);}return;}
   if(d.t==='kc'){player.streak=(player.streak||0)+1;onMyKill(d.v,!!d.h,d.w,d.k);return;}
-  if(d.t==='cash'){Z.money+=clamp(fin(d.v,0),-100000,100000);if(d.kill&&state==='play'){Z.kills++;match.kills++;if(d.h)match.heads++;const S=ST();S.zkills=(S.zkills||0)+1;S.weap[d.w]=(S.weap[d.w]||0)+1;chProgress('kills',1);if(d.h){chProgress('heads',1);showMsg('HEADSHOT',true);}}return;}
+  if(d.t==='cash'){Z.money+=clamp(fin(d.v,0),-100000,100000);if(d.kill&&state==='play'){Z.kills++;match.kills++;if(d.h)match.heads++;const S=ST();S.zkills=(S.zkills||0)+1;S.weap[d.w]=(S.weap[d.w]||0)+1;chProgress('kills',1);if(d.h)chProgress('heads',1);rfPush(clamp(fin(d.v,0),0,100000),'cash',d.h?'HEADSHOT':'ZOMBIE KILL');}return;}
   if(d.t==='xm'){xmView(d,false);return;}
   if(d.t==='stash'){stashShow(Array.isArray(d.s)&&d.s.every(Number.isFinite)?d.s:null);return;}
   if(d.t==='stashGot'){if(WEAPONS[d.w]){nades=Math.min(nades+2,9);setTimeout(()=>showMsg('SECRET STASH · '+WEAPONS[d.w].name.toUpperCase(),true),50);}return;}
