@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-0DyOAhECJE3vXFXcwNw4h8mO8gGu9ipiVydQh+qgfGc=' 'sha256-avctiEcCrohx0ZV3rxPcWmCc/vTs34ZCueBmBijjIHY=' 'unsafe-eval'; script-src-attr 'none'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; media-src 'self' data: blob:; connect-src 'self' https: wss: data: blob: http://127.0.0.1:* ws://127.0.0.1:* http://localhost:* ws://localhost:*; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'; frame-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-0DyOAhECJE3vXFXcwNw4h8mO8gGu9ipiVydQh+qgfGc=' 'sha256-5IVWux5cAL2V3MQpcn6gQVnU4oztWjgLU1QpbOW5ijs=' 'unsafe-eval'; script-src-attr 'none'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; media-src 'self' data: blob:; connect-src 'self' https: wss: data: blob: http://127.0.0.1:* ws://127.0.0.1:* http://localhost:* ws://localhost:*; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'; frame-src 'none'">
 <meta name="referrer" content="no-referrer">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
@@ -801,6 +801,7 @@ body.touch #tip{top:calc(var(--st) + 94px);max-width:52vw}body.touch #tip b{font
 @media (prefers-reduced-motion:reduce){.msg{animation-duration:1.2s}}
 #setCtrl{display:none}
 body.ghost #touch{display:none}body.ghost #scope{display:none}
+body.ghost #tip,body.ghost #zTip{display:none!important}
 #spec{position:fixed;inset:0;z-index:9;pointer-events:none;background:radial-gradient(ellipse at 50% 50%,rgba(120,170,255,0) 55%,rgba(90,140,230,.32) 100%)}
 .specTop{position:absolute;top:calc(var(--st) + 100px);left:50%;transform:translateX(-50%);font:500 13px var(--f-hud);letter-spacing:.18em;color:#cfe0ff;text-shadow:0 1px 4px #000;white-space:nowrap}
 .specBar{position:absolute;bottom:calc(var(--sb) + 18px);left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:12px;pointer-events:auto;background:rgba(8,12,20,.7);border:1px solid rgba(140,180,255,.5);padding:5px 8px}
@@ -1841,7 +1842,7 @@ async function adminClaim(code){if(!CS||CS.guest)return 'Sign in to your own acc
   if(r.ok){CS.admin=true;cloudKeep();return '';}const e=r.j&&r.j.error;
   return !r.status?'No connection to the server.':e==='code'?'That code is not right.':e==='taken'?'This game already has its admin.':e==='guest'?'Guest accounts cannot be admins. Create your account first.':'The server said no (error '+r.status+').';}
 /* ================= version, remote settings, crash reports ================= */
-const APP_VERSION='1.8.0',BUILD_ID='0701f40';
+const APP_VERSION='1.8.1',BUILD_ID='1894d5e';
 const verNum=v=>String(v||'0').split('.').slice(0,3).map(n=>parseInt(n)||0).reduce((a,n)=>a*1000+n,0);
 let RCFG={};try{RCFG=JSON.parse(localStorage.getItem('blockfire.rcfg')||'{}')||{};}catch(e){RCFG={};}
 const feat=k=>!(RCFG.features&&RCFG.features[k]===false);
@@ -6034,11 +6035,11 @@ function updatePlayer(dt){
 }
 let specT=null,specWait=0;
 const specList=()=>ents.filter(e=>e!==player&&e.alive&&e.inMatch!==false&&(XM.on&&XM.ffa?!e.xmOut:e.team===player.team)&&!(e.remote&&e.away));
-function specTick(dt){const on=state==='play'&&(RS.on||player.xmOut)&&!player.alive&&!FK.on&&!cineT;specWait=on?specWait+dt:0;const L=on&&specWait>2?specList():[];
+function specTick(dt){const on=state==='play'&&(RS.on||player.xmOut||isZ())&&!player.alive&&!FK.on&&!cineT;specWait=on?specWait+dt:0;const L=on&&specWait>2?specList():[];
   if(!L.length){if(specT&&specT.mesh&&specT.alive)specT.mesh.visible=true;specT=null;if(!$('spec').hidden){$('spec').hidden=true;document.body.classList.remove('ghost');}
-    if(on&&specWait>2&&!$('death').hidden&&!L.length)$('death').querySelector('.t').textContent='Your whole team is out. Next round soon.';return false;}
+    if(on&&!isZ()&&specWait>2&&!$('death').hidden&&!L.length)$('death').querySelector('.t').textContent='Your whole team is out. Next round soon.';return false;}
   if(!specT||!L.includes(specT)){if(specT&&specT.mesh&&specT.alive)specT.mesh.visible=true;specT=L[0];}
-  if($('spec').hidden){$('spec').hidden=false;document.body.classList.add('ghost');$('death').hidden=true;$('spec').querySelector('.specTop').textContent=RS.on?'👻 GHOST · YOU ARE OUT FOR THIS ROUND':'👻 GHOST · YOU ARE OUT · WATCHING UNTIL THE END';}
+  if($('spec').hidden){$('spec').hidden=false;document.body.classList.add('ghost');$('death').hidden=true;$('spec').querySelector('.specTop').textContent=isZ()?'👻 GHOST · YOU ARE BACK WHEN THE ROUND ENDS':RS.on?'👻 GHOST · YOU ARE OUT FOR THIS ROUND':'👻 GHOST · YOU ARE OUT · WATCHING UNTIL THE END';}
   $('specName').textContent=specT.name;$('specN').textContent=`${L.indexOf(specT)+1} / ${L.length}`;return true;}
 function specStep(d){const L=specList();if(!L.length)return;if(specT&&specT.mesh&&specT.alive)specT.mesh.visible=true;const i=L.indexOf(specT);specT=L[((i<0?0:i)+d+L.length)%L.length];}
 function updateCamera(dt){if(KC.on){kcSafe(dt);return;}
