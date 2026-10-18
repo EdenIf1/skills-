@@ -463,6 +463,20 @@ html.rot.rotLate #rotTip span{opacity:1}
 .bxCol small{font:12px var(--f-body);color:var(--dim)}.bxCol.done{border-color:#f3b54a;box-shadow:0 0 14px rgba(243,181,74,.18)}.bxCol.done small{color:#f3b54a}
 .bxBar{display:block;height:5px;background:rgba(255,255,255,.1);margin:4px 0}.bxBar i{display:block;height:100%;background:var(--bc)}
 .bxRow.star{border-color:#f3b54a!important}
+.mast{display:flex;align-items:center;gap:6px;font:600 10px var(--f-body);letter-spacing:.1em;color:var(--dim)}.mast b{flex:1;height:4px;background:rgba(255,255,255,.1)}.mast i{display:block;height:100%;background:linear-gradient(90deg,#c08a1a,#ffd36a)}
+.mast small{font:600 10px var(--f-body);color:var(--dim)}.mast.ok span{color:#f3b54a}.mast .chip{font-size:11px;padding:2px 7px}
+#kcSkip{pointer-events:auto;display:inline-block;margin-left:10px;font:600 13px var(--f-body);letter-spacing:.08em;color:#fff;background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.45);padding:5px 12px;cursor:pointer;vertical-align:2px}
+body.kc #cineCap{top:calc(11vh + 6px);bottom:auto}body.kc #cineCap b{color:#ff6a6a;font-size:clamp(20px,4vw,34px)}body.kc #death{visibility:hidden}
+#weekBox{margin-top:6px}.wkRows{display:flex;flex-direction:column;gap:4px;margin:4px 0 6px}
+.wkRow{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(60px,1fr) auto auto;align-items:center;gap:8px;padding:5px 10px;background:rgba(0,0,0,.3);border:1px solid var(--line)}
+.wkRow b{font:400 17px var(--f-hud);letter-spacing:.03em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.wkRow small{font:12px var(--f-body);color:var(--dim)}.wkRow em{font-style:normal;color:#6fd08c;font-weight:700}
+.wkBar{height:5px;background:rgba(255,255,255,.1)}.wkBar i{display:block;height:100%;background:linear-gradient(90deg,#f3b54a,#ffd27a)}.wkRow.got{opacity:.55}.wkRow.big{grid-template-columns:1fr auto;border-color:rgba(243,181,74,.5)}
+.rkBadge{display:inline-block;margin-left:8px;font:600 12px var(--f-body);letter-spacing:.06em;color:var(--rk);border:1px solid var(--rk);padding:2px 8px;white-space:nowrap}
+.rkLine{color:var(--rk)!important}.rkLine b{color:#fff}
+#pdLab{position:fixed;inset:0;pointer-events:none;z-index:31}#pdLab[hidden]{display:none}
+.pdN{position:absolute;transform:translate(-50%,-100%);text-align:center;font:400 20px/1 var(--f-hud);color:#fff;text-shadow:0 2px 6px #000;white-space:nowrap}
+.pdN b{display:block;font-size:13px;letter-spacing:.2em;color:#f3b54a}.pdN.p2 b{color:#dfe5ec}.pdN.p3 b{color:#d89a6a}.pdN small{display:block;font:12px var(--f-body);opacity:.8}
+.pdTitle{position:absolute;left:0;right:0;bottom:calc(11vh + 8px);text-align:center;font-family:var(--f-hud);color:#fff;text-shadow:0 2px 8px #000}.pdTitle b{display:block;font-size:clamp(24px,5vw,44px);letter-spacing:.2em;color:#ffd34a}.pdTitle span{font-size:14px;letter-spacing:.1em;opacity:.85}body.pd #toast{visibility:hidden}
 .citem.lock{opacity:.55}.citem .row{gap:5px}.citem .btn.sm{font-size:15px;padding:4px 10px 1px}
 .sw2{height:30px;border:1px solid rgba(0,0,0,.4)}
 .t0{color:var(--dim)}.t1{color:#9fb4c8}.t2{color:#6c9eff}.t3{color:#c07bf0}.t4{color:var(--amber)}
@@ -1135,6 +1149,7 @@ body.cine #hud>*:not(#nukeFlash),body.cine #touch,body.cine #airTab{visibility:h
         <button class="chip" data-zd="hard">High · 20</button>
         <button class="chip" data-zd="extreme">Extreme · 20</button>
       </div></div>
+      <div class="hMapRow" id="rankRow"><span class="lbl2">Ranked</span><div class="row"><button class="chip" data-rk="0">Off</button><button class="chip" data-rk="1">On</button><span id="rkHome"></span></div></div>
     </section>
     <section class="hSide">
       <div class="hPanel" id="hParty"></div>
@@ -1196,6 +1211,7 @@ body.cine #hud>*:not(#nukeFlash),body.cine #touch,body.cine #airTab{visibility:h
   <div class="sheet cut">
     <div class="shopHead"><h2 id="seaTitle">SEASON</h2><div class="row" style="gap:8px"><button class="btn sm cut" id="seaAll" hidden>Claim all</button><button class="btn sm ghost cut" id="seaClose">Close</button></div></div>
     <div id="seaSub" class="seaSub"></div><div class="seaBar"><b id="seaBar"></b></div>
+    <div id="weekBox"></div>
     <div id="seaGrid"></div>
   </div>
 </div>
@@ -1442,8 +1458,12 @@ function cleanProfile(out,def){
   return out;}
 // stars a gun earned from repeat mystery-box draws: 0 to 3 each
 function cleanStars(o){const r={};if(o&&typeof o==='object'&&!Array.isArray(o))for(const k in o){const n=Math.floor(+o[k]);if(n>0&&k.length<24)r[k]=Math.min(3,n);}return r;}
+function cleanCounts(o){const r={};if(o&&typeof o==='object'&&!Array.isArray(o))for(const k in o){const n=Math.floor(+o[k]);if(n>0&&k.length<24)r[k]=Math.min(1e6,n);}return r;}
+function mergeCounts(a,b){const r=cleanCounts(a),o=cleanCounts(b);for(const k in o)r[k]=Math.max(r[k]||0,o[k]);return r;}
+function weeklyMerge(a,b){const ok=x=>x&&typeof x==='object'&&Number.isFinite(x.w)&&Array.isArray(x.list);if(!ok(b))return a;if(!ok(a)||b.w>a.w)return JSON.parse(JSON.stringify(b));if(a.w>b.w)return a;
+  const r=JSON.parse(JSON.stringify(a));for(const c of r.list){const o=b.list.find(x=>x&&x.id===c.id);if(o){c.p=Math.max(c.p|0,o.p|0);c.c=(c.c|0)||(o.c|0);}}r.big=(r.big|0)||(b.big|0);return r;}
 function mergeStars(a,b){const r=cleanStars(a),o=cleanStars(b);for(const k in o)r[k]=Math.max(r[k]||0,o[k]);return r;}
-function fillProfile(p,name){const base=makeProfile(name),def=makeProfile(name);const out=cleanProfile(Object.assign(base,migrateProfile(p)),def);out.stats=Object.assign(newStats(),out.stats||{});out.attOwn=out.attOwn||{};if(!out.rent||typeof out.rent!=='object'||Array.isArray(out.rent))out.rent={};if(!out.paid||typeof out.paid!=='object'||Array.isArray(out.paid))out.paid={};out.stars=cleanStars(out.stars);if(!Array.isArray(out.charms))out.charms=[];out.charms=out.charms.filter(x=>typeof x==='string').slice(0,64);if(typeof out.charm!=='string')out.charm='';if(!out.attOwn.m4a1)out.attOwn.m4a1=['holo'];for(const g of ['spas','thunder'])if(!(out.attOwn[g]||[]).includes('red'))out.attOwn[g]=(out.attOwn[g]||[]).concat('red');return out;}
+function fillProfile(p,name){const base=makeProfile(name),def=makeProfile(name);const out=cleanProfile(Object.assign(base,migrateProfile(p)),def);out.stats=Object.assign(newStats(),out.stats||{});out.attOwn=out.attOwn||{};if(!out.rent||typeof out.rent!=='object'||Array.isArray(out.rent))out.rent={};if(!out.paid||typeof out.paid!=='object'||Array.isArray(out.paid))out.paid={};out.stars=cleanStars(out.stars);out.gk=cleanCounts(out.gk);if(!Array.isArray(out.mOff))out.mOff=[];if(!Array.isArray(out.charms))out.charms=[];out.charms=out.charms.filter(x=>typeof x==='string').slice(0,64);if(typeof out.charm!=='string')out.charm='';if(!out.attOwn.m4a1)out.attOwn.m4a1=['holo'];for(const g of ['spas','thunder'])if(!(out.attOwn[g]||[]).includes('red'))out.attOwn[g]=(out.attOwn[g]||[]).concat('red');return out;}
 function loadProfile(){
   if(!USERS)USERS=readUsers();
   if(!USERS.cur||!USERS.users[USERS.cur]){const n='Player';USERS.users[n]=USERS.users[n]||{pin:'',guest:true,p:makeProfile(n)};USERS.cur=n;}
@@ -1459,7 +1479,7 @@ function mergeProfiles(a,b){
   o.gp=Math.max(o.gp,p.gp,o.gp+p.gp-1500);o.xp+=p.xp;
   o.owned=uni(o.owned,p.owned);o.camos=uni(o.camos,p.camos);o.equipOwn=uni(o.equipOwn,p.equipOwn);
   for(const g in p.attOwn)o.attOwn[g]=uni(o.attOwn[g],p.attOwn[g]);
-  o.skins=uni(o.skins,p.skins);o.armorOwn=uni(o.armorOwn,p.armorOwn);o.knives=uni(o.knives,p.knives);o.hitfxs=uni(o.hitfxs,p.hitfxs);o.keys=Math.max(o.keys|0,p.keys|0);if(p.cal&&(!o.cal||(o.cal.m===p.cal.m&&(p.cal.n|0)>(o.cal.n|0))))o.cal=Object.assign({},p.cal);o.season=seasonMerge(o.season,p.season);o.stars=mergeStars(o.stars,p.stars);if(!o.charm&&p.charm)o.charm=p.charm;o.gearOwn=uni(o.gearOwn,p.gearOwn);if(!Object.keys(o.gear||{}).length)o.gear=Object.assign({},p.gear||{});o.calls=Math.min(3,Math.max(o.calls|0,p.calls|0));
+  o.skins=uni(o.skins,p.skins);o.armorOwn=uni(o.armorOwn,p.armorOwn);o.knives=uni(o.knives,p.knives);o.hitfxs=uni(o.hitfxs,p.hitfxs);o.keys=Math.max(o.keys|0,p.keys|0);if(p.cal&&(!o.cal||(o.cal.m===p.cal.m&&(p.cal.n|0)>(o.cal.n|0))))o.cal=Object.assign({},p.cal);o.season=seasonMerge(o.season,p.season);o.stars=mergeStars(o.stars,p.stars);o.gk=mergeCounts(o.gk,p.gk);o.weekly=weeklyMerge(o.weekly,p.weekly);if(!o.charm&&p.charm)o.charm=p.charm;o.gearOwn=uni(o.gearOwn,p.gearOwn);if(!Object.keys(o.gear||{}).length)o.gear=Object.assign({},p.gear||{});o.calls=Math.min(3,Math.max(o.calls|0,p.calls|0));
   if(p.stats&&p.stats.zbd){o.stats.zbd=o.stats.zbd||{};for(const k in p.stats.zbd)o.stats.zbd[k]=Math.max(o.stats.zbd[k]||0,p.stats.zbd[k]);}
   for(const g in p.att)if(!o.att[g])o.att[g]=p.att[g];
   // rentals: a forever copy on either side wins; otherwise keep the later end time
@@ -1590,7 +1610,7 @@ function syncMerge(loc,cl,B){const L=fillProfile(JSON.parse(JSON.stringify(loc))
   L.rent=L.rent||{};for(const k in C.rent||{}){const x=C.rent[k];if(x&&(!L.rent[k]||(L.rent[k].e||0)<(x.e||0)))L.rent[k]=x;}
   if(C.stats&&L.stats)for(const k in C.stats)if(typeof C.stats[k]==='number')L.stats[k]=Math.max(+L.stats[k]||0,C.stats[k]);
   if(C.cal&&(!L.cal||(L.cal.m===C.cal.m&&(C.cal.n|0)>(L.cal.n|0))))L.cal=Object.assign({},C.cal);
-  L.season=seasonMerge(L.season,C.season);L.stars=mergeStars(L.stars,C.stars);
+  L.season=seasonMerge(L.season,C.season);L.stars=mergeStars(L.stars,C.stars);L.gk=mergeCounts(L.gk,C.gk);L.weekly=weeklyMerge(L.weekly,C.weekly);
   if(C.daily&&(!L.daily||L.daily.date!==C.daily.date&&(C.daily.dn|0)>(L.daily.dn|0)))L.daily=C.daily;else if(C.daily&&L.daily&&L.daily.date===C.daily.date&&!C.daily.freeCrate)L.daily.freeCrate=false;
   L.calls=Math.max(L.calls|0,C.calls|0);L.best=Math.max(L.best|0,C.best|0);L.tmax=Math.max(+L.tmax||0,+C.tmax||0);
   L.pity=L.pity||{};return fillProfile(L,loc.name);}
@@ -1771,7 +1791,7 @@ async function adminClaim(code){if(!CS||CS.guest)return 'Sign in to your own acc
   if(r.ok){CS.admin=true;cloudKeep();return '';}const e=r.j&&r.j.error;
   return !r.status?'No connection to the server.':e==='code'?'That code is not right.':e==='taken'?'This game already has its admin.':e==='guest'?'Guest accounts cannot be admins. Create your account first.':'The server said no (error '+r.status+').';}
 /* ================= version, remote settings, crash reports ================= */
-const APP_VERSION='1.6.0',BUILD_ID='__BUILD_ID__';
+const APP_VERSION='1.7.0',BUILD_ID='__BUILD_ID__';
 const verNum=v=>String(v||'0').split('.').slice(0,3).map(n=>parseInt(n)||0).reduce((a,n)=>a*1000+n,0);
 let RCFG={};try{RCFG=JSON.parse(localStorage.getItem('blockfire.rcfg')||'{}')||{};}catch(e){RCFG={};}
 const feat=k=>!(RCFG.features&&RCFG.features[k]===false);
@@ -1838,7 +1858,7 @@ function haptic(style){const H=capPlug('Haptics');if(!H||SET.haptics===false)ret
 setTimeout(()=>{loadConfig();srvTime();liveUpdate();},800);setInterval(()=>{if(!document.hidden){loadConfig();srvTime();}},10*60*1000);
 setTimeout(cloudSync,300);addEventListener('online',()=>{cloudSync();if(cloudReady)cloudQueue();});setInterval(()=>{if(!cloudReady)cloudSync();},60000);
 
-const SET_DEFAULT={sens:1,adsSens:1,invert:false,vol:.8,quality:'high',fov:75,btnScale:1,btnAlpha:1,fps:false,aim:true};
+const SET_DEFAULT={killcam:true,sens:1,adsSens:1,invert:false,vol:.8,quality:'high',fov:75,btnScale:1,btnAlpha:1,fps:false,aim:true};
 let SET=Object.assign({},SET_DEFAULT);
 try{const o=JSON.parse(localStorage.getItem('blockfire.settings')||'{}');if(o&&typeof o==='object')for(const k in o)if(k in SET_DEFAULT?typeof o[k]===typeof SET_DEFAULT[k]&&(typeof o[k]!=='number'||isFinite(o[k])):true)SET[k]=o[k];}catch(e){}
 // keep numbers in a range the controls can live with, whatever was saved
@@ -1897,7 +1917,7 @@ function renderCal(){const s=calState();$('calTitle').textContent='DAILY GIFTS �
     const prize=now?calPrize(i):null;
     h+=`<div class="cd ${got?'got':''} ${now?'now':''} ${big?'big':''}"><span class="dn">${i+1}</span><div class="cdi">${calIcon(prize,k)}</div><div class="cdl" style="${k!=='gp'&&k!=='key'?'color:'+RAR[Math.min(5,v)].c:''}">${esc(prize?prize.label:lab)}</div>${now?'<button class="btn sm cut" id="calGo">Claim</button>':''}</div>`;}
   $('calGrid').innerHTML=h;}
-function renderCalDot(){const s=calState();let sc=0;try{sc=seasonState().can.length;}catch(e){}$('calDot').hidden=!s.can&&!sc;const d=$('seaDot');if(d)d.hidden=!sc;}
+function renderCalDot(){const s=calState();let sc=0;try{sc=seasonState().can.length+weeklyCan();}catch(e){}$('calDot').hidden=!s.can&&!sc;const d=$('seaDot');if(d)d.hidden=!sc;}
 function rollDaily(){
   const t=today();if(profile.daily&&(profile.daily.date===t||(profile.daily.dn|0)>dayNum()))return null;
   const r=rng([...t].reduce((a,c)=>a*31+c.charCodeAt(0),7));
@@ -1909,7 +1929,41 @@ function rollDaily(){
   return calState().can?'Your daily gift is ready: tap 🎁 at the top':null;
 }
 const pendingToasts=[];
-function chProgress(id,n){
+// weekly challenges: three bigger goals a week; each pays 3,000 GP, and all three a box-only item
+const WEEKLY=[{id:'kills',text:'Get 150 kills',goal:150},{id:'heads',text:'Land 50 headshots',goal:50},{id:'win',text:'Win 6 matches',goal:6},{id:'matches',text:'Finish 12 matches',goal:12},
+  {id:'streak',text:'Reach a 5 kill streak 5 times',goal:5},{id:'boom',text:'Get 20 explosive kills',goal:20},{id:'sniper',text:'Get 25 sniper kills',goal:25},{id:'shotgun',text:'Get 25 shotgun kills',goal:25}];
+const WEEK_GP=3000;
+const weekId=()=>Math.floor((dayNum()+3)/7);
+function weeklyState(){const w=weekId();let W=profile.weekly;
+  if(!W||typeof W!=='object'||W.w!==w||!Array.isArray(W.list)||W.list.length!==3){const r=rng(w*7919+13),pool=WEEKLY.slice(),pick=[];while(pick.length<3)pick.push(pool.splice((r()*pool.length)|0,1)[0].id);
+    W=profile.weekly={w,list:pick.map(id=>({id,p:0,c:0})),big:0};}
+  const left=Math.max(1,Math.ceil(((w+1)*7-3-dayNum())));return Object.assign(W,{left});}
+function weeklyProgress(id,n){try{const W=weeklyState();for(const c of W.list){const d=WEEKLY.find(x=>x.id===c.id);if(c.id!==id||!d||c.p>=d.goal)continue;
+  c.p=Math.min(d.goal,(c.p|0)+n);if(c.p>=d.goal)pendingToasts.push('Weekly challenge done: '+d.text+' · claim it in 🎁 › Season pass');}}catch(e){}}
+const weeklyCan=()=>{try{const W=weeklyState();return W.list.filter(c=>!c.c&&c.p>=((WEEKLY.find(x=>x.id===c.id)||{}).goal||1e9)).length+(!W.big&&W.list.every(c=>c.c)?1:0);}catch(e){return 0;}};
+function weeklyClaim(i){const W=weeklyState(),c=W.list[i];if(!c||c.c)return null;const d=WEEKLY.find(x=>x.id===c.id);if(!d||c.p<d.goal)return null;c.c=1;profile.gp+=WEEK_GP;saveProfile();return WEEK_GP.toLocaleString()+' GP';}
+function weeklyBig(){const W=weeklyState();if(W.big||!W.list.every(c=>c.c))return null;W.big=1;
+  const pool=[];for(const k in BOXES)for(const x of boxCosmetics(k))if(!x.own)pool.push(x);
+  let lab;if(pool.length){const x=pool[Math.floor(Math.random()*pool.length)];giveReward({kind:x.kind,v:x.v,tier:4});lab=x.n;}else{profile.keys=(profile.keys|0)+3;lab='3 free crates';}
+  saveProfile();return lab;}
+/* ===== ranked: win to climb from Bronze to Master; bots play on Hard; a new ranked season every month ===== */
+const RKDIV=[['Bronze',0,'#c08a5a'],['Silver',300,'#c4ccd6'],['Gold',700,'#f3b54a'],['Platinum',1200,'#5fd0c8'],['Diamond',1800,'#7ab8ff'],['Master',2600,'#c98cf5']];
+const RKDIV_GP=[2000,5000,12000,25000,50000,100000];
+function rkOf(rp){rp=Math.max(0,rp|0);let i=0;for(let k=0;k<RKDIV.length;k++)if(rp>=RKDIV[k][1])i=k;const lo=RKDIV[i][1],hi=i<RKDIV.length-1?RKDIV[i+1][1]:null;
+  let sub='';if(hi!==null){const f=(rp-lo)/(hi-lo);sub=f<1/3?' III':f<2/3?' II':' I';}return{i,name:RKDIV[i][0]+sub,col:RKDIV[i][2],lo,hi,rp};}
+function rankState(){const sid=seasonId();let R=profile.rank;if(!R||typeof R!=='object'||Array.isArray(R))R=profile.rank={s:sid,rp:0,best:0,n:0};
+  R.rp=Math.max(0,Math.min(99999,R.rp|0));R.best=Math.max(R.best|0,R.rp);R.n=R.n|0;if(typeof R.s!=='string')R.s=sid;
+  if(R.s!==sid){if(R.n>0){const b=rkOf(R.best).i;profile.gp+=RKDIV_GP[b];const m=`Ranked season over: you reached ${RKDIV[b][0]} · +${RKDIV_GP[b].toLocaleString()} GP`;pendingToasts.push(m);try{inboxAdd('news','Ranked season over',m+'. A new season has started; your points were halved.');}catch(e){}}
+    R.s=sid;R.rp=Math.floor(R.rp/2);R.best=R.rp;R.n=0;try{saveProfile();}catch(e){}}
+  return R;}
+const rankedOn=()=>{try{return profile.ranked===true&&!isZ()&&!XM.on&&!TUT.on;}catch(e){return false;}};
+function rankBadge(){try{const R=rankState(),r=rkOf(R.rp);return `<span class="rkBadge" style="--rk:${r.col}">◆ ${r.name} · ${R.rp} RP</span>`;}catch(e){return '';}}
+function rankApply(won,draw){const R=rankState(),b0=rkOf(R.rp);
+  const L=ents.filter(e=>e.inMatch!==false),mvp=player.kills>0&&L.every(e=>e===player||(e.kills|0)<=player.kills);
+  let d=won?24:draw?6:-16;d+=clamp(Math.round((player.kills-player.deaths)*1.5),-8,12);if(mvp)d+=6;if(!won&&!draw&&R.rp<100)d=Math.max(d,-6);
+  R.rp=Math.max(0,R.rp+d);R.n++;R.best=Math.max(R.best,R.rp);const b1=rkOf(R.rp);
+  return `<span class="rkLine" style="--rk:${b1.col}">RANKED · ${b1.name.toUpperCase()} · <b>${d>=0?'+':''}${d} RP</b>${b1.i>b0.i?' · PROMOTED!':b1.i<b0.i?' · demoted':''}${mvp?' · MVP':''}</span>`;}
+function chProgress(id,n){weeklyProgress(id,n);
   if(!profile.daily)return;
   for(const c of profile.daily.list){if(c.id!==id||c.done)continue;const def=CHALLENGES.find(x=>x.id===id);
     c.p=Math.min(def.goal,c.p+n);if(c.p>=def.goal){c.done=true;
@@ -3944,6 +3998,12 @@ const BOX_CAMOS={
   obsidian:{name:'Obsidian',tex:[[16,14,20],[60,30,90],[6,6,8],[180,90,255]],emissive:0x12002a,anim:.7,shiny:1,box:'elite'},
   solar:{name:'Solar Flare',tex:[[255,240,120],[255,140,20],[255,255,220],[200,60,10]],emissive:0x4a2a00,flow:2,anim:2.4,box:'elite'}};
 for(const k in BOX_CAMOS)CAMOS[k]=Object.assign({crate:1},BOX_CAMOS[k]);
+// mastery: 100 kills with a gun puts this animated gold-and-black finish on that gun only
+const MASTERY_K=100;
+CAMOS.mastery={name:'Mastery',tex:[[24,18,8],[255,200,60],[70,46,10],[255,240,170]],emissive:0x3a2600,flow:1,anim:1.4,shiny:1,crate:1,mastery:1};
+const gunKills=id=>{try{return (profile&&profile.gk&&profile.gk[id])|0;}catch(e){return 0;}};
+const mastered=id=>gunKills(id)>=MASTERY_K;
+function camoFor(id){try{if(mastered(id)&&!(profile.mOff||[]).includes(id))return 'mastery';}catch(e){}return profile.camo;}
 // store prices: weapons, knives, camos, blood colors and gear cost 10x (GP is meant to be hard to earn)
 const PRICE_X=10;for(const T of[CAMOS,GEAR,HITFX])for(const k in T)if(T[k].price)T[k].price*=PRICE_X;
 for(const id of WORDER.concat(['machete','karambit'])){const w=WEAPONS[id];if(!w)continue;if(id==='ak47'||id==='p9'){w.price=0;continue;}
@@ -4005,7 +4065,7 @@ function spawnCandidates(team){
   if(!out.length){const c=nearestValid(Math.floor((x0+x1)/2),Math.floor((z0+z1)/2));if(c>=0){const x=c%W,z=(c/W)|0;out.push([x+.5,SY[c],z+.5]);}}
   return out;
 }
-function respawn(e){
+function respawn(e){if(e===player&&KC.on)kcEnd();
   const xs=xmSpawn(e),cands=xs?[xs]:spawnCandidates(e.team);let best=cands[0]||[32.5,6,10.5],bd=-1e9;
   for(let i=0;i<10;i++){const c=cands[(rand()*cands.length)|0];if(!c)continue;let md=1e9;
     for(const o of ents)if(o.alive&&o.team!==e.team&&o.inMatch!==false)md=Math.min(md,Math.hypot(o.x-c[0],o.z-c[2]));
@@ -4254,13 +4314,13 @@ function freeObj(o){if(!o)return;o.traverse(m=>{if(m.geometry&&m.geometry!==boxG
 // First-person guns are kept and reused (at most VMC_MAX). A mystery box or wall buy then only swaps a ready model:
 // building a gun and compiling its shaders in the middle of a busy fight was the moment an iPhone died (Oct 15).
 const VMC=new Map(),VMC_MAX=16;
-const vmKey=id=>[id,profile.camo,profile.skin||'std',player.team,JSON.stringify(attOf(id))].join('|');
+const vmKey=id=>[id,camoFor(id),profile.skin||'std',player.team,JSON.stringify(attOf(id))].join('|');
 // only Zombies keeps guns (the box swaps them all the time); other modes build and free as before
 function vmFlush(keep){for(const [k,g] of VMC){if(keep&&keep.has(g)){g.userData.vmOwn=1;}else{VM.remove(g);freeObj(g);}VMC.delete(k);}}
-function vmGet(id,used){if(!isZ()){const g=gunMesh(id,profile.camo,false,attOf(id));g.userData.vmOwn=1;return g;}
+function vmGet(id,used){if(!isZ()){const g=gunMesh(id,camoFor(id),false,attOf(id));g.userData.vmOwn=1;return g;}
   const k=vmKey(id);let g=VMC.get(k);
   if(g&&!used.has(g)){VMC.delete(k);VMC.set(k,g);return g;}            // most recently used last
-  g=gunMesh(id,profile.camo,false,attOf(id));
+  g=gunMesh(id,camoFor(id),false,attOf(id));
   if(!VMC.has(k))VMC.set(k,g);else g.userData.vmOwn=1;                  // the same gun twice: the second is not kept
   return g;}
 function vmTrim(keep){for(const [k,g] of VMC){if(VMC.size<=VMC_MAX)break;if(keep.has(g))continue;VMC.delete(k);VM.remove(g);freeObj(g);}}
@@ -4289,6 +4349,9 @@ function buildViewmodels(){
   vmTrim(used);
   refreshPills();
 }
+let inspT=0;
+// inspect: tap the gun you are holding (or press I) to turn it in your hands and show it off
+function inspectStart(){if(state!=='play'||!player.alive||reloadT>0||swapT>0||ads||inspT>0)return;inspT=2.4;}
 let vmKick=0,vmBob=0,vmSwayX=0,vmSwayY=0,flashT=0,dualSide=false;
 
 /* ================= HUD helpers ================= */
@@ -4326,11 +4389,72 @@ function fkBody(){const S=skinMats(profile.skin||'std',player.team),g=new THREE.
   add(new THREE.BoxGeometry(.5,.5,.5),S.head,0,1.75,0);add(new THREE.BoxGeometry(.5,.75,.28),S.body,0,1.125,0);
   const lg=new THREE.BoxGeometry(.24,.75,.24);lg.translate(0,-.375,0);add(lg,S.leg,-.125,.75,0);add(lg,S.leg,.125,.75,0);
   const ag=new THREE.BoxGeometry(.22,.7,.22);ag.translate(0,-.3,0);const aL=add(ag,S.arm,-.36,1.45,0);aL.rotation.order='YXZ';aL.rotation.set(1.42,-.5,0);const aR=add(ag,S.arm,.36,1.45,0);aR.rotation.order='YXZ';aR.rotation.set(1.3,.12,0);
-  try{const id=curW().id,gm=gunMesh(id,profile.camo,true,attOf(id));gm.position.set(.08,1.36,-.2);gm.scale.setScalar(1.15);g.add(gm);}catch(e){}
+  try{const id=curW().id,gm=gunMesh(id,camoFor(id),true,attOf(id));gm.position.set(.08,1.36,-.2);gm.scale.setScalar(1.15);g.add(gm);}catch(e){}
   if(player.king){const c=kgCrownMesh();c.position.y=2.06;g.add(c);}
   g.rotation.order='YXZ';scene.add(g);return g;}
+/* ===== the podium: before the results, the top three stand on a stage with fireworks ===== */
+const PD={on:false};
+const pdOk=()=>(!navigator.webdriver||window.__podium)&&!reduceMotion;
+function pdStart(){try{if(PD.on||!pdOk())return false;
+  const L=ents.filter(e=>(e.inMatch!==false)&&(e===player||e.mesh)).sort((a,b)=>((b.kills|0)-(a.kills|0))||((a.deaths|0)-(b.deaths|0))).slice(0,3);if(L.length<2)return false;
+  const c=MAP.center||[W/2,0,D/2],cx=c[0],cz=c[2],cy=H+6;const g=new THREE.Group(),M=col=>new THREE.MeshLambertMaterial({color:col});
+  const slab=new THREE.Mesh(new THREE.BoxGeometry(9,.6,6),M(0x1c2129));slab.position.set(0,-.3,0);g.add(slab);
+  const spots=[[0,1.2,0xf3b54a],[-1.7,.8,0xc4ccd6],[1.7,.5,0xc08a5a]],figs=[];
+  L.forEach((e,i)=>{const [x,h,col]=spots[i];const b=new THREE.Mesh(new THREE.BoxGeometry(1.4,h,1.4),M(col));b.position.set(x,h/2,0);g.add(b);
+    const f=e===player?fkBody():e.mesh;if(f.parent!==scene){if(f.parent)f.parent.remove(f);scene.add(f);}
+    f.visible=true;f.rotation.set(0,Math.PI,0);f.position.set(cx+x,cy+h,cz);if(e.sprite)e.sprite.visible=false;figs.push({e,f,x,h,own:e===player});});
+  g.position.set(cx,cy,cz);scene.add(g);
+  for(const e of ents)if(e.mesh&&!L.includes(e))e.mesh.visible=false;
+  let lab=$('pdLab');if(!lab){lab=document.createElement('div');lab.id='pdLab';document.body.appendChild(lab);}
+  lab.innerHTML=figs.map((x,i)=>`<div class="pdN p${i+1}"><b>${['1ST','2ND','3RD'][i]}</b>${esc(x.e.name)}<small>${x.e.kills|0} kills</small></div>`).join('')+`<div class="pdTitle"><b>MATCH MVP</b><span>${esc(L[0].name)} · ${L[0].kills|0} kills · tap to continue</span></div>`;lab.hidden=false;
+  Object.assign(PD,{on:true,t:0,g,figs,cx,cy,cz,fw:0});document.body.classList.add('cine','pd');
+  $('cineCap').innerHTML='';try{sfx.ding();}catch(e){}
+  return true;}catch(e){reportErr('podium',e);pdEnd(true);return false;}}
+function pdStep(dt){PD.t+=dt;const a=Math.sin(PD.t*.35)*.3,r=6.2-Math.min(1,PD.t*.4)*.9;camera.position.set(PD.cx+Math.sin(a)*r,PD.cy+2.3,PD.cz+Math.cos(a)*r);camera.fov=50;camera.updateProjectionMatrix();camera.lookAt(PD.cx,PD.cy+2.3,PD.cz);
+  PD.figs.forEach((x,i)=>{const hop=i===0?Math.abs(Math.sin(PD.t*3.2))*.35:Math.abs(Math.sin(PD.t*2+i))*.08;x.f.position.y=PD.cy+x.h+hop;
+    const v=new THREE.Vector3(PD.cx+x.x,PD.cy+x.h+2.5+hop,PD.cz).project(camera),el=$('pdLab').children[i];if(el){el.style.left=((v.x+1)/2*innerWidth)+'px';el.style.top=((1-v.y)/2*innerHeight)+'px';}});
+  PD.fw-=dt;if(PD.fw<=0){PD.fw=.45;const cols=[0xf3b54a,0xff4d6d,0x6fd08c,0x5b9cf0,0xffffff];try{burst(PD.cx+(Math.random()-.5)*6,PD.cy+4+Math.random()*2,PD.cz-1.5,cols[(Math.random()*cols.length)|0],22,6,.12,1.1);}catch(e){}}
+  try{updateParts(dt);}catch(e){}
+  if(PD.t>4.6)pdEnd();}
+function pdSafe(dt){try{pdStep(dt);}catch(e){reportErr('podium',e);pdEnd();}}
+function pdEnd(quiet){if(!PD.on)return;PD.on=false;
+  try{for(const x of PD.figs){if(x.own){scene.remove(x.f);disposeObj(x.f);}else x.f.visible=false;}}catch(e){}
+  try{if(PD.g){scene.remove(PD.g);disposeObj(PD.g);}}catch(e){}PD.g=null;PD.figs=[];
+  const lab=$('pdLab');if(lab){lab.hidden=true;lab.innerHTML='';}document.body.classList.remove('pd');if(!cine&&!FK.on&&!KC.on)document.body.classList.remove('cine');
+  try{camera.fov=SET.fov||75;camera.updateProjectionMatrix();}catch(e){}
+  if(!quiet&&state==='end'){$('end').hidden=false;endFit();while(pendingToasts.length)toast(pendingToasts.shift());}}
+document.addEventListener('pointerdown',e=>{if(PD.on&&PD.t>.6){e.preventDefault();pdEnd();}},true);
+/* ===== kill-cam: when you go down, the last moments play again over the shoulder of whoever got you (the match goes on) ===== */
+const KC={on:false};
+const kcOk=()=>(!navigator.webdriver||window.__killcam)&&SET.killcam!==false&&!reduceMotion;
+function kcStart(att){try{if(KC.on||FK.on||cineT||!kcOk()||isZ()||state!=='play'||player.alive||!att||att===player||!ents.includes(att))return false;
+  const B=REC.buf;if(B.length<8)return false;const kt=REC.t,t0=Math.max(kt-2.6,B[0].t),t1=kt+.35;
+  Object.assign(KC,{on:true,att,kt,t0,t1,cur:t0,buf:B.slice(),tr:REC.tr.slice(),trI:0,hit:false,hold:0,body:fkBody()});
+  KC.trI=KC.tr.findIndex(x=>x[0]>=t0);if(KC.trI<0)KC.trI=KC.tr.length;
+  fireHeld=false;ads=false;$('scope').hidden=true;document.body.classList.add('cine','kc');
+  const w=$('dWeap')?$('dWeap').textContent:'';
+  $('cineCap').innerHTML=`<b>KILLCAM</b><span>${esc(att.name)}${w?' · '+esc(w):''} · ${Math.max(1,Math.ceil(att.hp||0))} HP left</span><button class="kcSkip" id="kcSkip" type="button">Skip ›</button>`;
+  return true;}catch(e){reportErr('kc',e);kcEnd();return false;}}
+function kcStep(dt){const sp=Math.abs(KC.cur-KC.kt)<.3?.3:1;if(KC.cur<KC.t1)KC.cur=Math.min(KC.t1,KC.cur+dt*sp);else KC.hold+=dt;
+  const P=fkPose(KC.cur,KC.buf);
+  for(const [e,p] of P){const mesh=e===player?KC.body:e.mesh;if(!mesh)continue;let alive=p[4];if(e===player&&KC.cur<KC.kt)alive=1;
+    mesh.visible=!!alive||(e===player&&KC.cur-KC.kt<1.2);mesh.position.set(p[0],p[1],p[2]);mesh.rotation.y=p[3];
+    mesh.rotation.x=e===player&&KC.cur>=KC.kt?-Math.min(1,(KC.cur-KC.kt)*3)*Math.PI/2:0;if(e.sprite)e.sprite.visible=false;}
+  while(KC.trI<KC.tr.length&&KC.tr[KC.trI][0]<=KC.cur){const r=KC.tr[KC.trI++];const was=REC.on;REC.on=false;tracer(r[1],r[2],r[3],r[4],r[5],r[6],r[7]);REC.on=was;}
+  if(!KC.hit&&KC.cur>=KC.kt){KC.hit=true;const p=P.get(player);if(p)burst(p[0],p[1]+1.3,p[2],0x9a1c1c,22,5,.14,.9);}
+  const a=P.get(KC.att),v=P.get(player);
+  if(a&&v){const dx=v[0]-a[0],dz=v[2]-a[2],d=Math.hypot(dx,dz)||1,ux=dx/d,uz=dz/d,s=KC.att.ksv||1;
+    const hx=a[0],hy=a[1]+1.7*s,hz=a[2];let cx=a[0]-ux*3*s-uz*1.1,cy=a[1]+2.1*s,cz=a[2]-uz*3*s+ux*1.1;
+    {const ddx=cx-hx,ddy=cy-hy,ddz=cz-hz,L=Math.hypot(ddx,ddy,ddz)||1,h=rayVoxel(hx,hy,hz,ddx/L,ddy/L,ddz/L,L,true);if(h){const k=Math.max(.15,h.t-.3)/L;cx=hx+ddx*k;cy=hy+ddy*k;cz=hz+ddz*k;}}
+    camera.position.set(cx,cy,cz);camera.fov=clamp(70-d*.5,32,70);camera.updateProjectionMatrix();camera.lookAt(v[0],v[1]+1.1,v[2]);}
+  if(KC.hold>.7||player.alive||state!=='play')kcEnd();}
+function kcSafe(dt){try{kcStep(dt);}catch(e){reportErr('kc',e);kcEnd();}}
+function kcEnd(){if(!KC.on)return;KC.on=false;try{if(KC.body){scene.remove(KC.body);disposeObj(KC.body);}}catch(e){}KC.body=null;KC.buf=null;KC.tr=null;
+  for(const e of ents){if(e.isPlayer)continue;if(e.mesh){e.mesh.visible=!!e.alive;e.mesh.rotation.x=0;e.mesh.position.set(e.x,e.y+(e.smoothY||0),e.z);}}
+  document.body.classList.remove('kc');if(!cine&&!FK.on)document.body.classList.remove('cine');try{camera.fov=SET.fov||75;camera.updateProjectionMatrix();}catch(e){}}
+document.addEventListener('click',e=>{if(KC.on&&e.target.closest&&e.target.closest('#kcSkip'))kcEnd();},true);
 // start the replay (host: then the results; a friend waits for the host's 'end')
-function fkStart(att,v,killT){if(FK.on||!att||!v||reduceMotion)return false;const t1=killT+.7,t0=Math.max(killT-2.4,REC.buf.length?REC.buf[0].t:killT-2.4);
+function fkStart(att,v,killT){if(KC.on)kcEnd();if(FK.on||!att||!v||reduceMotion)return false;const t1=killT+.7,t0=Math.max(killT-2.4,REC.buf.length?REC.buf[0].t:killT-2.4);
   if(REC.buf.length<4)return false;
   Object.assign(FK,{on:true,att,v,kt:killT,t0,t1,cur:t0,trI:0,body:null,hit:false,pend:null,hold:0});
   if(att===player||v===player)FK.body=fkBody();
@@ -4338,7 +4462,7 @@ function fkStart(att,v,killT){if(FK.on||!att||!v||reduceMotion)return false;cons
   $('cineCap').innerHTML=`<b>FINAL KILL</b><span>${esc(att.name)} ▸ ${esc(v.name)}</span>`;
   FK.trI=REC.tr.findIndex(x=>x[0]>=t0);if(FK.trI<0)FK.trI=REC.tr.length;
   return true;}
-function fkPose(t){const B=REC.buf;let i=0;while(i<B.length-2&&B[i+1].t<t)i++;const a=B[i],b=B[Math.min(i+1,B.length-1)],k=b.t>a.t?clamp((t-a.t)/(b.t-a.t),0,1):0;
+function fkPose(t,BB){const B=BB||REC.buf;let i=0;while(i<B.length-2&&B[i+1].t<t)i++;const a=B[i],b=B[Math.min(i+1,B.length-1)],k=b.t>a.t?clamp((t-a.t)/(b.t-a.t),0,1):0;
   const m=new Map();for(const s of a.s)m.set(s[0],[s[1],s[2],s[3],s[4],s[5]]);
   for(const s of b.s){const o=m.get(s[0]);if(o)m.set(s[0],[o[0]+(s[1]-o[0])*k,o[1]+(s[2]-o[1])*k,o[2]+(s[3]-o[2])*k,o[3]+angDiff(o[3],s[4])*k,k<.5?o[4]:s[5]]);}
   return m;}
@@ -4574,7 +4698,7 @@ function kill(v,att,head,weapon,kind){
     $('death').hidden=false;$('dName').textContent=att&&att!==v?att.name:ENVK[kind]||'Yourself';$('dName').className='n '+(att&&att!==v?teamCls(att):'');
     $('dWeap').textContent=weapon;fireHeld=false;ads=false;
     $('death').querySelector('.t').innerHTML=v.xmOut?'You are out. Watch the rest of the match.':isZ()?'Your team has to finish the round. You come back when it ends.':RS.on?'Out for this round. You are back when the next round starts.':'Redeploying in <span id="dT">4</span>';
-    if(att&&att!==v)v.deathLook=att;
+    if(att&&att!==v){v.deathLook=att;const mid=matchId;setTimeout(()=>{if(mid===matchId&&!player.alive&&state==='play')kcStart(att);},450);}
   }
   if(state==='play'&&!isClient()&&dropsOn()){const dw=v.isPlayer?curW().id:v.remote?v.wpId:BOTW[v.weapon];if(dw!=='minigun'&&!(dw==='rpg'&&RULE()==='king'))spawnDrop(dw,v.x,v.y,v.z);}
   if(state==='play'&&v===player&&!isZ()){const S=ST();S.deaths++;const m=S.maps[MAP.name]=S.maps[MAP.name]||{};m.d=(m.d||0)+1;}
@@ -4593,6 +4717,8 @@ function onMyKill(vname,head,weapon,kind){
     if(streakN>=2)showMsg(names[Math.min(streakN,7)]);else showMsg(head?'HEADSHOT':'ENEMY DOWN');
     showMsg(vname,true);sfx.kill(head);
     award(10+(head?5:0)+Math.min(15,streakN>=2?5*(streakN-1):0),null,25+(head?10:0)+Math.min(15,streakN>=2?5*(streakN-1):0));
+    try{const wid=loadout[cur];if(WEAPONS[wid]&&WEAPONS[wid].name===weapon&&!isKnife(wid)){const g=profile.gk=cleanCounts(profile.gk);g[wid]=(g[wid]|0)+1;
+      if(g[wid]===MASTERY_K){showMsg('WEAPON MASTERED',false,'big');pendingToasts.push(WEAPONS[wid].name+' mastered · it now wears the Mastery camo');try{markNew('camo','mastery');}catch(e){}buildViewmodels();}}}catch(e){}
     chProgress('kills',1);if(head)chProgress('heads',1);
     if(kind==='boom')chProgress('boom',1);if(kind==='sniper')chProgress('sniper',1);if(kind==='shotgun')chProgress('shotgun',1);
     if(s===5)chProgress('streak',1);
@@ -4906,7 +5032,7 @@ function buildTick(dt){if(buildCD>0)buildCD-=dt;
 const BOTD={easy:{name:'Easy',aim:.6,react:1.7,dmg:.7,nade:.35,cap:.4,tip:'Slow to react, miss a lot. Good for learning.'},
   medium:{name:'Medium',aim:1,react:1,dmg:1,nade:1,cap:.58,tip:'A fair fight.'},
   hard:{name:'Hard',aim:1.4,react:.6,dmg:1.25,nade:1.6,cap:.74,tip:'Fast, accurate and they flank. Bring your best.'}};
-const botD=()=>BOTD[isClient()?NET.botd:profile.botd]||BOTD.medium;
+const botD=()=>BOTD[isClient()?NET.botd:(rankedOn()?'hard':profile.botd)]||BOTD.medium;
 function botShoot(b,t,dist){if(!xmBotShoot(b))return;const BD=botD();
   const snipe=MM()==='sniper';
   const m=botMuzzle(b);b.firedT=1.2;
@@ -5613,7 +5739,7 @@ function startReload(){fr('reload '+(curW()&&curW().id));
   reloadT=w.reload*(isZ()&&Z.perks.quick?.5:1);sfx.reload();ads=false;syncAimBtn();
 }
 function finishReload(){const w=curW(),a=ammo[cur],n=Math.min(w.mag-a.mag,a.reserve);a.mag+=n;a.reserve-=n;}
-function swapTo(i){if(!player.alive||i===cur||i<0||i>=loadout.length)return;cur=i;reloadT=0;swapT=.4;bloom=0;ads=false;syncAimBtn();refreshPills();}
+function swapTo(i){if(!player.alive||i===cur||i<0||i>=loadout.length)return;inspT=0;cur=i;reloadT=0;swapT=.4;bloom=0;ads=false;syncAimBtn();refreshPills();}
 function playerNade(){
   if(!player.alive||nades<=0||state!=='play'||paused)return;
   nades--;const v=camVectors(),p=camera.position;
@@ -5788,7 +5914,7 @@ function specTick(dt){const on=state==='play'&&(RS.on||player.xmOut)&&!player.al
   if($('spec').hidden){$('spec').hidden=false;document.body.classList.add('ghost');$('death').hidden=true;$('spec').querySelector('.specTop').textContent=RS.on?'👻 GHOST · YOU ARE OUT FOR THIS ROUND':'👻 GHOST · YOU ARE OUT · WATCHING UNTIL THE END';}
   $('specName').textContent=specT.name;$('specN').textContent=`${L.indexOf(specT)+1} / ${L.length}`;return true;}
 function specStep(d){const L=specList();if(!L.length)return;if(specT&&specT.mesh&&specT.alive)specT.mesh.visible=true;const i=L.indexOf(specT);specT=L[((i<0?0:i)+d+L.length)%L.length];}
-function updateCamera(dt){
+function updateCamera(dt){if(KC.on){kcSafe(dt);return;}
   const p=player;
   if(specTick(dt)&&specT){const t=specT,s=t.ksv||1;camera.position.set(t.x,t.y+1.62*s+(t.smoothY||0),t.z);camera.rotation.set(t.pitch||0,t.yaw,0);
     if(t.mesh)t.mesh.visible=false;for(const e of ents)if(e.sprite&&e!==t&&Math.hypot(e.x-t.x,e.z-t.z)<5)e.sprite.visible=false;if(camera.fov!==baseFov){camera.fov=baseFov;camera.updateProjectionMatrix();}return;}
@@ -5820,7 +5946,10 @@ function updateViewmodel(dt,lookDX,lookDY){
   if(ud.spin){ud.spinV=(ud.spinV||0)+((fireHeld&&ammo[cur].mag>0?32:0)-(ud.spinV||0))*Math.min(1,4*dt);ud.spin.rotation.z+=ud.spinV*dt;}
   let rz=0,sx=0;
   if(swingT>0){swingT-=dt;const e=Math.sin(Math.PI*(1-Math.max(0,swingT)/.28));sx=-e*.16;rx-=e*.4;rz=e*.7;y+=e*.04;}
-  VM.position.set(x+sx,y,z);VM.rotation.set(rx,.05*(1-adsK),rz);
+  let ix=0,iy=0,iry=0,irz=0;
+  if(inspT>0){if(fireHeld||ads||reloadT>0||swapT>0||!player.alive)inspT=0;else{inspT-=dt;const k=1-Math.max(0,inspT)/2.4,e=Math.sin(Math.PI*Math.min(1,k*1.15));
+    iry=-e*1.25;irz=Math.sin(Math.PI*2*k)*.35*e;ix=-e*.09;iy=e*.035;}}
+  VM.position.set(x+sx+ix,y+iy,z);VM.rotation.set(rx,.05*(1-adsK)+iry,rz+irz);
   if(flashT>0&&w.kind!=='rpg'){flashT-=dt;vflash.visible=true;vflash.rotation.z=rand()*3;const sc=.8+rand()*.6;vflash.scale.set(sc,sc,sc);}else{flashT=0;vflash.visible=false;}
 }
 
@@ -5941,7 +6070,7 @@ $('board').addEventListener('click',closeBoard);
 $('board').addEventListener('touchend',closeBoard,{passive:false});
 
 /* ================= menu, shop, crates ================= */
-function renderProfile(){try{renderInboxDot();}catch(e){}try{checkCollector();}catch(e){}
+function renderProfile(){try{renderInboxDot();}catch(e){}try{checkCollector();}catch(e){}try{rankState();}catch(e){}
   const li=levelInfo(profile.xp);
   $('pLvl').textContent=li.level;$('pRank').textContent=li.rank+(TITLES[profile.title]?' · '+TITLES[profile.title].n:'');$('hCard').style.backgroundImage=CARDS[profile.card]&&profile.card!=='steel'?cardCss(profile.card):'';
   $('pXp').textContent=li.max?'Top level reached':`${li.into.toLocaleString()} / ${li.need.toLocaleString()} XP to next level`;
@@ -5954,6 +6083,7 @@ function renderProfile(){try{renderInboxDot();}catch(e){}try{checkCollector();}c
   $('openCrate').textContent=(d&&d.freeCrate)||(profile.keys|0)>0?'Free crate':'Crates';renderCalDot();renderNewDots();
   renderHome();
   {const mk=isClient()?(NET.mapKey||MAP.key):MAP.key,md=modeOf(mk);for(const b of $('mapPick').querySelectorAll('[data-map]')){b.classList.toggle('on',b.dataset.map===mk);b.hidden=!md.maps.includes(b.dataset.map);b.disabled=isClient();}}
+  try{const rr=$('rankRow');rr.hidden=MM()==='zombie'||isClient();for(const b of rr.querySelectorAll('[data-rk]'))b.classList.toggle('on',(b.dataset.rk==='1')===(profile.ranked===true));$('rkHome').innerHTML=profile.ranked===true?rankBadge():'';}catch(e){}
   {const zd=isClient()?(NET.zdiff||'medium'):(profile.zdiff||'medium');$('zdiffPick').hidden=MM()!=='zombie';for(const b of $('zdiffPick').querySelectorAll('[data-zd]')){b.classList.toggle('on',b.dataset.zd===zd);b.disabled=isClient();}}
   $('modeTag').textContent=MM()==='zombie'?(()=>{const DF=ZDIFF[isClient()?(NET.zdiff||'medium'):(profile.zdiff||'medium')]||ZDIFF.medium;return `Zombies · up to 4 players · ${DF.name}: survive ${DF.rounds} rounds`+(DF.name==='Extreme'?' · tougher zombies, less cash':'');})():(()=>{const md=modeOf(isClient()?(NET.mapKey||MAP.key):MAP.key);return md.name+' · '+md.sub+' · Bots: '+botD().name;})();
 }
@@ -6023,6 +6153,8 @@ $('renameBtn').addEventListener('click',()=>{const i=$('callsign');
 function selectMap(k){if(isClient()||!MAPS[k])return;profile.map=k;saveProfile();MAP=MAPS[k];renderProfile();resetMatch(false);if(isHost()){netRoster();renderMP();renderMPPill();}}
 {const NEWM=['moon','forest','city','code','town','rail','outpost','farm','house'];$('mapPick').innerHTML=NEWM.concat(Object.keys(MAPS).filter(k=>!NEWM.includes(k))).map(k=>`<button class="chip" data-map="${k}">${esc(MAPS[k].name)}</button>`).join('');}
 $('mapPick').addEventListener('click',e=>{const b=e.target.closest('[data-map]');if(b)selectMap(b.dataset.map);});
+$('rankRow').addEventListener('click',e=>{const b=e.target.closest('[data-rk]');if(!b)return;profile.ranked=b.dataset.rk==='1';saveProfile();renderProfile();
+  toast(profile.ranked?'Ranked on: wins earn points, losses and leaving cost points. Bots play on Hard. Party modes do not count.':'Ranked off');});
 $('zdiffPick').addEventListener('click',e=>{const b=e.target.closest('[data-zd]');if(!b||isClient())return;profile.zdiff=b.dataset.zd;saveProfile();renderProfile();if(isZ()&&state==='menu')zReset();if(isHost()){netRoster();renderMP();}});
 
 /* ---------- settings ---------- */
@@ -6036,7 +6168,8 @@ const SET_ROWS=[
   ['quality','Graphics','opts',['high','med','low'],{high:'High (best)',med:'Medium',low:'Low'}],
   ['invert','Invert look','opts',[false,true],{false:'Off',true:'On'}],
   ['aim','Aim assist (touch)','opts',[true,false],{true:'On',false:'Off'}],
-  ['fps','Show FPS','opts',[false,true],{false:'Off',true:'On'}]
+  ['fps','Show FPS','opts',[false,true],{false:'Off',true:'On'}],
+  ['killcam','Kill-cam','opts',[true,false],{true:'On',false:'Off'}]
 ];
 // your own button layout: each touch button can be dragged anywhere; stored as a share of the screen so it fits any size
 const LAYB=['fire','fire2','jump','sprint','crouch','reload','aim','nade','mine','build','bsel','drop','board','act','air','nuke','w'];
@@ -6188,7 +6321,9 @@ $('boardSet').addEventListener('click',e=>{e.stopPropagation();openSettings();})
 $('boardSet').addEventListener('touchend',e=>{e.stopPropagation();e.preventDefault();openSettings();},{passive:false});
 $('pauseSet').addEventListener('click',e=>{e.stopPropagation();openSettings();});
 // leave in the middle of a match: back to the main screen and out of the room, so a new room can be opened straight away
-function leaveMatch(){
+function leaveMatch(){try{kcEnd();}catch(e){}try{pdEnd(true);}catch(e){}
+  // walking out of a ranked match counts as a loss
+  try{if(state==='play'&&rankedOn()&&!match.ended&&MAP.time-matchT>30){const R=rankState();R.rp=Math.max(0,R.rp-16);R.n++;saveProfile();toast('You left a ranked match: -16 RP');}}catch(e){}
   RS.on=false;rsClearVis();$('rsHud').hidden=true;
   if(state!=='play'&&state!=='end')return;
   if(NET.mode)mpLeave(false);
@@ -6496,7 +6631,7 @@ function pvLoop(){if($('shop').hidden||!shopPv){pvRun=false;return;}requestAnima
   const g=cv.getContext('2d');g.clearRect(0,0,cv.width,cv.height);g.drawImage(T.c,0,0,cv.width,cv.height);}
 function pvStart(){if(!pvRun){pvRun=true;requestAnimationFrame(pvLoop);}}
 /* ================= inbox: rentals running out, news, friends' invites ================= */
-const NEWS_ID='v160';
+const NEWS_ID='v170';
 const INBOX_MAX=40,IN_ICON={rent:'⏳',news:'✨',invite:'🎮',gift:'🎁',info:'ℹ️'};
 function inboxAdd(k,title,body,act){if(!profile)return;const a=profile.inbox=Array.isArray(profile.inbox)?profile.inbox:[];if(k==='news'&&a.some(m=>m.title===String(title).slice(0,90)))return;
   const id=Date.now().toString(36)+Math.random().toString(36).slice(2,6);
@@ -6525,6 +6660,7 @@ $('inList').addEventListener('click',e=>{
 function inboxNews(){if(!profile)return;
   if(profile.newsSeen!==NEWS_ID){const first=!profile.newsSeen&&!(profile.stats&&profile.stats.matches);profile.newsSeen=NEWS_ID;
     if(first)inboxAdd('info','Welcome to Cubefront','Your progress saves by itself. Open a free crate every day, pick a mode and press Play. Invite friends from the lobby.');
+    inboxAdd('news','1.7: Ranked, kill-cam and more','Turn on Ranked on the main screen and climb from Bronze to Master (new season each month). When you go down, the kill-cam shows how it happened. 100 kills with a gun earns its Mastery camo. Tap the gun you hold to inspect it. Top 3 stand on a podium after each match. Weekly challenges are in 🎁 › Season pass.',{go:'lobby'});
     inboxAdd('news','1.6: the boxes never run dry','Mystery boxes now hold box-only camos that flow along your gun, kill effects, banners and gun charms that swing as you move. A gun you already own earns a star (up to 3): faster reload, more spare ammo. The box items change every season, and owning every gun of a box earns a Collector title.',{go:'shop',tab:'boxes'});
     inboxAdd('news','1.5: 25 new guns, mystery boxes and a season pass','Twin pistols and 24 more guns, each marked Rookie, Veteran or Elite. Mystery boxes have their own tab in the Store. A free season pass every month (tap 🎁 then Season pass). Add friends with 👥 and see who is online. Quick play joins a game in one tap.',{go:'shop',tab:'boxes'});
     inboxAdd('news','New: rent anything, sell what you own','Rent any gun, skin or gear for 1 day up to 90 days, or buy it forever. Sell forever items for 70% of what you paid. Kill the King, a new airstrike tablet and a much bigger nuke are in too.',{go:'shop',tab:'guns'});
@@ -6634,11 +6770,19 @@ function renderSeason(){const st=seasonState();
     const lab=k==='gp'?v.toLocaleString()+' GP':k==='key'?v+' crate'+(v>1?'s':''):`${RAR[Math.min(5,v)].n} ${CALNAME[k]}`;
     const prize=now?seasonPrize(i):null;
     h+=`<div class="sea ${got?'got':''} ${now?'now':''} ${lock?'lock':''} ${big?'big':''}"><span class="dn">${i+1}</span><div class="cdi">${calIcon(prize,k)}</div><div class="cdl" style="${k!=='gp'&&k!=='key'?'color:'+RAR[Math.min(5,v)].c:''}">${esc(prize?prize.label:lab)}</div>${now?`<button class="btn sm cut" data-sea="${i}">Claim</button>`:''}</div>`;}
-  $('seaGrid').innerHTML=h;}
+  $('seaGrid').innerHTML=h;
+  try{const W=weeklyState();let w=`<div class="lbl2">This week · ${W.left} day${W.left===1?'':'s'} left · ${WEEK_GP.toLocaleString()} GP each, a box-only item for all three</div><div class="wkRows">`;
+    W.list.forEach((c,i)=>{const d=WEEKLY.find(x=>x.id===c.id);if(!d)return;const done=c.p>=d.goal;
+      w+=`<div class="wkRow ${c.c?'got':''}"><b>${esc(d.text)}</b><span class="wkBar"><i style="width:${(100*Math.min(1,c.p/d.goal)).toFixed(0)}%"></i></span><small>${Math.min(c.p,d.goal)}/${d.goal}</small>${c.c?'<em>✓</em>':done?`<button class="btn sm cut" data-wk="${i}">Claim</button>`:''}</div>`;});
+    const all=W.list.every(c=>c.c);w+=`<div class="wkRow big ${W.big?'got':''}"><b>🎁 All three: a box-only item</b>${W.big?'<em>✓</em>':all?'<button class="btn sm cut" data-wkbig="1">Claim</button>':'<small>Finish all three</small>'}</div></div>`;
+    $('weekBox').innerHTML=w;}catch(e){$('weekBox').innerHTML='';}}
 function openSeason(){renderSeason();$('cal').hidden=true;$('season').hidden=false;}
 $('calSea').addEventListener('click',openSeason);
 $('daily').addEventListener('click',e=>{if(e.target.closest('#seaOpen'))openSeason();});
 $('seaClose').addEventListener('click',()=>{$('season').hidden=true;renderProfile();});
+$('weekBox').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;let got=null;
+  if(b.dataset.wk!==undefined)got=weeklyClaim(+b.dataset.wk);if(b.dataset.wkbig)got=weeklyBig();
+  if(got){try{initAudio();sfx.ding&&sfx.ding();}catch(x){}toast('Weekly reward: '+got);}renderSeason();renderProfile();});
 $('seaGrid').addEventListener('click',e=>{const b=e.target.closest('[data-sea]');if(!b)return;const w=seasonClaim(+b.dataset.sea);if(!w)return;
   try{initAudio();sfx.ding&&sfx.ding();}catch(x){}toast('Season reward: '+w.label+(PRIZEWHERE[w.kind]?' · in '+PRIZEWHERE[w.kind]:''));renderSeason();renderProfile();});
 $('seaAll').addEventListener('click',()=>{const st=seasonState();const got=[];for(const i of st.can.slice()){const w=seasonClaim(i);if(w)got.push(w.label);}
@@ -6654,7 +6798,7 @@ let rentSel='perm';const rentPick={};
 const pickOf=(kind,id)=>rentPick[kind+':'+id]||'perm';
 const rentOf=k=>RENT.find(r=>r.k===k)||RENT[RENT.length-1];
 const CAMO_T={desert:2,arctic:2,woodland:2,urban:2,dragon:3,tiger:3,digital:3,toxic:3,frost:3,carbon:4,neon:4,lava:4,galaxy:4,gold:4,diamond:5};
-for(const k in BOX_CAMOS)CAMO_T[k]={rookie:2,veteran:3,elite:4}[BOX_CAMOS[k].box];
+for(const k in BOX_CAMOS)CAMO_T[k]={rookie:2,veteran:3,elite:4}[BOX_CAMOS[k].box];CAMO_T.mastery=5;
 const BLK_T={common:1,rare:2,epic:3,legendary:4,mythic:5};
 const BASE_IT={gun:['ak47','p9'],knife:['knife'],camo:['none'],skin:['std'],hit:['red'],equip:['frag'],blk:['dirt']};
 const KIND_N={gun:'weapon',knife:'knife',camo:'weapon camo',skin:'character skin',hit:'hit color',gear:'gear',equip:'grenade',blk:'building blocks',att:'attachment'};
@@ -6855,7 +6999,7 @@ function renderShop(){
   }else{
     if(!shopPv||shopPv.tab!=='camo')pvSet({tab:'camo',gun:profile.slots[0],camo:profile.camo,att:attOf(profile.slots[0])});
     const lbl=t=>`<div class="lbl2" style="grid-column:1/-1">${t}</div>`;
-    const ids=Object.keys(CAMOS),basic=ids.filter(i=>!CAMOS[i].crate),special=ids.filter(i=>CAMOS[i].crate&&!CAMOS[i].box),boxc=ids.filter(i=>CAMOS[i].box);
+    const ids=Object.keys(CAMOS),basic=ids.filter(i=>!CAMOS[i].crate),special=ids.filter(i=>CAMOS[i].crate&&!CAMOS[i].box&&!CAMOS[i].mastery),boxc=ids.filter(i=>CAMOS[i].box);
     for(const id of basic.concat(['__sp'],special,['__bx'],boxc)){if(id==='__sp'){h+=lbl('Special camos · only from crates · they glow and shine');continue;}if(id==='__bx'){h+=lbl('Mystery box camos · they flow along the gun · only from mystery boxes');continue;}if(id===basic[0])h+=lbl('Basic camos · buy them here');
       const c=CAMOS[id],own=profile.camos.includes(id);
       h+=`<div class="item ${profile.camo===id?'eq':''} ${shopPv.camo===id?'pv':''}" data-pv="camo:${id}">${img(gunThumb(profile.slots[0],id,attOf(profile.slots[0])))}<div class="ty">weapon camo</div><h3>${c.name}</h3>
@@ -7066,14 +7210,15 @@ function renderChar(){
   if(charTab==='bag'){
     // the two guns you carry, big, with your camo and attachments
     const slotCard=(i)=>{const id=profile.slots[i],w=WEAPONS[id];if(!w)return '';const k=gunClass(id);
-      return `<div class="kitSlot" style="--gc:${GCLS[k].c}"><div class="kitLab">${i?'Secondary':'Primary'}${rentChip('gun',id)}</div><img class="kitImg" data-gth="${id}" data-own="1" alt=""><div class="kitName">${esc(w.name)}</div><div class="kitTy">${gclsTag(id)} ${w.kind==='rpg'?'launcher':w.kind}</div></div>`;};
+      return `<div class="kitSlot" style="--gc:${GCLS[k].c}"><div class="kitLab">${i?'Secondary':'Primary'}${rentChip('gun',id)}</div><img class="kitImg" data-gth="${id}" data-own="1" data-camo="${camoFor(id)}" alt=""><div class="kitName">${esc(w.name)}</div><div class="kitTy">${gclsTag(id)} ${w.kind==='rpg'?'launcher':w.kind}</div></div>`;};
     h+=`<div class="kitBar">${slotCard(0)}${slotCard(1)}</div>`;
     h+=`<div class="lbl2" style="grid-column:1/-1">Your bag · ${profile.owned.length} weapon${profile.owned.length===1?'':'s'} · tap Primary or Secondary to carry it</div>`;
     const mini=(l,v)=>`<div class="wsb"><span>${l}</span><b><i style="width:${Math.max(4,Math.min(100,v|0))}%"></i></b></div>`;
     for(const id of WORDER){if(!profile.owned.includes(id))continue;const w=WEAPONS[id],sl=profile.slots.indexOf(id),k=gunClass(id);
-      h+=`<div class="citem wcard ${sl>=0?'eq':''}" style="--gc:${GCLS[k].c}"><div class="wpic">${sl>=0?`<span class="wOn">${sl?'Secondary':'Primary'}</span>`:''}<img data-gth="${id}" data-own="1" alt="${esc(w.name)}"></div>
+      h+=`<div class="citem wcard ${sl>=0?'eq':''}" style="--gc:${GCLS[k].c}"><div class="wpic">${sl>=0?`<span class="wOn">${sl?'Secondary':'Primary'}</span>`:''}<img data-gth="${id}" data-own="1" data-camo="${camoFor(id)}" alt="${esc(w.name)}"></div>
         <h3>${esc(w.name)} ${starTag(id)}</h3><div class="ty">${gclsTag(id)} ${w.kind==='rpg'?'launcher':w.kind}${w.dual?' · twin':''}${rentChip('gun',id)}</div>
         <div class="wsbs">${mini('DMG',w.stats[0])}${mini('RATE',w.stats[1])}</div>
+        ${mastered(id)?`<div class="mast ok"><span>★ MASTERED</span><button class="chip ${(profile.mOff||[]).includes(id)?'':'on'}" data-mtog="${id}">Mastery camo ${(profile.mOff||[]).includes(id)?'off':'on'}</button></div>`:`<div class="mast"><span>Mastery</span><b><i style="width:${Math.min(100,gunKills(id))}%"></i></b><small>${gunKills(id)}/${MASTERY_K}</small></div>`}
         <div class="row"><button class="btn sm ${sl===0?'':'ghost'} cut" data-cslot="0" data-w="${id}">Primary</button><button class="btn sm ${sl===1?'':'ghost'} cut" data-cslot="1" data-w="${id}">Secondary</button></div></div>`;}
     for(const id of KNIVES){if(!(profile.knives||['knife']).includes(id))continue;const w=WEAPONS[id],on=myKnife()===id;
       h+=`<div class="citem wcard ${on?'eq':''}" style="--gc:#e0e6ee"><div class="wpic">${on?'<span class="wOn">Equipped</span>':''}<img data-gth="${id}" alt="${esc(w.name)}"></div><h3>${esc(w.name)}</h3><div class="ty">knife${rentChip('knife',id)}</div>${dsc(w.desc)}<button class="btn sm ${on?'':'ghost'} cut" data-cknife="${id}">${on?'Equipped':'Equip'}</button></div>`;}
@@ -7128,6 +7273,7 @@ $('charBody').addEventListener('click',e=>{
   if(b.dataset.title&&(profile.titles||[]).includes(b.dataset.title))profile.title=b.dataset.title;
   if(b.dataset.card&&(profile.cards||[]).includes(b.dataset.card))profile.card=b.dataset.card;
   if(b.dataset.kfx!==undefined&&(!b.dataset.kfx||(profile.killfxs||[]).includes(b.dataset.kfx)))profile.killfx=b.dataset.kfx;
+  if(b.dataset.mtog){const m=profile.mOff=Array.isArray(profile.mOff)?profile.mOff:[];const i=m.indexOf(b.dataset.mtog);if(i>=0)m.splice(i,1);else m.push(b.dataset.mtog);}
   if(b.dataset.charm!==undefined&&(!b.dataset.charm||(profile.charms||[]).includes(b.dataset.charm)))profile.charm=b.dataset.charm;
   if(b.dataset.hitfx&&(b.dataset.hitfx==='red'||(profile.hitfxs||[]).includes(b.dataset.hitfx)))profile.hitfx=b.dataset.hitfx;
   if(b.dataset.buyhit)buyItem('hit',b.dataset.buyhit,'perm');
@@ -7308,7 +7454,7 @@ $('crateOpen').addEventListener('click',()=>{
 });
 
 /* ================= match flow ================= */
-function resetMatch(inMatch){REACH.key='';try{if(TUT.on){TUT.on=false;document.body.classList.remove('tutOn');$('tutBox').hidden=true;}}catch(e){}
+function resetMatch(inMatch){REACH.key='';try{kcEnd();}catch(e){}try{pdEnd(true);}catch(e){}inspT=0;try{if(TUT.on){TUT.on=false;document.body.classList.remove('tutOn');$('tutBox').hidden=true;}}catch(e){}
   xmStop();
   $('zTip').hidden=true;PB.clear();buildHeld=false;ghost.visible=false;
   genWorld();rebuildWorld();
@@ -7376,7 +7522,7 @@ function startMatch(){roomRegSoon();try{gfxSpare();}catch(e){}try{sndWarm();}cat
   if(navigator.wakeLock&&navigator.wakeLock.request)navigator.wakeLock.request('screen').catch(()=>{});
 }
 let lastResult=null;
-function endMatch(byNuke){roomRegSoon();
+function endMatch(byNuke){roomRegSoon();try{kcEnd();}catch(e){}
   if(isZ()){zGameOver();return;}
   // a match ends once: a repeated end (late message, double call) must not count it or pay it again
   if(match.ended&&state==='end')return;
@@ -7389,6 +7535,7 @@ function endMatch(byNuke){roomRegSoon();
   const before=levelInfo(profile.xp-(match.bx|0));
   const winBonus=won?100:draw?60:40;
   match.xp+=winBonus;matchPay();match.ended=true;
+  let rkTxt='';try{if(rankedOn())rkTxt=rankApply(won,draw);}catch(e){reportErr('rank',e);}
   chProgress('matches',1);if(won)chProgress('win',1);
   {const S=ST();S.matches++;if(won)S.wins++;S.bestMatch=Math.max(S.bestMatch||0,player.kills);S.time+=Math.max(0,MAP.time-Math.max(0,matchT));const m=S.maps[MAP.name]=S.maps[MAP.name]||{};m.m=(m.m||0)+1;
    const dt=new Date();profile.history.unshift({t:`${dt.getDate()}/${dt.getMonth()+1}`,map:MAP.name,res:won?'Win':draw?'Draw':'Loss',k:player.kills,d:player.deaths,gp:match.gp});profile.history=profile.history.slice(0,15);}
@@ -7398,7 +7545,7 @@ function endMatch(byNuke){roomRegSoon();
   $('endTitle').className='big '+(draw?'':won?'cb':'cr');
   $('endSub').innerHTML=(xr?xr.sub:`Blue ${scores.blue} · Red ${scores.red}`)+` · you went ${player.kills} / ${player.deaths}`;
   let rw=`<span>Earned <b>+${match.gp.toLocaleString()} GP</b></span><span>${placeTxt(match.place)} place +${match.placeGp.toLocaleString()} · ${player.kills} kills +${match.killGp}${match.extra?` · bonus +${match.extra}`:''}</span><span>+${match.xp.toLocaleString()} XP</span><span>Headshots ${match.heads}</span><span>Best streak ${match.best}</span>`;
-  rw+=levelUpNote(before,after);
+  rw+=rkTxt+levelUpNote(before,after);
   $('endRewards').innerHTML=rw;
   renderBoard($('endBody'));
   $('shareMsg').textContent='';$('shareText').hidden=true;
@@ -7410,9 +7557,9 @@ function endMatch(byNuke){roomRegSoon();
     else if(draw)w=`BLUE ${scores.blue} – ${scores.red} RED`;
     else{const wt=xr&&XM.win&&XM.win.team?XM.win.team:scores.blue>scores.red?'blue':'red';w=`${tw(wt)} · ${scores.blue} – ${scores.red}`;c=wt==='blue'?'cb':'cr';}
     endShow(w,c);}
-  $('end').hidden=false;endFit();
+  if(!pdStart()){$('end').hidden=false;endFit();}
   for(const e of ents)e.inMatch=false;
-  while(pendingToasts.length)toast(pendingToasts.shift());
+  if(!PD.on)while(pendingToasts.length)toast(pendingToasts.shift());
 }
 function gearCards(card,ownedOnly){
   const gs=gearStats(),lv=myLevel(),own=profile.gearOwn||[],on=profile.gear||{},dsc=t=>`<div style="font-family:var(--f-body);font-size:13px;color:var(--dim)">${t}</div>`;
@@ -7502,7 +7649,7 @@ addEventListener('keydown',e=>{
   if(e.code==='KeyE'&&!e.repeat&&isZ()){zActHeld=true;zAct();}
   if(e.code==='KeyE'&&!e.repeat&&!isZ()&&state==='play'){if(rsCanAct())rsHeld=true;else pickUp();}
   if(e.code==='KeyX'&&!e.repeat)throwWeapon();
-  if(e.code==='Digit1')swapTo(0);if(e.code==='Digit2')swapTo(1);if(e.code==='KeyQ')swapTo(cur===0?1:0);
+  if(e.code==='KeyI')inspectStart();if(e.code==='Digit1')swapTo(0);if(e.code==='Digit2')swapTo(1);if(e.code==='KeyQ')swapTo(cur===0?1:0);
   if(e.code==='KeyG'&&!e.repeat)playerNade();
   if(e.code==='KeyT'&&!e.repeat)callAir();
   if(e.code==='KeyN'&&!e.repeat)callNuke();
@@ -7539,7 +7686,7 @@ tl.addEventListener('touchstart',e=>{
       if(b==='drop'){throwWeapon();continue;}
       if(b==='air'){callAir();continue;}
       if(b==='nuke'){callNuke();continue;}
-      if(b==='w0'||b==='w1'){swapTo(+b[1]);continue;}
+      if(b==='w0'||b==='w1'){if(+b[1]===cur)inspectStart();else swapTo(+b[1]);continue;}
       if(b==='build'){buildTap();continue;}
       if(b==='bsel'){cycleBlock();continue;}
       btn.classList.add('on');setTimeout(()=>btn.classList.remove('on'),140);
@@ -8736,7 +8883,7 @@ function frame(now){frameN++;if(!BOOT.ok){if(frameN===2)bootStage('first-frame')
   try{renderer.clear();
   if(window.__cam){const q=window.__cam;camera.position.set(q[0],q[1],q[2]);camera.lookAt(q[3],q[4],q[5]);}
   renderer.render(scene,camera);
-  if(state==='play'&&!cineT&&!FK.on){renderer.clearDepth();renderer.render(gunScene,gunCam);}}catch(e){
+  if(state==='play'&&!cineT&&!FK.on&&!KC.on){renderer.clearDepth();renderer.render(gunScene,gunCam);}}catch(e){
     // the phone took the graphics away a moment before telling us: that is the normal 'graphics lost' case, not an error
     let lost=false;try{lost=renderer.getContext().isContextLost();}catch(x){}if(lost){glLost=true;glLostAt=glLostAt||performance.now();}else reportErr('render',e);}
 }
@@ -9265,6 +9412,7 @@ function rsHud(){const el=$('rsHud');if(!RS.on||state!=='play'){if(!el.hidden)el
   {const B=RS.bomb,tt=Math.max(0,Math.ceil(B&&B.st==='planted'?B.t:RS.t));setText('timer',`${Math.floor(tt/60)}:${String(tt%60).padStart(2,'0')}`);}
   rsDrawBomb();}
 function step(dt,now){
+  if(PD.on){if(state==='end'){pdSafe(dt);return;}pdEnd(true);}
   if(isClient()){stepClient(dt,now);return;}
   if(state!=='play'){
     menuT+=dt;
