@@ -1413,6 +1413,7 @@ body.cine #hud>*:not(#nukeFlash),body.cine #touch,body.cine #airTab{visibility:h
 </div>
 <div id="board" class="overlay" hidden><div class="sheet cut"><div class="row" style="justify-content:space-between;align-items:center;flex-wrap:nowrap"><h2 style="margin:0">SCOREBOARD</h2><button class="btn sm ghost cut" id="boardLeave">Leave match</button></div><div class="teams" id="boardBody"></div><div class="row" style="margin-top:14px"><button class="btn cut" id="boardBack">Back to game</button><button class="btn ghost cut" id="boardSet">Settings</button></div></div></div>
 <div id="ageAsk" class="overlay" hidden style="z-index:95;background:rgba(0,0,0,.75)"><div class="sheet cut" style="text-align:center;max-width:380px"><h2 style="margin-top:0">Before you play</h2><p>What year were you born?</p><select id="ageY" style="font-size:18px;min-height:44px;min-width:180px"></select><div style="margin-top:12px"><button class="btn cut" id="ageGo" style="min-height:48px;min-width:160px;font-size:18px" disabled>Continue</button></div><p class="note" style="margin-top:10px">Only one thing is kept, on this device: whether online play is open to you.</p></div></div>
+<div id="reAuth" class="overlay" hidden style="z-index:91;background:rgba(0,0,0,.65)"><div class="sheet cut" style="text-align:center;max-width:440px"><h2 style="margin-top:0" id="reAuthH">Log in to play online</h2><p id="reAuthTx"></p><div class="row" style="justify-content:center;gap:12px;flex-wrap:wrap"><button class="btn cut" id="reAuthGo" style="min-height:48px;min-width:160px;font-size:18px">Log in</button><button class="btn ghost cut" id="reAuthAlt" style="min-height:48px;min-width:140px;font-size:18px">Not now</button></div></div></div>
 <div id="leaveAsk" class="overlay" hidden style="z-index:90;background:rgba(0,0,0,.6)"><div class="sheet cut" style="text-align:center;max-width:380px"><h2 style="margin-top:0">Leave the match?</h2><p id="leaveAskTx">Are you sure you want to leave the match?</p><div class="row" style="justify-content:center;gap:12px;flex-wrap:wrap"><button class="btn cut" id="leaveNo" style="min-height:48px;min-width:150px;font-size:18px">No, keep playing</button><button class="btn ghost cut" id="leaveYes" style="min-height:48px;min-width:120px;font-size:18px">Yes, leave</button></div></div></div>
 <div id="pause" class="overlay" hidden><div class="sheet cut"><h2>PAUSED</h2><p>Click to jump back in.</p><div class="row" style="justify-content:center"><button class="btn ghost cut" id="pauseSet">Settings</button><button class="btn ghost cut" id="pauseLeave">Leave match</button></div></div></div>
 <div id="end" class="overlay" hidden>
@@ -1664,7 +1665,7 @@ async function cloudFresh(){if(!CS)return false;csAdopt();if(Date.now()<CS.exp)r
         if(CS.guest&&CS.gpw){const t=await cloudReq('/auth/v1/token?grant_type=password',{method:'POST',auth:false,body:{email:cloudEmail(CS.name),password:CS.gpw}});if(t.ok&&cloudSession(t.j,CS.name))return true;}
         const dk=dkLoad()||dkParse(await idbGet(DK));if(dk&&dk.uid===CS.uid&&await dkLogin(dk))return true;
         CS.dead=true;cloudKeep();cloudErr=DEADMSG;try{reportErr('signin','sign-in cancelled by the server; asked to log in again');}catch(e){}
-        if(!deadTold){deadTold=true;try{toast(DEADMSG);}catch(e){}}}
+        if(!deadTold){deadTold=true;try{if(typeof state!=='undefined'&&state!=='play')needLogin('','dead');else toast(DEADMSG);}catch(e){}}}
       return false;}
     finally{try{const L=JSON.parse(localStorage.getItem('blockfire.rlock')||'null');if(L&&L.id===TAB_ID)localStorage.removeItem('blockfire.rlock');}catch(e){}}})();
   try{return await refreshing;}finally{refreshing=null;}}
@@ -1802,6 +1803,10 @@ async function cloudClaim(name,pass){
     if(e==='bad_name')return 'Usernames are 2 to 14 letters, numbers, spaces, dots or dashes (not "Player" or "Guest…").';
     if(e==='bad_password')return 'The password needs 6 to 72 characters.';
     return 'The save server answered with error '+r.status+'.';}
+  // setting the password ends every earlier sign-in of the account on the server, so sign in again right away
+  // (before this, the phone kept the old sign-in and was logged out about an hour later)
+  try{const t=await cloudReq('/auth/v1/token?grant_type=password',{method:'POST',auth:false,body:{email:cloudEmail(name),password:pass}});
+    if(!t.ok||!cloudSession(t.j,CS.name))reportErr('signin','[E4311] new name saved but signing in again failed ('+t.status+')');}catch(e){reportErr('signin',e);}
   const old=CS.name;saveProfile();const u=USERS.users[old];delete USERS.users[old];
   if(!profile.name||profile.name===old)profile.name=name;u.p=profile;u.guest=false;USERS.users[name]=u;USERS.cur=name;
   CS.name=name;CS.guest=false;CS.gpw='';CS.dirty=true;cloudKeep();lastName(name);
@@ -1882,7 +1887,7 @@ async function adminClaim(code){if(!CS||CS.guest)return 'Sign in to your own acc
   if(r.ok){CS.admin=true;cloudKeep();return '';}const e=r.j&&r.j.error;
   return !r.status?'No connection to the server.':e==='code'?'That code is not right.':e==='taken'?'This game already has its admin.':e==='guest'?'Guest accounts cannot be admins. Create your account first.':'The server said no (error '+r.status+').';}
 /* ================= version, remote settings, crash reports ================= */
-const APP_VERSION='1.9.3',BUILD_ID='__BUILD_ID__';
+const APP_VERSION='1.9.4',BUILD_ID='__BUILD_ID__';
 const verNum=v=>String(v||'0').split('.').slice(0,3).map(n=>parseInt(n)||0).reduce((a,n)=>a*1000+n,0);
 let RCFG={};try{RCFG=JSON.parse(localStorage.getItem('blockfire.rcfg')||'{}')||{};}catch(e){RCFG={};}
 const feat=k=>!(RCFG.features&&RCFG.features[k]===false);
@@ -6667,7 +6672,7 @@ const fmtTime=s=>{s=Math.round(s);const h=Math.floor(s/3600),m=Math.floor(s%3600
 let acMsgShown=false;
 // the player-name preview follows what you type
 document.addEventListener('input',e=>{const t=e.target;if(!t||t.id!=='clCs')return;const v=t.value.trim()||'?';acDraft.cs=t.value;const p=$('csPrev');if(p)p.textContent=v;const a=t.closest('form')&&t.closest('form').querySelector('.auCs .avBig');if(a)a.textContent=v.charAt(0).toUpperCase();});
-function renderAcct(){
+function renderAcct(){try{$('reAuth').hidden=true;}catch(e){}
   acMsgShown=false;
   const S=ST(),li=levelInfo(profile.xp);
   $('acName').textContent='ACCOUNT';
@@ -6817,16 +6822,16 @@ $('acBody').addEventListener('click',e=>{
   if(b.id==='clSignup'){const cs=nameOk(($('clCs')&&$('clCs').value)||'');
     if(!cs||nameBad(cs)){acMsg='!Pick a player name with 2 to 14 letters or numbers.';renderAcct();return;}
     acDraft.cs=cs;b.disabled=true;b.textContent='Creating…';
-    cloudSignup(acDraft.n,acDraft.pw).then(err=>{if(err){acMsg='!'+err;if(/username/i.test(err))acStep=1;renderAcct();return;}
+    cloudSignup(acDraft.n,acDraft.pw).then(err=>{if(!err)setTimeout(pjGo,300);if(err){acMsg='!'+err;if(/username/i.test(err))acStep=1;renderAcct();return;}
       profile.name=cs;saveProfile();try{cloudDirty();}catch(e){}keepSet(true);acStep=1;acDraft={n:'',pw:''};acMsg=`Welcome, ${cs}! Your account is ready and saved online.`;renderAcct();renderProfile();});return;}
   if(b.id==='clLogin'){const n=nameOk($('clName').value),pw=$('clPass').value||'';acKeep=true;
     if(!n){acMsg='!Pick a username with 2 to 14 letters (not "Player").';renderAcct();return;}
     if(!pw){acMsg='!Type your password.';renderAcct();return;}
     b.disabled=true;b.textContent='Please wait…';
-    cloudLogin(n,pw).then(err=>{if(!err)keepSet(acKeep);acMsg=err?'!'+err:`Welcome back, ${profile.name||CS.name}. Your progress is loaded.`;renderAcct();renderProfile();});return;}
+    cloudLogin(n,pw).then(err=>{if(!err){keepSet(acKeep);setTimeout(pjGo,300);}acMsg=err?'!'+err:`Welcome back, ${profile.name||CS.name}. Your progress is loaded.`;renderAcct();renderProfile();});return;}
   if(b.id==='reLogin'&&CS){const pw=$('rePass').value||'';if(!pw){acMsg='!Type your password.';renderAcct();return;}
     b.disabled=true;b.textContent='Please wait…';saveProfile();
-    cloudLogin(CS.name,pw).then(err=>{if(!err){keepSet(true);cloudErr='';}acMsg=err?'!'+err:'Logged in again. Your progress from this phone is combined with your online save.';renderAcct();renderProfile();});return;}
+    cloudLogin(CS.name,pw).then(err=>{if(!err){keepSet(true);cloudErr='';setTimeout(pjGo,300);}acMsg=err?'!'+err:'Logged in again. Your progress from this phone is combined with your online save.';renderAcct();renderProfile();});return;}
   if(b.id==='clDel'){acDel=true;renderAcct();return;}
   if(b.id==='clDelNo'){acDel=false;renderAcct();return;}
   if(b.id==='clDelGo'){if(($('clDelTxt').value||'').trim().toUpperCase()!=='DELETE'){acMsg='!Type DELETE to confirm.';renderAcct();return;}
@@ -8383,8 +8388,19 @@ function mpCheck(tk,code){if(!/^[0-9a-f]{36}$/.test(String(tk||''))||!cloudOn())
   TK.chk.set(k,p);return p;}
 // what this phone knows for sure about a player in the room (checked with the server itself, never taken from the host's word)
 function mpVinfo(nid){if(!nid)return null;if(nid===NET.nid)return NET.myV||null;if(isHost()){const e=NET.remotes.get(nid);return e&&e.ver?{gm:!!e.gm,pid:e.pid}:null;}return (NET.vinfo||{})[nid]||null;}
+// signing in before playing online: a cancelled sign-in, or an invite opened on a device that has no account yet
+var PJ='';
+function needLogin(code,kind){PJ=code||'';const dead=kind==='dead',nm=CS&&CS.name&&!CS.guest?CS.name:'';
+  $('reAuthH').textContent=dead?'Log in again to play online':'Join room '+code;
+  $('reAuthTx').textContent=dead?`Your sign-in on this device ended (code E4310). Log in${nm?' as '+nm:''} with your password${code?' and you join room '+code+' right after':' to play online again'}. Your progress on this phone is kept.`
+    :'Log in to play with your own name and progress, or join as a guest.';
+  $('reAuthGo').textContent='Log in';$('reAuthAlt').textContent=dead?'Not now':'Play as guest';$('reAuthAlt').dataset.k=kind;$('reAuth').hidden=false;
+  if(dead)try{reportErr('net','[E4310] sign-in ended: asked to log in again'+(code?' before joining':''));}catch(e){}}
+function pjGo(){$('reAuth').hidden=true;if(!PJ||!CS||CS.dead)return;const c=PJ;PJ='';$('acct').hidden=true;$('mp').hidden=false;mpJoin(c);}
+$('reAuthGo').addEventListener('click',()=>{$('reAuth').hidden=true;acTab='cloud';acMode='in';acMsg='';renderAcct();$('acct').hidden=false;});
+$('reAuthAlt').addEventListener('click',e=>{$('reAuth').hidden=true;const c=PJ;PJ='';if(e.currentTarget.dataset.k==='invite'&&c){$('mp').hidden=false;mpJoin(c);}});
 const BAN_MSG='Your account cannot play online right now (suspended by the game team after reports). You can still play against bots.';
-function kickEnt(x,why){if(!x)return;NET.kicked=NET.kicked||new Set();NET.kicked.add('s:'+x.sid);NET.kicked.add('n:'+nameKey(x.name));if(x.pid)NET.kicked.add('p:'+x.pid);if(x.pid)NET.kicked.add('p:'+x.pid);
+function kickEnt(x,why){if(!x)return;NET.kicked=NET.kicked||new Set();if(why!=='ticket'){NET.kicked.add('s:'+x.sid);NET.kicked.add('n:'+nameKey(x.name));if(x.pid)NET.kicked.add('p:'+x.pid);}
   try{if(x.conn)x.conn.send({t:'kicked',why:why||''});}catch(err){}setTimeout(()=>{if(NET.remotes.get(x.nid))hostRemove(x,'kicked');},400);}
 // the room checks a newcomer's ticket: banned accounts and players this host kicked or blocked are turned away
 function hostVerify(e,tk){if(!tk||e.tk||!/^[0-9a-f]{36}$/.test(tk))return;e.tk=tk;
@@ -8447,6 +8463,7 @@ function roomsHTML(){const n=(NET.rooms||[]).length;
 function mpHost(code,tries){
   if(isKid())return mpErr(KID_MSG);
   if(!mpAvailable())return mpErr('Multiplayer needs the public link of the game. Open it from GitHub and try again.');
+  if(!code&&cloudOn()&&CS&&CS.dead){needLogin('','dead');return;}
   if(!code){mpLeave(true);NET.err='';NET.cool=null;NET.kicked=null;NET.myTk='';NET.myV=null;NET.tkOK=false;NET.status='Opening a room…';renderMP();code=Array.from({length:5},()=>'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[(Math.random()*32)|0]).join('');}
   const peer=new Peer(roomId(code),peerOpts());NET.peer=peer;if(tries&&NET.mode!=='host'){NET.status='Reopening your room '+code+'…';renderMP();renderMPPill();}
   peer.on('open',()=>{if(NET.peer!==peer)return;NET.offline=false;const first=NET.mode!=='host',mig=NET.migrating;netLog('hosting '+code+(mig?' (took over)':''));requestWake();NET.mode='host';NET.code=code;NET.nid='P0';player.nid='P0';NET.status='';if(first&&!tries)NET.blk.clear();ss('bf.host',code);rlHostStart(code);renderMP();renderMPPill();roomReg();if(mig){NET.migrating=false;NET.reconnecting=false;$('netBanner').hidden=true;netRoster();netFitBots();toast(state==='play'?'You are the host now. The match goes on.':'You are the host of this room now.');}
@@ -8656,6 +8673,7 @@ function mpJoin(code,rejoin,pw){
   if(isKid())return mpErr(KID_MSG);
   code=String(code||'').trim().toUpperCase().replace(/[^A-Z0-9]/g,'');if(!rejoin)NET.pw=pw==null?'':String(pw).slice(0,20);
   if(code.length<4)return mpErr('Type the 5-letter room code.');
+  if(!rejoin&&cloudOn()&&CS&&CS.dead){needLogin(code,'dead');return;}
   // a second tap on Join for the room we are already in (or already joining) changes nothing: leaving and coming
   // back would lock the player out of the room for a minute
   if(!rejoin&&code===NET.code&&NET.peer&&!NET.peer.destroyed&&(isClient()||NET.status))return;
@@ -8663,7 +8681,7 @@ function mpJoin(code,rejoin,pw){
   if(rejoin)netDropTransport();else{mpLeave(true);NET.err='';NET.viaRelay=false;}
   NET.code=code;NET.retryCode=code;if(!rejoin){NET.tk='';NET.vinfo={};NET.myV=null;}
   mpTicket(code).then(t=>{if(NET.code!==code)return;if(t==='banned'){NET.leaving=true;mpLeave(true);mpErr(BAN_MSG);return;}
-    if(!t)return;NET.tk=t;mpCheck(t,code).then(v=>{if(v)NET.myV=v;renderMP();});if(isClient()&&NET.host){try{NET.host.send({t:'tk',v:t});}catch(e){}}});
+    if(!t){if(!rejoin&&CS&&CS.dead){NET.leaving=true;mpLeave(true);needLogin(code,'dead');}return;}NET.tk=t;mpCheck(t,code).then(v=>{if(v)NET.myV=v;renderMP();});if(isClient()&&NET.host){try{NET.host.send({t:'tk',v:t});}catch(e){}}});
   NET.status=rejoin?'Reconnecting to room '+code+'…':'Step 1 of 3 · Connecting to the game server…';renderMP();
   const peer=new Peer(peerOpts());NET.peer=peer;let tries=0,to=0;const t0=now(),LIMIT=rejoin?(NET.migrating?80000:28000):90000;
   const give=(msg)=>{clearTimeout(to);if(NET.peer!==peer)return;if(rejoin){if(!NET.migrating&&migrate('lost'))return;mpLost(NET.migrating?'The host left and the match could not move to another player. Your progress from it is saved.':'Could not get back into the room. The host may have closed it.');return;}mpLeave(true);mpErr(msg);};
@@ -9149,7 +9167,7 @@ $('mpBody').addEventListener('click',e=>{
 // after a reload: the host reopens the same room and a friend goes back into it
 {const hc=ss('bf.host'),rc=ss('bf.room');if(!location.hash.match(/room-/)){if(hc)setTimeout(()=>{if(mpAvailable()&&!NET.mode)mpHost(hc,1);},600);else if(rc)setTimeout(()=>{if(mpAvailable()&&!NET.mode){openLobby();mpJoin(rc);}},600);}}
 // a link with #room-CODE joins straight away
-{const m=location.hash.match(/room-([A-Za-z0-9]{4,6})/);if(m)setTimeout(()=>{$('mp').hidden=false;mpJoin(m[1]);},400);}
+{const m=location.hash.match(/room-([A-Za-z0-9]{4,6})/);if(m)setTimeout(()=>{$('mp').hidden=false;if(cloudOn()&&!CS&&!isKid())needLogin(m[1].toUpperCase(),'invite');else mpJoin(m[1]);},400);}
 
 /* ================= main menu camera ================= */
 // the menu shows a live match: follow-cams behind soldiers in the fight, cut with slow orbits of the map
