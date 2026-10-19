@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-0DyOAhECJE3vXFXcwNw4h8mO8gGu9ipiVydQh+qgfGc=' 'sha256-3o5+n/1EO5tkR3wOcHgTrXXYAbsa1raXuzuCmeM4VDE=' 'unsafe-eval'; script-src-attr 'none'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; media-src 'self' data: blob:; connect-src 'self' https: wss: data: blob: http://127.0.0.1:* ws://127.0.0.1:* http://localhost:* ws://localhost:*; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'; frame-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-0DyOAhECJE3vXFXcwNw4h8mO8gGu9ipiVydQh+qgfGc=' 'sha256-E9j8O2GF4xEbl5/ilwNF1QhmMaMz7sMsEd4c0jXmH8k=' 'unsafe-eval'; script-src-attr 'none'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; media-src 'self' data: blob:; connect-src 'self' https: wss: data: blob: http://127.0.0.1:* ws://127.0.0.1:* http://localhost:* ws://localhost:*; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'; frame-src 'none'">
 <meta name="referrer" content="no-referrer">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
@@ -1905,7 +1905,7 @@ async function adminClaim(code){if(!CS||CS.guest)return 'Sign in to your own acc
   if(r.ok){CS.admin=true;cloudKeep();return '';}const e=r.j&&r.j.error;
   return !r.status?'No connection to the server.':e==='code'?'That code is not right.':e==='taken'?'This game already has its admin.':e==='guest'?'Guest accounts cannot be admins. Create your account first.':'The server said no (error '+r.status+').';}
 /* ================= version, remote settings, crash reports ================= */
-const APP_VERSION='1.9.5',BUILD_ID='e6d1657';
+const APP_VERSION='1.9.6',BUILD_ID='1039c33';
 const verNum=v=>String(v||'0').split('.').slice(0,3).map(n=>parseInt(n)||0).reduce((a,n)=>a*1000+n,0);
 let RCFG={};try{RCFG=JSON.parse(localStorage.getItem('blockfire.rcfg')||'{}')||{};}catch(e){RCFG={};}
 const feat=k=>!(RCFG.features&&RCFG.features[k]===false);
@@ -5846,7 +5846,7 @@ function zTick(dt){
 function zGameOver(win){
   Z.won=!!win;
   if(isHost()){const m={t:'end',sc:[0,0],z:Z.round,win:win?1:0,kd:endKd()};netBroadcast(m);for(const ms of [1500,4000])setTimeout(()=>{if(isHost())netBroadcast(m);},ms);}
-  Z.over=true;state='end';fireHeld=false;ads=false;
+  Z.over=true;state='end';NET.endAt=Date.now();fireHeld=false;ads=false;
   if(document.exitPointerLock&&document.pointerLockElement)document.exitPointerLock();
   $('touch').hidden=true;$('hud').hidden=true;toggleBoard(false);$('pause').hidden=true;$('scope').hidden=true;$('zTip').hidden=true;
   const DF=zD(),before=levelInfo(profile.xp-(match.bx|0)),gp=Z.round*120+Z.kills*12+(win?{low:800,medium:1500,hard:2500,extreme:4000}[Z.diff]||1500:0);
@@ -6640,7 +6640,7 @@ $('boardSet').addEventListener('touchend',e=>{e.stopPropagation();e.preventDefau
 $('pauseSet').addEventListener('click',e=>{e.stopPropagation();openSettings();});
 $('setLay').addEventListener('click',e=>{e.stopPropagation();layOpenSafe();});
 // leave in the middle of a match: back to the main screen and out of the room, so a new room can be opened straight away
-function leaveMatch(){try{kcEnd();}catch(e){}try{pdEnd(true);}catch(e){}
+function leaveMatch(){if(!NET.handing&&!NET.yielded)NET.userLeft=Date.now();try{kcEnd();}catch(e){}try{pdEnd(true);}catch(e){}
   // walking out of a ranked match counts as a loss
   try{if(!NET.handing&&state==='play'&&rankedOn()&&!match.ended&&MAP.time-matchT>30){const R=rankState();R.rp=Math.max(0,R.rp-16);R.n++;saveProfile();toast('You left a ranked match: -16 RP');}}catch(e){}
   RS.on=false;rsClearVis();$('rsHud').hidden=true;
@@ -6661,7 +6661,7 @@ const tapOnly=(el,fn)=>{let tt=0;el.addEventListener('touchend',e=>{e.stopPropag
 for(const id of['boardLeave','pauseLeave'])tapOnly($(id),askLeave);
 tapOnly($('leaveNo'),closeLeaveAsk);
 // a second touch of the same stray tap (within a third of a second) cannot press Yes
-tapOnly($('leaveYes'),()=>{if(Date.now()-leaveAskT<350)return;closeLeaveAsk();leaveMatch();});
+tapOnly($('leaveYes'),()=>{if(Date.now()-leaveAskT<350)return;closeLeaveAsk();NET.userLeft=Date.now();leaveMatch();});
 addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('leaveAsk').hidden){e.stopPropagation();closeLeaveAsk();}},true);
 $('setClose').addEventListener('click',()=>{$('settings').hidden=true;});
 // privacy policy and terms live next to the game (and on the public site when playing inside Claude)
@@ -7918,7 +7918,7 @@ function endMatch(byNuke){roomRegSoon();try{kcEnd();}catch(e){}
   // a match ends once: a repeated end (late message, double call) must not count it or pay it again
   if(match.ended&&state==='end')return;
   if(isHost()){const m={t:'end',sc:[scores.blue,scores.red],nuke:!!byNuke,kd:endKd()};netBroadcast(m);for(const ms of [1500,4000])setTimeout(()=>{if(state==='end'&&isHost())netBroadcast(m);},ms);}
-  state='end';fireHeld=false;ads=false;RS.on=false;rsClearVis();$('rsHud').hidden=true;
+  state='end';NET.endAt=Date.now();fireHeld=false;ads=false;RS.on=false;rsClearVis();$('rsHud').hidden=true;
   if(document.exitPointerLock&&document.pointerLockElement)document.exitPointerLock();
   $('touch').hidden=true;$('hud').hidden=true;toggleBoard(false);$('pause').hidden=true;$('scope').hidden=true;$('zTip').hidden=true;
   const xr=xmResult(),myS=scores[player.team],thS=scores[player.team==='blue'?'red':'blue'],won=xr?xr.won:myS>thS,draw=xr?xr.draw:myS===thS;
@@ -8638,11 +8638,11 @@ function hostClientEv(e,ev){
 function hostDrop(c){
   const e=NET.conns.get(c);if(!e)return;
   NET.conns.delete(c);if(e.conn===c)e.conn=null;try{c.close();}catch(err){}
-  if(!e.away){e.away=now();e.alive=false;if(e.mesh)e.mesh.visible=false;toast(e.name+' lost connection, waiting for them…');}
+  if(!e.away){e.away=now();e.alive=false;if(e.mesh)e.mesh.visible=false;toast(e.name+' lost connection, waiting for them…');netLog('drop '+e.nid+' (conn closed) in '+state);mpTrace('host: a player lost connection');}
   netRoster();renderMP();renderMPPill();
 }
 function disposeEnt(e){if(!e||!e.mesh)return;e.mesh.traverse(o=>{if(o.geometry&&o.geometry!==SKG.head&&o.geometry!==SKG.body&&o.geometry!==SKG.arm)o.geometry.dispose();});if(e.sprite&&e.sprite.material){if(e.sprite.material.map)e.sprite.material.map.dispose();e.sprite.material.dispose();}}
-function hostRemove(e,why){roomRegSoon();
+function hostRemove(e,why){roomRegSoon();netLog('remove '+e.nid+' ('+why+') in '+state);if(why!=='left')mpTrace('host: player removed ('+why+')');
   if(e.conn){NET.conns.delete(e.conn);try{e.conn.close();}catch(err){}}
   e.alive=false;NET.remotes.delete(e.nid);if(e.mesh)scene.remove(e.mesh);disposeEnt(e);const i=ents.indexOf(e);if(i>=0)ents.splice(i,1);
   if(why==='left'){NET.cool=NET.cool||new Map();const until=Date.now()+(NET.rejoinMs||60000);NET.cool.set('s:'+e.sid,until);NET.cool.set('n:'+nameKey(e.name),until);}
@@ -8742,7 +8742,7 @@ function mpJoin(code,rejoin,pw){
 }
 // the link to the host died: get back in automatically and keep playing
 function clientReconnect(){
-  if(NET.reconnecting||!isClient()||NET.leaving)return;
+  if(NET.reconnecting||!isClient()||NET.leaving)return;netLog('connection to host lost in '+state);
   NET.reconnecting=true;NET.lastIn=now();$('netBanner').hidden=false;$('netBanner').textContent='Connection lost · reconnecting…';
   mpJoin(NET.code,true);
 }
@@ -8773,7 +8773,7 @@ function clientRecv0(d){
         if(isBlocked('',v.pid)){toast('Someone you blocked is in this room. You left the room.');setTimeout(()=>{try{mpLeave(false);}catch(e){}},50);return;}
         renderMP();});}}}
   // the host is back in the lobby but this phone is still in the match (it missed the end): follow the host
-  if(d.t==='roster'&&d.play===0&&state==='play'){clearTimeout(NET.followT);NET.followT=setTimeout(()=>{if(isClient()&&state==='play'&&NET.hostPlay===0){try{if(FK.on)fkClear();if(isZ())zGameOver(false);else endMatch(false);}catch(e){reportErr('follow',e);backToMenu();openLobby();}toast('The match is over.');}},3000);}
+  if(d.t==='roster'&&d.play===0&&state==='play'){netLog('host roster says not playing');clearTimeout(NET.followT);NET.followT=setTimeout(()=>{if(isClient()&&state==='play'&&NET.hostPlay===0){mpTrace('host is no longer in the match, following it out');try{if(FK.on)fkClear();if(isZ())zGameOver(false);else endMatch(false);}catch(e){reportErr('follow',e);backToMenu();openLobby();}toast('The match is over.');}},3000);}
   if(d.t==='roster')NET.hostPlay=d.play===0?0:1;
   if(d.t==='roster'){NET.botd=BOTD[d.botd]?d.botd:'medium';if(d.goal)NET.goal=clamp(fin(d.goal,50),10,100);NET.rule=RULES.includes(d.rule)?d.rule:'tdm';{const me=(d.list||[]).find(r=>r.nid===NET.nid);if(me&&state!=='play')NET.ready=!!me.rd;}netApplyRoster(d.list);{const bl=(d.list||[]).find(r=>r.nid!==NET.nid&&!r.bot&&isBlocked(r.name));if(bl){toast(`${bl.name} is in this room and you blocked them. You left the room.`);setTimeout(()=>{try{mpLeave(false);}catch(e){}},50);return;}}NET.botsList=d.bots||null;NET.fillC=d.fill!==false;if(d.map){NET.mapKey=d.map;NET.zdiff=d.zd||'medium';NET.teamUpC=d.teamUp!==false;if(state==='menu'&&MAPS[d.map]&&MAP!==MAPS[d.map]){MAP=MAPS[d.map];resetMatch(false);}renderProfile();}renderMP();renderMPPill();return;}
   if(d.t==='load'){if(state!=='play'&&MAPS[d.map]){MAP=MAPS[d.map];NET.mapKey=d.map;NET.rule=RULES.includes(d.rule)?d.rule:'tdm';resetMatch(false);loadShow();}return;}
@@ -8797,7 +8797,7 @@ function clientRecv0(d){
   if(d.t==='pk'){if(state==='play'&&player.alive){giveWeapon(d.w);sfx.reload();showMsg('PICKED UP '+WEAPONS[d.w].name.toUpperCase(),true);}return;}
   if(d.t==='spawn'){if(state==='play'&&(!player.alive||d.f))respawn(player);return;}
   if(d.t==='rs'){rsApply(d.rs);return;}
-  if(d.t==='bye'){if(migrate('left'))return;mpLost('The host closed the room.');return;}
+  if(d.t==='bye'){netLog('host said bye');if(migrate('left'))return;mpLost('The host closed the room.');return;}
   if(d.t==='end'&&Array.isArray(d.kd))for(const a of d.kd){if(!Array.isArray(a))continue;const e=a[0]===NET.nid?player:findNid(a[0]);if(e&&!e.zombie){e.kills=fin(a[1],e.kills)|0;e.deaths=fin(a[2],e.deaths)|0;}}
   if(d.t==='end'&&isZ()){if(d.z)Z.round=d.z;if(state==='play')zGameOver(!!d.win);return;}
   if(d.t==='fk'){const a=findNid(d.a),v=findNid(d.v);if(a&&v&&fkStart(a,v,REC.t-.12))FK.head=!!d.h;return;}
@@ -9008,6 +9008,15 @@ function requestWake(){try{if(navigator.wakeLock&&navigator.wakeLock.request&&!d
 // HOST MOVE: the host left in the middle of a match. Everyone picks the same next host (the player who joined
 // first); that phone opens the room again under the same code with the match exactly as it is, and the others
 // reconnect to it and keep their slot, team and score. Only if that fails does the match end (progress is kept).
+// online matches: every exit the player did not choose is reported with the last connection steps of this phone
+function mpTrace(kind){try{const t=Date.now();if(t-(mpTrace.t||0)<10000)return;mpTrace.t=t;
+  const info={message:'[MP] '+kind+' · '+(NET.mode||'offline')+' · state '+state+' · '+(typeof RULE==='function'?RULE():'')+' · '+(MAP&&MAP.name||''),
+    stack:NETLOG.slice(-16).join(' | ')+' || hidden '+document.hidden+' online '+navigator.onLine+' fps '+(typeof fpsNow!=='undefined'?fpsNow:'')};
+  reportErr('mp',info);}catch(e){}}
+{let was='',wasMode=null;setInterval(()=>{try{const st=state,md=NET.mode;
+  if(was==='play'&&st!=='play'&&st!=='end'&&wasMode&&!(NET.userLeft&&Date.now()-NET.userLeft<5000)&&!(NET.endAt&&Date.now()-NET.endAt<5000)&&!NET.handing)mpTrace('left the match without choosing to (now '+st+', '+(md||'no room')+')');
+  else if(was==='play'&&st==='play'&&wasMode&&!md&&!(NET.userLeft&&Date.now()-NET.userLeft<5000))mpTrace('room lost during the match');
+  was=st;wasMode=md;}catch(e){}},500);}
 const NETLOG=[];function netLog(m){try{NETLOG.push(Math.round(performance.now()/1000)+'s '+m);if(NETLOG.length>40)NETLOG.shift();}catch(e){}}
 function migNext(){const L=(NET.roster||[]).filter(r=>r&&/^P\d+$/.test(r.nid)&&r.nid!=='P0'&&!r.aw).sort((a,b)=>(+a.nid.slice(1))-(+b.nid.slice(1)));return L[0]?L[0].nid:'';}
 function migrate(why){
