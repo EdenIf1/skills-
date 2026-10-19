@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-0DyOAhECJE3vXFXcwNw4h8mO8gGu9ipiVydQh+qgfGc=' 'sha256-WY7DJlrmW2yYz7r240PExJFmcc0hQCppr9IZCg9cbi0=' 'unsafe-eval'; script-src-attr 'none'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; media-src 'self' data: blob:; connect-src 'self' https: wss: data: blob: http://127.0.0.1:* ws://127.0.0.1:* http://localhost:* ws://localhost:*; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'; frame-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-0DyOAhECJE3vXFXcwNw4h8mO8gGu9ipiVydQh+qgfGc=' 'sha256-dVHFfknfboofnJCUzOfxMh4R5RyaSeAo3GYkMm8zLsE=' 'unsafe-eval'; script-src-attr 'none'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; media-src 'self' data: blob:; connect-src 'self' https: wss: data: blob: http://127.0.0.1:* ws://127.0.0.1:* http://localhost:* ws://localhost:*; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'; frame-src 'none'">
 <meta name="referrer" content="no-referrer">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
@@ -301,7 +301,7 @@ html,body{overscroll-behavior:none}
 .hRight{display:flex;align-items:center;gap:14px}
 .hNet{display:flex;align-items:center;gap:6px;font-family:var(--f-hud);font-size:16px;letter-spacing:.1em;color:var(--dim);text-transform:uppercase;white-space:nowrap}.hNet i{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green)}.hNet.off i{background:#777;box-shadow:none}
 .hIcon{background:rgba(0,0,0,.35);border:1px solid var(--line);color:var(--ink);font-size:20px;width:36px;height:34px;cursor:pointer}
-#layEd{position:fixed;inset:0;z-index:60;background:repeating-linear-gradient(0deg,rgba(255,255,255,.04) 0 1px,transparent 1px 40px),repeating-linear-gradient(90deg,rgba(255,255,255,.04) 0 1px,transparent 1px 40px),rgba(8,11,15,.92);touch-action:none;user-select:none;-webkit-user-select:none}
+#layEd{position:fixed;inset:0;z-index:75;background:repeating-linear-gradient(0deg,rgba(255,255,255,.04) 0 1px,transparent 1px 40px),repeating-linear-gradient(90deg,rgba(255,255,255,.04) 0 1px,transparent 1px 40px),rgba(8,11,15,.92);touch-action:none;user-select:none;-webkit-user-select:none}
 #layEd[hidden]{display:none}
 .layBar{position:absolute;left:50%;top:calc(var(--st,0px) + 8px);transform:translateX(-50%);display:flex;gap:14px;align-items:center;background:rgba(0,0,0,.6);border:1px solid var(--line);padding:6px 10px;z-index:2;white-space:nowrap}
 .layBar b{font:500 15px var(--f-body);color:var(--ink)}.layBar .row{flex-wrap:nowrap}
@@ -1894,7 +1894,7 @@ async function adminClaim(code){if(!CS||CS.guest)return 'Sign in to your own acc
   if(r.ok){CS.admin=true;cloudKeep();return '';}const e=r.j&&r.j.error;
   return !r.status?'No connection to the server.':e==='code'?'That code is not right.':e==='taken'?'This game already has its admin.':e==='guest'?'Guest accounts cannot be admins. Create your account first.':'The server said no (error '+r.status+').';}
 /* ================= version, remote settings, crash reports ================= */
-const APP_VERSION='1.9.1',BUILD_ID='b524275';
+const APP_VERSION='1.9.2',BUILD_ID='315b231';
 const verNum=v=>String(v||'0').split('.').slice(0,3).map(n=>parseInt(n)||0).reduce((a,n)=>a*1000+n,0);
 let RCFG={};try{RCFG=JSON.parse(localStorage.getItem('blockfire.rcfg')||'{}')||{};}catch(e){RCFG={};}
 const feat=k=>!(RCFG.features&&RCFG.features[k]===false);
@@ -6461,6 +6461,26 @@ function layApply(){const L=SET.lay&&typeof SET.lay==='object'?SET.lay:{};
   for(const k of LAYB){const el=layEl(k);if(!el)continue;const o=L[k],s=el.closest('.cl')?(SET.btnScale||1):1;
     el.style.translate=Array.isArray(o)&&isFinite(o[0])&&isFinite(o[1])?`${(o[0]*innerWidth/s).toFixed(1)}px ${(o[1]*innerHeight/s).toFixed(1)}px`:'';}}
 let LAY=null;
+// ready-made layouts, picked with one tap in Settings. Each is worked out from where the buttons sit by default on this screen.
+const LAYP={def:'Default',claw:'Claw',pro:'Jump by fire'};
+// target centres as a share of the screen (checked on phones and iPads: nothing overlaps, nothing leaves the screen)
+const LAY_SETS={
+  claw:{fire:[.925,.80],fire2:[.09,.46],aim:[.925,.52],reload:[.81,.55],jump:[.80,.86],crouch:[.69,.88],sprint:[.58,.88],nade:[.70,.62],mine:[.60,.62],build:[.72,.36],bsel:[.655,.36]},
+  pro:{fire:[.925,.80],jump:[.925,.52],aim:[.81,.58],crouch:[.80,.87],reload:[.69,.88],sprint:[.58,.88],nade:[.70,.62],mine:[.60,.62],build:[.72,.36],bsel:[.655,.36]}};
+function layHome(){ // default centre of every button as a share of the screen
+  const keep=SET.lay;SET.lay={};layApply();const t=$('touch'),wasT=t.hidden,hadC=document.body.classList.contains('touch');t.hidden=false;document.body.classList.add('touch');
+  const shown=[],out={};for(const k of LAYB){const el=layEl(k);if(el&&el.hidden){el.hidden=false;shown.push(el);}}
+  for(const k of LAYB){const el=layEl(k);if(!el)continue;const r=el.getBoundingClientRect();if(!r.width)continue;out[k]={x:(r.left+r.width/2)/innerWidth,y:(r.top+r.height/2)/innerHeight,w:r.width/innerWidth,h:r.height/innerHeight};}
+  for(const el of shown)el.hidden=true;t.hidden=wasT;if(!hadC)document.body.classList.remove('touch');SET.lay=keep;layApply();return out;}
+function layPreset(name){
+  if(!LAYP[name])return;let L={};
+  if(name!=='def'){const H=layHome();
+    for(const k in H){const h=H[k];let tx=h.x,ty=h.y;
+      const T=LAY_SETS[name]&&LAY_SETS[name][k];if(T){tx=T[0];ty=T[1];}
+      tx=clamp(tx,h.w/2,1-h.w/2);ty=clamp(ty,h.h/2,1-h.h/2);
+      const dx=+(tx-h.x).toFixed(4),dy=+(ty-h.y).toFixed(4);if(Math.abs(dx)>=.0005||Math.abs(dy)>=.0005)L[k]=[dx,dy];}}
+  SET.lay=L;SET.layP=name;saveSettings();layApply();}
+function layName(){const n=SET.lay&&Object.keys(SET.lay).length;if(!n)return 'def';return LAYP[SET.layP]?SET.layP:'custom';}
 function layOpenSafe(){try{layOpen();}catch(err){reportErr('layout',err);try{$('layEd').hidden=true;$('settings').hidden=false;}catch(x){}toast('Could not open the button editor (code E4301). Please try again.');}}
 function layOpen(){
   layApply();const t=$('touch'),wasT=t.hidden;t.hidden=false;document.body.classList.add('touch');
@@ -6477,17 +6497,17 @@ function layClose(save){
     for(const it of LAY.items){const x=parseFloat(it.c.style.left),y=parseFloat(it.c.style.top),o=L[it.k]||[0,0];
       const nx=o[0]+(x-it.x0)/innerWidth,ny=o[1]+(y-it.y0)/innerHeight;L[it.k]=[+nx.toFixed(4),+ny.toFixed(4)];
       if(Math.abs(L[it.k][0])<.0005&&Math.abs(L[it.k][1])<.0005)delete L[it.k];}
-    SET.lay=L;saveSettings();}
+    SET.lay=L;if(LAY.moved)SET.layP='custom';saveSettings();}
   LAY=null;$('layEd').hidden=true;$('layPad').innerHTML='';layApply();renderSettings();$('settings').hidden=false;}
 {let drag=null;const pad=$('layPad');
   pad.addEventListener('pointerdown',e=>{const c=e.target.closest('.layBtn');if(!c)return;e.preventDefault();try{c.setPointerCapture(e.pointerId);}catch(err){}
     drag={c,id:e.pointerId,dx:e.clientX-parseFloat(c.style.left),dy:e.clientY-parseFloat(c.style.top)};c.classList.add('drag');});
   pad.addEventListener('pointermove',e=>{if(!drag||e.pointerId!==drag.id)return;e.preventDefault();const c=drag.c,w=c.offsetWidth,h=c.offsetHeight;
-    c.style.left=clamp(e.clientX-drag.dx,0,innerWidth-w)+'px';c.style.top=clamp(e.clientY-drag.dy,0,innerHeight-h)+'px';});
+    if(LAY)LAY.moved=1;c.style.left=clamp(e.clientX-drag.dx,0,innerWidth-w)+'px';c.style.top=clamp(e.clientY-drag.dy,0,innerHeight-h)+'px';});
   const end=e=>{if(!drag||(e&&e.pointerId!==drag.id))return;drag.c.classList.remove('drag');drag=null;};
   pad.addEventListener('pointerup',end);pad.addEventListener('pointercancel',end);
   $('layDone').addEventListener('click',()=>layClose(true));
-  $('layReset').addEventListener('click',()=>{SET.lay={};saveSettings();layApply();layOpen();});}
+  $('layReset').addEventListener('click',()=>{SET.lay={};SET.layP='def';saveSettings();layApply();layOpen();});}
 /* ---------- admin panel: everything here is checked again by the server (only the owner's account may change it) ---------- */
 let admTab='cfg',admMsg='',admData=null;
 function openAdmin(){if(!CS||!CS.admin)return;admMsg='';$('adm').hidden=false;admLoad();}
@@ -6574,7 +6594,7 @@ function extraSetRows(){let h='';
   return h;}
 function renderSettings(){
   $('setLay').hidden=!isTouch;
-  $('setBody').innerHTML=(isTouch?`<div class="setrow layRow"><span>Button layout<small class="setHint">Drag buttons anywhere</small></span><div class="opts"><button class="chip on" id="layEdit">Move buttons</button><button class="chip" id="layDef" ${SET.lay&&Object.keys(SET.lay).length?'':'disabled'}>Reset</button></div></div>`:'')+SET_ROWS.map(r=>{
+  $('setBody').innerHTML=(isTouch?`<div class="setrow layRow"><span>Button layout<small class="setHint">Pick a layout, or drag each button (fire, jump, grenade…) anywhere</small></span><div class="opts">${Object.keys(LAYP).map(k=>`<button class="chip ${layName()===k?'on':''}" data-layp="${k}">${LAYP[k]}</button>`).join('')}<button class="chip ${layName()==='custom'?'on':''}" id="layEdit">${layName()==='custom'?'Custom · edit':'Move buttons'}</button></div></div>`:'')+SET_ROWS.map(r=>{
     if(r[2]==='range')return `<label class="setrow"><span>${r[1]}</span><input type="range" id="set_${r[0]}" min="${r[3]}" max="${r[4]}" step="${r[5]}" value="${SET[r[0]]}"><output id="out_${r[0]}">${r[6](+SET[r[0]])}</output></label>`;
     return `<div class="setrow"><span>${r[1]}</span><div class="opts">${r[3].map(v=>`<button class="chip ${SET[r[0]]===v?'on':''}" data-set="${r[0]}" data-val="${v}">${r[4][v]}</button>`).join('')}</div></div>`;
   }).join('')+(blocked().length?`<div class="setrow"><span>Blocked players</span><div class="opts">${blocked().map((b,i)=>`<button class="chip" data-unblk="${i}" title="Unblock">${esc(b.n)} ✕</button>`).join('')}</div></div>`:'')+(CS&&CS.admin?`<div class="setrow"><span>Admin</span><div class="opts"><button class="chip" id="setAdm">Open admin panel</button></div></div>`:'');
@@ -6594,6 +6614,7 @@ $('setBody').addEventListener('input',e=>{const el=e.target;if(!el.id||!el.id.st
 $('setBody').addEventListener('click',e=>{
   {const u=e.target.closest('[data-unblk]');if(u){const b=blocked()[+u.dataset.unblk];if(b&&confirm(`Unblock ${b.n}?`)){blocked().splice(+u.dataset.unblk,1);saveProfile();renderSettings();toast(`${b.n} is unblocked.`);}return;}}
   if(e.target.closest('#layEdit')){layOpenSafe();return;}
+  {const lp=e.target.closest('[data-layp]');if(lp){try{layPreset(lp.dataset.layp);toast(LAYP[lp.dataset.layp]+' button layout on.');}catch(err){reportErr('layout',err);toast('Could not change the button layout (code E4302). Please try again.');}renderSettings();return;}}
   {const t=e.target.closest('#pushTog,#pushTog0');if(t){if((t.id==='pushTog')!==!!PUSH.on)pushToggle();return;}}
   {const t=e.target.closest('[data-tut]');if(t){const on=t.dataset.tut==='1';profile.tutDone=!on;profile.tutForce=on;saveProfile();renderSettings();toast(on?'The guide will show at the start of your next match.':'The guide is off.');return;}}
   {const t=e.target.closest('[data-lb]');if(t){profile.hideLb=t.dataset.lb==='1';saveProfile();renderSettings();toast(profile.hideLb?'You are hidden from the public leaderboard.':'You will show on the public leaderboard.');return;}}
