@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-0DyOAhECJE3vXFXcwNw4h8mO8gGu9ipiVydQh+qgfGc=' 'sha256-dVHFfknfboofnJCUzOfxMh4R5RyaSeAo3GYkMm8zLsE=' 'unsafe-eval'; script-src-attr 'none'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; media-src 'self' data: blob:; connect-src 'self' https: wss: data: blob: http://127.0.0.1:* ws://127.0.0.1:* http://localhost:* ws://localhost:*; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'; frame-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-0DyOAhECJE3vXFXcwNw4h8mO8gGu9ipiVydQh+qgfGc=' 'sha256-UnpRzMWsioeByNHwbbY3J0t/OSDjLv1WVbd6OsncXxI=' 'unsafe-eval'; script-src-attr 'none'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; media-src 'self' data: blob:; connect-src 'self' https: wss: data: blob: http://127.0.0.1:* ws://127.0.0.1:* http://localhost:* ws://localhost:*; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'; frame-src 'none'">
 <meta name="referrer" content="no-referrer">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
@@ -389,6 +389,11 @@ html,body{overscroll-behavior:none}
 .calBtn{position:relative}.calBtn i{position:absolute;right:-4px;top:-4px;width:11px;height:11px;border-radius:50%;background:#ff4d6d;box-shadow:0 0 8px #ff4d6d;animation:airPulse 1.2s infinite}
 #calGrid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;margin-top:8px;flex:none}
 #cal .sheet{width:min(860px,96vw)}
+.calX{width:44px;height:44px;flex:0 0 44px;display:grid;place-items:center;border-radius:50%;border:2px solid #fff;background:rgba(255,255,255,.14);color:#fff;font-size:22px;line-height:1;font-weight:700;cursor:pointer;padding:0}
+.calX:hover,.calX:active{background:#fff;color:#10151c}
+.calFoot{display:flex;justify-content:center;margin-top:10px}
+#cal .btn.calDone{min-width:min(260px,60vw);min-height:46px;font-size:20px;letter-spacing:.14em;background:#fff;color:#10151c}
+@media (max-height:500px){.calX{width:38px;height:38px;flex-basis:38px;font-size:19px}.calFoot{margin-top:6px}#cal .btn.calDone{min-height:38px;font-size:17px;padding-top:4px;padding-bottom:2px}}
 .cd{position:relative;background:rgba(0,0,0,.32);border:1px solid var(--line);padding:4px 4px 5px;display:flex;flex-direction:column;align-items:center;gap:2px;min-width:0;text-align:center}
 .cd .dn{position:absolute;left:5px;top:3px;font:600 12px var(--f-hud,sans-serif);color:var(--dim)}
 .cd .cdi{height:34px;display:flex;align-items:center;justify-content:center;font-size:22px}.cd .cdi img{max-height:34px;max-width:100%}
@@ -1312,9 +1317,10 @@ body.cine #hud>*:not(#nukeFlash),body.cine #touch,body.cine #airTab{visibility:h
 </div>
 <div id="cal" class="overlay" hidden>
   <div class="sheet cut">
-    <div class="shopHead"><h2 id="calTitle">DAILY GIFTS</h2><div class="row" style="gap:8px"><button class="btn sm cut calBtn" id="calSea">Season pass<i id="seaDot" hidden></i></button><button class="btn ghost cut" id="calClose">Close</button></div></div>
+    <div class="shopHead"><h2 id="calTitle">DAILY GIFTS</h2><div class="row" style="gap:8px"><button class="btn sm cut calBtn" id="calSea">Season pass<i id="seaDot" hidden></i></button><button class="calX" id="calClose" aria-label="Close" title="Close">✕</button></div></div>
     <div class="note" id="calSub"></div>
     <div id="calGrid"></div>
+    <div class="calFoot"><button class="btn cut calDone" id="calClose2">Close</button></div>
   </div>
 </div>
 <div id="crate" class="overlay" hidden>
@@ -1894,7 +1900,7 @@ async function adminClaim(code){if(!CS||CS.guest)return 'Sign in to your own acc
   if(r.ok){CS.admin=true;cloudKeep();return '';}const e=r.j&&r.j.error;
   return !r.status?'No connection to the server.':e==='code'?'That code is not right.':e==='taken'?'This game already has its admin.':e==='guest'?'Guest accounts cannot be admins. Create your account first.':'The server said no (error '+r.status+').';}
 /* ================= version, remote settings, crash reports ================= */
-const APP_VERSION='1.9.2',BUILD_ID='315b231';
+const APP_VERSION='1.9.3',BUILD_ID='7206885';
 const verNum=v=>String(v||'0').split('.').slice(0,3).map(n=>parseInt(n)||0).reduce((a,n)=>a*1000+n,0);
 let RCFG={};try{RCFG=JSON.parse(localStorage.getItem('blockfire.rcfg')||'{}')||{};}catch(e){RCFG={};}
 const feat=k=>!(RCFG.features&&RCFG.features[k]===false);
@@ -7801,11 +7807,14 @@ let crateBusy=false;
 function renderPity(){const el=$('cratePity');if(!el)return;const P=profile.pity||{e:0,l:0};el.textContent=`Epic or better within ${PITY_E-P.e} · Legendary or better within ${PITY_L-P.l} crates`;}
 function renderCrateBtn(){renderPity();const keys=profile.keys|0,free=(profile.daily&&profile.daily.freeCrate)||keys>0;const b=$('crateOpen');b.textContent=free?'Open free crate'+(keys>0?` (${keys+(profile.daily&&profile.daily.freeCrate?1:0)})`:''):`Open · ${CRATE_PRICE} GP`;b.disabled=crateBusy||(!free&&profile.gp<CRATE_PRICE);}
 $('openCrate').addEventListener('click',()=>{$('crateOdds').innerHTML=RAR.map((r,i)=>`<span style="color:${r.c}">${r.n} ${ODDS[i]}%</span>`).join('')+((profile.gearOwn||[]).includes('n_legend')?'':`<span title="Rolled first, before the other odds">Legend Dog Tag ${+(NECK_ODDS*100).toFixed(2)}%</span>`);$('reel').innerHTML='';$('reel').style.transition='none';$('reel').style.transform='translateX(0)';$('crateWin').innerHTML='&nbsp;';renderCrateBtn();$('crate').hidden=false;});
-$('openCal').addEventListener('click',()=>{renderCal();$('cal').hidden=false;});
+$('openCal').addEventListener('click',()=>{renderCal();$('cal').hidden=false;try{for(const d of document.querySelectorAll('#toasts .toast'))if(/daily gift is ready/i.test(d.textContent))d.remove();}catch(e){}});
 $('crateWin').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
   if(b.dataset.pequip){equipPrize(b.dataset.pequip,b.dataset.pv);b.textContent='Equipped ✓';b.disabled=true;toast('Equipped');}
   if(b.dataset.pshow)showPrize(b.dataset.pshow);});
-$('calClose').addEventListener('click',()=>{$('cal').hidden=true;renderProfile();});
+function calShut(){$('cal').hidden=true;renderProfile();}
+$('calClose').addEventListener('click',calShut);$('calClose2').addEventListener('click',calShut);
+// a tap on the dark area around the calendar closes it too
+$('cal').addEventListener('click',e=>{if(e.target===$('cal'))calShut();});
 $('calGrid').addEventListener('click',e=>{const b=e.target.closest('#calGo');if(!b)return;const w=calClaim();if(!w)return;initAudio();sfx.ding&&sfx.ding();toast('Day '+profile.cal.n+' gift: '+w.label+(PRIZEWHERE[w.kind]?' · in '+PRIZEWHERE[w.kind]:''));renderCal();renderProfile();});
 $('crateClose').addEventListener('click',()=>{if(crateBusy)return;$('crate').hidden=true;renderProfile();});
 $('crateOpen').addEventListener('click',()=>{
