@@ -20,16 +20,17 @@ blockfire/
   supabase/schema.sql             tables, RLS, triggers, room/invite RPCs
   supabase/identity.sql           bans, tickets, reports, admin ban RPCs
   supabase/config.toml            CLI config for linking the live project
-  supabase/PULL.md                how to pull the live schema, and which objects git is missing
-  supabase/migrations/            destination for that pull (no SQL checked in yet)
-  supabase/functions/             edge functions (guest, signup, claim, device, delete-account, admin-claim, retention)
+  supabase/PULL.md                how the live baseline was captured, and how to pull again
+  supabase/inventory.md           every live object and whether schema.sql / identity.sql had it
+  supabase/migrations/            20261018000000_live_baseline.sql (full live schema)
+  supabase/functions/             edge functions, including push (verify_jwt off)
   tests/                          Playwright scripts and a mock Supabase
   store/                          App Store copy, screenshots, capacity notes
 ```
 
 `.agents/` and `.claude/` are HyperFrames skills. They are not loaded by the game.
 
-`blockfire/supabase/config.toml` and an empty `migrations/` directory are in git so a live `db pull` has somewhere to write. The migration SQL itself is not checked in yet. See [blockfire/supabase/PULL.md](../blockfire/supabase/PULL.md).
+`blockfire/supabase/migrations/20261018000000_live_baseline.sql` is the 2026-10-20 live schema. `schema.sql` and `identity.sql` were not rewritten. See [blockfire/supabase/PULL.md](../blockfire/supabase/PULL.md).
 
 ## How a frame runs
 
@@ -149,8 +150,8 @@ The client is a thin `fetch` wrapper (`cloudReq`) around the Supabase REST, Auth
 | Crashes | `client_errors` |
 | Room list | `rooms` + `room_upsert2` / `room_remove` |
 | Username invites | `invites` + `invite_send` |
-| Friends, presence, referrals, world ranked board, trusted clock | RPCs the game calls; **their SQL is not in this repo** (see [BACKEND.md](BACKEND.md) and [blockfire/supabase/PULL.md](../blockfire/supabase/PULL.md)) |
-| Web push | `push_subs` and function `push`; **not in this repo** |
+| Friends, presence, referrals, world ranked board, trusted clock | RPCs in the live baseline migration, not in `schema.sql` or `identity.sql` |
+| Web push | `push_subs` in that baseline, and edge function `functions/push` |
 
 The admin panel is a screen in the game, shown only after `is_admin` returns true. Writes still go through RLS and `app_config_guard`.
 

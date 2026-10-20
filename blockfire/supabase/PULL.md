@@ -1,8 +1,12 @@
 # Live schema pull (WO-10)
 
-The live Supabase project is ahead of the SQL in git. This directory can receive that schema. It does not contain a dump yet. Do not invent `CREATE` statements for objects that have not been read from the database.
+The 2026-10-20 read-only export is checked in as [`migrations/20261018000000_live_baseline.sql`](migrations/20261018000000_live_baseline.sql). It sorts after the last live history version, `20261017132626`, and it reproduces that database (335 statements, Postgres 17). Object-by-object notes are in [`inventory.md`](inventory.md). Advisor output is in [`advisors.md`](advisors.md).
 
-`schema.sql` and `identity.sql` stay as the hand-applied scripts. A pull or a reviewed export adds a **new** file under `migrations/` and does not rewrite those two files. Another change is editing the hand-applied SQL for the economy; leave those files alone here.
+`schema.sql` and `identity.sql` stay as the hand-applied scripts. This baseline does not rewrite them. A later pull adds another timestamped file under `migrations/`.
+
+`cubefront-retention` is the one redaction. Its `Authorization` header is `Bearer <REDACTED_JWT>` in the migration. That token is the anon key. Restore it from Supabase Vault or another secret. Do not commit the JWT into the migration.
+
+Do not `supabase db push` the baseline onto the live project. The objects are already there.
 
 ## Credentials
 
@@ -15,7 +19,7 @@ Two values are required. Neither is in this repo, and neither belongs in `config
 
 The public project ref is `qnhogbwnumvounwpusmc`. The game already calls `https://qnhogbwnumvounwpusmc.supabase.co` (`CLOUD_CFG` in `blockfire/game/cabin-fever.html`). Override it with `SUPABASE_PROJECT_REF` only if that project changes. The anon key in the client is not an input to this pull. Do not copy it into a migration.
 
-`db pull` needs Docker. It starts a shadow Postgres to diff the remote schema. CLI 2.121.0 matches `config.toml` (generated from `supabase init` of that version). `[db].major_version` is 17, which is that template's default. It was not confirmed with `SHOW server_version` on the live database. If the pull stops on a version mismatch, set `major_version` to the live major version and run again.
+`db pull` needs Docker. It starts a shadow Postgres to diff the remote schema. CLI 2.121.0 matches `config.toml`. `[db].major_version` is 17, which the export confirmed.
 
 ## Run it
 
@@ -46,21 +50,19 @@ Do not run `supabase config push`, `supabase db push`, or plain `supabase pull` 
 
 The script refuses to leave a migration in place when the file contains the database password, the access token, a `postgres://` URL with a password, an `sbp_` token, an `sb_secret_` key, a JWT, a private key, or a quoted hex string of 64 or more characters. It moves that file to `*.rejected` (gitignored) and exits. Table rows are not dumped, so `app_secret` values and the admin code hash stay out unless someone stored them as a column default.
 
-## What git already has
+## What `schema.sql` and `identity.sql` already had
 
-`schema.sql` and `identity.sql` define these. The client does not use the Supabase JavaScript SDK. Calls were found by searching `blockfire/` for `/rest/v1/` and `/functions/v1/`.
+The client does not use the Supabase JavaScript SDK. Calls were found by searching `blockfire/` for `/rest/v1/` and `/functions/v1/`. These objects were already in the hand-applied SQL, and the baseline includes them too.
 
 Tables: `players`, `app_config`, `support_messages`, `client_errors`, `admins`, `admin_claim`, `device_keys`, `heartbeat`, `rooms`, `invites`, `bans`, `mp_tickets`, `app_secret`.
 
-Functions: `players_keep_name`, `players_force_name` (no trigger attaches it), `support_rate_limit`, `client_errors_guard`, `is_admin`, `app_config_guard`, `rooms_touch`, `room_upsert`, `room_remove`, `invite_send`, `room_upsert2`, `keepalive`, `is_banned`, `my_ban`, `mp_ticket`, `mp_check`, `report_player`, `admin_ban`, `admin_unban`, `admin_bans`.
+Functions: `players_keep_name`, `players_force_name` (the hand-applied SQL names it and does not attach a trigger; the baseline does, as `players_force_name` on `public.players`), `support_rate_limit`, `client_errors_guard`, `is_admin`, `app_config_guard`, `rooms_touch`, `room_upsert`, `room_remove`, `invite_send`, `room_upsert2`, `keepalive`, `is_banned`, `my_ban`, `mp_ticket`, `mp_check`, `report_player`, `admin_ban`, `admin_unban`, `admin_bans`.
 
-Edge functions on disk: `guest`, `signup`, `claim`, `device`, `delete-account`, `admin-claim`, `retention`.
+The baseline also has the three cron jobs. It does not include storage-bucket SQL. The export skipped Supabase-managed schemas.
 
-There is no storage-bucket SQL and no schedule SQL in git.
+## Called by the client or by `retention`, absent from the hand-applied SQL
 
-## Called by the client or by `retention`, and not defined in that SQL
-
-These names are real call sites. Their columns, grants, triggers, and policies are not in git. A later migration has to come from the live database.
+These names are real call sites. They are not in `schema.sql` or `identity.sql`. They are in the baseline. [`inventory.md`](inventory.md) is the full live list, including tables the client never names (`friends`, `presence`, `referrals`, `push_keys`, `backup.snap`).
 
 | Name | Kind | Where it is called | What the caller sends or expects |
 |---|---|---|---|
@@ -74,10 +76,10 @@ These names are real call sites. Their columns, grants, triggers, and policies a
 | `presence_ping` | RPC | `frPing` | `{p_room}` or null. Body ignored |
 | `ranked_leaderboard` | RPC | leaderboard load | `{p_limit: 50}`. Array of `{pos, name, rp, games, me}` |
 | `push_subs` | table | `pushEnable`, `pushDisable` | Upsert on `endpoint`. Body fields: `endpoint`, `user_id`, `p256dh`, `auth`, `tz_offset` |
-| `push` | Edge Function | `pushEnable` | GET returns `{key}`. POST `{op:'test'}`. No `functions/push` directory |
-| `economy_flags` | table | `functions/retention` | Deleted where column `at` is older than 90 days. No other column is named in git |
+| `push` | Edge Function | `pushEnable` | GET returns `{key}`. POST `{op:'test'}`. Source is `functions/push`. Live gateway has `verify_jwt` off |
+| `economy_flags` | table | `functions/retention` | Deleted where column `at` is older than 90 days. The baseline has the rest of the table |
 
-`referral_*` in the client is only `referral_claim` and `referral_rewards`. Other `referral_*` objects may exist on the live project. They are not listed here because this tree does not contain them.
+Live `referral_*` is `referral_claim`, `referral_rewards`, the `referrals` table, and `referrals_id_seq`. Nothing else with that prefix was in the export.
 
 RPCs the client calls that **are** in git: `is_admin`, `admin_bans`, `admin_ban`, `admin_unban`, `invite_send`, `mp_ticket`, `mp_check`, `room_upsert2`, `room_upsert` (404 fallback), `room_remove`, `report_player`.
 

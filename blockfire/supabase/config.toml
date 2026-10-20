@@ -49,8 +49,7 @@ shadow_port = 54320
 health_timeout = "2m"
 # The database major version to use. This has to be the same as your remote database's. Run `SHOW
 # server_version;` on the remote database to check.
-# 17 is the default from `supabase init` (CLI 2.121.0). It was not read from the live
-# project. If `db pull` fails on a version mismatch, set this to that major version.
+# 17 matches the 2026-10-20 read-only export of project qnhogbwnumvounwpusmc.
 major_version = 17
 # OrioleDB version to use as the Postgres storage engine. Leave empty to use the default engine.
 orioledb_version = ""
@@ -383,6 +382,12 @@ enabled = false
 authorization_url_path = "/oauth/consent"
 # Allow dynamic client registration
 allow_dynamic_registration = false
+
+# Live `push` is deployed with JWT verification off. The function checks the
+# caller JWT itself, or the x-cron token stored in public.push_keys.
+# The other functions keep the CLI default, verify_jwt = true.
+[functions.push]
+verify_jwt = false
 
 [edge_runtime]
 enabled = true
