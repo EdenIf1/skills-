@@ -1888,7 +1888,7 @@ async function adminClaim(code){if(!CS||CS.guest)return 'Sign in to your own acc
   if(r.ok){CS.admin=true;cloudKeep();return '';}const e=r.j&&r.j.error;
   return !r.status?'No connection to the server.':e==='code'?'That code is not right.':e==='taken'?'This game already has its admin.':e==='guest'?'Guest accounts cannot be admins. Create your account first.':'The server said no (error '+r.status+').';}
 /* ================= version, remote settings, crash reports ================= */
-const APP_VERSION='1.9.7',BUILD_ID='__BUILD_ID__';
+const APP_VERSION='1.9.8',BUILD_ID='__BUILD_ID__';
 const verNum=v=>String(v||'0').split('.').slice(0,3).map(n=>parseInt(n)||0).reduce((a,n)=>a*1000+n,0);
 let RCFG={};try{RCFG=JSON.parse(localStorage.getItem('blockfire.rcfg')||'{}')||{};}catch(e){RCFG={};}
 const feat=k=>!(RCFG.features&&RCFG.features[k]===false);
@@ -7617,7 +7617,9 @@ $('charClose').addEventListener('click',()=>{flushSeen();$('char').hidden=true;g
 
 /* ================= resume: a solo match the phone closed in the background can be picked up again ================= */
 const RSM_K='blockfire.resume';
-const rsmOk=()=>{try{return state==='play'&&!NET.mode&&!isZ()&&!XM.on&&!TUT.on&&!match.ended&&matchT>5;}catch(e){return false;}};
+// modes whose whole score lives in the team scores and K/D can be picked up again after the page was closed
+const RSM_XM=['ctf','dom','hp','ffa'];
+const rsmOk=()=>{try{return state==='play'&&!NET.mode&&!isZ()&&(!XM.on||RSM_XM.includes(XM.rule))&&!TUT.on&&!match.ended&&matchT>5;}catch(e){return false;}};
 function rsmSave(){if(!rsmOk())return;try{bankMatch();saveProfile();}catch(e){}
   try{const o={t:Date.now(),v:APP_VERSION,u:USERS&&USERS.cur,map:MAP.key,rule:RULE(),sc:[scores.blue|0,scores.red|0],mt:Math.round(matchT),goal:GOAL,k:player.kills|0,d:player.deaths|0,team:player.team,rk:rankedOn(),
     m:{gp:match.gp|0,xp:match.xp|0,heads:match.heads|0,best:match.best|0,kills:match.kills|0,bg:match.bg|0,bx:match.bx|0,extra:match.extra|0},b:bots.map(b=>[b.kills|0,b.deaths|0])};
