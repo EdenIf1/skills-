@@ -3553,7 +3553,9 @@ for(const ev of['pointerdown','touchend','keydown'])addEventListener(ev,()=>{if(
 const unplug=ns=>{for(const n of ns){if(n._u)continue;n._u=1;AUD.live--;try{n.disconnect();}catch(e){}}};
 function bus(vol,dist,rev){
   const g=AC.createGain();g.gain.value=vol;
-  const f=AC.createBiquadFilter();f.type='lowpass';f.frequency.value=clamp(16000*Math.pow(1-clamp(dist/90,0,.95),2),700,16000);
+  // 16000 Hz is above Nyquist while sounds are recorded at 24 kHz; Chrome warns and clamps
+  const fHi=Math.min(16000,AC.sampleRate/2*.95);
+  const f=AC.createBiquadFilter();f.type='lowpass';f.frequency.value=clamp(16000*Math.pow(1-clamp(dist/90,0,.95),2),700,fHi);
   g.connect(f);f.connect(master);g._k=[g,f];g._n=0;
   if(rev&&verbIn){const s=AC.createGain();s.gain.value=rev*(.6+clamp(dist/60,0,1)*.6);f.connect(s);s.connect(verbIn);g._k.push(s);}
   if(offR)for(const n of g._k)n._u=1;else AUD.live+=g._k.length;
@@ -3566,7 +3568,7 @@ function sEnd(src,ns,out){if(!offR)frSnd++;if(offR)for(const n of ns)n._u=1;else
   src.onended=()=>{unplug(ns);if(out&&out._k&&--out._n<=0){unplug(out._k);out._k=null;}};}
 function sNoise(t,dur,f0,f1,vol,type,out,q){if(!offR&&AUD.live>90)return;
   const s=AC.createBufferSource();s.buffer=noiseBuf;s.playbackRate.value=.85+Math.random()*.3;
-  const f=AC.createBiquadFilter();f.type=type||'lowpass';if(q)f.Q.value=q;f.frequency.setValueAtTime(f0,t);f.frequency.exponentialRampToValueAtTime(Math.max(20,f1),t+dur);
+  const f=AC.createBiquadFilter();f.type=type||'lowpass';if(q)f.Q.value=q;const fHi=Math.min(16000,AC.sampleRate/2*.95);f.frequency.setValueAtTime(Math.min(f0,fHi),t);f.frequency.exponentialRampToValueAtTime(Math.max(20,Math.min(f1,fHi)),t+dur);
   const g=AC.createGain();g.gain.setValueAtTime(.0001,t);g.gain.linearRampToValueAtTime(vol,t+.004);g.gain.exponentialRampToValueAtTime(.001,t+dur);
   s.connect(f);f.connect(g);g.connect(out||master);sEnd(s,[s,f,g],out);s.start(t,Math.random()*.5);s.stop(t+dur+.05);
 }
