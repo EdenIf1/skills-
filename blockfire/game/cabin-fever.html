@@ -1954,6 +1954,24 @@ async function liveUpdate(){const U=capPlug('CapacitorUpdater');if(!U)return;upd
   catch(e){reportErr('update',e);}}
 function haptic(style){const H=capPlug('Haptics');if(!H||SET.haptics===false)return;try{H.impact({style:style||'LIGHT'});}catch(e){}}
 setTimeout(()=>{loadConfig();srvTime();liveUpdate();},800);setInterval(()=>{if(!document.hidden){loadConfig();srvTime();}},10*60*1000);
+// Guest abuse check. Lives here, not inside cloudGuest, so the save block above can be edited on its own.
+// The public site key is app_config.turnstile_site_key, or localStorage blockfire.cloudcfg.turnstile. Not a secret.
+// No key: the guest call is unchanged. The server ignores the token until TURNSTILE_SECRET_KEY is set.
+{const rawFetch=globalThis.fetch.bind(globalThis);const siteKeyOk=s=>typeof s==='string'&&/^[0-9A-Za-z_-]{20,120}$/.test(s);
+  const isGuestPost=(input,init)=>{try{const u=new URL(typeof input==='string'?input:(input&&input.url)||'',location.href);const method=(init&&init.method)||(input&&input.method)||'GET';return method==='POST'&&/\/functions\/v1\/guest$/.test(u.pathname);}catch(e){return false;}};
+  let scriptP=null,widgetId=null,box=null,tokenChain=Promise.resolve(''),guestTold=false;
+  function loadApi(){if(window.turnstile)return Promise.resolve(true);if(scriptP)return scriptP;scriptP=new Promise(resolve=>{const s=document.createElement('script');s.src='https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';s.async=true;s.onload=()=>resolve(!!window.turnstile);s.onerror=()=>resolve(false);setTimeout(()=>resolve(!!window.turnstile),4000);document.head.appendChild(s);});return scriptP;}
+  async function siteKey(){try{const c=JSON.parse(localStorage.getItem('blockfire.cloudcfg')||'null');if(c&&siteKeyOk(c.turnstile))return c.turnstile;}catch(e){}
+    try{if(typeof RCFG!=='undefined'&&siteKeyOk(RCFG&&RCFG.turnstile_site_key))return RCFG.turnstile_site_key;}catch(e){}
+    try{const cfg=cloudCfg();const r=await rawFetch(String(cfg.url||'').replace(/\/$/,'')+'/rest/v1/app_config?select=key,value',{headers:{apikey:cfg.key,Authorization:'Bearer '+cfg.key,Accept:'application/json'},signal:AbortSignal.timeout(3000)});if(!r.ok)return '';const rows=await r.json();const row=Array.isArray(rows)?rows.find(x=>x&&x.key==='turnstile_site_key'):null;const v=row&&row.value;if(siteKeyOk(v)){try{RCFG.turnstile_site_key=v;}catch(e){}return v;}}catch(e){}
+    return '';}
+  function oneToken(key){return new Promise(resolve=>{let done=false;const finish=t=>{if(done)return;done=true;resolve(t||'');};const timer=setTimeout(()=>finish(''),4000);
+    try{if(!box){box=document.createElement('div');box.id='cfGuestTs';box.hidden=true;document.body.appendChild(box);}
+      const opts={sitekey:key,size:'invisible',action:'guest',execution:'execute',callback:t=>{clearTimeout(timer);finish(t);},'error-callback':()=>{clearTimeout(timer);finish('');}};
+      if(widgetId==null)widgetId=window.turnstile.render(box,opts);else window.turnstile.reset(widgetId);window.turnstile.execute(widgetId);}catch(e){clearTimeout(timer);finish('');}});}
+  function tokenFor(key){const run=tokenChain.then(()=>oneToken(key));tokenChain=run.catch(()=>'');return run;}
+  globalThis.fetch=async function(input,init){let guest=false;try{guest=isGuestPost(input,init);if(guest){const key=await siteKey();if(key&&await loadApi()&&window.turnstile){const t=await tokenFor(key);if(t){let body={};if(init&&typeof init.body==='string'&&init.body){try{const p=JSON.parse(init.body);if(p&&typeof p==='object'&&!Array.isArray(p))body=p;}catch(e){}}body.turnstile=t;init=Object.assign({},init||{},{method:'POST',body:JSON.stringify(body)});}}}}catch(e){}
+    const res=await rawFetch(input,init);if(guest&&!guestTold&&(res.status===403||res.status===429||res.status===503)){guestTold=true;res.clone().json().then(j=>{j=j||{};if(j.error==='turnstile')toast('Online save could not check this device. You can keep playing here. It will try again.');else if(j.error==='rate')toast('Too many new saves on this network. Wait a little, then reopen the game.');else if(res.status===503)toast('Online save is not available right now. You can keep playing on this device.');}).catch(()=>{});}return res;};}
 setTimeout(cloudSync,300);addEventListener('online',()=>{cloudSync();if(cloudReady)cloudQueue();});setInterval(()=>{if(!cloudReady)cloudSync();},60000);
 
 const SET_DEFAULT={music:.45,sound3d:true,cb:'off',killcam:true,sens:1,adsSens:1,invert:false,vol:.8,quality:'high',fov:75,btnScale:1,btnAlpha:1,fps:false,aim:true};
