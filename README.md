@@ -70,7 +70,7 @@ npm run sync
 | Native bundle | `cd blockfire/app && npm run www` | `blockfire/app/www/index.html` (game is the index) |
 | Signed live update | `UPDATE_KEY=/path/to/key.pem node blockfire/app/scripts/make-bundle.mjs <out-dir>` | `bundle-<version>.zip` and `update.json` |
 
-`APP_VERSION` in `cabin-fever.html` is the game version (currently `1.9.9`). The iOS marketing version in `app/package.json` and the Xcode project is `1.9.0`. Live updates install only when the bundle's major.minor matches the installed app.
+`APP_VERSION` in `cabin-fever.html` is the game version (currently `1.9.10`). The iOS marketing version in `app/package.json` and the Xcode project is `1.9.0`. Live updates install only when the bundle's major.minor matches the installed app.
 
 `UPDATE_KEY` is the path to the owner's signing key. The script refuses to write an unsigned update. The matching public key is `UPD_PUB` in the game. Do not commit the private key.
 
@@ -124,7 +124,7 @@ Remote switches (table `app_config`, edited in the admin panel or the Supabase d
 
 | Place | Value |
 |---|---|
-| `APP_VERSION` in the game | `1.9.9` |
+| `APP_VERSION` in the game | `1.9.10` |
 | `blockfire/app/package.json` | `1.9.0` |
 | Xcode `MARKETING_VERSION` | `1.9.0` |
 | Xcode `CURRENT_PROJECT_VERSION` | `1` (CI replaces this with the Actions run number) |

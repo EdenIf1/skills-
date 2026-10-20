@@ -14,3 +14,4 @@ Local servers the tests expect:
 | cloud.mjs, guest.mjs | accounts: guest, claim a name, login elsewhere, two devices, 90-day idle, wrong passwords |
 | store.mjs | help form, account deletion, update-required screen, feature switches, crash guard, save migration |
 | leave.mjs, rly.mjs, rob.mjs, mpsuite.mjs | multiplayer robustness: leaving, relays, reloads, packet loss, 21 scenarios |
+| bot-aggression.mjs | headless 120s bot match: time to first shot, gap between fights, K/D by difficulty |

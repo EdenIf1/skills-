@@ -2,11 +2,15 @@
 
 Player-facing notes for Cubefront, taken from the `blockfire-app` history of `blockfire/`. Dates are the days those changes were committed. Notes describe what a player can see or do. Store-only edits and version-number bumps with no gameplay change are left out.
 
-The game in this tree reports itself as **1.9.9**. The iPhone project is still marketing version **1.9.0**. Small fixes can reach installed apps as a signed live update; a new minor version is an App Store update.
+The game in this tree reports itself as **1.9.10**. The iPhone project is still marketing version **1.9.0**. Small fixes can reach installed apps as a signed live update; a new minor version is an App Store update.
 
 Work that is only planned or in progress is not listed here. See [docs/BACKLOG_DECISIONS.md](docs/BACKLOG_DECISIONS.md).
 
 ## 2026-10-20
+
+### 1.9.10
+
+Bots look for a fight. Between shots they walk toward the last place an enemy was seen, or onto the enemy side of the map, and they spend less time sitting in windows. Easy still aims slowly and misses. Medium and Hard push harder when they are healthy and still have ammo.
 
 ### 1.9.9
 
