@@ -1915,7 +1915,7 @@ async function adminClaim(code){if(!CS||CS.guest)return 'Sign in to your own acc
   if(r.ok){CS.admin=true;cloudKeep();return '';}const e=r.j&&r.j.error;
   return !r.status?'No connection to the server.':e==='code'?'That code is not right.':e==='taken'?'This game already has its admin.':e==='guest'?'Guest accounts cannot be admins. Create your account first.':'The server said no (error '+r.status+').';}
 /* ================= version, remote settings, crash reports ================= */
-const APP_VERSION='1.9.10',BUILD_ID='__BUILD_ID__';
+const APP_VERSION='1.9.11',BUILD_ID='__BUILD_ID__';
 const verNum=v=>String(v||'0').split('.').slice(0,3).map(n=>parseInt(n)||0).reduce((a,n)=>a*1000+n,0);
 let RCFG={};try{RCFG=JSON.parse(localStorage.getItem('blockfire.rcfg')||'{}')||{};}catch(e){RCFG={};}
 const feat=k=>!(RCFG.features&&RCFG.features[k]===false);
@@ -3774,7 +3774,7 @@ const MIX={ok:false,node:null,nid:0};
 async function mixInit(){if(MIX.node||!AC)return;try{if(!AC.audioWorklet||typeof AudioWorkletNode==='undefined')return;
   await AC.audioWorklet.addModule('mixer.js');
   const n=new AudioWorkletNode(AC,'bfmix',{numberOfInputs:0,numberOfOutputs:1,outputChannelCount:[2]});n.connect(master);
-  n.port.onmessage=e=>{if(e.data&&e.data.t==='v')AUD.vox=e.data.n|0;};MIX.node=n;MIX.ok=true;fr('mixer on');
+  n.port.onmessage=e=>{if(e.data&&e.data.t==='v')AUD.vox=e.data.n|0;};MIX.node=n;MIX.ok=true;fr('mixer on');if(loadCut.on)try{n.port.postMessage({t:'n',n:10});}catch(e){}
   for(const k in RECS)if(RECS[k].buf&&RECS[k].buf.getChannelData)mixSend(k);}
   catch(e){MIX.ok=false;fr('mixer off '+(e&&e.message||e));}}
 // hand a recording to the mixer (moved, not copied) and keep only its length here
@@ -3924,6 +3924,11 @@ const PMAX=700;
 // effects budget: phones keep at most 260 bits at once, start at most 300 a second, use half as many per hit or
 // blast, and skip blasts and hits far away. After the phone drops the graphics once, all of it halves again.
 const FXB={cap:isTouch?260:PMAX,rate:isTouch?300:3000,mul:isTouch?.5:1,far:isTouch?60:140,t:0,last:0};
+// a phone that crashed or lost its graphics lately (safe mode, 14 days) plays every match with lighter effects and fewer
+// sounds at once, from the first frame: big moments (airstrikes, nukes, grenade spam, 12v12) stay under its limit
+function loadCut(why){if(loadCut.on)return;loadCut.on=1;try{FXB.cap=Math.max(80,FXB.cap>>1);FXB.rate=Math.max(80,FXB.rate/2);FXB.mul=Math.max(.25,FXB.mul/2);VOX.n=Math.max(6,VOX.n-4);
+  if(MIX.ok)MIX.node.port.postMessage({t:'n',n:10});fr('light load ('+why+'): fx '+FXB.cap+' voices '+VOX.n);}catch(e){}}
+if(memSafe())loadCut('safe mode');
 function pRoom(){const now=performance.now()/1000;FXB.t=Math.min(FXB.rate*.25,FXB.t+(now-FXB.last)*FXB.rate);FXB.last=now;
   if(FXB.t<1)return false;FXB.t-=1;while(parts.length>=FXB.cap)parts.shift();return true;}
 const fxN=n=>Math.max(1,Math.round(n*FXB.mul));
@@ -9695,7 +9700,7 @@ function aliveTick(dt){if(window.__reloading)return;if(state==='play'){aliveT-=d
 window.addEventListener('pagehide',()=>{try{localStorage.removeItem('blockfire.alive');}catch(e){}});
 // the black box notes when the game goes to the background: a phone may close a game left there, which is not a crash
 document.addEventListener('visibilitychange',()=>{try{frNow(document.hidden?'page hidden':'page visible');}catch(e){}});
-setTimeout(()=>{try{const a=localStorage.getItem('blockfire.alive');localStorage.removeItem('blockfire.alive');if(a){const o=JSON.parse(a),ago=Math.round((Date.now()-o.t)/1000);if(ago<7*86400){if(ago<600)memSafeOn();const bg=/page hidden$/.test((o.fr||[]).slice(-1)[0]||'');const c=reportErr('crash',{message:(bg?'page closed while the game was in the background':'page closed during a match')+' (reopened '+ago+'s later) '+a.replace(/,"fr":\[.*\]/,''),stack:(()=>{try{return (JSON.parse(a).fr||[]).join(' | ');}catch(e){return '';}})()});toast('The game closed unexpectedly last time (code '+c+'). Your progress is saved.');}}
+setTimeout(()=>{try{const a=localStorage.getItem('blockfire.alive');localStorage.removeItem('blockfire.alive');if(a){const o=JSON.parse(a),ago=Math.round((Date.now()-o.t)/1000);if(ago<7*86400){if(ago<600){memSafeOn();loadCut('crash');}const bg=/page hidden$/.test((o.fr||[]).slice(-1)[0]||'');const c=reportErr('crash',{message:(bg?'page closed while the game was in the background':'page closed during a match')+' (reopened '+ago+'s later) '+a.replace(/,"fr":\[.*\]/,''),stack:(()=>{try{return (JSON.parse(a).fr||[]).join(' | ');}catch(e){return '';}})()});toast('The game closed unexpectedly last time (code '+c+'). Your progress is saved.');}}
   const g=localStorage.getItem('blockfire.glreset');if(g){localStorage.removeItem('blockfire.glreset');if(ownerNote())toast('The phone reset the graphics, so the game restarted'+(g.length>1?' (code '+g+')':'')+'. Your progress is saved.');}}catch(e){}},1500);
 const DQ={t:0,n:0,good:0,bad:0};let frameN=0;const noRender=(()=>{try{return localStorage.getItem('blockfire.norender')==='1';}catch(e){return false;}})();
 function frame(now){frameN++;if(!BOOT.ok){if(frameN===2)bootStage('first-frame');else if(frameN>10&&performance.now()>8000){BOOT.ok=true;bootStage('ok');}}animCamos(now);
