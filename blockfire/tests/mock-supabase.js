@@ -20,14 +20,14 @@ http.createServer((q,s)=>{let b='';q.on('data',d=>b+=d);q.on('end',()=>{
     users[crypto.randomUUID()]={email:name.toLowerCase()+'@players.blockfire.game',pw:password,guest:true};return send(200,{name,password});}
   if(u.pathname==='/functions/v1/claim'){const id=tokens[(q.headers.authorization||'').replace('Bearer ','')];if(!id)return send(401,{error:'login'});if(!users[id].guest)return send(403,{error:'not_guest'});
     const n=String(j.name||'').trim(),k=n.toLowerCase().replace(/\s+/g,'');if(!/^[A-Za-z0-9_ .-]{2,14}$/.test(n)||k==='player'||k.startsWith('guest'))return send(400,{error:'bad_name'});
-    if((j.password||'').length<6)return send(400,{error:'bad_password'});const email=k.replace(/[^a-z0-9._-]/g,'_')+'@players.blockfire.game';
+    if((j.password||'').length<8)return send(400,{error:'bad_password'});const email=k.replace(/[^a-z0-9._-]/g,'_')+'@players.blockfire.game';
     if(Object.entries(users).some(([i,x])=>i!==id&&x.email===email))return send(409,{error:'taken'});
     Object.assign(users[id],{email,pw:j.password,guest:false});if(rows[id])rows[id].name=n;return send(200,{ok:true,name:n});}
-  if(u.pathname==='/functions/v1/signup'){const n=String(j.name||'').trim();if(!/^[A-Za-z0-9_ .-]{2,14}$/.test(n))return send(400,{error:'bad_name'});if((j.password||'').length<6)return send(400,{error:'bad_password'});
+  if(u.pathname==='/functions/v1/signup'){const n=String(j.name||'').trim();if(!/^[A-Za-z0-9_ .-]{2,14}$/.test(n))return send(400,{error:'bad_name'});if((j.password||'').length<8)return send(400,{error:'bad_password'});
     const email=n.toLowerCase().replace(/\s+/g,'').replace(/[^a-z0-9._-]/g,'_')+'@players.blockfire.game';if(Object.values(users).some(x=>x.email===email))return send(409,{error:'taken'});
     users[crypto.randomUUID()]={email,pw:j.password};return send(200,{ok:true});}
   if(u.pathname==='/auth/v1/signup'){if(Object.values(users).some(x=>x.email===j.email))return send(422,{code:422,error_code:'user_already_exists',msg:'User already registered'});
-    if((j.password||'').length<6)return send(422,{msg:'Password should be at least 6 characters.'});
+    if((j.password||'').length<8)return send(422,{msg:'Password should be at least 8 characters.'});
     const id=crypto.randomUUID();users[id]={email:j.email,pw:j.password};return send(200,tok(id));}
   if(u.pathname==='/auth/v1/token'){const g=u.searchParams.get('grant_type');
     if(g==='password'){const id=Object.keys(users).find(k=>users[k].email===j.email&&users[k].pw===j.password);if(!id)return send(400,{error:'invalid_grant',error_description:'Invalid login credentials'});return send(200,tok(id));}

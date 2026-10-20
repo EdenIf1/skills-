@@ -31,7 +31,7 @@ This repository also contains HyperFrames skill packs under `.agents/` and `.cla
 - **Xcode 26 or later** to archive the iOS app locally. The cloud workflow uses a `macos-26` runner for the same reason (Apple's upload rule called out in the workflow).
 - **Tests** import `playwright` and launch Chromium from `/opt/pw-browsers/chromium`. There is no `package.json` in this repo that installs Playwright or PeerJS. See [Tests](#tests).
 
-No root `package.json`, lockfile for the game, Dockerfile, or `supabase/config.toml` is checked in.
+No root `package.json`, lockfile for the game, or Dockerfile is checked in. The live schema export is [blockfire/supabase/migrations/20261018000000_live_baseline.sql](blockfire/supabase/migrations/20261018000000_live_baseline.sql). See [blockfire/supabase/PULL.md](blockfire/supabase/PULL.md).
 
 ## Run locally
 

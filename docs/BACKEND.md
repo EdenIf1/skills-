@@ -2,7 +2,7 @@
 
 Cubefront's backend is **Supabase** (Postgres, Auth, Row Level Security, Edge Functions). `blockfire/supabase/README.md` names the live project `blockfire` in region `eu-central-1`. The browser calls that project with the URL and anon key hardcoded as `CLOUD_CFG` in `blockfire/game/cabin-fever.html`. Those values are not repeated here.
 
-There is no storage-bucket SQL, no `supabase/config.toml`, and no `supabase/migrations/` history. Schema lives in two files that are meant to be applied by hand:
+There is no storage-bucket SQL. The 2026-10-20 live schema is [`blockfire/supabase/migrations/20261018000000_live_baseline.sql`](../blockfire/supabase/migrations/20261018000000_live_baseline.sql) (see [`inventory.md`](../blockfire/supabase/inventory.md)). The two files below are still the hand-applied scripts. They were not rewritten to match the export:
 
 1. [`blockfire/supabase/schema.sql`](../blockfire/supabase/schema.sql)
 2. [`blockfire/supabase/identity.sql`](../blockfire/supabase/identity.sql) — the header says it only adds and replaces functions; it does not drop objects.
@@ -11,9 +11,9 @@ There is no storage-bucket SQL, no `supabase/config.toml`, and no `supabase/migr
 
 ## What you can rebuild from git
 
-Apply the two SQL files, deploy the seven edge functions, and insert the one-time admin code hash yourself. That recreates accounts, saves, remote config, support mail, crash rows, the room list, invites, bans, and multiplayer tickets.
+Apply the two SQL files, deploy the edge functions, and insert the one-time admin code hash yourself. That recreates accounts, saves, remote config, support mail, crash rows, the room list, invites, bans, and multiplayer tickets as those two files define them.
 
-It does **not** recreate friends, referrals, the world ranked board, push notifications, the trusted clock RPC, the retention table the cleanup job deletes, or the daily schedules. Those are listed under [Not in git](#not-in-git).
+The live baseline migration is the full exported schema. It includes friends, referrals, the ranked board, push, `server_now`, `economy_flags`, and the three cron jobs. The `cubefront-retention` Bearer token in that file is `<REDACTED_JWT>`.
 
 ## Tables
 
@@ -262,19 +262,17 @@ The client posts to these RPCs. None of them appear in `schema.sql` or `identity
 | `presence_ping` | `{p_room}` | The client ignores the body |
 | `ranked_leaderboard` | `{p_limit: 50}` | Array of `{pos, name, rp, games, me}` |
 
-**TODO:** friends, presence, referrals, ranked leaderboard, and `server_now` cannot be rebuilt from this repo. If they exist on the live project, they were applied outside git.
+Those RPCs are not in `schema.sql` or `identity.sql`. They are in the live baseline, along with `friends`, `presence`, `referrals`, and `push_keys`. See [blockfire/supabase/inventory.md](../blockfire/supabase/inventory.md).
 
-WO-10 is planned to dump that live schema into `supabase/migrations` (see [BACKLOG_DECISIONS.md](BACKLOG_DECISIONS.md)). Until that dump lands, this page still describes only `schema.sql` and `identity.sql`.
+The client also reads and writes `public.push_subs` (`endpoint`, `user_id`, `p256dh`, `auth`, `tz_offset`) and calls edge function `push` (GET for a VAPID public key `{key}`, POST `{op:'test'}`). The table is in the baseline. The function source is `blockfire/supabase/functions/push/index.ts`.
 
-The client also reads and writes `public.push_subs` (`endpoint`, `user_id`, `p256dh`, `auth`, `tz_offset`) and calls edge function `push` (GET for a VAPID public key `{key}`, POST `{op:'test'}`). **No `push` function and no `push_subs` table are in git.**
-
-`retention` deletes from `public.economy_flags` where column `at` is older than 90 days. **`economy_flags` is not created in either SQL file.**
+`retention` deletes from `public.economy_flags` where column `at` is older than 90 days. **`economy_flags` is not created in either hand-applied SQL file.** It is in the baseline. Rows are written by `players_econ_guard()` on `players`.
 
 `my_ban` is defined, and the game file does not call it (search shows no `rpc/my_ban`). Bans are enforced inside `room_upsert2`, `invite_send`, and `mp_ticket`.
 
 ## Edge functions
 
-All under `blockfire/supabase/functions/<name>/index.ts`. `blockfire/supabase/README.md` says every function is deployed with JWT verification. There is no `config.toml` to confirm per-function `verify_jwt`. The game sends the anon key as `apikey` and, when `auth` is not false, the user access token as `Authorization`.
+All under `blockfire/supabase/functions/<name>/index.ts`. Live deploys keep JWT verification on for every function except `push`, which is `[functions.push] verify_jwt = false` in `config.toml`. The game sends the anon key as `apikey` and, when `auth` is not false, the user access token as `Authorization`.
 
 | Function | Auth the code checks | Behavior |
 |---|---|---|
@@ -284,9 +282,10 @@ All under `blockfire/supabase/functions/<name>/index.ts`. `blockfire/supabase/RE
 | `device` | `create` and `revoke` need a user JWT. `login` needs `{uid, key}` | Stores SHA-256 of a random key. Login works for 30 days after `last_used_at`, then deletes the key. Keeps at most 8 keys per user. Login mints a magic link and returns a normal session |
 | `delete-account` | User JWT, body `{confirm:'DELETE'}` | Deletes the `players` row, then the auth user |
 | `admin-claim` | User JWT, not a guest, body `{code}` | Compares SHA-256 of the uppercased code to `admin_claim`. Inserts `admins` if the table is empty, then deletes the hash |
-| `retention` | None in the function body (uses service role) | Deletes old rows. Comment says a database scheduler calls it daily. **The schedule is not in git** |
+| `retention` | None in the function body (uses service role) | Deletes old rows. The baseline schedules it as cron `cubefront-retention` (`41 3 * * *`). The Bearer token in that job is `<REDACTED_JWT>` and must come from Vault or another secret |
+| `push` | User JWT for `op:'test'`. `x-cron` token from `push_keys` for `cron` and `invite`. Gateway JWT verification is off | VAPID key, rental and gift reminders, invite pushes |
 
-`signup` and `claim` require passwords of **8 to 72** characters. Some error strings in the game still say 6. The mock server in `tests/mock-supabase.js` also accepts 6. **TODO:** the client copy and the server rule disagree.
+`signup` and `claim` in this repo require passwords of **8 to 72** characters. The live copies of those two functions accept **6**. That drift is left as-is: the repo files were not edited to match live, and the baseline was not edited to match the repo. Some error strings in the game still say 6. The mock server in `tests/mock-supabase.js` also accepts 6.
 
 `guest`, `signup`, `claim`, `device`, `delete-account`, and `admin-claim` send CORS `Access-Control-Allow-Origin: *`. `retention` does not.
 
@@ -321,7 +320,7 @@ No `insert into storage.buckets` and no storage policies are in the repo. **TODO
 
 ## Rebuild a project from git
 
-This uses the Supabase SQL editor and the Supabase CLI. The CLI is not configured in the repo (`config.toml` is absent), so link the project yourself. Do not paste the service-role key into git.
+This uses the Supabase SQL editor and the Supabase CLI. `blockfire/supabase/config.toml` is the local CLI config. Linking still needs `SUPABASE_ACCESS_TOKEN` and `SUPABASE_DB_PASSWORD` (see [blockfire/supabase/PULL.md](../blockfire/supabase/PULL.md)). Do not paste the service-role key into git.
 
 1. Create a Supabase project. The checked-in note says region `eu-central-1` for the current one. A new project will have a new URL. The game will not use it until `CLOUD_CFG` (or `localStorage` `blockfire.cloudcfg`) points at it.
 2. Confirm `pgcrypto` is available as `extensions.gen_random_bytes` and `extensions.hmac`. `identity.sql` needs both and does not create the extension.
@@ -338,20 +337,20 @@ This uses the Supabase SQL editor and the Supabase CLI. The CLI is not configure
    supabase functions deploy delete-account
    supabase functions deploy admin-claim
    supabase functions deploy retention
+   supabase functions deploy push
    ```
 
-   `blockfire/supabase/README.md` says to deploy with JWT verification on. **TODO:** `retention` is documented as a scheduler call and does not check a user. Whether the gateway should skip JWT verification for that function is not written down. `guest` and `signup` are called with the anon key, which is a JWT, so gateway verification can stay on for them.
+   `config.toml` sets `verify_jwt = false` for `push` only. The other functions keep the default, JWT verification on. `push` checks the user JWT or the `x-cron` token itself. `retention` does not check a user in its body. `guest` and `signup` are called with the anon key, which is a JWT, so gateway verification can stay on for them.
 7. Point the game at the project (`CLOUD_CFG` or `blockfire.cloudcfg`) using the project URL and the **anon** key only.
 8. Sign up in the game, then Profile → enter the admin code once. The code row is deleted after success, and `admins.one` blocks a second admin.
 
 After that, guests, username sign-up, cloud saves, the room list, invites, tickets, bans, support messages, and crash rows work **as far as the SQL in git goes**.
 
-Still manual, because it is not in git:
+Still manual:
 
-- Schedule `retention` (the function comment says once a day).
-- Schedule `keepalive()` if you need the free-tier pause protection. The workflow named in the SQL comment is not on this branch.
-- Create the missing RPCs and tables if you need friends, referrals, the ranked board, push, or `server_now`.
-- Turn on Realtime broadcast if you want the in-game backup route that uses `/realtime/v1/websocket`. Nothing in the SQL enables it.
+- Put the real `cubefront-retention` Bearer token in Vault or another secret. The baseline keeps `<REDACTED_JWT>` and must not receive the JWT in git.
+- Schedule `keepalive()` if you need the free-tier pause protection. The workflow named in the SQL comment is not on this branch. The baseline's cron jobs are nightly backup, retention, and hourly push.
+- Turn on Realtime broadcast if you want the in-game backup route that uses `/realtime/v1/websocket`. The export found no app tables in the `supabase_realtime` publication.
 - Auth email templates are unused for normal sign-up (accounts are confirmed by the admin API). Any extra Auth settings on the live project were not exported.
 
 ## Client contract that the SQL does cover

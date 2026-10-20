@@ -35,7 +35,7 @@ const C=await dev('http://127.0.0.1:8765');await ev(C,"localStorage.removeItem('
 const D=await dev('http://localhost:8765');await ev(D,"(async()=>{})();1");
 await D.evaluate(()=>{localStorage.clear();localStorage.setItem('blockfire.norender','1');localStorage.setItem('blockfire.cloudcfg',JSON.stringify({url:'http://127.0.0.1:54321',key:'anon-key'}));});await D.reload();await D.waitForTimeout(1500);
 m=await form(D,'EDEN','another1','clSignup');T('D_dupe',m);CK(/taken/.test(m),'dupe name allowed');
-m=await form(D,'Ed','123','clSignup');T('D_shortPw',m);CK(/6 characters/.test(m),'short pw');
+m=await form(D,'Ed','123','clSignup');T('D_shortPw',m);CK(/8\+ characters/.test(m),'short pw');
 // logout clears this device, login restores
 await A.evaluate(()=>{document.getElementById('openAcct').click();document.querySelector('[data-ac=cloud]').click();});await A.click('#clLogout');await A.waitForTimeout(1200);
 T('A_logout',{cs:await ev(A,'CS'),cur:await ev(A,'USERS.cur'),users:await ev(A,'Object.keys(USERS.users)'),xp:await ev(A,'profile.xp')});CK(!(await ev(A,'CS'))&&(await ev(A,'profile.xp'))===0,'logout left data');
