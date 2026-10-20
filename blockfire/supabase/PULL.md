@@ -1,10 +1,10 @@
 # Live schema pull (WO-10)
 
-The 2026-10-20 read-only export is checked in as [`migrations/20261018000000_live_baseline.sql`](migrations/20261018000000_live_baseline.sql). It sorts after the last live history version, `20261017132626`, and it reproduces that database (335 statements, Postgres 17). Object-by-object notes are in [`inventory.md`](inventory.md). Advisor output is in [`advisors.md`](advisors.md).
+The 2026-10-20 read-only export is checked in as [`baseline/20261018000000_live_baseline.sql`](baseline/20261018000000_live_baseline.sql). It is a reference snapshot, not a migration. It sits outside `migrations/` so `supabase db push` and a preview branch do not apply it. Postgres 17. Object-by-object notes are in [`inventory.md`](inventory.md). Advisor output is in [`advisors.md`](advisors.md).
 
-`schema.sql` and `identity.sql` stay as the hand-applied scripts. This baseline does not rewrite them. A later pull adds another timestamped file under `migrations/`.
+`schema.sql` and `identity.sql` stay as the hand-applied scripts. This baseline does not rewrite them. A later pull adds another timestamped file under `migrations/`. Do not move the snapshot back into `migrations/`. Do not run `supabase migration repair` to record it on the live project.
 
-`cubefront-retention` is the one redaction. Its `Authorization` header is `Bearer <REDACTED_JWT>` in the migration. That token is the anon key. Restore it from Supabase Vault or another secret. Do not commit the JWT into the migration.
+The live job `cubefront-retention` (`41 3 * * *`, `net.http_post` to `functions/v1/retention` with a Bearer service JWT) is managed out of band. The snapshot does not schedule it. WO-16 re-adds it and reads the token from Vault. Do not commit that JWT.
 
 Do not `supabase db push` the baseline onto the live project. The objects are already there.
 
@@ -21,6 +21,8 @@ The public project ref is `qnhogbwnumvounwpusmc`. The game already calls `https:
 
 `db pull` needs Docker. It starts a shadow Postgres to diff the remote schema. CLI 2.121.0 matches `config.toml`. `[db].major_version` is 17, which the export confirmed.
 
+`config.toml` sets `site_url` to `https://edenif1.github.io/skills-/`, allows redirects to `https://localhost` (the iOS app) and `https://edenif1.github.io`, and sets `minimum_password_length` to 6, which is the live value. The hardening change raises that minimum to 8. Do not run `supabase config push` without review. The rest of the file is local CLI config.
+
 ## Run it
 
 From the repo root, after the two exports above:
@@ -35,18 +37,15 @@ Check the scanner without credentials or Docker:
 bash blockfire/supabase/db-pull.sh --self-test
 ```
 
-Or run the workflow **Supabase schema pull** from the Actions tab (`workflow_dispatch` only, so a missing secret does not fail other CI). It checks out the branch you select and writes `blockfire/supabase/migrations/<timestamp>_remote_schema.sql`.
+Or run the workflow **Supabase schema pull** from the Actions tab (`workflow_dispatch` only, so a missing secret does not fail other CI). It checks out the branch you select, writes `blockfire/supabase/migrations/<timestamp>_remote_schema.sql`, and uploads that file as an artifact. It does not commit, open a pull request, or write to the live migration history. Download the artifact and commit it yourself after review.
 
-- Leave **mark applied** off until someone has read the SQL. Turning it on inserts one row into the live `supabase_migrations.schema_migrations` table. It does not change game tables.
-- Leave **commit** off to download the SQL as a workflow artifact and commit it yourself. Turning it on pushes the new `migrations/*.sql` file to the branch the workflow ran on.
-
-The script answers **no** to "Update remote migration history table?" unless `SUPABASE_DB_PULL_MARK_APPLIED=1`. It passes the database password only through the environment, which the CLI reads as `SUPABASE_DB_PASSWORD`. It does not put the password on the command line.
+The script always answers **no** to "Update remote migration history table?". It passes the database password only through the environment, which the CLI reads as `SUPABASE_DB_PASSWORD`. It does not put the password on the command line.
 
 If `db pull` exits without writing a file, the script falls back to `supabase db dump --linked --schema public` and saves that as a new migration. That dump is schema only. It skips managed schemas such as `auth` and `storage`. A successful `db pull` (pg-delta is on in `config.toml`) is the one that also keeps custom triggers and RLS on those managed schemas.
 
-After a file appears, read it before `supabase db push`. The first pull is a baseline of objects that already exist on the live project. Pushing that baseline back would try to create them again. Recording it as applied (the workflow checkbox, or `supabase migration repair --status applied <version>`) is what tells later pushes to skip it.
+After a file appears, read it before `supabase db push`. The checked-in baseline is objects that already exist on the live project, stored outside `migrations/` so a push does not try to create them again. Do not run `supabase migration repair` to mark it applied.
 
-Do not run `supabase config push`, `supabase db push`, or plain `supabase pull` from this tree. Plain `supabase pull` also downloads Edge Function source and can overwrite `functions/`. The auth section of `config.toml` is the CLI template, not a copy of the live Auth settings.
+Do not run `supabase config push` without review, and do not run `supabase db push` or plain `supabase pull` from this tree. Plain `supabase pull` also downloads Edge Function source and can overwrite `functions/`. `config.toml` matches live for `site_url`, the redirect allow-list, and the password minimum of 6. The other sections are local CLI config.
 
 The script refuses to leave a migration in place when the file contains the database password, the access token, a `postgres://` URL with a password, an `sbp_` token, an `sb_secret_` key, a JWT, a private key, or a quoted hex string of 64 or more characters. It moves that file to `*.rejected` (gitignored) and exits. Table rows are not dumped, so `app_secret` values and the admin code hash stay out unless someone stored them as a column default.
 
@@ -58,7 +57,7 @@ Tables: `players`, `app_config`, `support_messages`, `client_errors`, `admins`, 
 
 Functions: `players_keep_name`, `players_force_name` (the hand-applied SQL names it and does not attach a trigger; the baseline does, as `players_force_name` on `public.players`), `support_rate_limit`, `client_errors_guard`, `is_admin`, `app_config_guard`, `rooms_touch`, `room_upsert`, `room_remove`, `invite_send`, `room_upsert2`, `keepalive`, `is_banned`, `my_ban`, `mp_ticket`, `mp_check`, `report_player`, `admin_ban`, `admin_unban`, `admin_bans`.
 
-The baseline also has the three cron jobs. It does not include storage-bucket SQL. The export skipped Supabase-managed schemas.
+The baseline also schedules `cubefront-nightly-backup` and `push-hourly`. `cubefront-retention` is live and is not in the snapshot. The baseline does not include storage-bucket SQL. The export skipped Supabase-managed schemas.
 
 ## Called by the client or by `retention`, absent from the hand-applied SQL
 

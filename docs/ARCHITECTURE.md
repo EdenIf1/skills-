@@ -22,7 +22,7 @@ blockfire/
   supabase/config.toml            CLI config for linking the live project
   supabase/PULL.md                how the live baseline was captured, and how to pull again
   supabase/inventory.md           every live object and whether schema.sql / identity.sql had it
-  supabase/migrations/            20261018000000_live_baseline.sql (full live schema)
+  supabase/baseline/              20261018000000_live_baseline.sql (reference snapshot, not a migration)
   supabase/functions/             edge functions, including push (verify_jwt off)
   tests/                          Playwright scripts and a mock Supabase
   store/                          App Store copy, screenshots, capacity notes
@@ -30,7 +30,7 @@ blockfire/
 
 `.agents/` and `.claude/` are HyperFrames skills. They are not loaded by the game.
 
-`blockfire/supabase/migrations/20261018000000_live_baseline.sql` is the 2026-10-20 live schema. `schema.sql` and `identity.sql` were not rewritten. See [blockfire/supabase/PULL.md](../blockfire/supabase/PULL.md).
+`blockfire/supabase/baseline/20261018000000_live_baseline.sql` is the 2026-10-20 live schema, kept outside `migrations/` so `supabase db push` does not apply it. `schema.sql` and `identity.sql` were not rewritten. See [blockfire/supabase/PULL.md](../blockfire/supabase/PULL.md).
 
 ## How a frame runs
 

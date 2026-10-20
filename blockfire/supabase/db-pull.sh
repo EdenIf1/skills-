@@ -1,12 +1,16 @@
 #!/usr/bin/env bash
 # Pull the live Cubefront schema into blockfire/supabase/migrations/.
 #
+# The 2026-10-20 snapshot is blockfire/supabase/baseline/20261018000000_live_baseline.sql.
+# That file is a reference snapshot, not a migration. Do not move it back under migrations/.
+#
 # Requires, and never prints:
 #   SUPABASE_ACCESS_TOKEN   https://supabase.com/dashboard/account/tokens
 #   SUPABASE_DB_PASSWORD    Dashboard → Project Settings → Database
 #
-# Does not modify schema.sql or identity.sql. Does not dump table data.
-# Does not run `supabase db push` or `supabase config push`.
+# Does not modify schema.sql, identity.sql, or the baseline snapshot.
+# Does not dump table data. Does not write the live migration history.
+# Does not run `supabase db push`, `supabase migration repair`, or `supabase config push`.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -71,11 +75,19 @@ self_test() {
   trap "rm -rf '$dir'" RETURN
   printf 'create table public.example (id int);\n' > "$dir/clean.sql"
   scan_sql "$dir/clean.sql"
-  printf '%s\n' "select 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoic2VydmljZV9yb2xlIn0.signaturevalue';" > "$dir/jwt.sql"
+  # Assemble the fixtures in pieces so this script does not contain a JWT or a database URL.
+  jwt_hdr="$(printf '%s%s' 'eyJ' 'hbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9')"
+  jwt_pay="$(printf '%s%s' 'eyJ' 'yb2xlIjoic2VydmljZV9yb2xlIn0')"
+  jwt_sig="$(printf '%s%s' 'signature' 'value')"
+  printf '%s\n' "select '${jwt_hdr}.${jwt_pay}.${jwt_sig}';" > "$dir/jwt.sql"
   if scan_sql "$dir/jwt.sql"; then
     die "self-test: JWT was not detected"
   fi
-  printf '%s\n' "select 'postgres://postgres:supersecretpassword@db.example.com:5432/postgres';" > "$dir/url.sql"
+  db_scheme="$(printf '%s%s' 'postgres' '://')"
+  db_user="$(printf '%s' 'postgres')"
+  db_secret="$(printf '%s%s' 'super' 'secretpassword')"
+  db_host="$(printf '%s%s' 'db.example.com' ':5432/postgres')"
+  printf '%s\n' "select '${db_scheme}${db_user}:${db_secret}@${db_host}';" > "$dir/url.sql"
   if scan_sql "$dir/url.sql"; then
     die "self-test: database URL was not detected"
   fi
@@ -108,9 +120,9 @@ error: live schema pull needs two values. They are not in this repository.
 
 Optional:
   SUPABASE_PROJECT_REF            defaults to ${PROJECT_REF} (public; already in the game client URL)
-  SUPABASE_DB_PULL_MARK_APPLIED   set to 1 to record the new file in the live migration history
 
-Do not commit either secret. Do not paste them into config.toml, this script, or a migration file.
+The pull always answers no when the CLI asks to update the remote migration history.
+Do not commit either secret. Do not paste them into config.toml, this script, the baseline snapshot, or a migration file.
 EOF
   exit 2
 fi
@@ -135,22 +147,10 @@ after="$(mktemp)"
 trap 'rm -f "$before" "$after"' EXIT
 snapshot "$before"
 
-mark="${SUPABASE_DB_PULL_MARK_APPLIED:-0}"
-case "$mark" in
-  1|true|TRUE|yes|YES) mark=1 ;;
-  *) mark=0 ;;
-esac
-
 set +e
-if [[ "$mark" == "1" ]]; then
-  printf 'db pull will record the new migration in the live history table.\n'
-  supabase db pull remote_schema --linked --yes
-  pull_status=$?
-else
-  printf 'db pull will not update the live migration history (answering no to that prompt).\n'
-  printf 'n\n' | supabase db pull remote_schema --linked
-  pull_status=$?
-fi
+printf 'db pull will not update the live migration history (answering no to that prompt).\n'
+printf 'n\n' | supabase db pull remote_schema --linked
+pull_status=$?
 set -e
 
 snapshot "$after"

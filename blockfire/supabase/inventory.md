@@ -1,11 +1,11 @@
-Checked into this repo from the 2026-10-20 export. The baseline file matches those bytes, including the `<REDACTED_JWT>` placeholder: `migrations/20261018000000_live_baseline.sql`. The `push` source is `functions/push/index.ts`. The other seven live functions were diffed against `functions/`. Only `signup` and `claim` differ: live minimum password length is 6, and the repo copies still require 8.
+Checked into this repo from the 2026-10-20 export. The reference snapshot is `baseline/20261018000000_live_baseline.sql`, outside `migrations/`, so `supabase db push` and a preview branch do not apply it. It is the export plus the live column grants, sequence grants, `backup.snap` revoke, and `invites` `MAINTAIN` grants. The `cubefront-retention` schedule is not in the file. The `push` source is `functions/push/index.ts`. The other seven live functions were diffed against `functions/`. Only `signup` and `claim` differ: live minimum password length is 6, and the repo copies still require 8.
 
 # WO-10 live schema inventory: Cubefront / Blockfire
 
 - **Project:** `blockfire`, ref `qnhogbwnumvounwpusmc`, eu-central-1, Postgres 17. This is the only project in the Supabase account. It matches the URL in `blockfire/game/cabin-fever.html` @ c13898e.
 - **Exported:** 2026-10-20, read-only. Only catalog SELECTs and `pg_get_*` were used, plus list/get MCP tools. No writes, migrations or deploys.
 - **Compared against:** `blockfire/supabase/schema.sql`, `identity.sql` and `functions/*` on `blockfire-app` @ 3c5c746. Matching is by object name, using a `CREATE ... <name>` regex.
-- **Files:** `live_schema.sql` (parses cleanly with libpg_query/pglast: 335 statements; ordered as extensions, schema, sequences, tables, FKs, indexes, functions, triggers, RLS, policies, grants, cron), `edge_functions/<slug>/index.ts` (8), `advisors.md`, and `repo/` (copies of the repo files used for the diff).
+- **Files:** `baseline/20261018000000_live_baseline.sql` (reference snapshot, not a migration; ordered as extensions, schema, sequences, tables, FKs, indexes, functions, triggers, RLS, policies, grants, then the two cron jobs that do not carry a token), `functions/<slug>/index.ts` (8), `advisors.md`. The diff used `schema.sql`, `identity.sql`, and `functions/`.
 
 ## Named objects (architect + parent request)
 
@@ -28,10 +28,10 @@ Checked into this repo from the 2026-10-20 export. The baseline file matches tho
 
 All of them exist live and **none** of them are in the repo. `referral_*` live = `referral_claim` + `referral_rewards` only (plus the `referrals` table and `referrals_id_seq`).
 
-The `push_subs` and `economy_flags` coverage in `live_schema.sql`:
+The `push_subs` and `economy_flags` coverage in `baseline/20261018000000_live_baseline.sql`:
 - **`push_subs`:** table, `push_subs_user` index, FK, RLS on, policies `push own select/insert/update/delete` (authenticated, `auth.uid() = user_id`), and grants. The grants include ALL to anon and authenticated, guarded only by RLS. The table has no triggers. Push delivery goes through the `invites_push` trigger on `invites` -> `push_call()` -> the `push` edge function, plus the hourly `push-hourly` cron.
 - **`economy_flags`:** table, `economy_flags_id_seq`, RLS on with no policies (deny-all to the API), and grants to service_role only. The table has no triggers of its own. Rows are written by `players_econ_guard()` (trigger on `players`) via `econ_clamp()`.
-- **`push` edge function:** in `edge_functions/push/index.ts`. It has no literal secrets, because it uses `Deno.env` and reads VAPID keys and the cron token from `public.push_keys` at runtime.
+- **`push` edge function:** in `functions/push/index.ts`. It has no literal secrets, because it uses `Deno.env` and reads VAPID keys and the cron token from `public.push_keys` at runtime.
 
 ## Counts
 
@@ -161,9 +161,9 @@ Indexes listed are non-constraint indexes only; PK/UNIQUE/CHECK constraints are 
 | sequence | `public.invites_id_seq` | n/a (identity) | owned by invites.id |
 | sequence | `public.referrals_id_seq` | NO | owned by referrals.id |
 | sequence | `public.support_messages_id_seq` | n/a (identity) | owned by support_messages.id |
-| cron job | `cubefront-nightly-backup` | NO | `23 3 * * *` |
-| cron job | `cubefront-retention` | NO | `41 3 * * *` |
-| cron job | `push-hourly` | NO | `7 * * * *` |
+| cron job | `cubefront-nightly-backup` | NO | `23 3 * * *`. Scheduled in the baseline (`select backup.take()`). |
+| cron job | `cubefront-retention` | NO | Live job `41 3 * * *`: `net.http_post` to `functions/v1/retention` with a Bearer service JWT. Not in the baseline. Managed out of band. WO-16 re-adds it and reads the token from Vault. |
+| cron job | `push-hourly` | NO | `7 * * * *`. Scheduled in the baseline (`select public.push_call(...)`). |
 
 ## Edge functions (live vs repo)
 
@@ -183,9 +183,19 @@ Indexes listed are non-constraint indexes only; PK/UNIQUE/CHECK constraints are 
 - **Repo-only objects:** none. Every table, function, trigger and policy in the repo SQL exists live.
 - **`backup.take()` + `backup.snap`:** cron `cubefront-nightly-backup` (03:23 UTC) snapshots tables, including `auth.users.encrypted_password` (password hashes), into `backup.snap`. RLS is OFF there, but schema `backup` grants USAGE only to `postgres`, so it is not API-reachable. Someone should decide whether hashes belong in that snapshot.
 - **Table grants:** `anon` and `authenticated` hold ALL on `app_secret`, `bans`, `mp_tickets` and `push_subs`. These are protected by RLS only: the first three are deny-all (no policies), and `push_subs` has own-row policies for authenticated only. A defensive REVOKE is recommended (SQL-hardening lane).
+- **Column grants** (eight statements, immediately after the table-level `REVOKE ALL` / `GRANT` block, because that `REVOKE ALL` clears column ACLs):
+  - `authenticated` may `UPDATE` `app_config.value` only.
+  - `anon` and `authenticated` may `INSERT` `client_errors` (`app_version`, `device`, `message`, `stack`, `where_`) only. There is no table-level `INSERT` for those roles.
+  - `authenticated` may `UPDATE` `players` (`data`, `id`, `name`, `updated_at`) only. Table-level privileges for that role are `INSERT` and `SELECT`.
+  - `anon` and `authenticated` may `SELECT` `rooms` (`code`, `host_name`, `locked`, `map`, `max`, `mode`, `players`, `progress`, `proto`, `state`, `updated_at`) only. `host_uid` is not included. There is no table-level `SELECT` for those roles.
+  - `anon` and `authenticated` may `INSERT` `support_messages` (`app_version`, `contact`, `device`, `message`, `player_name`, `topic`) only. There is no table-level `INSERT` for those roles, so `reported_uid` and `user_id` are not client-writable through the grant.
+- **`public.invites`:** Postgres 17 `MAINTAIN` is granted to `anon`. `authenticated` has `SELECT`, `DELETE`, and `MAINTAIN`. `service_role` has `ALL`.
+- **Sequences:** `client_errors_id_seq`, `device_keys_id_seq`, `economy_flags_id_seq`, `invites_id_seq`, `referrals_id_seq`, and `support_messages_id_seq` each have `REVOKE ALL` from `PUBLIC`, `anon`, `authenticated`, and `service_role`, then `GRANT ALL` to `anon`, `authenticated`, and `service_role`.
+- **`backup.snap`:** `REVOKE ALL` from `PUBLIC`, `anon`, `authenticated`, and `service_role`. Live privileges are the postgres owner only. RLS stays off; see `advisors.md`.
 - **Secret-bearing tables (values NOT read or exported, DDL only):** `public.app_secret` (used by `mp_check`), `public.push_keys` (VAPID private key + cron_token), and `vault.*`.
 - **Realtime:** `supabase_realtime` has no app tables.
+- **`cubefront-retention`:** the live job exists (`41 3 * * *`). It calls `net.http_post` to `functions/v1/retention` with a Bearer service JWT. It is managed out of band and is not scheduled in the baseline, so a replay cannot install a placeholder token and 401 every night. WO-16 re-adds the job and reads the token from Vault.
 
 ## Redactions
-- In `live_schema.sql`, cron job `cubefront-retention` had a hard-coded `Authorization: Bearer <JWT>`. It is replaced with `<REDACTED_JWT>`. The token is the project's **anon** key (role=anon, exp 2036), not service_role, but it was redacted per policy. To restore it, use the anon key, or better, read it from Vault.
-- Nothing else needed redacting. Function bodies have no literal keys or tokens (`push_call` reads its token from `push_keys`), and the edge functions take credentials from `Deno.env`. The public project URL was kept. A final scan for JWT/sk_/PEM/password literals came back clean.
+- The retention Bearer token is not in this repository. The baseline does not schedule `cubefront-retention`.
+- Function bodies have no literal keys or tokens (`push_call` reads its token from `push_keys`), and the edge functions take credentials from `Deno.env`. The public project URL in `push_call` was kept (see `advisors.md`, WO-16). A scan of this snapshot found no JWT, `sbp_` token, private key, or database URL with a password.

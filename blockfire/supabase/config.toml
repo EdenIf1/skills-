@@ -7,8 +7,13 @@
 # service-role key. Those stay in the environment or in GitHub Actions secrets.
 # See PULL.md.
 #
-# Do not run `supabase config push` or `supabase db push` from this file. The auth
-# and API sections below are the CLI template, not a copy of the live project.
+# Do not run `supabase config push` without review. A push overwrites live Auth
+# and API settings with this file. Do not run `supabase db push` from this tree.
+#
+# Set from the live project (2026-10-20): site_url, additional_redirect_urls
+# (https://localhost is the iOS app), and minimum_password_length = 6.
+# The hardening change (WO-16) raises that minimum to 8. This file keeps 6.
+# Network restrictions are off and this file does not allow 0.0.0.0/0 or ::/0.
 # `project_id` is only the local Docker name.
 
 # A string used to distinguish different Supabase projects on the same host. Defaults to the
@@ -84,13 +89,9 @@ sql_paths = []
 
 [db.network_restrictions]
 # Enable management of network restrictions.
+# Disabled. Do not restore the CLI default allow-all lists (0.0.0.0/0 and ::/0).
+# Those do not reflect production and must not be pushed.
 enabled = false
-# List of IPv4 CIDR blocks allowed to connect to the database.
-# Defaults to allow all IPv4 connections. Set empty array to block all IPs.
-allowed_cidrs = ["0.0.0.0/0"]
-# List of IPv6 CIDR blocks allowed to connect to the database.
-# Defaults to allow all IPv6 connections. Set empty array to block all IPs.
-allowed_cidrs_v6 = ["::/0"]
 
 # Uncomment to reject non-secure connections to the database.
 # [db.ssl_enforcement]
@@ -168,11 +169,11 @@ max_indexes = 5
 enabled = true
 # The base URL of your website. Used as an allow-list for redirects and for constructing URLs used
 # in emails.
-site_url = "http://127.0.0.1:3000"
+site_url = "https://edenif1.github.io/skills-/"
 # The public URL that Auth serves on. Defaults to the API external URL with `/auth/v1` appended.
 # external_url = ""
-# A list of *exact* URLs that auth providers are permitted to redirect to post authentication.
-additional_redirect_urls = ["https://127.0.0.1:3000"]
+# Exact URLs auth providers may redirect to. https://localhost is the iOS app.
+additional_redirect_urls = ["https://localhost", "https://edenif1.github.io"]
 # How long tokens are valid for, in seconds. Defaults to 3600 (1 hour), maximum 604,800 (1 week).
 jwt_expiry = 3600
 # JWT issuer URL. If not set, defaults to auth.external_url.
@@ -190,7 +191,7 @@ enable_signup = true
 enable_anonymous_sign_ins = false
 # Allow/disallow testing manual linking of accounts
 enable_manual_linking = false
-# Passwords shorter than this value will be rejected as weak. Minimum 6, recommended 8 or more.
+# Live project minimum is 6. WO-16 raises this to 8. Keep 6 here so the file matches live.
 minimum_password_length = 6
 # Passwords that do not meet the following requirements will be rejected as weak. Supported values
 # are: `letters_digits`, `lower_upper_letters_digits`, `lower_upper_letters_digits_symbols`

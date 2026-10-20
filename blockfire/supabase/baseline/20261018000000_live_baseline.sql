@@ -1,12 +1,17 @@
 -- =====================================================================
--- Cubefront / Blockfire LIVE schema export (WO-10)
+-- Cubefront / Blockfire LIVE schema snapshot (WO-10)
 -- Project ref: qnhogbwnumvounwpusmc (eu-central-1, Postgres 17)
 -- Exported read-only via catalog queries on 2026-10-20 (UTC).
--- Scope: schemas public + backup, app trigger on auth.users, pg_cron jobs,
---        realtime publications. Supabase-managed schemas are not dumped.
+-- Scope: schemas public + backup, app trigger on auth.users, pg_cron jobs
+--        except cubefront-retention, realtime publications.
+--        Supabase-managed schemas are not dumped.
 -- Idempotent-ish: IF NOT EXISTS / CREATE OR REPLACE / DROP ... IF EXISTS.
--- Secrets redacted: see inventory.md.
--- NOT applied anywhere. Review before using as a migration.
+-- Reference snapshot only. This file lives in baseline/, outside
+-- supabase/migrations/, so `supabase db push` and preview branches do not
+-- apply it. Do not move it back under migrations/. Do not db push it.
+-- cubefront-retention is live and managed out of band (see inventory.md).
+-- Column grants, sequence grants, backup.snap revoke, and invites MAINTAIN
+-- were added so this snapshot matches live privileges.
 -- =====================================================================
 SET check_function_bodies = false;
 
@@ -1154,7 +1159,8 @@ GRANT ALL ON public.friends TO service_role;
 REVOKE ALL ON public.heartbeat FROM anon, authenticated, service_role;
 GRANT ALL ON public.heartbeat TO service_role;
 REVOKE ALL ON public.invites FROM anon, authenticated, service_role;
-GRANT DELETE, SELECT ON public.invites TO authenticated;
+GRANT MAINTAIN ON TABLE public.invites TO anon;
+GRANT SELECT, DELETE, MAINTAIN ON TABLE public.invites TO authenticated;
 GRANT ALL ON public.invites TO service_role;
 REVOKE ALL ON public.mp_tickets FROM anon, authenticated, service_role;
 GRANT ALL ON public.mp_tickets TO anon;
@@ -1178,6 +1184,34 @@ GRANT ALL ON public.rooms TO service_role;
 REVOKE ALL ON public.support_messages FROM anon, authenticated, service_role;
 GRANT DELETE, SELECT ON public.support_messages TO authenticated;
 GRANT ALL ON public.support_messages TO service_role;
+
+-- Column privileges (live). The table-level REVOKE ALL above strips these,
+-- so they are granted again immediately after that block.
+GRANT UPDATE (value) ON public.app_config TO authenticated;
+GRANT INSERT (app_version, device, message, stack, where_) ON public.client_errors TO anon;
+GRANT INSERT (app_version, device, message, stack, where_) ON public.client_errors TO authenticated;
+GRANT UPDATE (data, id, name, updated_at) ON public.players TO authenticated;
+GRANT SELECT (code, host_name, locked, map, max, mode, players, progress, proto, state, updated_at) ON public.rooms TO anon;
+GRANT SELECT (code, host_name, locked, map, max, mode, players, progress, proto, state, updated_at) ON public.rooms TO authenticated;
+GRANT INSERT (app_version, contact, device, message, player_name, topic) ON public.support_messages TO anon;
+GRANT INSERT (app_version, contact, device, message, player_name, topic) ON public.support_messages TO authenticated;
+
+-- Sequence privileges (live).
+REVOKE ALL ON SEQUENCE public.client_errors_id_seq FROM PUBLIC, anon, authenticated, service_role;
+GRANT ALL ON SEQUENCE public.client_errors_id_seq TO anon, authenticated, service_role;
+REVOKE ALL ON SEQUENCE public.device_keys_id_seq FROM PUBLIC, anon, authenticated, service_role;
+GRANT ALL ON SEQUENCE public.device_keys_id_seq TO anon, authenticated, service_role;
+REVOKE ALL ON SEQUENCE public.economy_flags_id_seq FROM PUBLIC, anon, authenticated, service_role;
+GRANT ALL ON SEQUENCE public.economy_flags_id_seq TO anon, authenticated, service_role;
+REVOKE ALL ON SEQUENCE public.invites_id_seq FROM PUBLIC, anon, authenticated, service_role;
+GRANT ALL ON SEQUENCE public.invites_id_seq TO anon, authenticated, service_role;
+REVOKE ALL ON SEQUENCE public.referrals_id_seq FROM PUBLIC, anon, authenticated, service_role;
+GRANT ALL ON SEQUENCE public.referrals_id_seq TO anon, authenticated, service_role;
+REVOKE ALL ON SEQUENCE public.support_messages_id_seq FROM PUBLIC, anon, authenticated, service_role;
+GRANT ALL ON SEQUENCE public.support_messages_id_seq TO anon, authenticated, service_role;
+
+-- backup.snap is postgres-only on live.
+REVOKE ALL ON TABLE backup.snap FROM PUBLIC, anon, authenticated, service_role;
 
 -- Function EXECUTE privileges (live ACLs)
 REVOKE ALL ON FUNCTION backup.take() FROM PUBLIC, anon, authenticated;
@@ -1262,9 +1296,10 @@ GRANT EXECUTE ON FUNCTION public.support_rate_limit() TO service_role;
 -- supabase_realtime exists with NO app tables; supabase_realtime_messages_publication covers realtime.messages_* partitions (Supabase-managed). Nothing to add.
 
 -- ---------- 15. pg_cron jobs ----------
+-- cubefront-retention is live (`41 3 * * *`, net.http_post to functions/v1/retention
+-- with a Bearer service JWT) and is managed out of band. It is not scheduled
+-- here. WO-16 re-adds it and reads the token from Vault.
 SELECT cron.unschedule('cubefront-nightly-backup') WHERE EXISTS (SELECT 1 FROM cron.job WHERE jobname = 'cubefront-nightly-backup');
 SELECT cron.schedule('cubefront-nightly-backup', '23 3 * * *', $cron$select backup.take()$cron$);  -- active=True
-SELECT cron.unschedule('cubefront-retention') WHERE EXISTS (SELECT 1 FROM cron.job WHERE jobname = 'cubefront-retention');
-SELECT cron.schedule('cubefront-retention', '41 3 * * *', $cron$select net.http_post(url := 'https://qnhogbwnumvounwpusmc.supabase.co/functions/v1/retention', body := '{}'::jsonb, headers := jsonb_build_object('Content-Type','application/json','Authorization','Bearer <REDACTED_JWT>'))$cron$);  -- active=True
 SELECT cron.unschedule('push-hourly') WHERE EXISTS (SELECT 1 FROM cron.job WHERE jobname = 'push-hourly');
 SELECT cron.schedule('push-hourly', '7 * * * *', $cron$select public.push_call('{"op":"cron"}'::jsonb)$cron$);  -- active=True

@@ -69,8 +69,39 @@
 
 - Table `public.rooms` has multiple permissive policies for role `authenticated` for action `SELECT`. Policies include `{"anyone sees live rooms","host sees own room"}`
 
+## Grants in the baseline snapshot
+
+The table-level `REVOKE ALL` / `GRANT` block clears column privileges. The snapshot grants the live column privileges again, immediately after that block:
+
+- `GRANT UPDATE (value) ON public.app_config TO authenticated`
+- `GRANT INSERT (app_version, device, message, stack, where_) ON public.client_errors TO anon`
+- `GRANT INSERT (app_version, device, message, stack, where_) ON public.client_errors TO authenticated`
+- `GRANT UPDATE (data, id, name, updated_at) ON public.players TO authenticated`
+- `GRANT SELECT (code, host_name, locked, map, max, mode, players, progress, proto, state, updated_at) ON public.rooms TO anon`
+- `GRANT SELECT (code, host_name, locked, map, max, mode, players, progress, proto, state, updated_at) ON public.rooms TO authenticated`
+- `GRANT INSERT (app_version, contact, device, message, player_name, topic) ON public.support_messages TO anon`
+- `GRANT INSERT (app_version, contact, device, message, player_name, topic) ON public.support_messages TO authenticated`
+
+`anon` and `authenticated` have no table-level insert on `client_errors` or `support_messages`, no table-level update on `players` or `app_config`, and no table-level select on `rooms`. `rooms.host_uid` is not in the select list.
+
+`public.invites` matches live Postgres 17 privileges: `MAINTAIN` for `anon`, and `SELECT`, `DELETE`, `MAINTAIN` for `authenticated`. `service_role` still has `ALL`.
+
+Sequences `client_errors_id_seq`, `device_keys_id_seq`, `economy_flags_id_seq`, `invites_id_seq`, `referrals_id_seq`, and `support_messages_id_seq`: `REVOKE ALL` from `PUBLIC`, `anon`, `authenticated`, and `service_role`, then `GRANT ALL` to `anon`, `authenticated`, and `service_role`.
+
+`backup.snap`: `REVOKE ALL` from `PUBLIC`, `anon`, `authenticated`, and `service_role` (postgres owner only on live).
+
+`anon` and `authenticated` still hold table-level `ALL` on `app_secret`, `bans`, `mp_tickets`, and `push_subs`. RLS is the only guard.
+
 ## Highlights / triage
 - **SECURITY DEFINER RPCs callable via REST (WARN):** 4 are callable by `anon` (`keepalive`, `mp_check`, `public_leaderboard`, `ranked_leaderboard`) and 22 by `authenticated`. All of them pin `search_path=''`. Most are intentional RPC entry points. Review the `admin_*` functions (each must gate on `is_admin()`) and `report_player`.
 - **Leaked-password protection disabled (WARN):** this is an Auth dashboard setting. Combined with the live signup/claim minimum of 6 chars (the repo says 8), it is the weakest point.
 - **RLS enabled, no policy (INFO, 12 tables):** deny-all by design for server-only tables. Pair it with revoking the leftover ALL grants that anon/authenticated hold on `app_secret`, `bans`, `mp_tickets`, `push_subs`.
 - **Perf (low impact):** 3 unindexed FKs (`client_errors.user_id`, `support_messages.user_id`, `support_messages.reported_uid`), unused index `push_subs_user`, and 2 permissive SELECT policies on `rooms` (`host sees own room` is `USING (false)` and can be dropped).
+
+## Known issues (WO-16)
+
+Left as they are in this snapshot. The hardening change addresses them.
+
+- **push SSRF.** `public.push_call` is `SECURITY DEFINER` and calls `net.http_post`. `invites_push` and the `push-hourly` cron invoke it. The database makes an outbound HTTP request to the project functions endpoint.
+- **`backup.snap` RLS.** `ALTER TABLE backup.snap DISABLE ROW LEVEL SECURITY` leaves RLS off. `backup.take()` copies `auth.users.encrypted_password` (password hashes) into `backup.snap`. Schema `backup` grants `USAGE` only to `postgres`, and the snapshot revokes table privileges from `PUBLIC`, `anon`, `authenticated`, and `service_role`.
+- **Hard-coded prod URLs.** `public.push_call` posts to `https://qnhogbwnumvounwpusmc.supabase.co/functions/v1/push`. That project URL stays in the snapshot.

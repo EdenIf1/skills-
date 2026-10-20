@@ -1,6 +1,8 @@
 # Manual pull of the live Cubefront schema into blockfire/supabase/migrations/.
 # Does not run on push, so a missing secret does not fail other CI.
-# Does not edit schema.sql or identity.sql, and does not print the token or the database password.
+# Does not edit schema.sql, identity.sql, or baseline/20261018000000_live_baseline.sql.
+# Does not print the token or the database password.
+# Does not write the live migration history and does not open a pull request.
 #
 # Repository secrets (Settings → Secrets and variables → Actions):
 #   SUPABASE_ACCESS_TOKEN   https://supabase.com/dashboard/account/tokens
@@ -9,17 +11,8 @@
 name: Supabase schema pull
 on:
   workflow_dispatch:
-    inputs:
-      mark_applied:
-        description: "Record the new migration as already applied on the live database (one history row). Leave false until the SQL has been reviewed."
-        type: boolean
-        default: false
-      commit:
-        description: "Commit new migration files to the branch this workflow was started on."
-        type: boolean
-        default: false
 permissions:
-  contents: write
+  contents: read
 concurrency:
   group: supabase-db-pull
   cancel-in-progress: false
@@ -31,7 +24,6 @@ jobs:
       SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
       SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
       SUPABASE_PROJECT_REF: qnhogbwnumvounwpusmc
-      SUPABASE_DB_PULL_MARK_APPLIED: ${{ inputs.mark_applied == true && '1' || '0' }}
     steps:
       - uses: actions/checkout@v4
       - uses: supabase/setup-cli@v1
@@ -57,16 +49,3 @@ jobs:
           name: supabase-migrations
           path: blockfire/supabase/migrations/*.sql
           if-no-files-found: ignore
-      - name: Commit migration files
-        if: inputs.commit == true && success()
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add blockfire/supabase/migrations/*.sql
-          if git diff --cached --quiet; then
-            echo "No new migration SQL to commit."
-            exit 0
-          fi
-          git diff --cached --stat
-          git commit -m "Add live Supabase schema migration"
-          git push

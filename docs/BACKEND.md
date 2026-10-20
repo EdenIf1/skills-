@@ -2,7 +2,7 @@
 
 Cubefront's backend is **Supabase** (Postgres, Auth, Row Level Security, Edge Functions). `blockfire/supabase/README.md` names the live project `blockfire` in region `eu-central-1`. The browser calls that project with the URL and anon key hardcoded as `CLOUD_CFG` in `blockfire/game/cabin-fever.html`. Those values are not repeated here.
 
-There is no storage-bucket SQL. The 2026-10-20 live schema is [`blockfire/supabase/migrations/20261018000000_live_baseline.sql`](../blockfire/supabase/migrations/20261018000000_live_baseline.sql) (see [`inventory.md`](../blockfire/supabase/inventory.md)). The two files below are still the hand-applied scripts. They were not rewritten to match the export:
+There is no storage-bucket SQL. The 2026-10-20 live schema is the reference snapshot [`blockfire/supabase/baseline/20261018000000_live_baseline.sql`](../blockfire/supabase/baseline/20261018000000_live_baseline.sql) (see [`inventory.md`](../blockfire/supabase/inventory.md)). It is not under `migrations/`. The two files below are still the hand-applied scripts. They were not rewritten to match the export:
 
 1. [`blockfire/supabase/schema.sql`](../blockfire/supabase/schema.sql)
 2. [`blockfire/supabase/identity.sql`](../blockfire/supabase/identity.sql) — the header says it only adds and replaces functions; it does not drop objects.
@@ -13,7 +13,7 @@ There is no storage-bucket SQL. The 2026-10-20 live schema is [`blockfire/supaba
 
 Apply the two SQL files, deploy the edge functions, and insert the one-time admin code hash yourself. That recreates accounts, saves, remote config, support mail, crash rows, the room list, invites, bans, and multiplayer tickets as those two files define them.
 
-The live baseline migration is the full exported schema. It includes friends, referrals, the ranked board, push, `server_now`, `economy_flags`, and the three cron jobs. The `cubefront-retention` Bearer token in that file is `<REDACTED_JWT>`.
+The live baseline snapshot is the full exported schema, plus the live column grants, sequence grants, `backup.snap` revoke, and `invites` `MAINTAIN` grants. It includes friends, referrals, the ranked board, push, `server_now`, `economy_flags`, `cubefront-nightly-backup`, and `push-hourly`. The live `cubefront-retention` job (`41 3 * * *`, Bearer service JWT) is managed out of band and is not in the snapshot. WO-16 re-adds it from Vault.
 
 ## Tables
 
@@ -282,7 +282,7 @@ All under `blockfire/supabase/functions/<name>/index.ts`. Live deploys keep JWT 
 | `device` | `create` and `revoke` need a user JWT. `login` needs `{uid, key}` | Stores SHA-256 of a random key. Login works for 30 days after `last_used_at`, then deletes the key. Keeps at most 8 keys per user. Login mints a magic link and returns a normal session |
 | `delete-account` | User JWT, body `{confirm:'DELETE'}` | Deletes the `players` row, then the auth user |
 | `admin-claim` | User JWT, not a guest, body `{code}` | Compares SHA-256 of the uppercased code to `admin_claim`. Inserts `admins` if the table is empty, then deletes the hash |
-| `retention` | None in the function body (uses service role) | Deletes old rows. The baseline schedules it as cron `cubefront-retention` (`41 3 * * *`). The Bearer token in that job is `<REDACTED_JWT>` and must come from Vault or another secret |
+| `retention` | None in the function body (uses service role) | Deletes old rows. Live cron `cubefront-retention` (`41 3 * * *`) calls it with a Bearer service JWT. That job is managed out of band and is not in the baseline. WO-16 re-adds it from Vault |
 | `push` | User JWT for `op:'test'`. `x-cron` token from `push_keys` for `cron` and `invite`. Gateway JWT verification is off | VAPID key, rental and gift reminders, invite pushes |
 
 `signup` and `claim` in this repo require passwords of **8 to 72** characters. The live copies of those two functions accept **6**. That drift is left as-is: the repo files were not edited to match live, and the baseline was not edited to match the repo. Some error strings in the game still say 6. The mock server in `tests/mock-supabase.js` also accepts 6.
@@ -348,8 +348,8 @@ After that, guests, username sign-up, cloud saves, the room list, invites, ticke
 
 Still manual:
 
-- Put the real `cubefront-retention` Bearer token in Vault or another secret. The baseline keeps `<REDACTED_JWT>` and must not receive the JWT in git.
-- Schedule `keepalive()` if you need the free-tier pause protection. The workflow named in the SQL comment is not on this branch. The baseline's cron jobs are nightly backup, retention, and hourly push.
+- `cubefront-retention` stays out of git. The live job uses a Bearer service JWT and is managed out of band. WO-16 re-adds it and reads the token from Vault.
+- Schedule `keepalive()` if you need the free-tier pause protection. The workflow named in the SQL comment is not on this branch. The baseline schedules nightly backup and hourly push only.
 - Turn on Realtime broadcast if you want the in-game backup route that uses `/realtime/v1/websocket`. The export found no app tables in the `supabase_realtime` publication.
 - Auth email templates are unused for normal sign-up (accounts are confirmed by the admin API). Any extra Auth settings on the live project were not exported.
 

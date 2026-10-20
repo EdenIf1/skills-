@@ -1,11 +1,11 @@
 # Migrations
 
-`20261018000000_live_baseline.sql` is the 2026-10-20 read-only export of project `qnhogbwnumvounwpusmc` (Postgres 17). The version sorts after the last live migration-history entry, `20261017132626`. The file is the full live schema (extensions, `backup`, sequences, tables, foreign keys, indexes, functions, triggers including `signup_guard` on `auth.users`, RLS, policies, grants, and `pg_cron`). It was not edited. `schema.sql` and `identity.sql` are separate hand-applied scripts and were not rewritten.
+This directory is for new, reviewed migrations only. `supabase db push` and preview branches apply every `.sql` file here because `[db.migrations] enabled = true` in `config.toml`.
 
-Do not `supabase db push` this baseline onto the live project. Those objects are already there.
+The 2026-10-20 live schema is not here. It is a reference snapshot at [`../baseline/20261018000000_live_baseline.sql`](../baseline/20261018000000_live_baseline.sql). Those objects already exist on project `qnhogbwnumvounwpusmc`. Do not move that file back under `migrations/`. Do not `supabase db push` it. Do not run `supabase migration repair` against production to record it.
 
-## Cron token
+`schema.sql` and `identity.sql` are separate hand-applied scripts and were not rewritten.
 
-`cubefront-retention` is scheduled with `Authorization: Bearer <REDACTED_JWT>`. The placeholder stays in this file. The token is the project's anon key, and it must be supplied from Supabase Vault or another secret when the job is created or restored. Do not paste the JWT back into the migration.
+`cubefront-retention` (`41 3 * * *`, `net.http_post` to `functions/v1/retention` with a Bearer service JWT) is live and managed out of band. It is not scheduled in the snapshot. WO-16 re-adds it and reads the token from Vault. Do not paste that JWT into a migration.
 
-Later pulls from `../db-pull.sh` should add a new timestamped file and should not rewrite this baseline or the hand-applied SQL.
+Later pulls from `../db-pull.sh` add a new timestamped file here and do not rewrite the baseline or the hand-applied SQL. The pull does not write to the live migration history.
