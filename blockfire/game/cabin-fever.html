@@ -1888,7 +1888,7 @@ async function adminClaim(code){if(!CS||CS.guest)return 'Sign in to your own acc
   if(r.ok){CS.admin=true;cloudKeep();return '';}const e=r.j&&r.j.error;
   return !r.status?'No connection to the server.':e==='code'?'That code is not right.':e==='taken'?'This game already has its admin.':e==='guest'?'Guest accounts cannot be admins. Create your account first.':'The server said no (error '+r.status+').';}
 /* ================= version, remote settings, crash reports ================= */
-const APP_VERSION='1.9.10',BUILD_ID='__BUILD_ID__';
+const APP_VERSION='1.9.11',BUILD_ID='__BUILD_ID__';
 const verNum=v=>String(v||'0').split('.').slice(0,3).map(n=>parseInt(n)||0).reduce((a,n)=>a*1000+n,0);
 let RCFG={};try{RCFG=JSON.parse(localStorage.getItem('blockfire.rcfg')||'{}')||{};}catch(e){RCFG={};}
 const feat=k=>!(RCFG.features&&RCFG.features[k]===false);
@@ -5199,22 +5199,33 @@ function botWatch(b,dt){if(XM.on&&XM.rule==='prop')return;
 function botEscape(b){b.escT=1.2+rand()*.8;b.escA=rand()*Math.PI*2;b.path=null;}
 // seconds since the match started (the menu clock otherwise), so a remembered spot ages the same in a real match and a fast sim
 function botClock(){return state==='play'?(MAP.time||0)-matchT:(typeof menuT==='number'?menuT:0);}
-function botMark(e){if(e&&e.alive)e.known={x:e.x,z:e.z,at:botClock()};}
-// nowhere to be: walk to the nearest enemy someone has actually seen, or a point of interest on the enemy half of the map
-function botIdleGoal(b){
-  const clk=botClock();let best=null,bd=1e9;
-  if(b.lastSeenT>0&&b.lastSeen){best=b.lastSeen;bd=Math.hypot(b.lastSeen.x-b.x,b.lastSeen.z-b.z);}
-  for(const e of ents){if(e===b||!e.alive||e.inMatch===false||e.team===b.team)continue;
-    const k=e.known;if(!k||clk-(k.at||0)>7)continue;
-    const d=Math.hypot(k.x-b.x,k.z-b.z);if(d<bd){bd=d;best=k;}}
-  if(best)return [Math.floor(best.x),Math.floor(best.z)];
-  const P=poiList();if(!P.length)return [MAP.center[0]|0,MAP.center[2]|0];
+// known.at is a botClock reading. That clock restarts near 0 every match, and a spot from the previous match would otherwise stay "fresh" forever (clk - at goes negative and the 7s check passes).
+let botMem=-1;
+function botFresh(){if(botMem===matchId)return;botMem=matchId;for(const e of ents)e.known=null;}
+// fresh = this bot just noticed them. Easy calls that out rarely; Medium and Hard refresh the spot whenever they can see it.
+function botMark(e,fresh){if(!e||!e.alive)return;const sh=botD().share;if(sh!=null&&(!fresh||rand()>sh))return;e.known={x:e.x,z:e.z,at:botClock()};}
+function botSpot(p){return !!(p&&reachable(p.x!=null?p.x:p[0],p.z!=null?p.z:p[1]));}
+// a point of interest. Zombie Safehouse uses the same rectangle for both spawns, so the enemy-half split is skipped there.
+function botPoi(b){
+  const raw=poiList()||[],P=raw.filter(p=>reachable(p[0],p[1])),use=P.length?P:raw;
+  if(!use.length)return [MAP.center[0]|0,MAP.center[2]|0];
   const sp=MAP.spawn&&MAP.spawn[b.team],myLow=sp?(sp[2]+sp[3])/2<D/2:b.z<D/2;
-  let half=P.filter(p=>(p[1]<D/2)!==myLow);if(!half.length)half=P;
+  let half=use;if(!isZ()){half=use.filter(p=>(p[1]<D/2)!==myLow);if(!half.length)half=use;}
   const foeName=b.team==='blue'?'red':'blue',foe=MAP.spawn&&MAP.spawn[foeName];
   const ex=foe?(foe[0]+foe[1])/2:MAP.center[0],ez=foe?(foe[2]+foe[3])/2:MAP.center[2];
   const scored=half.map(p=>[Math.hypot(p[0]+.5-ex,p[1]+.5-ez)+rand()*12,p]).sort((a,c)=>a[0]-c[0]);
   return scored[(rand()*Math.min(4,scored.length))|0][1];
+}
+// nowhere to be: walk to a reachable spot someone has actually seen, or a point of interest. A clock that jumped backwards (clk < at) is stale.
+function botIdleGoal(b){
+  botFresh();
+  const clk=botClock();let best=null,bd=1e9;
+  if(b.lastSeenT>0&&b.lastSeen&&botSpot(b.lastSeen)){best=b.lastSeen;bd=Math.hypot(b.lastSeen.x-b.x,b.lastSeen.z-b.z);}
+  for(const e of ents){if(e===b||!e.alive||e.inMatch===false||e.team===b.team)continue;
+    const k=e.known;if(!k||clk<k.at||clk-k.at>7||!botSpot(k))continue;
+    const d=Math.hypot(k.x-b.x,k.z-b.z);if(d<bd){bd=d;best=k;}}
+  if(best)return [Math.floor(best.x),Math.floor(best.z)];
+  return botPoi(b);
 }
 function planPath(b){
   let gx,gz;
@@ -5229,7 +5240,9 @@ function planPath(b){
   // look again every couple of seconds: the enemy they are walking toward has moved
   b.repathT=og?2.5+rand():2+rand()*2;
   if(s<0||g<0){b.path=null;return;}
-  b.path=bfs(s,g);b.pathI=1;if(!b.path)b.repathT=.5;
+  b.path=bfs(s,g);b.pathI=1;
+  // last-known cell has no route: try a point of interest instead of standing until the 8s unstick
+  if(!b.path){const p=botPoi(b),g2=nearestValid(p[0],p[1]);b.path=(s>=0&&g2>=0&&g2!==g)?bfs(s,g2):null;b.pathI=1;if(!b.path)b.repathT=.5;}
 }
 function turnTo(a,b,max){let d=angDiff(a,b);if(d>max)d=max;if(d<-max)d=-max;return a+d;}
 function angDiff(a,b){let d=b-a;while(d>Math.PI)d-=Math.PI*2;while(d<-Math.PI)d+=Math.PI*2;return d;}
@@ -5319,27 +5332,29 @@ function buildTick(dt){if(buildCD>0)buildCD-=dt;
   let t=null;if(buildHeld&&buildOn()&&player.alive&&buildLeft>0)t=buildTarget();
   ghost.visible=!!t;if(t){ghost.position.set(t.x+.5,t.y+.5,t.z+.5);ghost.material.color.setHex(t.ok?0x7dffa0:0xff5a4f);}}
 // agg: how hard they push a fight. sight / cone: how far and how wide they notice someone. perch: chance to take a window instead.
-const BOTD={easy:{name:'Easy',aim:.6,react:1.7,dmg:.7,nade:.35,cap:.4,agg:.62,sight:64,cone:.05,perch:.22,tip:'Slow to react, miss a lot. Good for learning.'},
+// snap 0: no hurt-snap. pushHp: only walk them down above this fraction of health. share: chance to call out a new sighting (Medium/Hard always do).
+const BOTD={easy:{name:'Easy',aim:.6,react:1.7,dmg:.7,nade:.35,cap:.4,agg:.62,sight:56,cone:.2,perch:.22,snap:0,pushHp:.75,share:.2,tip:'Slow to react, miss a lot. Good for learning.'},
   medium:{name:'Medium',aim:1,react:1,dmg:1,nade:1,cap:.58,agg:1,sight:70,cone:-.15,perch:.15,tip:'A fair fight.'},
   hard:{name:'Hard',aim:1.4,react:.6,dmg:1.25,nade:1.6,cap:.74,agg:1.3,sight:80,cone:-.4,perch:.08,tip:'Fast, accurate and they flank. Bring your best.'}};
 const botD=()=>BOTD[isClient()?NET.botd:(rankedOn()?'hard':profile.botd)]||BOTD.medium;
 function botMagN(){return MM()==='sniper'?5:30;}
-// 1 = a full gun. The player uses the real magazine; a bot remembers its own.
+// the king (minigun) and zombies never use this rifle magazine
+function botMagOn(b){return MM()!=='knife'&&MM()!=='boom'&&!isZ()&&!(b&&b.king);}
+// 1 = a full gun. Same rule for every fighter: a missing bot magazine counts as full. Never read a human's real ammo.
 function botFrac(e){
   if(!e)return 0;
-  if(e.isPlayer){const a=ammo[cur],w=curW();return a&&w&&w.mag>1?a.mag/w.mag:(MM()==='knife'?1:0);}
   if(e.mag==null||e._ad!==(e.deaths|0))return 1;
   return Math.max(0,e.mag)/botMagN();
 }
 function botCanFire(b){
-  if(MM()==='knife'||MM()==='boom')return true;
+  if(!botMagOn(b))return true;
   if(b.mag==null||b._ad!==(b.deaths|0)){b._ad=b.deaths|0;b.mag=botMagN();b.relT=0;}
   if(b.relT>0)return false;
   if(b.mag<=0){b.relT=1.25+rand()*.45;return false;}
   return true;
 }
 function botShoot(b,t,dist){if(!xmBotShoot(b))return;const BD=botD();
-  b.didFire=true;if(MM()!=='boom'){if(b.mag==null||b._ad!==(b.deaths|0)){b._ad=b.deaths|0;b.mag=botMagN();}if(b.mag>0)b.mag--;}
+  b.didFire=true;if(botMagOn(b)){if(b.mag==null||b._ad!==(b.deaths|0)){b._ad=b.deaths|0;b.mag=botMagN();}if(b.mag>0)b.mag--;}
   const snipe=MM()==='sniper';
   const m=botMuzzle(b);b.firedT=1.2;
   const tspd=Math.hypot(t.vx,t.vz);
@@ -5387,14 +5402,18 @@ function perchPick(b){b.perch=null;const perchP=botD().perch!=null?botD().perch:
   const L=PERCHES.filter(p=>(p.dest[2]<D/2)===side&&!bots.some(x=>x.perch===p)&&reachable(p.wp[0][0],p.wp[0][2]));if(!L.length)return;
   b.perch=L[(rand()*L.length)|0];b.pph=0;b.pi=0;b.ptime=0;}
 function updateBot(b,dt){
+  botFresh();
   if(b.inMatch===false)return;
   if(!b.alive){
+    b._wasDead=true;
     b.deadT+=dt;
     if(b.deadT<1.6){b.mesh.rotation.x=-Math.min(1,b.deadT*3)*Math.PI/2;b.mesh.position.y=b.y+Math.min(1,b.deadT*3)*.25;}
     else b.mesh.visible=false;
     b.respawnT-=dt;if(b.respawnT<=0)respawn(b);
     return;
   }
+  // a new life forgets the last shot, and the first path search is spread over half a second so the squad does not all plan on one frame
+  if(b._lifeId!==matchId||b._wasDead){b._lifeId=matchId;b._wasDead=false;b.didFire=false;b.repathT=rand()*.5;b._holdPlan=true;}
   b.spawnProt-=dt;b.lastSeenT-=dt;b.repathT-=dt;b.nadeCD-=dt;b.firedT-=dt;if(b.blindT>0)b.blindT-=dt;
   if((b.hp||0)<(b._hp==null?b.hp:b._hp))b.hurtT=.9;b._hp=b.hp;if(b.hurtT>0)b.hurtT-=dt;
   if(b.relT>0){b.relT-=dt;if(b.relT<=0){b.relT=0;if((b.mag|0)<=0)b.mag=botMagN();}}
@@ -5406,7 +5425,7 @@ function updateBot(b,dt){
     b.scanT=.16+rand()*.1;
     let t=b.blindT>0?null:findTarget(b);
     if(t&&b.xmPassive&&Math.hypot(t.x-b.x,t.z-b.z)>2.5)t=null;
-    if(t){if(!b.seeing||t!==b.target){const BD=botD(),base=(.32+rand()*.35)/Math.max(.45,b.skill)*BD.react;b.reactT=b.hurtT>0?Math.min(base,.2*BD.react):base;}b.seeing=true;b.target=t;b.lastSeen={x:t.x,z:t.z};b.lastSeenT=7;botMark(t);}
+    if(t){const fresh=!b.seeing||t!==b.target;if(fresh){const BD=botD(),base=(.32+rand()*.35)/Math.max(.45,b.skill)*BD.react;b.reactT=b.hurtT>0&&BD.snap!==0?Math.min(base,.2*BD.react):base;}b.seeing=true;b.target=t;b.lastSeen={x:t.x,z:t.z};b.lastSeenT=7;botMark(t,fresh);}
     else{b.seeing=false;b.target=null;}
     b.alertBy=null;
   }
@@ -5421,9 +5440,9 @@ function updateBot(b,dt){
     b.pitch=Math.atan2((t.y+1.2)-(b.y+1.5),dist);
     if(!flee){
       b.strafeT-=dt;if(b.strafeT<=0){b.strafeT=.4+rand()*.7;b.strafeDir=rand()<.5?-1:1;
-        const agg=botD().agg||1,hp=(b.hp||0)/((b.maxHp||100)||100),mine=botFrac(b),theirs=botFrac(t);
-        // healthy, with ammo still in the gun: walk them down. Hurt or dry: give ground.
-        const prefer=20-8*agg,push=hp>.6&&mine>.34&&mine+.02>=theirs,hurt=hp<.42||mine<.12;
+        const BD=botD(),agg=BD.agg||1,hp=(b.hp||0)/((b.maxHp||100)||100),mine=botFrac(b),theirs=botFrac(t);
+        // healthy, with ammo still in the gun: walk them down. Hurt or dry: give ground. Easy only pushes above 75% HP.
+        const prefer=20-8*agg,pushAt=BD.pushHp!=null?BD.pushHp:.6,push=hp>pushAt&&mine>.34&&mine+.02>=theirs,hurt=hp<.42||mine<.12;
         if(push)b.adv=dist>prefer?1:dist<Math.max(4,prefer-5)?-.2:.25;
         else if(hurt)b.adv=dist<22?-.85:-.15;
         else b.adv=dist>prefer+10?1:dist<7?-.45:(rand()<.22+.28*agg?.5:0);}
@@ -5457,12 +5476,15 @@ function updateBot(b,dt){
       if(b.path&&b.pathI<b.path.length){const c=b.path[b.pathI],tx=c%W+.5,tz=((c/W)|0)+.5,ddx=tx-b.x,ddz=tz-b.z,d=Math.hypot(ddx,ddz);if(d<.35)b.pathI++;else{mx=ddx/d;mz=ddz/d;speed=4.3;}}}
     else b.path=null;
   }else if(!flee){
-    if(b.rsAct)b.path=null;else if(!b.path||b.pathI>=b.path.length||b.repathT<=0)planPath(b);
-    if(b.path&&b.pathI<b.path.length){
-      const c=b.path[b.pathI],tx=c%W+.5,tz=((c/W)|0)+.5,dx=tx-b.x,dz=tz-b.z,d=Math.hypot(dx,dz);
-      if(d<.35)b.pathI++;else{mx=dx/d;mz=dz/d;}
-      if(b.lastSeenT>0)speed=5.2;else if(!b.objRun)speed=5;
-    }else if(b.huntDirect){const f=botFoes(b).best;if(f){const dx=f.x-b.x,dz=f.z-b.z,d=Math.hypot(dx,dz)||1;mx=dx/d;mz=dz/d;}}
+    if(b._holdPlan&&b.repathT<=0)b._holdPlan=false;
+    if(!b._holdPlan){
+      if(b.rsAct)b.path=null;else if(!b.path||b.pathI>=b.path.length||b.repathT<=0)planPath(b);
+      if(b.path&&b.pathI<b.path.length){
+        const c=b.path[b.pathI],tx=c%W+.5,tz=((c/W)|0)+.5,dx=tx-b.x,dz=tz-b.z,d=Math.hypot(dx,dz);
+        if(d<.35)b.pathI++;else{mx=dx/d;mz=dz/d;}
+        if(b.lastSeenT>0)speed=5.2;else if(!b.objRun)speed=5;
+      }else if(b.huntDirect){const f=botFoes(b).best;if(f){const dx=f.x-b.x,dz=f.z-b.z,d=Math.hypot(dx,dz)||1;mx=dx/d;mz=dz/d;}}
+    }
     b.pitch*=.9;
   }
   if(b.perch){const pm=perchStep(b,dt);if(pm){mx=pm[0];mz=pm[1];}}
@@ -5477,7 +5499,7 @@ function updateBot(b,dt){
   const ox=b.x,oz=b.z;
   const blocked=physics(b,dt);climbGround(b,dt);
   const moved=Math.hypot(b.x-ox,b.z-oz)/dt;
-  if(ml>0&&moved<.6){b.stuckT+=dt;if(b.stuckT>.4&&blocked&&b.stuckT<2){if(b.onGround)b.vy=JUMP_V;else if(climbLeft(b)){b.vy=Math.max(b.vy,4.8);b.clx=b.x;b.clz=b.z;}}if(b.stuckT>2){b.stuckT=0;b.path=null;b.lastSeenT=0;b.stuckN=(performance.now()-(b.stuckAt||0)<7000?(b.stuckN|0):0)+1;b.stuckAt=performance.now();if(b.stuckN>=2){b.stuckN=0;botEscape(b);}else if(b.escT>0)b.escA+=Math.PI*.6;}}else b.stuckT=Math.max(0,b.stuckT-dt);
+  if(ml>0&&moved<.6){b.stuckT+=dt;if(b.stuckT>.4&&blocked&&b.stuckT<2){if(b.onGround)b.vy=JUMP_V;else if(climbLeft(b)){b.vy=Math.max(b.vy,4.8);b.clx=b.x;b.clz=b.z;}}if(b.stuckT>2){b.stuckT=0;b.path=null;b.lastSeenT=0;b.stuckN=(botClock()-(b.stuckAt||0)<7?(b.stuckN|0):0)+1;b.stuckAt=botClock();if(b.stuckN>=2){b.stuckN=0;botEscape(b);}else if(b.escT>0)b.escA+=Math.PI*.6;}}else b.stuckT=Math.max(0,b.stuckT-dt);
   b.walk+=moved*dt*2.4;
   const sw=Math.sin(b.walk)*Math.min(1,moved/3)*.75;
   b.legL.rotation.x=sw;b.legR.rotation.x=-sw;b.head.rotation.x=b.pitch*.7;
@@ -7668,7 +7690,7 @@ const RSM_K='blockfire.resume';
 // match (every mode's state, every fighter's stats, the player's weapons), restored the same way for every mode.
 let RSM_T0=0;
 const rsmOk=()=>{try{return state==='play'&&!NET.mode&&!TUT.on&&!match.ended&&RSM_T0&&Date.now()-RSM_T0>5000;}catch(e){return false;}};
-const RSM_SKIP=new Set(['alive','hp','shield','vx','vy','vz','x','y','z','yaw','pitch','deadT','respawnT','spawnProt','firedT','reloadT','nid','isPlayer','remote','id','onGround','path','target','mesh','sprite']);
+const RSM_SKIP=new Set(['alive','hp','shield','vx','vy','vz','x','y','z','yaw','pitch','deadT','respawnT','spawnProt','firedT','reloadT','nid','isPlayer','remote','id','onGround','path','target','mesh','sprite','mag','relT','hurtT','didFire']);
 // a value as plain data: fighters become {__ent:name}, 3D objects and other machinery are left out
 function rsmPlain(v,dep){if(v==null||typeof v==='number'||typeof v==='string'||typeof v==='boolean')return typeof v==='number'&&!isFinite(v)?0:v;
   if(dep>6||typeof v!=='object')return undefined;if(ents.includes(v))return v.name?{__ent:v.name}:undefined;
