@@ -1636,7 +1636,8 @@ try{localStorage.setItem('blockfire.users',JSON.stringify(USERS));}catch(e){}
 const ST=()=>{const S=profile.stats;if(S&&!S.kdv2){S.kdv2=1;S.kills=Math.max(0,(S.kills|0)-(S.zkills|0));S.heads=Math.min(S.heads|0,S.kills);}return S;};
 /* ---- online accounts: sign up once; progress lives in the database and comes back on any phone or link ---- */
 const CLOUD_CFG={url:'https://qnhogbwnumvounwpusmc.supabase.co',key:'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFuaG9nYndudW12b3Vud3B1c21jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE2NzYyNzQsImV4cCI6MjEwNzI1MjI3NH0.8c16Bx4eagKtW8Usp0bRXNmxXRW0I3zZ_jjpZJy6kyI'}; // Supabase project URL + its public (anon) key
-function cloudCfg(){return CLOUD_CFG;}
+// the save server is fixed; only automated tests on this machine may point the game at a local stand-in
+function cloudCfg(){try{if(navigator.webdriver||/^(127\.0\.0\.1|localhost)$/.test(location.hostname)){const o=JSON.parse(localStorage.getItem('blockfire.cloudcfg')||'null');if(o&&o.url)return o;}}catch(e){}return CLOUD_CFG;}
 // inside the Claude app the game runs in a closed sandbox that cannot reach the save server: accounts live in the full game
 const IN_CLAUDE=(()=>{try{if(window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform())return false;return /claude|anthropic/i.test(location.hostname)||localStorage.getItem('blockfire.fakeclaude')==='1';}catch(e){return false;}})();
 const cloudOn=()=>!IN_CLAUDE&&!!cloudCfg().url;
@@ -8486,7 +8487,7 @@ function attachU(c,onMsg){
 function sendU(c,msg){const u=c&&c.u;if(u&&u.readyState==='open'){if(u.bufferedAmount>65536)return;try{u.send(JSON.stringify(msg));return;}catch(err){}}
   const dc=c&&c.dataChannel;if(dc&&dc.bufferedAmount>65536)return;if(c&&c.open)try{c.send(msg);}catch(err){}}
 const fin=(v,d,a,b)=>{v=+v;if(!Number.isFinite(v))return d;return a===undefined?v:Math.max(a,Math.min(b,v));};
-function mySid(){let s2='';try{s2=sessionStorage.getItem('bf.sid')||localStorage.getItem('blockfire.sid')||'';if(!s2)s2=Math.random().toString(36).slice(2,12);sessionStorage.setItem('bf.sid',s2);localStorage.setItem('blockfire.sid',s2);}catch(e){s2=s2||Math.random().toString(36).slice(2,12);}return s2;}
+function mySid(){let s2='';try{s2=sessionStorage.getItem('bf.sid')||'';if(!s2)s2=Math.random().toString(36).slice(2,12);sessionStorage.setItem('bf.sid',s2);}catch(e){s2=s2||Math.random().toString(36).slice(2,12);}return s2;}
 const ss=(k,v)=>{try{if(v===undefined)return sessionStorage.getItem(k);if(v===null)sessionStorage.removeItem(k);else sessionStorage.setItem(k,v);}catch(e){}return null;};
 function netBlk(x,y,z,id){if(isHost()&&state==='play'){NET.blk.set(x+','+y+','+z,id);netEv(['x',x,y,z,id]);}}
 // every block changed in this match goes to a newcomer in pieces of 2000 (x,y,z,block per change), right after the welcome
@@ -9319,13 +9320,13 @@ function mpResClear(){try{localStorage.removeItem(MPRES_K);}catch(e){}}
 function mpResLoad(){try{const o=JSON.parse(localStorage.getItem(MPRES_K)||'null');return o&&o.code&&Date.now()-o.at<MPRES_MS?o:null;}catch(e){return null;}}
 function mpResNote(){try{if(NET.mode&&NET.code&&state==='play'&&!match.ended)localStorage.setItem(MPRES_K,JSON.stringify({code:NET.code,host:isHost(),at:Date.now(),rule:RULE(),map:MAP.name||'',sid:mySid()}));}catch(e){}}
 setInterval(mpResNote,1000);document.addEventListener('visibilitychange',()=>{if(document.hidden)mpResNote();});window.addEventListener('pagehide',mpResNote);
-function mpResOffer(o){$('mpResTx').textContent=`Room ${o.code} · ${(MODES.find(x=>x.rule===o.rule)||{}).name||'Online match'}${o.map?' on '+o.map:''}. Your place is kept for a few minutes.`;$('mpRes').hidden=false;$('mpRes').dataset.code=o.code;$('mpRes').dataset.host=o.host?'1':'';}
-function mpResGo(){const code=$('mpRes').dataset.code,host=!!$('mpRes').dataset.host;$('mpRes').hidden=true;if(!code)return;
+function mpResOffer(o){$('mpResTx').textContent=`Room ${o.code} · ${(MODES.find(x=>x.rule===o.rule)||{}).name||'Online match'}${o.map?' on '+o.map:''}. Your place is kept for a few minutes.`;$('mpRes').hidden=false;$('mpRes').dataset.code=o.code;$('mpRes').dataset.host=o.host?'1':'';$('mpRes').dataset.sid=o.sid||'';}
+function mpResGo(){const code=$('mpRes').dataset.code,host=!!$('mpRes').dataset.host,sid=$('mpRes').dataset.sid;$('mpRes').hidden=true;if(!code)return;try{if(sid)sessionStorage.setItem('bf.sid',sid);}catch(e){}
   if(host)NET.fbHost={code,until:now()+30000};netLog('return to the game '+code+(host?' (was host)':''));$('menu').hidden=false;openLobby();mpJoin(code);}
 function mpResLeave(){const code=$('mpRes').dataset.code;$('mpRes').hidden=true;mpResClear();if(!code)return;toast('You left the match.');
   // tell the room this place is free now (no waiting for the 3 minutes to run out)
   try{const p=new Peer(peerOpts());let done=false;const fin=()=>{if(done)return;done=true;setTimeout(()=>{try{p.destroy();}catch(e){}},600);};
-    p.on('open',()=>{try{const c=p.connect(roomId(code),{reliable:true});c.on('open',()=>{try{c.send({t:'byesid',sid:mySid()});}catch(e){}fin();});c.on('error',fin);}catch(e){fin();}});p.on('error',fin);setTimeout(fin,15000);}catch(e){}}
+    p.on('open',()=>{try{const c=p.connect(roomId(code),{reliable:true});c.on('open',()=>{try{c.send({t:'byesid',sid:$('mpRes').dataset.sid||mySid()});}catch(e){}fin();});c.on('error',fin);}catch(e){fin();}});p.on('error',fin);setTimeout(fin,15000);}catch(e){}}
 const NETLOG=[];function netLog(m){try{NETLOG.push(Math.round(performance.now()/1000)+'s '+m);if(NETLOG.length>40)NETLOG.shift();}catch(e){}}
 function migNext(){const L=(NET.roster||[]).filter(r=>r&&/^P\d+$/.test(r.nid)&&r.nid!=='P0'&&!r.aw).sort((a,b)=>(+a.nid.slice(1))-(+b.nid.slice(1)));return L[0]?L[0].nid:'';}
 function migrate(why){
@@ -9518,7 +9519,7 @@ $('mpBody').addEventListener('click',e=>{
 // after a reload: the host reopens the same room and a friend goes back into it
 $('mpResGo').addEventListener('click',mpResGo);$('mpResNo').addEventListener('click',mpResLeave);
 {const hc=ss('bf.host'),rc=ss('bf.room'),hp=String(ss('bf.hplay')||'').split('|');ss('bf.hplay',null);const mr=mpResLoad();
-  if(mr&&!location.hash.match(/room-/)){ss('bf.host',null);ss('bf.room',null);setTimeout(()=>{if(!NET.mode)mpResOffer(mr);},700);}
+  if(mr&&!location.hash.match(/room-/)){ss('bf.host',null);ss('bf.room',null);const offer=(at0,n)=>{const o=mpResLoad();if(NET.mode||!o)return;if(Date.now()-o.at<2500&&(at0==null||o.at!==at0)&&n<6){setTimeout(()=>offer(o.at,n+1),3000);return;}if(at0!=null&&o.at!==at0&&Date.now()-o.at<2500)return;mpResOffer(o);};setTimeout(()=>offer(null,0),700);}
   else if(!location.hash.match(/room-/)){if(hc&&hp[0]===hc&&Date.now()-(+hp[1]||0)<120000)setTimeout(()=>{if(mpAvailable()&&!NET.mode){NET.fbHost={code:hc,until:now()+30000};netLog('reopened mid-match: joining '+hc+' first');$('menu').hidden=false;openLobby();mpJoin(hc);}},600);else if(hc)setTimeout(()=>{if(mpAvailable()&&!NET.mode)mpHost(hc,1);},600);else if(rc)setTimeout(()=>{if(mpAvailable()&&!NET.mode){openLobby();mpJoin(rc);}},600);}}
 // a link with #room-CODE joins straight away
 {const m=location.hash.match(/room-([A-Za-z0-9]{4,6})/);if(m)setTimeout(()=>{$('mp').hidden=false;if(cloudOn()&&(!CS||CS.guest)&&!isKid())needLogin(m[1].toUpperCase(),'invite');else mpJoin(m[1]);},400);}
