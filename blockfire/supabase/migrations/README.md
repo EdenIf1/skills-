@@ -9,3 +9,5 @@ Do not `supabase db push` this baseline onto the live project. Those objects are
 `cubefront-retention` is scheduled with `Authorization: Bearer <REDACTED_JWT>`. The placeholder stays in this file. The token is the project's anon key, and it must be supplied from Supabase Vault or another secret when the job is created or restored. Do not paste the JWT back into the migration.
 
 Later pulls from `../db-pull.sh` should add a new timestamped file and should not rewrite this baseline or the hand-applied SQL.
+
+`20261020150000_server_economy.sql` is the server-economy migration. It is rebased on the baseline above. Apply only that file to the live project, after the baseline objects are already present. It does not rewrite `players.data`, does not recreate `economy_flags` or the guard trigger, and does not change grants on objects that already exist.
