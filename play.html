@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-0DyOAhECJE3vXFXcwNw4h8mO8gGu9ipiVydQh+qgfGc=' 'sha256-E9j8O2GF4xEbl5/ilwNF1QhmMaMz7sMsEd4c0jXmH8k=' 'unsafe-eval'; script-src-attr 'none'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; media-src 'self' data: blob:; connect-src 'self' https: wss: data: blob: http://127.0.0.1:* ws://127.0.0.1:* http://localhost:* ws://localhost:*; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'; frame-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-0DyOAhECJE3vXFXcwNw4h8mO8gGu9ipiVydQh+qgfGc=' 'sha256-ZTqg6iSVURlxzmSae9YClpWM7Fb0XCmf0UP39ANSlrU=' 'unsafe-eval'; script-src-attr 'none'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; media-src 'self' data: blob:; connect-src 'self' https: wss: data: blob: http://127.0.0.1:* ws://127.0.0.1:* http://localhost:* ws://localhost:*; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'; frame-src 'none'">
 <meta name="referrer" content="no-referrer">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
@@ -1431,6 +1431,7 @@ body.cine #hud>*:not(#nukeFlash),body.cine #touch,body.cine #airTab{visibility:h
 </div>
 <div id="board" class="overlay" hidden><div class="sheet cut"><div class="row" style="justify-content:space-between;align-items:center;flex-wrap:nowrap"><h2 style="margin:0">SCOREBOARD</h2><button class="btn sm ghost cut" id="boardLeave">Leave match</button></div><div class="teams" id="boardBody"></div><div class="row" style="margin-top:14px"><button class="btn cut" id="boardBack">Back to game</button><button class="btn ghost cut" id="boardSet">Settings</button></div></div></div>
 <div id="ageAsk" class="overlay" hidden style="z-index:95;background:rgba(0,0,0,.75)"><div class="sheet cut" style="text-align:center;max-width:380px"><h2 style="margin-top:0">Before you play</h2><p>What year were you born?</p><select id="ageY" style="font-size:18px;min-height:44px;min-width:180px"></select><div style="margin-top:12px"><button class="btn cut" id="ageGo" style="min-height:48px;min-width:160px;font-size:18px" disabled>Continue</button></div><p class="note" style="margin-top:10px">Only one thing is kept, on this device: whether online play is open to you.</p></div></div>
+<div id="mpRes" class="overlay" hidden style="z-index:92;background:rgba(0,0,0,.65)"><div class="sheet cut" style="text-align:center;max-width:440px"><h2 style="margin-top:0">Your match is still on</h2><p id="mpResTx"></p><div class="row" style="justify-content:center;gap:12px;flex-wrap:wrap"><button class="btn cut" id="mpResGo" style="min-height:48px;min-width:180px;font-size:18px">Return to the game</button><button class="btn ghost cut" id="mpResNo" style="min-height:48px;min-width:150px;font-size:18px">Leave the match</button></div></div></div>
 <div id="reAuth" class="overlay" hidden style="z-index:91;background:rgba(0,0,0,.65)"><div class="sheet cut" style="text-align:center;max-width:440px"><h2 style="margin-top:0" id="reAuthH">Log in to play online</h2><p id="reAuthTx"></p><div class="row" style="justify-content:center;gap:12px;flex-wrap:wrap"><button class="btn cut" id="reAuthGo" style="min-height:48px;min-width:160px;font-size:18px">Log in</button><button class="btn ghost cut" id="reAuthAlt" style="min-height:48px;min-width:140px;font-size:18px">Not now</button></div></div></div>
 <div id="leaveAsk" class="overlay" hidden style="z-index:90;background:rgba(0,0,0,.6)"><div class="sheet cut" style="text-align:center;max-width:380px"><h2 style="margin-top:0">Leave the match?</h2><p id="leaveAskTx">Are you sure you want to leave the match?</p><div class="row" style="justify-content:center;gap:12px;flex-wrap:wrap"><button class="btn cut" id="leaveNo" style="min-height:48px;min-width:150px;font-size:18px">No, keep playing</button><button class="btn ghost cut" id="leaveYes" style="min-height:48px;min-width:120px;font-size:18px">Yes, leave</button></div></div></div>
 <div id="pause" class="overlay" hidden><div class="sheet cut"><h2>PAUSED</h2><p>Click to jump back in.</p><div class="row" style="justify-content:center"><button class="btn ghost cut" id="pauseSet">Settings</button><button class="btn ghost cut" id="pauseLeave">Leave match</button></div></div></div>
@@ -1905,7 +1906,7 @@ async function adminClaim(code){if(!CS||CS.guest)return 'Sign in to your own acc
   if(r.ok){CS.admin=true;cloudKeep();return '';}const e=r.j&&r.j.error;
   return !r.status?'No connection to the server.':e==='code'?'That code is not right.':e==='taken'?'This game already has its admin.':e==='guest'?'Guest accounts cannot be admins. Create your account first.':'The server said no (error '+r.status+').';}
 /* ================= version, remote settings, crash reports ================= */
-const APP_VERSION='1.9.6',BUILD_ID='1039c33';
+const APP_VERSION='1.9.7',BUILD_ID='6bea17e';
 const verNum=v=>String(v||'0').split('.').slice(0,3).map(n=>parseInt(n)||0).reduce((a,n)=>a*1000+n,0);
 let RCFG={};try{RCFG=JSON.parse(localStorage.getItem('blockfire.rcfg')||'{}')||{};}catch(e){RCFG={};}
 const feat=k=>!(RCFG.features&&RCFG.features[k]===false);
@@ -5846,7 +5847,7 @@ function zTick(dt){
 function zGameOver(win){
   Z.won=!!win;
   if(isHost()){const m={t:'end',sc:[0,0],z:Z.round,win:win?1:0,kd:endKd()};netBroadcast(m);for(const ms of [1500,4000])setTimeout(()=>{if(isHost())netBroadcast(m);},ms);}
-  Z.over=true;state='end';NET.endAt=Date.now();fireHeld=false;ads=false;
+  Z.over=true;state='end';NET.endAt=Date.now();mpResClear();fireHeld=false;ads=false;
   if(document.exitPointerLock&&document.pointerLockElement)document.exitPointerLock();
   $('touch').hidden=true;$('hud').hidden=true;toggleBoard(false);$('pause').hidden=true;$('scope').hidden=true;$('zTip').hidden=true;
   const DF=zD(),before=levelInfo(profile.xp-(match.bx|0)),gp=Z.round*120+Z.kills*12+(win?{low:800,medium:1500,hard:2500,extreme:4000}[Z.diff]||1500:0);
@@ -6640,7 +6641,7 @@ $('boardSet').addEventListener('touchend',e=>{e.stopPropagation();e.preventDefau
 $('pauseSet').addEventListener('click',e=>{e.stopPropagation();openSettings();});
 $('setLay').addEventListener('click',e=>{e.stopPropagation();layOpenSafe();});
 // leave in the middle of a match: back to the main screen and out of the room, so a new room can be opened straight away
-function leaveMatch(){if(!NET.handing&&!NET.yielded)NET.userLeft=Date.now();try{kcEnd();}catch(e){}try{pdEnd(true);}catch(e){}
+function leaveMatch(){if(!NET.handing&&!NET.yielded){NET.userLeft=Date.now();mpResClear();}try{kcEnd();}catch(e){}try{pdEnd(true);}catch(e){}
   // walking out of a ranked match counts as a loss
   try{if(!NET.handing&&state==='play'&&rankedOn()&&!match.ended&&MAP.time-matchT>30){const R=rankState();R.rp=Math.max(0,R.rp-16);R.n++;saveProfile();toast('You left a ranked match: -16 RP');}}catch(e){}
   RS.on=false;rsClearVis();$('rsHud').hidden=true;
@@ -7918,7 +7919,7 @@ function endMatch(byNuke){roomRegSoon();try{kcEnd();}catch(e){}
   // a match ends once: a repeated end (late message, double call) must not count it or pay it again
   if(match.ended&&state==='end')return;
   if(isHost()){const m={t:'end',sc:[scores.blue,scores.red],nuke:!!byNuke,kd:endKd()};netBroadcast(m);for(const ms of [1500,4000])setTimeout(()=>{if(state==='end'&&isHost())netBroadcast(m);},ms);}
-  state='end';NET.endAt=Date.now();fireHeld=false;ads=false;RS.on=false;rsClearVis();$('rsHud').hidden=true;
+  state='end';NET.endAt=Date.now();mpResClear();fireHeld=false;ads=false;RS.on=false;rsClearVis();$('rsHud').hidden=true;
   if(document.exitPointerLock&&document.pointerLockElement)document.exitPointerLock();
   $('touch').hidden=true;$('hud').hidden=true;toggleBoard(false);$('pause').hidden=true;$('scope').hidden=true;$('zTip').hidden=true;
   const xr=xmResult(),myS=scores[player.team],thS=scores[player.team==='blue'?'red':'blue'],won=xr?xr.won:myS>thS,draw=xr?xr.draw:myS===thS;
@@ -8179,7 +8180,7 @@ player.nid='P0';bots.forEach((b,i)=>b.nid='B'+i);
 for(const k in MAPS)MAPS[k].key=k;
 let mineSeq=1;
 // protocol version: a friend with an older cached copy of the game gets a clear "refresh" message instead of strange bugs
-const PROTO=7,DEAD_MS=8000,GRACE_MS=20000;
+const PROTO=7,DEAD_MS=8000,GRACE_MS=20000,MATCH_GRACE_MS=180000;
 const now=()=>performance.now();
 function netEv(e){if(isHost()&&NET.conns.size&&state==='play'){NET.q.push(e);if(NET.q.length>400)NET.q.splice(0,NET.q.length-400);}}
 function netOut(e){if(isClient()&&state==='play'){NET.q.push(e);if(NET.q.length>200)NET.q.splice(0,NET.q.length-200);}}
@@ -8191,7 +8192,7 @@ function attachU(c,onMsg){
 function sendU(c,msg){const u=c&&c.u;if(u&&u.readyState==='open'){if(u.bufferedAmount>65536)return;try{u.send(JSON.stringify(msg));return;}catch(err){}}
   const dc=c&&c.dataChannel;if(dc&&dc.bufferedAmount>65536)return;if(c&&c.open)try{c.send(msg);}catch(err){}}
 const fin=(v,d,a,b)=>{v=+v;if(!Number.isFinite(v))return d;return a===undefined?v:Math.max(a,Math.min(b,v));};
-function mySid(){let s2='';try{s2=sessionStorage.getItem('bf.sid')||'';if(!s2){s2=Math.random().toString(36).slice(2,12);sessionStorage.setItem('bf.sid',s2);}}catch(e){s2=s2||Math.random().toString(36).slice(2,12);}return s2;}
+function mySid(){let s2='';try{s2=sessionStorage.getItem('bf.sid')||localStorage.getItem('blockfire.sid')||'';if(!s2)s2=Math.random().toString(36).slice(2,12);sessionStorage.setItem('bf.sid',s2);localStorage.setItem('blockfire.sid',s2);}catch(e){s2=s2||Math.random().toString(36).slice(2,12);}return s2;}
 const ss=(k,v)=>{try{if(v===undefined)return sessionStorage.getItem(k);if(v===null)sessionStorage.removeItem(k);else sessionStorage.setItem(k,v);}catch(e){}return null;};
 function netBlk(x,y,z,id){if(isHost()&&state==='play'){NET.blk.set(x+','+y+','+z,id);netEv(['x',x,y,z,id]);}}
 // every block changed in this match goes to a newcomer in pieces of 2000 (x,y,z,block per change), right after the welcome
@@ -8531,6 +8532,7 @@ function hostRecv0(c,d){
       if(x){NET.kicked=NET.kicked||new Set();NET.kicked.add('s:'+x.sid);NET.kicked.add('n:'+nameKey(x.name));if(x.pid)NET.kicked.add('p:'+x.pid);setTimeout(()=>{if(NET.remotes.get(x.nid))hostRemove(x,'kicked');},300);}else setTimeout(()=>{try{c.close();}catch(e){}},300);}return;}}
   if(d.t==='pi'){try{c.send({t:'po',ts:d.ts});}catch(e){}return;}
   if(d.t==='po'){const e=NET.conns.get(c);if(e)e.ping=Math.round(now()-d.ts);return;}
+  if(d.t==='byesid'){if(isHost()){const x=[...NET.remotes.values()].find(r=>r.sid&&r.sid===String(d.sid||'').slice(0,20)&&r.conn!==c);if(x)hostRemove(x,'left');}setTimeout(()=>{try{c.close();}catch(e){}},300);return;}
   if(d.t==='hello'){
     if(!isHost()){try{c.close();}catch(e){}return;}
     if(NET.conns.has(c))return;
@@ -8937,7 +8939,7 @@ setInterval(()=>{
   const t=now();
   if(isHost()){
     for(const [c,e] of NET.conns){try{c.send({t:'pi',ts:t});}catch(err){}if(t-(c.lastIn||t)>DEAD_MS)hostDrop(c);}
-    for(const e of [...NET.remotes.values()])if(e.away&&t-e.away>GRACE_MS)hostRemove(e,'lost');
+    for(const e of [...NET.remotes.values()])if(e.away&&t-e.away>(state==='play'?MATCH_GRACE_MS:GRACE_MS))hostRemove(e,'lost');
     for(const c of [...NET.pend]){if(NET.conns.has(c)||!c.open&&t-c.born>15000||t-c.born>12000){NET.pend.delete(c);if(!NET.conns.has(c))try{c.close();}catch(err){}}}
     const v={};for(const e of NET.remotes.values())v[e.nid]=e.ping||0;netBroadcast({t:'pgs',v});
     if(!$('mp').hidden&&state!=='play')renderMP();
@@ -8957,7 +8959,6 @@ function hostHandoff(){const code=NET.code;netLog('app in the background: room h
 function backToRoom(){const c=NET.backTo;NET.backTo='';if(!c||NET.mode)return;
   try{$('menu').hidden=false;openLobby();mpJoin(c);}catch(e){reportErr('net',e);}}
 document.addEventListener('visibilitychange',()=>{
-  if(document.hidden&&isHost()&&state==='play'&&NET.code&&[...NET.remotes.values()].some(e=>!e.away)){hostHandoff();return;}
   if(!document.hidden&&NET.backTo){toast('You were in another app, so your friends kept playing with a new host. Taking you back into the match…');setTimeout(backToRoom,400);return;}
   if(isHost())netBroadcast({t:document.hidden?'away':'back'});if(isHost())NET.awayAt=document.hidden?now():0;
   if(!document.hidden&&NET.yielded){NET.yielded=false;toast('Your game was in another app for over a minute, so your friends kept playing with a new host.');}
@@ -9017,6 +9018,20 @@ function mpTrace(kind){try{const t=Date.now();if(t-(mpTrace.t||0)<10000)return;m
   if(was==='play'&&st!=='play'&&st!=='end'&&wasMode&&!(NET.userLeft&&Date.now()-NET.userLeft<5000)&&!(NET.endAt&&Date.now()-NET.endAt<5000)&&!NET.handing)mpTrace('left the match without choosing to (now '+st+', '+(md||'no room')+')');
   else if(was==='play'&&st==='play'&&wasMode&&!md&&!(NET.userLeft&&Date.now()-NET.userLeft<5000))mpTrace('room lost during the match');
   was=st;wasMode=md;}catch(e){}},500);}
+// "Return to the game": while in an online match this phone keeps a small note; if the page closes (the phone
+// closed it, a crash, the player swiped it away) the note offers to go back in, or to leave and free the place.
+const MPRES_K='blockfire.mpres',MPRES_MS=170000;
+function mpResClear(){try{localStorage.removeItem(MPRES_K);}catch(e){}}
+function mpResLoad(){try{const o=JSON.parse(localStorage.getItem(MPRES_K)||'null');return o&&o.code&&Date.now()-o.at<MPRES_MS?o:null;}catch(e){return null;}}
+function mpResNote(){try{if(NET.mode&&NET.code&&state==='play'&&!match.ended)localStorage.setItem(MPRES_K,JSON.stringify({code:NET.code,host:isHost(),at:Date.now(),rule:RULE(),map:MAP.name||'',sid:mySid()}));}catch(e){}}
+setInterval(mpResNote,1000);document.addEventListener('visibilitychange',()=>{if(document.hidden)mpResNote();});window.addEventListener('pagehide',mpResNote);
+function mpResOffer(o){$('mpResTx').textContent=`Room ${o.code} · ${(MODES.find(x=>x.rule===o.rule)||{}).name||'Online match'}${o.map?' on '+o.map:''}. Your place is kept for a few minutes.`;$('mpRes').hidden=false;$('mpRes').dataset.code=o.code;$('mpRes').dataset.host=o.host?'1':'';}
+function mpResGo(){const code=$('mpRes').dataset.code,host=!!$('mpRes').dataset.host;$('mpRes').hidden=true;if(!code)return;
+  if(host)NET.fbHost={code,until:now()+30000};netLog('return to the game '+code+(host?' (was host)':''));$('menu').hidden=false;openLobby();mpJoin(code);}
+function mpResLeave(){const code=$('mpRes').dataset.code;$('mpRes').hidden=true;mpResClear();if(!code)return;toast('You left the match.');
+  // tell the room this place is free now (no waiting for the 3 minutes to run out)
+  try{const p=new Peer(peerOpts());let done=false;const fin=()=>{if(done)return;done=true;setTimeout(()=>{try{p.destroy();}catch(e){}},600);};
+    p.on('open',()=>{try{const c=p.connect(roomId(code),{reliable:true});c.on('open',()=>{try{c.send({t:'byesid',sid:mySid()});}catch(e){}fin();});c.on('error',fin);}catch(e){fin();}});p.on('error',fin);setTimeout(fin,15000);}catch(e){}}
 const NETLOG=[];function netLog(m){try{NETLOG.push(Math.round(performance.now()/1000)+'s '+m);if(NETLOG.length>40)NETLOG.shift();}catch(e){}}
 function migNext(){const L=(NET.roster||[]).filter(r=>r&&/^P\d+$/.test(r.nid)&&r.nid!=='P0'&&!r.aw).sort((a,b)=>(+a.nid.slice(1))-(+b.nid.slice(1)));return L[0]?L[0].nid:'';}
 function migrate(why){
@@ -9067,7 +9082,7 @@ function migJoinInstead(code){netLog('someone else hosts: joining them');const p
   NET.mode='client';NET.nid=NET.migOld||NET.nid;player.nid=NET.nid;NET.hostName='';NET.status='';NET.lastIn=now();mpJoin(code,true);}
 function migSlot(d){if(!NET.migAt||now()-NET.migAt>120000||typeof d.mig!=='string'||!d.mig)return null;
   const nm=nameKey(String(d.mn||d.name||'')),L=[...NET.remotes.values()].filter(x=>x.mig&&nameKey(x.name)===nm);return L.find(x=>x.nid===d.mig)||(L.length===1?L[0]:null);}
-function mpLost(why){netLog('lost: '+String(why||'').slice(0,60));NET.leaving=true;mpLeave(false);mpErr(why||'Lost the connection to the room.');toast(NET.err);}
+function mpLost(why){mpResClear();netLog('lost: '+String(why||'').slice(0,60));NET.leaving=true;mpLeave(false);mpErr(why||'Lost the connection to the room.');toast(NET.err);}
 /* ---- lobby screen ---- */
 function renderMPPill(){
   const p=$('mpPill');if(p)p.hidden=true;
@@ -9205,7 +9220,10 @@ $('mpBody').addEventListener('click',e=>{
   if(t.dataset.team!==undefined){NET.teamUp=t.dataset.team==='1';player.team='blue';let i=0;for(const r of [...NET.remotes.values()])hostSetTeam(r,NET.teamUp?'blue':(i++%2===0?'red':'blue'));netFitBots();netRoster();renderMP();renderMPPill();}
 });
 // after a reload: the host reopens the same room and a friend goes back into it
-{const hc=ss('bf.host'),rc=ss('bf.room'),hp=String(ss('bf.hplay')||'').split('|');ss('bf.hplay',null);if(!location.hash.match(/room-/)){if(hc&&hp[0]===hc&&Date.now()-(+hp[1]||0)<120000)setTimeout(()=>{if(mpAvailable()&&!NET.mode){NET.fbHost={code:hc,until:now()+30000};netLog('reopened mid-match: joining '+hc+' first');$('menu').hidden=false;openLobby();mpJoin(hc);}},600);else if(hc)setTimeout(()=>{if(mpAvailable()&&!NET.mode)mpHost(hc,1);},600);else if(rc)setTimeout(()=>{if(mpAvailable()&&!NET.mode){openLobby();mpJoin(rc);}},600);}}
+$('mpResGo').addEventListener('click',mpResGo);$('mpResNo').addEventListener('click',mpResLeave);
+{const hc=ss('bf.host'),rc=ss('bf.room'),hp=String(ss('bf.hplay')||'').split('|');ss('bf.hplay',null);const mr=mpResLoad();
+  if(mr&&!location.hash.match(/room-/)){ss('bf.host',null);ss('bf.room',null);setTimeout(()=>{if(!NET.mode)mpResOffer(mr);},700);}
+  else if(!location.hash.match(/room-/)){if(hc&&hp[0]===hc&&Date.now()-(+hp[1]||0)<120000)setTimeout(()=>{if(mpAvailable()&&!NET.mode){NET.fbHost={code:hc,until:now()+30000};netLog('reopened mid-match: joining '+hc+' first');$('menu').hidden=false;openLobby();mpJoin(hc);}},600);else if(hc)setTimeout(()=>{if(mpAvailable()&&!NET.mode)mpHost(hc,1);},600);else if(rc)setTimeout(()=>{if(mpAvailable()&&!NET.mode){openLobby();mpJoin(rc);}},600);}}
 // a link with #room-CODE joins straight away
 {const m=location.hash.match(/room-([A-Za-z0-9]{4,6})/);if(m)setTimeout(()=>{$('mp').hidden=false;if(cloudOn()&&(!CS||CS.guest)&&!isKid())needLogin(m[1].toUpperCase(),'invite');else mpJoin(m[1]);},400);}
 
