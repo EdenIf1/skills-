@@ -1975,6 +1975,9 @@ SET.sens=Math.min(2.5,Math.max(.3,SET.sens));SET.adsSens=Math.min(1.5,Math.max(.
 // the old 'Auto' graphics option is gone: everyone starts on the best picture and can lower it in Settings
 if(!['high','med','low'].includes(SET.quality))SET.quality='high';
 function saveSettings(){try{localStorage.setItem('blockfire.settings',JSON.stringify(SET));}catch(e){}}
+// menu picture: Low (or a weak device that has not asked for High) holds one shot instead of redrawing the match
+const MENUBG={map:null,w:0,h:0,lite:false,warm:0,dev:null,soft:null,fpsWeak:false,bad:0,keepHigh:false,savedHigh:false,ready:false,q:SET.quality};
+try{const o=JSON.parse(localStorage.getItem('blockfire.settings')||'null');MENUBG.savedHigh=!!(o&&o.quality==='high');}catch(e){}
 // trusted time: the server's clock (checked at start and every 10 minutes); moving the phone's date does not give
 // extra daily gifts or endless rentals. Small differences are ignored.
 const SRV={off:0,ok:false};try{SRV.off=+localStorage.getItem('blockfire.srvoff')||0;}catch(e){}
@@ -6783,6 +6786,9 @@ function applySettings(){
   document.documentElement.style.setProperty('--bs',SET.btnScale);
   document.documentElement.style.setProperty('--ba',SET.btnAlpha);
   $('fps').hidden=!SET.fps;
+  // changing Graphics takes effect on the next frame (the menu picture included); no reload
+  if(MENUBG.ready&&MENUBG.q!==SET.quality){MENUBG.keepHigh=SET.quality==='high';if(MENUBG.keepHigh){MENUBG.fpsWeak=false;MENUBG.bad=0;}MENUBG.lite=false;MENUBG.warm=0;MENUBG.map=null;}
+  MENUBG.q=SET.quality;MENUBG.ready=true;
   resize();layApply();
 }
 $('setBody').addEventListener('input',e=>{const el=e.target;if(!el.id||!el.id.startsWith('set_'))return;const k=el.id.slice(4),r=SET_ROWS.find(x=>x[0]===k);SET[k]=+el.value;$('out_'+k).textContent=r[6](SET[k]);applySettings();saveSettings();});
@@ -6795,7 +6801,9 @@ $('setBody').addEventListener('click',e=>{
   {const t=e.target.closest('[data-lb]');if(t){profile.hideLb=t.dataset.lb==='1';saveProfile();renderSettings();toast(profile.hideLb?'You are hidden from the public leaderboard.':'You will show on the public leaderboard.');return;}}
   if(e.target.closest('#setAdm')){$('settings').hidden=true;openAdmin();return;}
   if(e.target.closest('#layDef')){SET.lay={};saveSettings();layApply();renderSettings();return;}
-  const b=e.target.closest('[data-set]');if(!b)return;const k=b.dataset.set,r=SET_ROWS.find(x=>x[0]===k);SET[k]=r[3].find(v=>String(v)===b.dataset.val);applySettings();saveSettings();renderSettings();});
+  const b=e.target.closest('[data-set]');if(!b)return;const k=b.dataset.set,r=SET_ROWS.find(x=>x[0]===k);SET[k]=r[3].find(v=>String(v)===b.dataset.val);
+  if(k==='quality'){MENUBG.keepHigh=SET.quality==='high';if(MENUBG.keepHigh){MENUBG.fpsWeak=false;MENUBG.bad=0;}MENUBG.lite=false;MENUBG.warm=0;MENUBG.map=null;}
+  applySettings();saveSettings();renderSettings();});
 const openSettings=()=>{$('settings').classList.remove('ctrlOn');$('setCtrl').textContent='Controls';renderSettings();$('settings').hidden=false;};
 $('setCtrl').addEventListener('click',()=>{const on=$('settings').classList.toggle('ctrlOn');$('setCtrl').textContent=on?'Settings':'Controls';});
 $('openSet').addEventListener('click',openSettings);
@@ -9158,9 +9166,9 @@ function stepClient(dt,now){
     $('netBanner').hidden=!(NET.reconnecting||NET.hostAway||performance.now()-NET.lastSnapAt>2500);
     if(!$('netBanner').hidden&&!NET.reconnecting)$('netBanner').textContent=NET.hostAway?"Host's game is in the background · waiting for them…":'Waiting for the host…';
   }else{
-    menuT+=dt;for(const b of bots)updateBot(b,dt);if(isZ())zUpdate(dt);menuCam(dt);
+    menuT+=dt;if(!menuBgHold()){for(const b of bots)updateBot(b,dt);if(isZ())zUpdate(dt);menuCam(dt);}
   }
-  updateDrops(dt);updateFires(dt);updateSmokes(dt);updateParts(dt);updateTracers(dt);updateFlashes(dt);updateSnow(dt);
+  if(!menuBgHold()){updateDrops(dt);updateFires(dt);updateSmokes(dt);updateParts(dt);updateTracers(dt);updateFlashes(dt);updateSnow(dt);}
   if(worldDirty){worldDirty=false;rebuildWorld();}
 }
 /* ---- heartbeat: notice a dead link within seconds, not minutes ---- */
@@ -9538,6 +9546,53 @@ function menuCam(dt){if(LD.on){loadCam(dt);return;}
     camLook.lerp(camWant.set(b.x+fx*7,b.y+1.3,b.z+fz*7),Math.min(1,dt*3));}
   camera.fov=baseFov;camera.updateProjectionMatrix();camera.lookAt(camLook);
 }
+// a weak phone (or Low graphics) should not keep simulating and redrawing a whole match behind the menu
+function menuSoftGL(){
+  if(MENUBG.soft!==null)return MENUBG.soft;
+  MENUBG.soft=false;
+  try{const gl=renderer.getContext();if(!gl)return false;
+    const ext=gl.getExtension('WEBGL_debug_renderer_info');
+    const s=String(ext?gl.getParameter(ext.UNMASKED_RENDERER_WEBGL):(gl.getParameter(gl.RENDERER)||''));
+    MENUBG.soft=/swiftshader|llvmpipe|softpipe|software|basic render/i.test(s);
+  }catch(e){MENUBG.soft=false;}
+  return MENUBG.soft;
+}
+function menuDeviceWeak(){
+  if(MENUBG.dev!==null)return MENUBG.dev;
+  let weak=false;
+  try{const cores=navigator.hardwareConcurrency|0,mem=navigator.deviceMemory;
+    if(cores&&cores<=2)weak=true;
+    else if(typeof mem==='number'&&mem>0&&mem<=2)weak=true;
+    else if(menuSoftGL())weak=true;
+  }catch(e){}
+  MENUBG.dev=weak;return weak;
+}
+// Low always holds a still. High that the player saved (or just picked) keeps the live match, unless that live
+// match is actually missing frames. A weak device that never chose graphics — few cores, little memory, or
+// software rendering — gets the still straight away, even though the default picture is High.
+function menuWantLite(){
+  if(state!=='menu'||LD.on)return false;
+  if(SET.quality==='low')return true;
+  if(SET.quality==='high'){
+    if(MENUBG.keepHigh)return false;
+    if(MENUBG.savedHigh)return !!MENUBG.fpsWeak;
+    return menuDeviceWeak()||!!MENUBG.fpsWeak;
+  }
+  return menuDeviceWeak()||!!MENUBG.fpsWeak;
+}
+function menuStillPose(){
+  const c=MAP.center,o=MAP.orbit||24,a=.85;
+  camera.fov=baseFov;camera.updateProjectionMatrix();
+  camera.position.set(c[0]+Math.cos(a)*o,c[1]+9,c[2]+Math.sin(a)*o);
+  camera.lookAt(c[0],c[1],c[2]);
+}
+// true once the still is on screen: stop redrawing until the map, the size, or the graphics choice changes
+function menuBgHold(){
+  if(window.__cam)return false;
+  if(!menuWantLite()){MENUBG.map=null;MENUBG.lite=false;MENUBG.warm=0;return false;}
+  if(MENUBG.map!==MAP||MENUBG.w!==innerWidth||MENUBG.h!==innerHeight){MENUBG.map=MAP;MENUBG.w=innerWidth;MENUBG.h=innerHeight;MENUBG.warm=0;MENUBG.lite=false;}
+  return !!MENUBG.lite;
+}
 
 /* ================= main loop ================= */
 let last=performance.now(),menuT=0;
@@ -9567,7 +9622,7 @@ function glRebuild(){glRebuilds++;memSafeOn();
   nc.addEventListener('webglcontextlost',glOnLost,false);nc.addEventListener('webglcontextrestored',glOnRestored,false);
   renderer=new THREE.WebGLRenderer({canvas:nc,antialias:false,powerPreference:'high-performance'});
   renderer.autoClear=false;renderer.setPixelRatio(pr);resize();
-  glLost=false;glLostAt=0;worldDirty=true;try{netLog('graphics rebuilt (try '+glRebuilds+', pr '+pr+')');}catch(e){}
+  glLost=false;glLostAt=0;worldDirty=true;MENUBG.map=null;MENUBG.lite=false;MENUBG.warm=0;try{netLog('graphics rebuilt (try '+glRebuilds+', pr '+pr+')');}catch(e){}
   if(ownerNote())toast('The phone dropped the graphics for a moment. The game kept going.');}
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&glLost)glLostAt=performance.now();});
 // never leave a frozen screen: save everything, then reload and say what happened
@@ -9594,7 +9649,7 @@ function frame(now){frameN++;if(!BOOT.ok){if(frameN===2)bootStage('first-frame')
     if(frameErrs>=3&&state==='play'&&(FK.on||XM.win)){frameErrs=0;try{fkClear();}catch(x){}try{endMatch(false);}catch(x){reportErr('endMatch',x);safeExit();}}
     else if(frameErrs===20&&state!=='menu')safeExit();}
   document.body.classList.toggle('playing',state==='play');
-  try{mapFxTick(dt);}catch(e){reportErr('mapfx',e);}
+  try{if(!menuBgHold())mapFxTick(dt);}catch(e){reportErr('mapfx',e);}
   // out of a match (back in the lobby or the menu): never leave the ghost / spectator panel up
   if(state!=='play'&&!$('spec').hidden){$('spec').hidden=true;document.body.classList.remove('ghost');if(specT&&specT.mesh)specT.mesh.visible=!!specT.alive;specT=null;specWait=0;}
   if(flameSndT>0&&state==='play'){flameSndT-=dt;if(!flameSnd&&AC){flameSnd=sfx.loop(650);}if(flameSnd)flameSnd.g.gain.value=.5;}
@@ -9605,15 +9660,26 @@ function frame(now){frameN++;if(!BOOT.ok){if(frameN===2)bootStage('first-frame')
     if(isTouch){if(fps<34)VFX.lite=true;else if(fps>56&&DQ.good>=4)VFX.lite=false;if(fps<40&&pr>1.25){renderer.setPixelRatio(Math.max(1.25,pr-.25));DQ.good=0;}
       else if(fps>55){DQ.good=(DQ.good|0)+1;if(DQ.good>=5&&pr<base-.01){renderer.setPixelRatio(Math.min(base,pr+.25));DQ.good=0;}}else DQ.good=0;
       if(pr>base+.01)renderer.setPixelRatio(base);}
-    else if(pr<base-.01)renderer.setPixelRatio(base);}}
+    else if(pr<base-.01)renderer.setPixelRatio(base);
+    // the live menu is missing frames: next frames hold a still instead of pushing the phone harder.
+    // ignore the first moments — shaders compiling are not the phone being too weak for the menu
+    if(state==='menu'&&!LD.on&&!menuBgHold()&&!(SET.quality==='high'&&MENUBG.keepHigh)){
+      if(performance.now()<12000)MENUBG.bad=0;
+      else if(fps<10){MENUBG.bad=(MENUBG.bad|0)+1;if(MENUBG.bad>=3)MENUBG.fpsWeak=true;}
+      else MENUBG.bad=0;}
+  }}
   if(state==='play'){frSnapT-=rdt;if(frSnapT<=0){frSnapT=2;try{fr('fps'+DQ.fps+' fx'+parts.length+' snd'+frSnd+' vox'+(AUD.vox|0)+' pr'+renderer.getPixelRatio().toFixed(2)+' '+curW().id+(player.king?' KING':'')+' ents'+ents.length+' geo'+renderer.info.memory.geometries+' tex'+renderer.info.memory.textures+' prog'+renderer.info.programs.length+(performance.memory?' js'+Math.round(performance.memory.usedJSHeapSize/1e6):'')+(isZ()?' z'+zombies.length+' r'+Z.round:''));}catch(e){}frSnd=0;}}
   aliveTick(rdt);
   if(glLost&&glLostAt&&!document.hidden&&performance.now()-glLostAt>1200){glLostAt=0;if(glRebuilds<3){try{glRebuild();}catch(e){reportErr('glrebuild',e);glReload();}}else glReload();return;}
   if(noRender||glLost)return;
-  try{try{vfxTick(Math.min(.05,rdt));}catch(e){}renderer.clear();
+  try{if(!menuBgHold()){try{vfxTick(Math.min(.05,rdt));}catch(e){}
+  if(menuWantLite())menuStillPose();
+  renderer.clear();
   if(window.__cam){const q=window.__cam;camera.position.set(q[0],q[1],q[2]);camera.lookAt(q[3],q[4],q[5]);}
   renderer.render(scene,camera);
-  if(state==='play'&&!cineT&&!FK.on&&!KC.on){renderer.clearDepth();renderer.render(gunScene,gunCam);}}catch(e){
+  if(state==='play'&&!cineT&&!FK.on&&!KC.on){renderer.clearDepth();renderer.render(gunScene,gunCam);}
+  if(menuWantLite()){MENUBG.warm=(MENUBG.warm|0)+1;if(MENUBG.warm>=2)MENUBG.lite=true;}
+  }}catch(e){
     // the phone took the graphics away a moment before telling us: that is the normal 'graphics lost' case, not an error
     let lost=false;try{lost=renderer.getContext().isContextLost();}catch(x){}if(lost){glLost=true;glLostAt=glLostAt||performance.now();}else reportErr('render',e);}
 }
@@ -10146,9 +10212,11 @@ function step(dt,now){try{tstSync();}catch(e){}
   if(isClient()){stepClient(dt,now);return;}
   if(state!=='play'){
     menuT+=dt;
-    for(const b of bots)updateBot(b,dt);
-    if(isZ())zUpdate(dt);
-    menuCam(dt);
+    if(!menuBgHold()){
+      for(const b of bots)updateBot(b,dt);
+      if(isZ())zUpdate(dt);
+      menuCam(dt);
+    }
   }else if(FK.on){fkSafe(dt);if(isHost())hostTick(dt);
   }else if(cineT>0){cineStep(dt);if(isHost())hostTick(dt);
   }else if(!paused){
@@ -10165,7 +10233,7 @@ function step(dt,now){try{tstSync();}catch(e){}
     if(!$('board').hidden&&((now/500)|0)%2===0)renderBoard($('boardBody'));
     if(!isZ()&&!RS.on&&!XM.on&&(scores.blue>=GOAL||scores.red>=GOAL||matchT<=0))fkEnd();
   }
-  if(!paused){if(!cineT&&!FK.on){updateDrops(dt);updateFires(dt);updateSmokes(dt);updateMines(dt);updateProjs(dt);}updateParts(dt);updateTracers(dt);updateFlashes(dt);updateSnow(dt);}
+  if(!paused&&!menuBgHold()){if(!cineT&&!FK.on){updateDrops(dt);updateFires(dt);updateSmokes(dt);updateMines(dt);updateProjs(dt);}updateParts(dt);updateTracers(dt);updateFlashes(dt);updateSnow(dt);}
   if(state==='play'){nukeSmokeTick(dt);if(!FK.on&&!cineT)recTick(dt);xmVisuals(dt);}
   if(worldDirty){worldDirty=false;rebuildWorld();}
 }
