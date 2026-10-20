@@ -2,7 +2,7 @@
 
 Cubefront's backend is **Supabase** (Postgres, Auth, Row Level Security, Edge Functions). `blockfire/supabase/README.md` names the live project `blockfire` in region `eu-central-1`. The browser calls that project with the URL and anon key hardcoded as `CLOUD_CFG` in `blockfire/game/cabin-fever.html`. Those values are not repeated here.
 
-There is no storage-bucket SQL, no `supabase/config.toml`, and no `supabase/migrations/` history. Schema lives in two files that are meant to be applied by hand:
+There is no storage-bucket SQL. `blockfire/supabase/config.toml` is the CLI config for a live pull, and `blockfire/supabase/migrations/` is where that pull writes. No migration SQL is checked in yet. The schema you can read today still lives in two files that are meant to be applied by hand:
 
 1. [`blockfire/supabase/schema.sql`](../blockfire/supabase/schema.sql)
 2. [`blockfire/supabase/identity.sql`](../blockfire/supabase/identity.sql) — the header says it only adds and replaces functions; it does not drop objects.
@@ -264,7 +264,7 @@ The client posts to these RPCs. None of them appear in `schema.sql` or `identity
 
 **TODO:** friends, presence, referrals, ranked leaderboard, and `server_now` cannot be rebuilt from this repo. If they exist on the live project, they were applied outside git.
 
-WO-10 is planned to dump that live schema into `supabase/migrations` (see [BACKLOG_DECISIONS.md](BACKLOG_DECISIONS.md)). Until that dump lands, this page still describes only `schema.sql` and `identity.sql`.
+WO-10 dumps that live schema into `blockfire/supabase/migrations/` (see [BACKLOG_DECISIONS.md](BACKLOG_DECISIONS.md) and [blockfire/supabase/PULL.md](../blockfire/supabase/PULL.md)). The pull script and the empty migrations directory are in git. The dump file is not, until a reviewed export or `db-pull.sh` adds it. Until that file lands, this page still describes only `schema.sql` and `identity.sql`.
 
 The client also reads and writes `public.push_subs` (`endpoint`, `user_id`, `p256dh`, `auth`, `tz_offset`) and calls edge function `push` (GET for a VAPID public key `{key}`, POST `{op:'test'}`). **No `push` function and no `push_subs` table are in git.**
 
@@ -274,7 +274,7 @@ The client also reads and writes `public.push_subs` (`endpoint`, `user_id`, `p25
 
 ## Edge functions
 
-All under `blockfire/supabase/functions/<name>/index.ts`. `blockfire/supabase/README.md` says every function is deployed with JWT verification. There is no `config.toml` to confirm per-function `verify_jwt`. The game sends the anon key as `apikey` and, when `auth` is not false, the user access token as `Authorization`.
+All under `blockfire/supabase/functions/<name>/index.ts`. `blockfire/supabase/README.md` says every function is deployed with JWT verification. `config.toml` does not set per-function `verify_jwt`, so it does not record that choice. The game sends the anon key as `apikey` and, when `auth` is not false, the user access token as `Authorization`.
 
 | Function | Auth the code checks | Behavior |
 |---|---|---|
@@ -321,7 +321,7 @@ No `insert into storage.buckets` and no storage policies are in the repo. **TODO
 
 ## Rebuild a project from git
 
-This uses the Supabase SQL editor and the Supabase CLI. The CLI is not configured in the repo (`config.toml` is absent), so link the project yourself. Do not paste the service-role key into git.
+This uses the Supabase SQL editor and the Supabase CLI. `blockfire/supabase/config.toml` is the local CLI config. Linking still needs `SUPABASE_ACCESS_TOKEN` and `SUPABASE_DB_PASSWORD` (see [blockfire/supabase/PULL.md](../blockfire/supabase/PULL.md)). Do not paste the service-role key into git.
 
 1. Create a Supabase project. The checked-in note says region `eu-central-1` for the current one. A new project will have a new URL. The game will not use it until `CLOUD_CFG` (or `localStorage` `blockfire.cloudcfg`) points at it.
 2. Confirm `pgcrypto` is available as `extensions.gen_random_bytes` and `extensions.hmac`. `identity.sql` needs both and does not create the extension.

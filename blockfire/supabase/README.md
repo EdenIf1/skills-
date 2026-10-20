@@ -11,3 +11,5 @@ Already applied to the live project. Kept here so the backend can be rebuilt or 
 
 Security model: players can only read and write their own `players` row; `app_config` is read-only for everyone;
 `support_messages` and `client_errors` are insert-only (nobody can read them except from the dashboard).
+
+`schema.sql` and `identity.sql` are not the whole live database. Friends, referrals, presence, the ranked board, `server_now`, `push_subs`, and `economy_flags` are called by the game or by `retention` and are not in those files. `PULL.md` lists every call and how to pull the live schema into `migrations/` once `SUPABASE_ACCESS_TOKEN` and `SUPABASE_DB_PASSWORD` are set. Do not commit those values.
