@@ -1,0 +1,10 @@
+# `supabase link` writes the project ref and local connection details here.
+.branches/
+.temp/
+
+# Never commit credentials. The pull script reads these from the environment.
+.env
+.env.*
+
+# Secret scan moves a bad dump aside instead of leaving it as a migration.
+*.rejected
