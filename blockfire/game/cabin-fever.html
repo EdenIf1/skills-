@@ -1888,7 +1888,7 @@ async function adminClaim(code){if(!CS||CS.guest)return 'Sign in to your own acc
   if(r.ok){CS.admin=true;cloudKeep();return '';}const e=r.j&&r.j.error;
   return !r.status?'No connection to the server.':e==='code'?'That code is not right.':e==='taken'?'This game already has its admin.':e==='guest'?'Guest accounts cannot be admins. Create your account first.':'The server said no (error '+r.status+').';}
 /* ================= version, remote settings, crash reports ================= */
-const APP_VERSION='1.9.9',BUILD_ID='__BUILD_ID__';
+const APP_VERSION='1.9.10',BUILD_ID='__BUILD_ID__';
 const verNum=v=>String(v||'0').split('.').slice(0,3).map(n=>parseInt(n)||0).reduce((a,n)=>a*1000+n,0);
 let RCFG={};try{RCFG=JSON.parse(localStorage.getItem('blockfire.rcfg')||'{}')||{};}catch(e){RCFG={};}
 const feat=k=>!(RCFG.features&&RCFG.features[k]===false);
@@ -4250,7 +4250,7 @@ const WEAP_NAMES=['KV-47','MK-4','PX-9','Raptor AR','Talon AR','Striker AR','B7 
 const ents=[];
 function makeEnt(name,team,isPlayer){
   const e={name,team,isPlayer,x:0,y:5,z:0,vx:0,vy:0,vz:0,yaw:0,pitch:0,hp:100,alive:false,onGround:false,smoothY:0,
-    kills:0,deaths:0,respawnT:0,spawnProt:0,lastAttacker:null,lastHurt:99,firedT:0};
+    kills:0,deaths:0,respawnT:0,spawnProt:0,tutSafe:false,lastAttacker:null,lastHurt:99,firedT:0};
   if(!isPlayer){
     const S=SKINS[team]||SKINS.red;const g=new THREE.Group();g.rotation.order='YXZ';
     const SA=skinAtlas(S);
@@ -4920,7 +4920,7 @@ function damage(v,amt,att,head,weapon,kind){
   // a friend's game never decides damage: it tells the host what it hit
   if(isClient()&&state==='play'){if(att===player&&v.nid)netOut(['h',v.nid,Math.round(amt),head?1:0,weapon,kind]);return;}
   if(v.zombie){if(!(att&&att.zombie))zHurt(v,amt,att,head,weapon,kind);return;}
-  if(!v.alive||v.spawnProt>0)return;
+  if(!v.alive||v.spawnProt>0||(v.isPlayer&&v.tutSafe))return;
   if(att&&att!==v&&att.team===v.team)return;
   amt=xmDamage(v,amt,att,kind);if(!(amt>0))return;
   if(v.shield>0){const s=Math.min(v.shield,amt);v.shield-=s;amt-=s;if(v.isPlayer&&s>0)shHitT=.25;}
@@ -7888,8 +7888,10 @@ function resetMatch(inMatch){REACH.key='';try{kcEnd();}catch(e){}try{pdEnd(true)
 }
 
 /* ================= first match: a short guided start for brand-new players =================
-   Four quick steps on top of a normal match (move, look, shoot, build). You cannot die while it runs,
-   it can be skipped, and finishing it pays 1,000 GP. Players who already played never see it. */
+   Four quick steps on top of a normal match (move, look, shoot, build). You cannot die while it runs
+   (player.tutSafe — not spawn protection, so the SPAWN PROTECTION label is not stuck on),
+   it can be skipped, and finishing it pays 1,000 GP. Players who already played never see it.
+   The build step skips itself when placing blocks is impossible. */
 const TUT={on:false,step:0,t:0,x:0,z:0,yaw:0,turn:0,shots:0,build:0};
 const TUT_STEPS=()=>[
   {h:'Move',b:isTouch?'Drag the left stick to walk.':'Walk with W A S D.'},
@@ -7900,7 +7902,7 @@ function tutEl(){let d=$('tutBox');if(!d){d=document.createElement('div');d.id='
   d.addEventListener('click',e=>{if(e.target.closest('[data-tskip]'))tutEnd(false);});}return d;}
 function tutStart(){try{if(profile.tutDone)return;if(!profile.tutForce&&((ST().matches|0)>0||(profile.xp|0)>0)){profile.tutDone=true;return;}
   if(NET.mode||isZ()||XM.on||RS.on||KG.on||MM()==='knife'||MM()==='sniper'||MM()==='boom')return;
-  Object.assign(TUT,{on:true,step:0,t:0,x:player.x,z:player.z,yaw:player.yaw,turn:0,shots:ST().shots|0,build:buildLeft});player.spawnProt=1e9;document.body.classList.add('tutOn');tutShow();}catch(e){reportErr('tut',e);}}
+  Object.assign(TUT,{on:true,step:0,t:0,x:player.x,z:player.z,yaw:player.yaw,turn:0,shots:ST().shots|0,build:buildLeft});player.tutSafe=true;player.spawnProt=0;document.body.classList.add('tutOn');tutShow();}catch(e){reportErr('tut',e);}}
 function tutShow(){const S=TUT_STEPS()[TUT.step],d=tutEl();if(!S){d.hidden=true;return;}
   d.innerHTML=`<div class="tutN">Step ${TUT.step+1} of 4</div><b>${S.h}</b><span>${S.b}</span><button class="tutSkip" data-tskip aria-label="Skip the guide">Skip guide ✕</button>`;d.hidden=false;d.classList.remove('tutOk');}
 function tutNext(){TUT.step++;try{sfx.ding();}catch(e){}if(TUT.step>=4){tutEnd(true);return;}
@@ -7909,18 +7911,18 @@ function tutEnd(done){if(!TUT.on)return;TUT.on=false;document.body.classList.rem
   if(done){const pay=!profile.tutPaid;if(pay){profile.gp+=1000;profile.tutPaid=true;}const d=tutEl();d.innerHTML=`<b>Nice work!</b><span>That is all you need.${pay?' +1,000 GP.':''} Now win the match.</span>`;d.classList.add('tutOk');d.hidden=false;setTimeout(()=>{d.hidden=true;},3500);}
   else{const d=$('tutBox');if(d)d.hidden=true;try{toast('Guide skipped. You can turn it back on in Settings.');}catch(e){}}
   saveProfile();}
-function tutTick(dt){if(!TUT.on)return;if(state!=='play'){TUT.on=false;document.body.classList.remove('tutOn');const d=$('tutBox');if(d)d.hidden=true;return;}
-  TUT.t+=dt;player.spawnProt=Math.max(player.spawnProt||0,1);
+function tutTick(dt){if(!TUT.on){if(player.tutSafe)player.tutSafe=false;return;}if(state!=='play'){TUT.on=false;player.tutSafe=false;document.body.classList.remove('tutOn');const d=$('tutBox');if(d)d.hidden=true;return;}
+  TUT.t+=dt;
   let a=player.yaw-TUT.yaw;a=Math.atan2(Math.sin(a),Math.cos(a));TUT.turn+=Math.abs(a);TUT.yaw=player.yaw;
   if(TUT.step===0&&Math.hypot(player.x-TUT.x,player.z-TUT.z)>3)tutNext();
   else if(TUT.step===1&&TUT.turn>1.4)tutNext();
   else if(TUT.step===2&&(ST().shots|0)-TUT.shots>=5)tutNext();
-  else if(TUT.step===3&&buildLeft<TUT.build)tutNext();
+  else if(TUT.step===3&&(buildLeft<TUT.build||!buildOn()||buildLeft<=0))tutNext();
   if(TUT.t>150)tutEnd(false);}
 function startMatch(){RSM_T0=Date.now();roomRegSoon();try{gfxSpare();}catch(e){}try{sndWarm();}catch(e){}
   initAudio();loadHide();
   state='play';paused=false;player.name=isClient()&&NET.myName?NET.myName:profile.name;
-  TUT.on=false;setTimeout(()=>{if(state==='play'&&!paused)tutStart();},2500);
+  TUT.on=false;player.tutSafe=false;setTimeout(()=>{if(state==='play'&&!paused)tutStart();},2500);
   ['menu','end','shop','crate','mp','acct','settings','char','lb'].forEach(id=>$(id).hidden=true);$('hud').hidden=false;$('touch').hidden=!isTouch;
   if(isZ()){player.team='blue';if(isHost())for(const r of [...NET.remotes.values()])hostSetTeam(r,'blue');}
   resetMatch(true);setSprintLock(false);touch.sprintId=null;setCrouch(false);tipStart();
@@ -9826,7 +9828,7 @@ function lookTick(dt){const ffa=state==='play'&&XFFA.includes(RULE());
     lodTick(e);
     if(e.lookKey!==want){e.lookKey=want;try{applyLook(e,e.sk||'std',e.ar||0);}catch(x){}if(e.lod)e.lod.geometry=lodGeo(lookTeam(e));if(e.sprite&&e.sprite.userData.recolor)e.sprite.userData.recolor(TEAMS[lookTeam(e)].tag);}
     const pr=isProt(e)&&e.mesh.visible;if(pr&&!e.prot){e.prot=new THREE.Mesh(PROT_GEO,PROT_MAT);e.prot.position.y=1.05;e.mesh.add(e.prot);}if(e.prot){e.prot.visible=pr;if(pr)e.prot.scale.setScalar(1+Math.sin(performance.now()/120)*.04);}}
-  const me=state==='play'&&player.alive&&player.spawnProt>0;const t=$('protTag');if(t&&t.hidden===me)t.hidden=!me;}
+  const show=state==='play'&&isProt(player),t=$('protTag');if(t&&t.hidden===show)t.hidden=!show;}
 function kgAnim(dt){if(!KG.on&&!player.king)return;
   if(state==='play'){for(const e of ents){if(!e.king||!e.alive||e.remote)continue;if(e===player&&isClient()&&!player.king)continue;
     if(collides(e.x,e.y,e.z)||e.y<1){const pd=kgPad(e.team);e.x=pd[0];e.y=pd[1];e.z=pd[2];e.vx=e.vy=e.vz=0;if(e.mesh)e.mesh.position.set(e.x,e.y,e.z);}}}for(const e of ents){const tgt=e.king?KS:1;e.ksv=e.ksv||1;if(Math.abs(e.ksv-tgt)>.001){e.ksv+=(tgt-e.ksv)*Math.min(1,dt*2.6);if(Math.abs(e.ksv-tgt)<.01)e.ksv=tgt;}
