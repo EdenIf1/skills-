@@ -4920,7 +4920,7 @@ function damage(v,amt,att,head,weapon,kind){
   // a friend's game never decides damage: it tells the host what it hit
   if(isClient()&&state==='play'){if(att===player&&v.nid)netOut(['h',v.nid,Math.round(amt),head?1:0,weapon,kind]);return;}
   if(v.zombie){if(!(att&&att.zombie))zHurt(v,amt,att,head,weapon,kind);return;}
-  if(!v.alive||v.spawnProt>0||(v.isPlayer&&v.tutSafe&&TUT.on))return;
+  if(!v.alive||v.spawnProt>0||(v.isPlayer&&v.tutSafe))return;
   if(att&&att!==v&&att.team===v.team)return;
   amt=xmDamage(v,amt,att,kind);if(!(amt>0))return;
   if(v.shield>0){const s=Math.min(v.shield,amt);v.shield-=s;amt-=s;if(v.isPlayer&&s>0)shHitT=.25;}
@@ -7912,7 +7912,7 @@ function tutEnd(done){if(!TUT.on)return;TUT.on=false;document.body.classList.rem
   else{const d=$('tutBox');if(d)d.hidden=true;try{toast('Guide skipped. You can turn it back on in Settings.');}catch(e){}}
   saveProfile();}
 function tutTick(dt){if(!TUT.on){if(player.tutSafe)player.tutSafe=false;return;}if(state!=='play'){TUT.on=false;player.tutSafe=false;document.body.classList.remove('tutOn');const d=$('tutBox');if(d)d.hidden=true;return;}
-  TUT.t+=dt;player.spawnProt=0;
+  TUT.t+=dt;
   let a=player.yaw-TUT.yaw;a=Math.atan2(Math.sin(a),Math.cos(a));TUT.turn+=Math.abs(a);TUT.yaw=player.yaw;
   if(TUT.step===0&&Math.hypot(player.x-TUT.x,player.z-TUT.z)>3)tutNext();
   else if(TUT.step===1&&TUT.turn>1.4)tutNext();
