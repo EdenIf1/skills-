@@ -1,7 +1,7 @@
 # Tests (Playwright + Chromium)
 
 Local servers the tests expect:
-- the built game on http://127.0.0.1:8765 (`python3 build/build.py game/cabin-fever.html out && cd out && python3 -m http.server 8765`)
+- the built game on http://127.0.0.1:8765 (`python3 build/build.py game/cabin-fever.html out --dev && cd out && python3 -m http.server 8765`). `--dev` (or `--test`) keeps the `window.__bf` hook these tests drive. A production build, including `npm run www` for the iPhone app, omits that hook. `localStorage` `blockfire.cloudcfg` is ignored; the game always uses the hardcoded `CLOUD_CFG` origin.
 - a PeerJS server on 127.0.0.1:9000 (`npx peerjs --port 9000`)
 - an MQTT-over-WebSocket broker on 127.0.0.1:8883 for the backup route (aedes + ws)
 - `node tests/mock-supabase.js` on 127.0.0.1:54321 (stands in for Supabase auth, tables and functions)
