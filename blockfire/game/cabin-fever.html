@@ -57,6 +57,21 @@ body{font-family:var(--f-body);touch-action:none;user-select:none;-webkit-user-s
 #cross i{position:absolute;background:#fff;box-shadow:0 0 2px #000}
 #cross .t,#cross .b{width:2px;height:9px;left:-1px}
 #cross .l,#cross .r{height:2px;width:9px;top:-1px}
+#cross .c{display:none;width:2px;height:2px;left:-1px;top:-1px}
+.xhBlock{grid-column:1/-1;display:grid;gap:10px}
+.xhPrev{position:relative;width:96px;height:96px;background:rgba(0,0,0,.55);border:1px solid var(--line);grid-column:2/4;justify-self:start;overflow:hidden}
+.xhPrev .xh{position:absolute;left:50%;top:50%;width:0;height:0}
+.xhPrev .xh i{position:absolute;background:#fff;box-shadow:0 0 2px #000}
+.xhPrev .c{display:none}
+.xhSw{width:28px;height:28px;padding:0;border:1px solid rgba(255,255,255,.45);background:var(--sw);cursor:pointer}
+.xhSw.on{outline:2px solid var(--amber);outline-offset:2px}
+.xhPick{display:inline-flex;align-items:center}
+.xhPick input{width:32px;height:28px;padding:0;border:1px solid var(--line);background:none;cursor:pointer}
+@media (orientation:landscape) and (max-height:400px){
+  .xhBlock{grid-template-columns:1fr 1fr;gap:4px 16px}
+  .xhBlock>.setrow:first-child{grid-column:1/-1}
+  .xhPrev{width:64px;height:64px}
+}
 #dot{position:absolute;left:50%;top:50%;width:4px;height:4px;margin:-2px 0 0 -2px;background:var(--red);border-radius:50%;box-shadow:0 0 3px #000}
 #scope{position:absolute;inset:0;background:radial-gradient(circle at center,rgba(140,190,255,.05) 0,rgba(0,0,0,.2) 31vmin,#000 34.4vmin)}
 #scope .p{position:absolute;background:#000}
@@ -1121,7 +1136,7 @@ body.cine #hud>*:not(#nukeFlash),body.cine #touch,body.cine #airTab{visibility:h
   </div>
   <div id="feed"></div>
   <div id="scope" hidden><i class="p l"></i><i class="p r"></i><i class="p b"></i><b class="cd"></b></div>
-  <div id="cross"><i class="t"></i><i class="b"></i><i class="l"></i><i class="r"></i></div>
+  <div id="cross"><i class="t"></i><i class="b"></i><i class="l"></i><i class="r"></i><i class="c"></i></div>
   <div id="dot" hidden></div>
   <div id="hitm"></div>
   <div id="msgs"></div><div id="rfeed"><div id="rftot"></div></div>
@@ -1956,13 +1971,14 @@ function haptic(style){const H=capPlug('Haptics');if(!H||SET.haptics===false)ret
 setTimeout(()=>{loadConfig();srvTime();liveUpdate();},800);setInterval(()=>{if(!document.hidden){loadConfig();srvTime();}},10*60*1000);
 setTimeout(cloudSync,300);addEventListener('online',()=>{cloudSync();if(cloudReady)cloudQueue();});setInterval(()=>{if(!cloudReady)cloudSync();},60000);
 
-const SET_DEFAULT={music:.45,sound3d:true,cb:'off',killcam:true,sens:1,adsSens:1,invert:false,vol:.8,quality:'high',fov:75,btnScale:1,btnAlpha:1,fps:false,aim:true};
+const SET_DEFAULT={music:.45,sound3d:true,cb:'off',killcam:true,sens:1,adsSens:1,invert:false,vol:.8,quality:'high',fov:75,btnScale:1,btnAlpha:1,fps:false,aim:true,chSize:9,chGap:5,chCol:'#ffffff',chDot:false,chOut:true};
 let SET=Object.assign({},SET_DEFAULT);
 try{const o=JSON.parse(localStorage.getItem('blockfire.settings')||'{}');if(o&&typeof o==='object')for(const k in o)if(k in SET_DEFAULT?typeof o[k]===typeof SET_DEFAULT[k]&&(typeof o[k]!=='number'||isFinite(o[k])):true)SET[k]=o[k];}catch(e){}
 // keep numbers in a range the controls can live with, whatever was saved
 SET.sens=Math.min(2.5,Math.max(.3,SET.sens));SET.adsSens=Math.min(1.5,Math.max(.3,SET.adsSens));SET.fov=Math.min(100,Math.max(65,SET.fov));SET.vol=Math.min(1,Math.max(0,SET.vol));SET.btnScale=Math.min(1.2,Math.max(.8,SET.btnScale));SET.btnAlpha=Math.min(1,Math.max(.35,SET.btnAlpha));
 // the old 'Auto' graphics option is gone: everyone starts on the best picture and can lower it in Settings
 if(!['high','med','low'].includes(SET.quality))SET.quality='high';
+crossClamp();
 function saveSettings(){try{localStorage.setItem('blockfire.settings',JSON.stringify(SET));}catch(e){}}
 // trusted time: the server's clock (checked at start and every 10 minutes); moving the phone's date does not give
 // extra daily gifts or endless rentals. Small differences are ignored.
@@ -6286,9 +6302,8 @@ function refreshHUD(dt){
   $('reloadTxt').hidden=!(reloadT>0);
   const hs=Math.hypot(player.vx,player.vz);
   const sp=w.kind==='shotgun'?w.spread:(w.spread+hs*w.move+(player.onGround?0:.05)+bloom);
-  const gap=5+sp*520;
-  const cr=$('cross');cr.style.opacity=adsK>.6||!player.alive?'0':'1';
-  cr.children[0].style.top=(-gap-9)+'px';cr.children[1].style.top=gap+'px';cr.children[2].style.left=(-gap-9)+'px';cr.children[3].style.left=gap+'px';
+  paintCross(sp);
+  $('cross').style.opacity=adsK>.6||!player.alive?'0':'1';
   $('dot').hidden=!(adsK>.6&&player.alive&&w.kind!=='sniper'&&w.kind!=='knife'&&w.optic==='iron');
   if(hitT>0){hitT-=dt;$('hitm').style.opacity=String(Math.min(1,hitT*8));}else $('hitm').style.opacity='0';
   vigT=Math.max(0,vigT-dt*.9);
@@ -6586,13 +6601,54 @@ function extraSetRows(){let h='';
   if(cloudOn()&&CS&&CS.uid){const hide=!!profile.hideLb;
     h+=`<div class="setrow"><span>Public leaderboard<small class="setHint">Show my name and stats on the game's website</small></span><div class="opts"><button class="chip ${hide?'':'on'}" data-lb="0">Show</button><button class="chip ${hide?'on':''}" data-lb="1">Hide</button></div></div>`;}
   return h;}
+const XH_SW=[['#ffffff','White'],['#ef5a4f','Red'],['#6fd08c','Green'],['#5b9cf0','Blue'],['#f3b54a','Yellow'],['#e85dff','Pink']];
+let crossSp=0;
+function crossCol(){const c=String(SET.chCol||'').toLowerCase();return /^#[0-9a-f]{6}$/.test(c)?c:'#ffffff';}
+function crossClamp(){
+  const n=(v,d,a,b)=>{v=Math.round(+v);return isFinite(v)?Math.min(b,Math.max(a,v)):d;};
+  SET.chSize=n(SET.chSize,9,2,24);SET.chGap=n(SET.chGap,5,0,20);SET.chCol=crossCol();SET.chDot=!!SET.chDot;SET.chOut=SET.chOut!==false;
+}
+function placeCross(root,gap){
+  if(!root||root.children.length<4)return;
+  const len=SET.chSize,th=2,half=th/2,col=SET.chCol,shadow=SET.chOut?'0 0 2px #000':'none';
+  const put=(el,x,y,w,h)=>{const s=el.style;s.left=x+'px';s.top=y+'px';s.width=w+'px';s.height=h+'px';s.background=col;s.boxShadow=shadow;};
+  const a=root.children;
+  put(a[0],-half,-(gap+len),th,len);put(a[1],-half,gap,th,len);put(a[2],-(gap+len),-half,len,th);put(a[3],gap,-half,len,th);
+  if(a[4]){a[4].style.display=SET.chDot?'block':'none';put(a[4],-half,-half,th,th);}
+}
+function paintCross(sp){
+  if(typeof sp==='number'&&isFinite(sp))crossSp=sp<0?0:sp;
+  crossClamp();
+  placeCross($('cross'),SET.chGap+crossSp*520);
+  placeCross($('xhPv'),SET.chGap);
+}
+function crossMark(){const col=crossCol();for(const b of document.querySelectorAll('#setBody [data-ch=col]'))b.classList.toggle('on',b.dataset.val===col);}
+function crossEdit(el){
+  if(el.id==='xhSize'){SET.chSize=Math.min(24,Math.max(2,Math.round(+el.value)||2));const o=$('xhSizeO');if(o)o.textContent=String(SET.chSize);}
+  else if(el.id==='xhGap'){const g=Math.round(+el.value);SET.chGap=Math.min(20,Math.max(0,isFinite(g)?g:5));const o=$('xhGapO');if(o)o.textContent=String(SET.chGap);}
+  else if(el.id==='xhCol'){const v=String(el.value||'').toLowerCase();if(!/^#[0-9a-f]{6}$/.test(v))return;SET.chCol=v;crossMark();}
+  else return;
+  saveSettings();paintCross();
+}
+function crossSetHTML(){
+  crossClamp();const col=SET.chCol;
+  const sw=XH_SW.map(([v,n])=>`<button type="button" class="xhSw${col===v?' on':''}" data-ch="col" data-val="${v}" style="--sw:${v}" aria-label="${n}"></button>`).join('');
+  const chip=(k,val,on,label)=>`<button type="button" class="chip${on?' on':''}" data-ch="${k}" data-val="${val}">${label}</button>`;
+  return `<div class="xhBlock"><div class="setrow"><span>Crosshair<small class="setHint">The mark in the middle of the screen. The preview shows it at rest.</small></span><div class="xhPrev" id="xhPrev"><div class="xh" id="xhPv" aria-hidden="true"><i class="t"></i><i class="b"></i><i class="l"></i><i class="r"></i><i class="c"></i></div></div></div>
+    <label class="setrow"><span>Size<small class="setHint">Length of each line</small></span><input type="range" id="xhSize" min="2" max="24" step="1" value="${SET.chSize}"><output id="xhSizeO">${SET.chSize}</output></label>
+    <label class="setrow"><span>Gap<small class="setHint">Opening in the middle. Moving and firing open it further.</small></span><input type="range" id="xhGap" min="0" max="20" step="1" value="${SET.chGap}"><output id="xhGapO">${SET.chGap}</output></label>
+    <div class="setrow"><span>Color</span><div class="opts">${sw}<label class="xhPick"><input type="color" id="xhCol" value="${col}" aria-label="Custom color"></label></div></div>
+    <div class="setrow"><span>Center dot</span><div class="opts">${chip('dot','0',!SET.chDot,'Off')}${chip('dot','1',!!SET.chDot,'On')}</div></div>
+    <div class="setrow"><span>Outline</span><div class="opts">${chip('out','1',SET.chOut!==false,'On')}${chip('out','0',SET.chOut===false,'Off')}</div></div></div>`;
+}
 function renderSettings(){
   $('setLay').hidden=!isTouch;
-  $('setBody').innerHTML=(isTouch?`<div class="setrow layRow"><span>Button layout<small class="setHint">Pick a layout, or drag each button (fire, jump, grenade…) anywhere</small></span><div class="opts">${Object.keys(LAYP).map(k=>`<button class="chip ${layName()===k?'on':''}" data-layp="${k}">${LAYP[k]}</button>`).join('')}<button class="chip ${layName()==='custom'?'on':''}" id="layEdit">${layName()==='custom'?'Custom · edit':'Move buttons'}</button></div></div>`:'')+SET_ROWS.map(r=>{
+  $('setBody').innerHTML=(isTouch?`<div class="setrow layRow"><span>Button layout<small class="setHint">Pick a layout, or drag each button (fire, jump, grenade…) anywhere</small></span><div class="opts">${Object.keys(LAYP).map(k=>`<button class="chip ${layName()===k?'on':''}" data-layp="${k}">${LAYP[k]}</button>`).join('')}<button class="chip ${layName()==='custom'?'on':''}" id="layEdit">${layName()==='custom'?'Custom · edit':'Move buttons'}</button></div></div>`:'')+crossSetHTML()+SET_ROWS.map(r=>{
     if(r[2]==='range')return `<label class="setrow"><span>${r[1]}</span><input type="range" id="set_${r[0]}" min="${r[3]}" max="${r[4]}" step="${r[5]}" value="${SET[r[0]]}"><output id="out_${r[0]}">${r[6](+SET[r[0]])}</output></label>`;
     return `<div class="setrow"><span>${r[1]}</span><div class="opts">${r[3].map(v=>`<button class="chip ${SET[r[0]]===v?'on':''}" data-set="${r[0]}" data-val="${v}">${r[4][v]}</button>`).join('')}</div></div>`;
   }).join('')+(blocked().length?`<div class="setrow"><span>Blocked players</span><div class="opts">${blocked().map((b,i)=>`<button class="chip" data-unblk="${i}" title="Unblock">${esc(b.n)} ✕</button>`).join('')}</div></div>`:'')+(CS&&CS.admin?`<div class="setrow"><span>Admin</span><div class="opts"><button class="chip" id="setAdm">Open admin panel</button></div></div>`:'');
   try{$('setBody').insertAdjacentHTML('beforeend',extraSetRows());}catch(e){reportErr('settings',e);}
+  paintCross();
 }
 function applySettings(){
   if(master)master.gain.value=.75*SET.vol;
@@ -6602,11 +6658,12 @@ function applySettings(){
   document.documentElement.style.setProperty('--bs',SET.btnScale);
   document.documentElement.style.setProperty('--ba',SET.btnAlpha);
   $('fps').hidden=!SET.fps;
-  resize();layApply();
+  resize();layApply();paintCross();
 }
-$('setBody').addEventListener('input',e=>{const el=e.target;if(!el.id||!el.id.startsWith('set_'))return;const k=el.id.slice(4),r=SET_ROWS.find(x=>x[0]===k);SET[k]=+el.value;$('out_'+k).textContent=r[6](SET[k]);applySettings();saveSettings();});
+$('setBody').addEventListener('input',e=>{const el=e.target;if(el&&(el.id==='xhSize'||el.id==='xhGap'||el.id==='xhCol')){crossEdit(el);return;}if(!el.id||!el.id.startsWith('set_'))return;const k=el.id.slice(4),r=SET_ROWS.find(x=>x[0]===k);SET[k]=+el.value;$('out_'+k).textContent=r[6](SET[k]);applySettings();saveSettings();});
 $('setBody').addEventListener('click',e=>{
   {const u=e.target.closest('[data-unblk]');if(u){const b=blocked()[+u.dataset.unblk];if(b&&confirm(`Unblock ${b.n}?`)){blocked().splice(+u.dataset.unblk,1);saveProfile();renderSettings();toast(`${b.n} is unblocked.`);}return;}}
+  {const ch=e.target.closest('[data-ch]');if(ch){if(ch.dataset.ch==='dot')SET.chDot=ch.dataset.val==='1';else if(ch.dataset.ch==='out')SET.chOut=ch.dataset.val==='1';else if(ch.dataset.ch==='col'&&/^#[0-9a-f]{6}$/.test(ch.dataset.val||''))SET.chCol=ch.dataset.val;else return;saveSettings();renderSettings();return;}}
   if(e.target.closest('#layEdit')){layOpenSafe();return;}
   {const lp=e.target.closest('[data-layp]');if(lp){try{layPreset(lp.dataset.layp);toast(LAYP[lp.dataset.layp]+' button layout on.');}catch(err){reportErr('layout',err);toast('Could not change the button layout (code E4302). Please try again.');}renderSettings();return;}}
   {const t=e.target.closest('#pushTog,#pushTog0');if(t){if((t.id==='pushTog')!==!!PUSH.on)pushToggle();return;}}
