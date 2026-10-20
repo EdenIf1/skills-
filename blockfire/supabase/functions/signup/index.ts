@@ -32,6 +32,7 @@ Deno.serve(async (req: Request) => {
   const key = name.toLowerCase().replace(/\s+/g, '');
   if (!/^[A-Za-z0-9_ .-]{2,14}$/.test(name) || key === 'player' || key.startsWith('guest') || nameBad(name))
     return out(400, { error: 'bad_name' });
+  // 8+ characters. Existing accounts are not reset; this only rejects a new password.
   if (password.length < 8 || password.length > 72) return out(400, { error: 'bad_password' });
   const email = key.replace(/[^a-z0-9._-]/g, '_') + '@players.blockfire.game';
   const url = Deno.env.get('SUPABASE_URL')!;
