@@ -1,3 +1,4 @@
+<meta charset="utf-8">
 <title>Cubefront</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -27,6 +28,10 @@ body{font-family:var(--f-body);touch-action:none;user-select:none;-webkit-user-s
 #score .tm{min-width:62px;padding:2px 12px 0;font-size:38px;line-height:1.1;text-align:center;font-variant-numeric:tabular-nums;font-weight:600}
 #score .b{background:linear-gradient(180deg,rgba(91,156,240,.85),rgba(40,80,140,.85))}
 #score .r{background:linear-gradient(180deg,rgba(239,90,79,.85),rgba(140,44,38,.85))}
+#score .tm{display:flex;flex-direction:column;align-items:center;justify-content:center}
+#score .tm i{font-style:normal;font-size:12px;letter-spacing:.16em;line-height:1;font-weight:500;opacity:.85}
+#score .tm b{font-weight:600;line-height:1}
+#score.ffa .b,#score.ffa .r{background:linear-gradient(180deg,rgba(228,236,243,.48),rgba(72,80,90,.92))}
 #score .mid{background:var(--panel);padding:4px 12px 0;text-align:center;line-height:1}
 #timer{font-size:28px;font-variant-numeric:tabular-nums;color:var(--amber)}
 #score .goal{font-size:14px;letter-spacing:.12em;color:var(--dim);text-transform:uppercase}
@@ -807,7 +812,13 @@ body.touch #tip{top:calc(var(--st) + 94px);max-width:52vw}body.touch #tip b{font
 .lobTeams{display:grid;grid-template-columns:1fr 1fr;gap:8px}.lobTeams.one{grid-template-columns:1fr}
 .lobSide{display:flex;flex-direction:column;gap:4px}
 .lobSideH{display:flex;justify-content:space-between;align-items:baseline;padding:2px 2px 0;border-bottom:2px solid currentColor;margin-bottom:2px}.lobSideH span{font-size:20px;letter-spacing:.12em}.lobSideH small{font-size:12px;color:var(--dim);letter-spacing:.06em}
-.lobSide.bs .lobSideH{color:var(--blue)}.lobSide.rs .lobSideH{color:var(--red)}.lobSide.zs .lobSideH{color:var(--green)}
+.lobSide.bs .lobSideH{color:var(--blue)}.lobSide.rs .lobSideH{color:var(--red)}.lobSide.zs .lobSideH{color:var(--green)}.lobSide.ps .lobSideH{color:var(--snow)}
+#boardQuit{display:flex;align-items:center;gap:6px;flex:none}#boardQuit .boardQuitQ{font:600 13px var(--f-body);letter-spacing:.02em;color:var(--dim);text-transform:none}
+/* the team list scrolls; the buttons stay on screen so a long board cannot cover Back to game */
+#board .sheet{display:flex;flex-direction:column;overflow:hidden}
+#board .sheet>.row:first-child{flex:none}
+#board #boardBody{flex:1 1 auto;min-height:0;overflow-x:hidden;overflow-y:auto}
+#board #boardActs{flex:none;position:relative;z-index:2}
 .slot{display:flex;align-items:center;gap:8px;height:34px;padding:0 8px 0 0;background:rgba(0,0,0,.34);border:1px solid var(--line);min-width:0}
 .slot .av{width:34px;height:32px;display:grid;place-items:center;font-style:normal;font-size:20px;color:#fff;flex:none}
 .slot .sn{flex:1;min-width:0;line-height:1}.slot .sn b{display:block;font-weight:400;font-size:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.slot .sn em{font-style:normal;color:var(--dim);font-size:14px}
@@ -1115,9 +1126,9 @@ body.cine #hud>*:not(#nukeFlash),body.cine #touch,body.cine #airTab{visibility:h
   <div id="uavTag" hidden>UAV ONLINE</div>
   <div id="protTag" hidden>SPAWN PROTECTION</div>
   <div id="score">
-    <div class="tm b cut" id="sB">0</div>
+    <div class="tm b cut"><i id="sBl" hidden>YOU</i><b id="sB">0</b></div>
     <div class="mid"><div id="timer">6:00</div><div class="goal" id="goalTxt">First to 60</div></div>
-    <div class="tm r cut" id="sR">0</div>
+    <div class="tm r cut"><i id="sRl" hidden>LEADER</i><b id="sR">0</b></div>
   </div>
   <div id="feed"></div>
   <div id="scope" hidden><i class="p l"></i><i class="p r"></i><i class="p b"></i><b class="cd"></b></div>
@@ -1411,7 +1422,7 @@ body.cine #hud>*:not(#nukeFlash),body.cine #touch,body.cine #airTab{visibility:h
     <div id="acBody"></div>
   </div>
 </div>
-<div id="board" class="overlay" hidden><div class="sheet cut"><div class="row" style="justify-content:space-between;align-items:center;flex-wrap:nowrap"><h2 style="margin:0">SCOREBOARD</h2><button class="btn sm ghost cut" id="boardLeave">Leave match</button></div><div class="teams" id="boardBody"></div><div class="row" style="margin-top:14px"><button class="btn cut" id="boardBack">Back to game</button><button class="btn ghost cut" id="boardSet">Settings</button></div></div></div>
+<div id="board" class="overlay" hidden><div class="sheet cut"><div class="row" style="justify-content:space-between;align-items:center;flex-wrap:nowrap"><h2 style="margin:0">SCOREBOARD</h2><div id="boardQuit"><button class="btn sm ghost cut" id="boardLeave" type="button">Leave match</button></div></div><div class="teams" id="boardBody"></div><div class="row" id="boardActs" style="margin-top:14px"><button class="btn cut" id="boardBack">Back to game</button><button class="btn ghost cut" id="boardSet">Settings</button></div></div></div>
 <div id="ageAsk" class="overlay" hidden style="z-index:95;background:rgba(0,0,0,.75)"><div class="sheet cut" style="text-align:center;max-width:380px"><h2 style="margin-top:0">Before you play</h2><p>What year were you born?</p><select id="ageY" style="font-size:18px;min-height:44px;min-width:180px"></select><div style="margin-top:12px"><button class="btn cut" id="ageGo" style="min-height:48px;min-width:160px;font-size:18px" disabled>Continue</button></div><p class="note" style="margin-top:10px">Only one thing is kept, on this device: whether online play is open to you.</p></div></div>
 <div id="mpRes" class="overlay" hidden style="z-index:92;background:rgba(0,0,0,.65)"><div class="sheet cut" style="text-align:center;max-width:440px"><h2 style="margin-top:0">Your match is still on</h2><p id="mpResTx"></p><div class="row" style="justify-content:center;gap:12px;flex-wrap:wrap"><button class="btn cut" id="mpResGo" style="min-height:48px;min-width:180px;font-size:18px">Return to the game</button><button class="btn ghost cut" id="mpResNo" style="min-height:48px;min-width:150px;font-size:18px">Leave the match</button></div></div></div>
 <div id="reAuth" class="overlay" hidden style="z-index:91;background:rgba(0,0,0,.65)"><div class="sheet cut" style="text-align:center;max-width:440px"><h2 style="margin-top:0" id="reAuthH">Log in to play online</h2><p id="reAuthTx"></p><div class="row" style="justify-content:center;gap:12px;flex-wrap:wrap"><button class="btn cut" id="reAuthGo" style="min-height:48px;min-width:160px;font-size:18px">Log in</button><button class="btn ghost cut" id="reAuthAlt" style="min-height:48px;min-width:140px;font-size:18px">Not now</button></div></div></div>
@@ -4115,7 +4126,23 @@ function nameSprite(name,color){
   draw();if(document.fonts&&document.fonts.ready)document.fonts.ready.then(draw).catch(()=>{});
   const s=new THREE.Sprite(new THREE.SpriteMaterial({map:tx,depthTest:false,transparent:true,fog:false}));
   s.userData.recolor=c=>{if(c===color)return;color=c;draw();};
-  s.scale.set(1.7,.425,1);s.renderOrder=20;return s;
+  s.userData.tagNat=[1.7,.425];s.scale.set(1.7,.425,1);s.renderOrder=20;return s;
+}
+// nametags shrink with distance and never cover the view: at one block a tag stays under 3% of the screen height
+const _tagP=new THREE.Vector3(),_tagF=new THREE.Vector3();
+function fitNameTags(){
+  if(state!=='play')return;
+  const tan=Math.tan(camera.fov*Math.PI/360);
+  camera.getWorldDirection(_tagF);
+  for(const e of ents){
+    const sp=e.sprite;if(!sp||!sp.parent)continue;
+    const nat=sp.userData.tagNat||[1.7,.425],ps=Math.abs(sp.parent.scale.y)||1;
+    sp.getWorldPosition(_tagP);
+    const depth=Math.max(.35,_tagP.sub(camera.position).dot(_tagF));
+    const maxY=(2*depth*tan)*0.028/ps;
+    const y=Math.min(nat[1],maxY);
+    sp.scale.set(y*(nat[0]/nat[1]),y,1);
+  }
 }
 
 /* ================= weapons ================= */
@@ -6354,9 +6381,16 @@ function refreshPills(){
   const p=$('wpills').children;
   for(let i=0;i<2;i++){p[i].textContent=WEAPONS[loadout[i]]?WEAPONS[loadout[i]].name:'-';p[i].classList.toggle('on',i===cur);}
 }
+function scoreChrome(){
+  const on=!!(XM.on&&XM.ffa),el=$('score');
+  if(el.classList.contains('ffa')!==on)el.classList.toggle('ffa',on);
+  const bl=$('sBl'),rl=$('sRl');if(bl&&bl.hidden===on)bl.hidden=!on;if(rl&&rl.hidden===on)rl.hidden=!on;
+}
 function refreshHUD(dt){
+  try{fitNameTags();}catch(e){}
+  scoreChrome();
   if(XM.on&&XM.ffa){const L=xmPart(),top=L.slice().sort((a,b)=>XM.rule==='gun'?(b.gg|0)-(a.gg|0):b.kills-a.kills)[0];const v=e=>XM.rule==='gun'?Math.min(GGL.length,(e.gg|0)+1):e.kills;
-    setText('sB',String(v(player)));setText('sR',String(top&&top!==player?v(top):L.filter(e=>e!==player).reduce((m,e)=>Math.max(m,v(e)),0)));}
+    setText('sB',String(v(player)));setText('sR',String(top?v(top):0));}
   else if(xmIs('inf')){setText('sB',String(xmPart().filter(e=>e.team==='blue').length));setText('sR',String(xmPart().filter(e=>e.team==='red').length));}
   else if(xmIs('prop')){setText('sB',String(xmPart().filter(e=>e.team==='blue'&&!e.xmOut).length));setText('sR',String(xmPart().filter(e=>e.team==='red').length));}
   else{setText('sB',String(scores.blue));setText('sR',String(scores.red));}
@@ -6433,8 +6467,10 @@ function endFit(){const e=$('end');e.classList.remove('t1','t2','t3','t4');const
 addEventListener('resize',()=>{if(!$('end').hidden)endFit();});
 $('endBoardBtn').addEventListener('click',()=>{const show=$('endBody').hidden;$('endBody').hidden=!show;$('endPod').hidden=show;$('endBoardBtn').textContent=show?'Podium':'Scores';});
 $('toLobby').addEventListener('click',()=>{backToMenu();openLobby(!NET.mode);});
-function toggleBoard(show){const b=$('board');const s=show===undefined?b.hidden:show;if(s)renderBoard($('boardBody'));b.hidden=!s;}
-function closeBoard(e){if(e){e.preventDefault();e.stopPropagation();}toggleBoard(false);if(!isTouch&&state==='play'&&!locked){paused=false;$('pause').hidden=true;tryLock();}}
+function boardQuitReset(){const q=$('boardQuit');if(!q)return;q.innerHTML='<button class="btn sm ghost cut" id="boardLeave" type="button">Leave match</button>';}
+function boardQuitAsk(){const q=$('boardQuit');if(!q)return;q.innerHTML='<span class="boardQuitQ">Leave this match?</span><button class="btn sm cut" id="boardLeaveYes" type="button">Yes, leave</button><button class="btn sm ghost cut" id="boardLeaveNo" type="button">Stay</button>';}
+function toggleBoard(show){const b=$('board');const s=show===undefined?b.hidden:show;if(s)renderBoard($('boardBody'));boardQuitReset();b.hidden=!s;}
+function closeBoard(e){if(e&&e.target&&e.target.closest&&e.target.closest('#boardQuit'))return;if(e){e.preventDefault();e.stopPropagation();}toggleBoard(false);if(!isTouch&&state==='play'&&!locked){paused=false;$('pause').hidden=true;tryLock();}}
 $('board').addEventListener('click',closeBoard);
 $('board').addEventListener('touchend',closeBoard,{passive:false});
 
@@ -6720,6 +6756,9 @@ $('setCtrl').addEventListener('click',()=>{const on=$('settings').classList.togg
 $('openSet').addEventListener('click',openSettings);
 $('boardSet').addEventListener('click',e=>{e.stopPropagation();openSettings();});
 $('boardSet').addEventListener('touchend',e=>{e.stopPropagation();e.preventDefault();openSettings();},{passive:false});
+function boardBackGo(e){if(e){e.preventDefault();e.stopPropagation();}closeBoard();}
+$('boardBack').addEventListener('click',boardBackGo);
+$('boardBack').addEventListener('touchend',boardBackGo,{passive:false});
 $('pauseSet').addEventListener('click',e=>{e.stopPropagation();openSettings();});
 $('setLay').addEventListener('click',e=>{e.stopPropagation();layOpenSafe();});
 // leave in the middle of a match: back to the main screen and out of the room, so a new room can be opened straight away
@@ -6741,7 +6780,13 @@ function askLeave(){if(state!=='play'&&state!=='end')return;fireHeld=false;
   leaveAskT=Date.now();$('leaveAsk').hidden=false;}
 function closeLeaveAsk(){$('leaveAsk').hidden=true;}
 const tapOnly=(el,fn)=>{let tt=0;el.addEventListener('touchend',e=>{e.stopPropagation();e.preventDefault();tt=Date.now();fn();},{passive:false});el.addEventListener('click',e=>{e.stopPropagation();if(Date.now()-tt<600)return;fn();});};
-for(const id of['boardLeave','pauseLeave'])tapOnly($(id),askLeave);
+tapOnly($('pauseLeave'),askLeave);
+let boardQuitT=0;
+function boardQuitGo(e){const t=e.target.closest&&e.target.closest('#boardQuit button');if(!t)return;e.stopPropagation();e.preventDefault();
+  if(e.type==='click'&&Date.now()-boardQuitT<700)return;if(e.type==='touchend')boardQuitT=Date.now();
+  if(t.id==='boardLeave')boardQuitAsk();else if(t.id==='boardLeaveNo')boardQuitReset();else if(t.id==='boardLeaveYes')leaveMatch();}
+$('boardQuit').addEventListener('click',boardQuitGo);
+$('boardQuit').addEventListener('touchend',boardQuitGo,{passive:false});
 tapOnly($('leaveNo'),closeLeaveAsk);
 // a second touch of the same stray tap (within a third of a second) cannot press Yes
 tapOnly($('leaveYes'),()=>{if(Date.now()-leaveAskT<350)return;closeLeaveAsk();NET.userLeft=Date.now();leaveMatch();});
@@ -7963,13 +8008,29 @@ $('crateOpen').addEventListener('click',()=>{
 });
 
 /* ================= match flow ================= */
+// what the score caption says for this rule, for the host and for someone who just joined
+function goalLabel(rule){
+  if(rule==='elim'||rule==='snd')return `First to ${RWIN} rounds`;
+  if(rule==='king')return `Kill ${Math.max(1,teamN('blue'),teamN('red'))} kings`;
+  if(rule==='gun')return `Gun Game · ${GGL.length} guns`;
+  if(rule==='ctf')return 'First to 3 captures';
+  if(rule==='dom')return 'Hold points · first to 150';
+  if(rule==='ffa')return 'First to 25 kills';
+  if(rule==='inf')return 'Survive the infection';
+  if(rule==='prop')return 'Hide or seek';
+  if(rule==='hp')return 'Hold the zone · 100';
+  if(rule==='br')return 'Last one standing';
+  if(rule==='oitc')return '3 lives · one bullet';
+  if(rule==='build')return `Build, then first to ${GOAL}`;
+  return `First to ${GOAL}`;
+}
 function resetMatch(inMatch){REACH.key='';try{kcEnd();}catch(e){}try{pdEnd(true);}catch(e){}inspT=0;try{if(TUT.on){TUT.on=false;document.body.classList.remove('tutOn');$('tutBox').hidden=true;}}catch(e){}
   xmStop();
   $('zTip').hidden=true;PB.clear();buildHeld=false;ghost.visible=false;
   genWorld();rebuildWorld();
   GOAL=MM()==='zombie'?MAP.goal:isClient()?(NET.goal||50):clamp(profile.goal||50,10,100);scores={blue:0,red:0};matchT=MAP.time;streakN=0;streakT=0;uavT=0;nukeT=0;
   try{if(bankMatch())saveProfile();}catch(e){}match={gp:0,xp:0,heads:0,best:0,kills:0};callN=0;callToldT=0;for(const e of ents){e.airOwed=0;e.nukeOwed=0;}blindT=0;
-  $('goalTxt').textContent=`First to ${GOAL}`;
+  $('goalTxt').textContent=goalLabel(RULE());
   for(const g of projs){scene.remove(g.m);if(g.snd)sfx.stopLoop(g.snd);}projs.length=0;parts.length=0;tracers.length=0;
   clearDrops();stashReset();for(const a of dmgArcs){a.live=false;a.el.classList.remove('on');}dmgArcs.length=0;fires.length=0;for(const s of smokes){for(const p of s.sp)scene.remove(p);s.mat.dispose();}smokes.length=0;for(const m of mines)scene.remove(m.m);mines.length=0;
   cineClear();fkClear();recReset();
@@ -7983,6 +8044,7 @@ function resetMatch(inMatch){REACH.key='';try{kcEnd();}catch(e){}try{pdEnd(true)
   netFitBots();
   if(inMatch)kgStart();else kgStop();
   if(inMatch)xmStart();else xmStop();
+  $('goalTxt').textContent=goalLabel(RULE());scoreChrome();
   $('score').hidden=isZ();$('zhud').hidden=!isZ();$('streak').hidden=isZ();$('gas').hidden=true;$('tmHp').hidden=true;mateOn=null;
   if(!inMatch)player.alive=false;
 }
@@ -8052,9 +8114,10 @@ function endMatch(byNuke){roomRegSoon();try{kcEnd();}catch(e){}
    const dt=new Date();profile.history.unshift({t:`${dt.getDate()}/${dt.getMonth()+1}`,map:MAP.name,res:won?'Win':draw?'Draw':'Loss',k:player.kills,d:player.deaths,gp:match.gp});profile.history=profile.history.slice(0,15);}
   bankMatch();profile.best=Math.max(profile.best||0,player.kills);saveProfile();
   const after=levelInfo(profile.xp);
+  const ffaEnd=!!(XM.on&&XM.ffa);
   $('endTitle').textContent=byNuke?'NUKED':draw?'DRAW':won?'VICTORY':'DEFEAT';
-  $('endTitle').className='big '+(draw?'':won?'cb':'cr');
-  $('endSub').innerHTML=(xr?xr.sub:`Blue ${scores.blue} · Red ${scores.red}`)+` · you went ${player.kills} / ${player.deaths}`;
+  $('endTitle').className='big '+(draw?'':ffaEnd?(won?'cg':''):(won?'cb':'cr'));
+  $('endSub').innerHTML=(xr?xr.sub:ffaEnd?`You ${player.kills} · leader ${(matchRank()[0]?matchRank()[0].kills:0)}`:`Blue ${scores.blue} · Red ${scores.red}`)+` · you went ${player.kills} / ${player.deaths}`;
   let rw=`<span>Earned <b>+${match.gp.toLocaleString()} GP</b></span><span>${placeTxt(match.place)} place +${match.placeGp.toLocaleString()} · ${player.kills} kills +${match.killGp}${match.extra?` · bonus +${match.extra}`:''}</span><span>+${match.xp.toLocaleString()} XP</span><span>Headshots ${match.heads}</span><span>Best streak ${match.best}</span>`;
   if(match.evXp||match.evGp)rw+=`<span class="evLine">EVENT BONUS · ${match.evXp?`<b>+${match.evXp.toLocaleString()} XP</b> (double XP)`:''}${match.evXp&&match.evGp?' · ':''}${match.evGp?`<b>+${match.evGp.toLocaleString()} GP</b> (featured mode)`:''}</span>`;
   rw+=rkTxt+levelUpNote(before,after);
@@ -8066,6 +8129,7 @@ function endMatch(byNuke){roomRegSoon();try{kcEnd();}catch(e){}
   {let w,c;const tw=t=>t==='blue'?'BLUE TEAM WINS':'RED TEAM WINS';
     if(XM.on&&XM.win&&XM.win.n!==undefined){w=(XM.win.n===nidOf(player)?'YOU WIN':String(XM.win.name||'Someone').toUpperCase()+' WINS');c='cg';}
     else if(XM.on&&XM.win&&XM.win.team&&(XM.rule==='inf'||XM.rule==='prop'))w=xr.sub.toUpperCase();
+    else if(ffaEnd){const top=matchRank()[0],lead=top?top.kills:0;w=draw?`YOU ${player.kills} – LEADER ${lead}`:(won?'YOU WIN':(top&&top!==player?String(top.name||'Someone').toUpperCase()+' WINS':'DEFEAT'));c=won?'cg':'';}
     else if(draw)w=`BLUE ${scores.blue} – ${scores.red} RED`;
     else{const wt=xr&&XM.win&&XM.win.team?XM.win.team:scores.blue>scores.red?'blue':'red';w=`${tw(wt)} · ${scores.blue} – ${scores.red}`;c=wt==='blue'?'cb':'cr';}
     endShow(w,c);}
@@ -8153,6 +8217,7 @@ addEventListener('wheel',()=>{if(state==='play'&&!paused)swapTo(cur===0?1:0);},{
 addEventListener('keydown',e=>{
   if(e.target&&e.target.tagName==='INPUT')return;
   if(e.code==='Tab'){e.preventDefault();if(state==='play'&&!e.repeat){const open=$('board').hidden;toggleBoard(open);if(!open)closeBoard();}return;}
+  if(e.code==='Escape'&&state==='play'&&!$('board').hidden&&$('settings').hidden&&$('leaveAsk').hidden){e.preventDefault();closeBoard();return;}
   if(state!=='play')return;
   keys[e.code]=true;
   if(e.code==='Space')e.preventDefault();
@@ -9211,8 +9276,8 @@ function renderMPPill(){
 const hexCss=n=>'#'+n.toString(16).padStart(6,'0');
 function lobSlot(o){
   // o: {name, team, lv, tag, me, friend, bot, ready, host, swap, empty}
-  if(o.empty)return `<div class="slot empty"><i class="av">${o.locked?'–':'+'}</i><div class="sn"><b>${o.locked?'No bot':'Open slot'}</b><small>${o.locked?'Bots are off for your team':'Waiting for a friend'}</small></div></div>`;
-  const col=o.team==='red'?'var(--red)':o.team==='zombie'?'var(--green)':'var(--blue)';
+  if(o.empty)return `<div class="slot empty"><i class="av">${o.locked?'–':'+'}</i><div class="sn"><b>${o.locked?'No bot':'Open slot'}</b><small>${o.locked?(o.team==='all'?'Bots are off':'Bots are off for your team'):'Waiting for a friend'}</small></div></div>`;
+  const col=o.team==='red'?'var(--red)':o.team==='zombie'?'var(--green)':o.team==='all'?'rgba(228,236,243,.28)':'var(--blue)';
   const png=fin(o.ping,0)|0,pg=png?`<span class="pg ${png<90?'cg':png<220?'ca':'cr'}">${png} ms</span>`:'';
   const st=o.bot?'<span class="st bot">BOT</span>':o.solo?'':o.away?'<span class="st nr">RECONNECTING</span>':o.host?'<span class="st host">♛ HOST</span>':(o.ready?'<span class="st rd">READY</span>':'<span class="st nr">NOT READY</span>');
   return `<div class="slot ${o.me?'me':''} ${o.bot?'bot':''} ${o.friend?'fr':''}"><i class="av" style="background:${o.bot?'rgba(255,255,255,.08)':col}">${o.bot?'⚙':esc(o.name.charAt(0).toUpperCase())}</i>
@@ -9244,6 +9309,7 @@ function renderMP(){
   if(NET.status)h+=`<div class="note ca">${esc(NET.status)}</div>`;
   const solo=!NET.mode,host=isHost()||solo,mk=host?MAP.key:(NET.mapKey||MAP.key),M=MAPS[mk]||MAP,zm=M.mode==='zombie',mode=modeOf(mk);
   const zdKey=host?(profile.zdiff||'medium'):(NET.zdiff||'medium'),teamUp=host?NET.teamUp:NET.teamUpC,fill=host?profile.fillBots!==false:NET.fillC!==false;
+  const ffa=XFFA.includes(mode.rule),slots=teamSize(),ffaN=mode.rule==='br'?12:slots,cap=zm?4:ffa?ffaN:slots*2;
   const myLook={sk:profile.skin||'std',ar:armorBits()};
   const roster=host?[Object.assign({nid:'P0',name:profile.name,team:player.team,rd:1,lv:levelInfo(profile.xp).level},myLook)].concat([...NET.remotes.values()].map(e=>({nid:e.nid,name:e.name,team:e.team,rd:e.ready?1:0,lv:e.lv||1,sk:e.sk,ar:e.ar,aw:e.away?1:0,pg:e.ping||0}))):NET.roster;
   const bl=host?{blue:bots.filter(x=>x.team==='blue'&&x.inMatch!==false&&(!zm||ZALLY.includes(x.name))).map(x=>x.name),red:bots.filter(x=>x.team==='red'&&x.inMatch!==false&&!zm).map(x=>x.name)}:(NET.botsList||{blue:[],red:[]});
@@ -9252,30 +9318,31 @@ function renderMP(){
   // top bar: room code + invite, or invite/join when playing alone
   if(solo)h+=`<div class="lobTop"><div class="lobCode"><span class="lbl2">Lobby</span><b style="font-size:22px">SOLO</b></div>
     <div class="lobInv">${mpAvailable()?`<button class="btn sm cut" id="mpBrowse">Rooms</button><button class="btn sm cut" id="mpHost">Invite friends</button><input id="mpCode" maxlength="6" placeholder="CODE" autocomplete="off" style="width:96px;font-family:var(--f-hud);font-size:18px;letter-spacing:.12em;text-transform:uppercase"><button class="btn sm ghost cut" id="mpJoin">Join</button>`:`<a class="btn sm cut" href="${PUBLIC_URL}" target="_blank" rel="noopener" style="text-decoration:none">Open the public game</a><span class="note">Playing with friends works on the public link, not inside Claude.</span>`}</div>
-    <div class="lobCount"><b>1</b>/${zm?4:teamSize()*2}<span>players</span></div></div>`;
+    <div class="lobCount"><b>1</b>/${cap}<span>players</span></div></div>`;
   else h+=`<div class="lobTop"><div class="lobCode"><span class="lbl2">Room</span><b>${esc(NET.code)}</b></div>
     <div class="lobInv"><button class="btn sm cut" id="mpCopy">Copy invite</button>${cloudOn()?`<span class="invRow"><input id="invName" maxlength="14" placeholder="Friend's name" autocomplete="off" autocapitalize="off"><button class="btn sm ghost cut" id="invSend">Invite</button></span>`:''}${isHost()?`<label class="rmPub"><input type="checkbox" id="rmPub" ${NET.public!==false?'checked':''}> Listed in Rooms</label><button class="btn sm ghost cut" id="rmPass">${NET.pass?'🔒 Locked':'🔓 Set password'}</button>`:''}<span class="note">${isHost()?'Send the invite, then come straight back here.':'In '+esc(NET.hostName||'your friend')+"'s room"}</span></div>
-    <div class="lobCount"><b>${roster.length}</b>/${zm?4:teamSize()*2}<span>players</span></div></div><textarea readonly rows="1" id="mpUrl" class="lobUrl">${esc(inviteUrl())}</textarea>`;
+    <div class="lobCount"><b>${roster.length}</b>/${cap}<span>players</span></div></div><textarea readonly rows="1" id="mpUrl" class="lobUrl">${esc(inviteUrl())}</textarea>`;
   // left: mode, map, rules
   h+=`<div class="lobMain"><div class="lobCfg">
     <div class="lbl2">Mode</div><div class="lobChips">${(()=>{const g=lobGroup||modeGrp(mode);return MODES.filter(m=>modeGrp(m)===g).map(m=>`<button class="chip ${m.id===mode.id?'on':''}" data-mode="${m.id}" ${dis}>${m.name}</button>`).join('')+(host?`<button class="chip grp" data-lgrp="${g==='party'?'classic':'party'}">${g==='party'?'◂ Classic':'★ Party ▸'}</button>`:'');})()}</div>
     <div class="lbl2">Map</div><div class="lobMaps">${mode.maps.map(k=>{const X=MAPS[k];return `<button class="mapc ${k===mk?'on':''}" data-lmap="${k}" ${dis} style="background:linear-gradient(160deg,${hexCss(X.sky)} 0%,${hexCss(X.hemi[1])} 100%)"><b>${esc(X.name)}</b><small>${esc(X.tag||'6 v 6')}</small></button>`;}).join('')}</div>`;
-  if(!zm&&!(XRULES.includes(mode.rule)&&mode.rule!=='build')){const gl=host?(profile.goal||50):(NET.goal||50);h+=`<div class="lbl2">Kills to win</div><div class="lobChips">${[30,50,75,100].map(g=>`<button class="chip ${g===gl?'on':''}" data-lgoal="${g}" ${dis}>${g}</button>`).join('')}</div>`;}
+  if(!zm&&mode.rule!=='elim'&&mode.rule!=='snd'&&mode.rule!=='king'&&mode.rule!=='build'&&!XRULES.includes(mode.rule)){const gl=host?(profile.goal||50):(NET.goal||50);h+=`<div class="lbl2">Kills to win</div><div class="lobChips">${[30,50,75,100].map(g=>`<button class="chip ${g===gl?'on':''}" data-lgoal="${g}" ${dis}>${g}</button>`).join('')}</div>`;}
   if(!zm){const bk=host?(profile.botd||'medium'):(NET.botd||'medium');h+=`<div class="lbl2">Bots</div><div class="lobChips">${Object.entries(BOTD).map(([k,v])=>`<button class="chip bd-${k} ${k===bk?'on':''}" data-lbd="${k}" ${dis} title="${esc(v.tip)}">${v.name}</button>`).join('')}</div>`;}
   if(zm)h+=`<div class="lbl2">Difficulty</div><div class="lobChips">${Object.entries(ZDIFF).map(([k,v])=>`<button class="chip ${k===zdKey?'on':''}" data-lzd="${k}" ${dis}>${v.name} · ${v.rounds}</button>`).join('')}</div>`;
-  h+=`<label class="lbchk ${host?'':'off'}"><input type="checkbox" id="lobFill" ${fill?'checked':''} ${dis}> ${zm?'Bot allies fill empty spots':'Fill my team with bots'}</label>`;
-  if(!zm&&!solo)h+=`<div class="lbl2">New players join</div><div class="lobChips"><button class="chip ${teamUp?'on':''}" data-team="1" ${dis}>My team</button><button class="chip ${teamUp?'':'on'}" data-team="0" ${dis}>Balanced teams</button></div>`;
-  h+=`<div class="note" style="margin:2px 0 0">${zm?'Up to 4 survivors. Bots take the spots nobody is in.':fill?`Your team and the other team are filled to ${teamSize()} with bots.`:`Only real players on your team. The other side is filled to ${teamSize()} with players or bots.`}</div>`;
-  h+=`</div><div class="lobTeams ${zm?'one':''}">`;
+  if(!ffa)h+=`<label class="lbchk ${host?'':'off'}"><input type="checkbox" id="lobFill" ${fill?'checked':''} ${dis}> ${zm?'Bot allies fill empty spots':'Fill my team with bots'}</label>`;
+  if(!zm&&!solo&&!ffa)h+=`<div class="lbl2">New players join</div><div class="lobChips"><button class="chip ${teamUp?'on':''}" data-team="1" ${dis}>My team</button><button class="chip ${teamUp?'':'on'}" data-team="0" ${dis}>Balanced teams</button></div>`;
+  h+=`<div class="note" style="margin:2px 0 0">${zm?'Up to 4 survivors. Bots take the spots nobody is in.':ffa?`No teams. Everyone plays alone${fill?`, and bots fill empty spots up to ${ffaN}.`:`, up to ${ffaN} players.`}`:fill?`Your team and the other team are filled to ${slots} with bots.`:`Only real players on your team. The other side is filled to ${slots} with players or bots.`}</div>`;
+  h+=`</div><div class="lobTeams ${zm||ffa?'one':''}">`;
   // right: the slots
-  const side=(team,label,cls,n)=>{
-    const hum=zm?roster:roster.filter(r=>r.team===team),botN=zm?bl.blue:bl[team];const rows=[];
-    for(const r of hum.slice(0,n))rows.push(lobSlot({name:r.name,team:zm?'blue':team,lv:r.lv,sk:r.sk,me:r.nid===meNid,friend:r.nid!==meNid,host:!solo&&r.nid==='P0',ready:!!r.rd,solo,away:!!r.aw,nid:r.nid,kick:host&&!solo&&r.nid!=='P0'&&r.nid!==meNid,ping:r.nid===meNid?(isClient()?NET.ping:0):(isHost()?r.pg:(r.nid==='P0'?NET.ping:(NET.pings[r.nid]||r.pg||0))),swap:host&&!zm?r.nid:null}));
-    for(const nm of botN.slice(0,n-rows.length))rows.push(lobSlot({name:nm,team:zm?'blue':team,bot:true}));
+  const side=(team,label,cls,n,all)=>{
+    const hum=zm||all?roster:roster.filter(r=>r.team===team),botN=zm?bl.blue:all?(bl.blue||[]).concat(bl.red||[]):bl[team];const rows=[];
+    const tm=all?'all':(zm?'blue':team);
+    for(const r of hum.slice(0,n))rows.push(lobSlot({name:r.name,team:tm,lv:r.lv,sk:r.sk,me:r.nid===meNid,friend:r.nid!==meNid,host:!solo&&r.nid==='P0',ready:!!r.rd,solo,away:!!r.aw,nid:r.nid,kick:host&&!solo&&r.nid!=='P0'&&r.nid!==meNid,ping:r.nid===meNid?(isClient()?NET.ping:0):(isHost()?r.pg:(r.nid==='P0'?NET.ping:(NET.pings[r.nid]||r.pg||0))),swap:host&&!zm&&!all?r.nid:null}));
+    for(const nm of botN.slice(0,n-rows.length))rows.push(lobSlot({name:nm,team:tm,bot:true}));
     const bc=rows.length-Math.min(hum.length,n);
-    while(rows.length<n)rows.push(lobSlot({empty:true,locked:!fill&&hum.some(r=>r.nid===meNid)}));
+    while(rows.length<n)rows.push(lobSlot({empty:true,locked:!fill&&hum.some(r=>r.nid===meNid),team:all?'all':team}));
     return `<div class="lobSide ${cls}"><div class="lobSideH"><span>${label}</span><small>${hum.length} player${hum.length===1?'':'s'} · ${bc} bot${bc===1?'':'s'}</small></div>${rows.join('')}</div>`;};
-  h+=zm?side('blue','SURVIVORS','zs',4)+`<div class="lobZ"><b>${esc(ZDIFF[zdKey].name)}</b><span>Hold the house for ${ZDIFF[zdKey].rounds} rounds</span></div>`:side('blue','BLUE TEAM','bs',6)+side('red','RED TEAM','rs',6);
+  h+=zm?side('blue','SURVIVORS','zs',4)+`<div class="lobZ"><b>${esc(ZDIFF[zdKey].name)}</b><span>Hold the house for ${ZDIFF[zdKey].rounds} rounds</span></div>`:ffa?side('all','PLAYERS','ps',ffaN,true):side('blue','BLUE TEAM','bs',slots)+side('red','RED TEAM','rs',slots);
   h+=`</div></div>`;
   // bottom bar
   const msg=solo?'Ready when you are':isHost()?(others.length?(allReady?'Everyone is ready':`Waiting for ${others.length-readyN} player${others.length-readyN===1?'':'s'} to ready up`):'Invite friends, or start now with bots'):
@@ -9508,8 +9575,8 @@ function frame(now){frameN++;if(!BOOT.ok){if(frameN===2)bootStage('first-frame')
 /* ================= Party modes: Gun Game, Capture the Flag, Domination, Free-for-All, Infected, Hide & Seek,
    Hardpoint, Battle Royale, One in the Chamber and Build Battle.
    The host (or a solo player) runs the rules; friends get the state in 'xm' messages four times a second.
-   Free-for-all modes give everyone their own team ('f1', 'f2'…) so all the usual friend/enemy checks just work;
-   the lobby and the roster keep showing the original blue/red side (xmTeam0). ================= */
+   Free-for-all modes give everyone their own team ('f1', 'f2'…) so all the usual friend/enemy checks just work.
+   The lobby shows one neutral PLAYERS list, and the score reads YOU versus LEADER. ================= */
 const XRULES=['gun','ctf','dom','ffa','inf','prop','hp','br','oitc','build'];
 const RULES=['tdm','elim','snd','king','front','knife','sniper','solid','boom'].concat(XRULES);
 const XFFA=['gun','ffa','br','oitc'];
