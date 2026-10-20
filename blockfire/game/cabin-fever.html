@@ -1888,7 +1888,7 @@ async function adminClaim(code){if(!CS||CS.guest)return 'Sign in to your own acc
   if(r.ok){CS.admin=true;cloudKeep();return '';}const e=r.j&&r.j.error;
   return !r.status?'No connection to the server.':e==='code'?'That code is not right.':e==='taken'?'This game already has its admin.':e==='guest'?'Guest accounts cannot be admins. Create your account first.':'The server said no (error '+r.status+').';}
 /* ================= version, remote settings, crash reports ================= */
-const APP_VERSION='1.9.8',BUILD_ID='__BUILD_ID__';
+const APP_VERSION='1.9.9',BUILD_ID='__BUILD_ID__';
 const verNum=v=>String(v||'0').split('.').slice(0,3).map(n=>parseInt(n)||0).reduce((a,n)=>a*1000+n,0);
 let RCFG={};try{RCFG=JSON.parse(localStorage.getItem('blockfire.rcfg')||'{}')||{};}catch(e){RCFG={};}
 const feat=k=>!(RCFG.features&&RCFG.features[k]===false);
@@ -7617,12 +7617,43 @@ $('charClose').addEventListener('click',()=>{flushSeen();$('char').hidden=true;g
 
 /* ================= resume: a solo match the phone closed in the background can be picked up again ================= */
 const RSM_K='blockfire.resume';
-// modes whose whole score lives in the team scores and K/D can be picked up again after the page was closed
-const RSM_XM=['ctf','dom','hp','ffa'];
-const rsmOk=()=>{try{return state==='play'&&!NET.mode&&!isZ()&&(!XM.on||RSM_XM.includes(XM.rule))&&!TUT.on&&!match.ended&&matchT>5;}catch(e){return false;}};
+// Any match against bots can be picked up again after the page was closed: one plain-data snapshot of the whole
+// match (every mode's state, every fighter's stats, the player's weapons), restored the same way for every mode.
+let RSM_T0=0;
+const rsmOk=()=>{try{return state==='play'&&!NET.mode&&!TUT.on&&!match.ended&&RSM_T0&&Date.now()-RSM_T0>5000;}catch(e){return false;}};
+const RSM_SKIP=new Set(['alive','hp','shield','vx','vy','vz','x','y','z','yaw','pitch','deadT','respawnT','spawnProt','firedT','reloadT','nid','isPlayer','remote','id','onGround','path','target','mesh','sprite']);
+// a value as plain data: fighters become {__ent:name}, 3D objects and other machinery are left out
+function rsmPlain(v,dep){if(v==null||typeof v==='number'||typeof v==='string'||typeof v==='boolean')return typeof v==='number'&&!isFinite(v)?0:v;
+  if(dep>6||typeof v!=='object')return undefined;if(ents.includes(v))return v.name?{__ent:v.name}:undefined;
+  if(v.isObject3D||v.isMaterial||v.isTexture||v.isBufferGeometry||(typeof Element!=='undefined'&&v instanceof Element))return undefined;
+  if(Array.isArray(v)){if(v.length>400)return undefined;return v.map(x=>{const y=rsmPlain(x,dep+1);return y===undefined?null:y;});}
+  if(v instanceof Set||v instanceof Map)return undefined;const pr=Object.getPrototypeOf(v);if(pr!==Object.prototype&&pr!==null)return undefined;
+  const o={};let n=0;for(const k in v){if(++n>300)break;const y=rsmPlain(v[k],dep+1);if(y!==undefined)o[k]=y;}return o;}
+const rsmEnt=n=>ents.find(e=>e.name===n)||null;
+// put plain data back into the live objects, keeping everything the snapshot left out (meshes and the like)
+function rsmMerge(t,s){if(!t||!s||typeof s!=='object')return;
+  for(const k in s){const sv=s[k],tv=t[k];if(tv&&typeof tv==='object'&&(tv.isObject3D||tv.isMaterial))continue;
+    if(sv&&typeof sv==='object'&&sv.__ent!==undefined){t[k]=rsmEnt(sv.__ent);continue;}
+    if(Array.isArray(sv)){if(Array.isArray(tv)&&tv.length===sv.length&&sv.some(x=>x&&typeof x==='object')){sv.forEach((x,i)=>{if(x&&typeof x==='object'&&x.__ent!==undefined)tv[i]=rsmEnt(x.__ent);else if(x&&typeof x==='object'&&tv[i]&&typeof tv[i]==='object')rsmMerge(tv[i],x);else if(x!==null)tv[i]=x;});}
+      else t[k]=sv.map(x=>x&&typeof x==='object'&&x.__ent!==undefined?rsmEnt(x.__ent):x);continue;}
+    if(sv&&typeof sv==='object'){if(tv&&typeof tv==='object')rsmMerge(tv,sv);else t[k]=sv;continue;}
+    t[k]=sv;}}
+function rsmSnap(){const objs={};for(const [k,o] of Object.entries({Z,XM,KG,RS}))objs[k]=rsmPlain(o,0);
+  // zombies still standing are counted as still to come
+  if(isZ()&&objs.Z)objs.Z.toSpawn=(Z.toSpawn|0)+zombies.filter(z=>z.alive).length;
+  const ef=[];for(const e of ents){if(e.zombie||e.remote||!e.name)continue;const o={n:e.name};for(const k in e){if(RSM_SKIP.has(k)||k[0]==='_')continue;const v=e[k];if(typeof v==='number'||typeof v==='string'||typeof v==='boolean')o[k]=typeof v==='number'&&!isFinite(v)?0:v;}ef.push(o);}
+  return {objs,ef,w:{loadout:loadout.slice(),cur,ammo:rsmPlain(ammo,0),nades}};}
+function rsmRestore(x){if(!x)return;
+  try{for(const k of ['Z','XM','KG','RS']){const live={Z,XM,KG,RS}[k];if(x.objs&&x.objs[k]&&live)rsmMerge(live,x.objs[k]);}}catch(e){reportErr('resume',e);}
+  try{for(const o of x.ef||[]){const e=rsmEnt(o.n);if(!e)continue;for(const k in o){if(k==='n'||RSM_SKIP.has(k))continue;if(typeof e[k]!=='object'||e[k]===null)e[k]=o[k];}}}catch(e){reportErr('resume',e);}
+  try{const w=x.w;if(w&&Array.isArray(w.loadout)&&w.loadout.length&&w.loadout.every(k=>WEAPONS[k])){loadout=w.loadout.slice();cur=clamp(w.cur|0,0,loadout.length-1);LW=loadout.map(effW);
+      ammo=Array.isArray(w.ammo)&&w.ammo.length===loadout.length?w.ammo.map((a,i)=>({mag:clamp(a&&a.mag|0,0,LW[i].mag),reserve:Math.max(0,a&&a.reserve|0)})):LW.map(q=>({mag:q.mag,reserve:q.mag}));
+      if(typeof w.nades==='number')nades=w.nades|0;buildViewmodels();$('wpills').hidden=loadout.length<2;refreshPills();}}catch(e){reportErr('resume',e);}
+  // a short breather before the fight goes on
+  try{if(isZ())Z.breakT=Math.max(Z.breakT||0,4);}catch(e){}}
 function rsmSave(){if(!rsmOk())return;try{bankMatch();saveProfile();}catch(e){}
   try{const o={t:Date.now(),v:APP_VERSION,u:USERS&&USERS.cur,map:MAP.key,rule:RULE(),sc:[scores.blue|0,scores.red|0],mt:Math.round(matchT),goal:GOAL,k:player.kills|0,d:player.deaths|0,team:player.team,rk:rankedOn(),
-    m:{gp:match.gp|0,xp:match.xp|0,heads:match.heads|0,best:match.best|0,kills:match.kills|0,bg:match.bg|0,bx:match.bx|0,extra:match.extra|0},b:bots.map(b=>[b.kills|0,b.deaths|0])};
+    m:{gp:match.gp|0,xp:match.xp|0,heads:match.heads|0,best:match.best|0,kills:match.kills|0,bg:match.bg|0,bx:match.bx|0,extra:match.extra|0},b:bots.map(b=>[b.kills|0,b.deaths|0]),zd:profile.zdiff||'',x:(()=>{try{return rsmSnap();}catch(e){reportErr('resume',e);return null;}})()};
     localStorage.setItem(RSM_K,JSON.stringify(o));}catch(e){}}
 function rsmClear(){try{localStorage.removeItem(RSM_K);}catch(e){}}
 function rsmLoad(){try{const o=JSON.parse(localStorage.getItem(RSM_K)||'null');if(!o||typeof o!=='object')return null;
@@ -7632,16 +7663,18 @@ window.addEventListener('pagehide',e=>{if(!e.persisted&&!document.hidden)rsmClea
 function rsmApply(o){try{scores.blue=o.sc[0]|0;scores.red=o.sc[1]|0;matchT=Math.max(10,+o.mt||MAP.time);player.kills=o.k|0;player.deaths=o.d|0;
   const m=o.m||{};match.gp=m.gp|0;match.xp=m.xp|0;match.heads=m.heads|0;match.best=m.best|0;match.kills=m.kills|0;match.bg=m.bg|0;match.bx=m.bx|0;match.extra=m.extra|0;
   (o.b||[]).forEach((r,i)=>{const b=bots[i];if(b&&Array.isArray(r)){b.kills=r[0]|0;b.deaths=r[1]|0;}});
-  try{updateHUD();}catch(e){}toast('Match restored. Good luck!');}catch(e){reportErr('resume',e);}}
+  rsmRestore(o.x);try{updateHUD();}catch(e){}toast('Match restored. Good luck!');}catch(e){reportErr('resume',e);}}
 let rsmPend=null;
 function rsmOffer(tries){const o=rsmLoad();if(!o){rsmClear();return;}
   if(state!=='menu'||LD.on||NET.mode||!$('acct').hidden||!$('resume').hidden){if((tries|0)<20)setTimeout(()=>rsmOffer((tries|0)+1),1500);return;}
   rsmPend=o;const md=(MODES.find(x=>x.rule===o.rule)||{}).name||'Team Deathmatch',mine=o.team==='red'?o.sc[1]:o.sc[0],their=o.team==='red'?o.sc[0]:o.sc[1],mm=Math.floor(o.mt/60),ss=String(o.mt%60).padStart(2,'0');
+  const zr=o.map==='zombie'&&o.x&&o.x.objs&&o.x.objs.Z?(o.x.objs.Z.round|0):0;
+  if(zr){$('rsmCard').innerHTML=`<b>${esc(MAPS[o.map].name)}</b><span>Zombies · round ${zr}</span><span>you ${o.k} zombie kills · $${(o.x.objs.Z.money|0).toLocaleString()} · +${(o.m&&o.m.gp)|0} GP so far</span>`;$('resume').hidden=false;return;}
   $('rsmCard').innerHTML=`<b>${esc(MAPS[o.map].name)}</b><span>${esc(md)}${o.rk?' · Ranked':''}</span><div class="rsmSc"><i class="cb">${mine}</i><em>–</em><i class="cr">${their}</i></div><span>${mm}:${ss} left · you ${o.k}/${o.d} K/D · +${(o.m&&o.m.gp)|0} GP so far</span>`;
   $('resume').hidden=false;}
 $('rsmNo').addEventListener('click',()=>{rsmClear();rsmPend=null;$('resume').hidden=true;});
 $('rsmGo').addEventListener('click',()=>{const o=rsmPend;rsmClear();rsmPend=null;$('resume').hidden=true;if(!o||!MAPS[o.map]||state!=='menu'||LD.on)return;
-  try{goFull();}catch(e){}profile.map=o.map;MAP=MAPS[o.map];profile.rule=o.rule;if(o.rk)profile.ranked=true;saveProfile();
+  try{goFull();}catch(e){}profile.map=o.map;MAP=MAPS[o.map];profile.rule=o.rule;if(o.zd)profile.zdiff=o.zd;if(o.rk)profile.ranked=true;saveProfile();
   loadThen(()=>{startMatch();if(o.team&&!isZ())player.team=o.team==='red'?'red':'blue';rsmApply(o);});});
 setTimeout(()=>{if(!navigator.webdriver||window.__resumeTest)rsmOffer(0);},2500);
 
@@ -7884,7 +7917,7 @@ function tutTick(dt){if(!TUT.on)return;if(state!=='play'){TUT.on=false;document.
   else if(TUT.step===2&&(ST().shots|0)-TUT.shots>=5)tutNext();
   else if(TUT.step===3&&buildLeft<TUT.build)tutNext();
   if(TUT.t>150)tutEnd(false);}
-function startMatch(){roomRegSoon();try{gfxSpare();}catch(e){}try{sndWarm();}catch(e){}
+function startMatch(){RSM_T0=Date.now();roomRegSoon();try{gfxSpare();}catch(e){}try{sndWarm();}catch(e){}
   initAudio();loadHide();
   state='play';paused=false;player.name=isClient()&&NET.myName?NET.myName:profile.name;
   TUT.on=false;setTimeout(()=>{if(state==='play'&&!paused)tutStart();},2500);
