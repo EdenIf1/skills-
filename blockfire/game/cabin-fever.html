@@ -3205,7 +3205,8 @@ const MAPS={
   town:{name:'Old Town',tag:'Big · streets & rooftops',size:96,team:8,gen:genTown,sky:0xa9c4dc,fog:[30,115],hemi:[0xf2f0ea,0x5f5a50],weather:'none',goal:75,time:540,
     spawn:{blue:[40,55,2,8],red:[40,55,87,93]},center:[47.5,8,47.5],orbit:40},
   rail:{name:'Rail Yard',tag:'Big · cross through the train',size:96,team:8,gen:genRail,sky:0xb8c2c8,fog:[30,115],hemi:[0xeef0f2,0x5a5248],weather:'dust',goal:75,time:540,
-    spawn:{blue:[40,55,2,8],red:[40,55,87,93]},center:[47.5,8,47.5],orbit:40},
+    camPoi:[[47,40],[22,40],[74,40],[47,58],[30,28],[66,68]],
+    spawn:{blue:[40,55,2,5],red:[40,55,90,93]},center:[47.5,8,47.5],orbit:40},
   outpost:{name:'Outpost',tag:'Big · sniper lodges',size:96,team:8,gen:genOutpost,sky:0x9fc0de,fog:[34,125],hemi:[0xf4f2e8,0x506040],weather:'none',goal:75,time:540,
     spawn:{blue:[38,57,1,6],red:[38,57,89,94]},center:[47.5,9,47.5],orbit:42},
   farm:{name:'Farm',tag:'Big · animals roam',size:96,team:8,gen:genFarm,sky:0xa8cdea,fog:[32,120],hemi:[0xfff4dc,0x5a6a40],weather:'none',goal:75,time:540,animals:FARM_ANIMALS,
@@ -4288,13 +4289,21 @@ function spawnCandidates(team){
   return out;
 }
 function respawn(e){if(e===player&&KC.on)kcEnd();
-  const xs=xmSpawn(e),cands=xs?[xs]:spawnCandidates(e.team);let best=cands[0]||[32.5,6,10.5],bd=-1e9;
-  for(let i=0;i<10;i++){const c=cands[(rand()*cands.length)|0];if(!c)continue;let md=1e9;
-    for(const o of ents)if(o.alive&&o.team!==e.team&&o.inMatch!==false)md=Math.min(md,Math.hypot(o.x-c[0],o.z-c[2]));
-    for(const o of ents)if(o.alive&&o!==e&&Math.hypot(o.x-c[0],o.z-c[2])<.8)md-=50;
-    if(md>bd){bd=md;best=c;}}
+  // at least 2 blocks from anyone already alive, and on Rail Yard a clear look down the lane (turn if the station wall is in your face)
+  const xs=xmSpawn(e),all=spawnCandidates(e.team);
+  const gap=c=>{let d=1e9;for(const o of ents)if(o.alive&&o!==e&&o.inMatch!==false)d=Math.min(d,Math.hypot(o.x-c[0],o.z-c[2]));return d;};
+  const yawOf=c=>Math.atan2(-(MAP.center[0]-c[0]),-(MAP.center[2]-c[2]));
+  const ahead=(c,yaw)=>{const fx=-Math.sin(yaw),fz=-Math.cos(yaw),h=rayVoxel(c[0],c[1]+1.62,c[2],fx,0,fz,8,false);return h?h.t:8;};
+  let cands=all;if(xs&&gap(xs)>=2)cands=[xs];
+  let pool=cands.filter(c=>gap(c)>=2);if(!pool.length)pool=all.filter(c=>gap(c)>=2);if(!pool.length)pool=all.length?all:cands;
+  if(MAP.key==='rail'){const vis=pool.filter(c=>ahead(c,yawOf(c))>=4);if(vis.length)pool=vis;}
+  let best=pool[(rand()*pool.length)|0]||[32.5,6,10.5],bd=-1e9;
+  for(const c of pool){let ed=1e9;for(const o of ents)if(o.alive&&o.team!==e.team&&o.inMatch!==false)ed=Math.min(ed,Math.hypot(o.x-c[0],o.z-c[2]));
+    const score=ed+Math.min(gap(c),14)+rand()*.05;if(score>bd){bd=score;best=c;}}
   e.x=best[0];e.y=best[1];e.z=best[2];e.vx=e.vy=e.vz=0;e.hunt=false;e.idleT=0;e.ix=undefined;e.bl=64;e.hp=e.maxHp||100;e.shield=e.maxSh||0;e.alive=true;e.spawnProt=2;e.smoothY=0;e.onGround=false;e.climbFrom=null;e.clx=null;e.gT=0;e.lastAttacker=null;e.streak=0;
-  e.yaw=Math.atan2(-(MAP.center[0]-e.x),-(MAP.center[2]-e.z));e.pitch=0;
+  let yaw=yawOf(best),base=yaw;
+  if(ahead(best,base)<4){let bt=-1,pick=base;for(let i=0;i<16;i++){const y=base+i*Math.PI/8,t=ahead(best,y)-Math.abs(angDiff(y,base))*.25;if(t>bt){bt=t;pick=y;}}yaw=pick;}
+  e.yaw=yaw;e.pitch=0;
   if(e.isPlayer){
     player.kingArmed=false;loadout=playerLoadout();
     LW=loadout.map(effW);ammo=LW.map(w=>({mag:w.mag,reserve:MM()==='boom'&&w.kind==='rpg'?8:w.reserve}));cur=0;nades=noNades()?0:MM()==='boom'?3:profile.nadeLvl;minesLeft=noNades()?0:profile.mineLvl;reloadT=0;swapT=.35;bloom=0;recoilP=0;ads=false;
@@ -6183,6 +6192,22 @@ function specTick(dt){const on=state==='play'&&(RS.on||player.xmOut||isZ())&&!pl
   if($('spec').hidden){$('spec').hidden=false;document.body.classList.add('ghost');$('death').hidden=true;$('spec').querySelector('.specTop').textContent=isZ()?'👻 GHOST · YOU ARE BACK WHEN THE ROUND ENDS':RS.on?'👻 GHOST · YOU ARE OUT FOR THIS ROUND':'👻 GHOST · YOU ARE OUT · WATCHING UNTIL THE END';}
   $('specName').textContent=specT.name;$('specN').textContent=`${L.indexOf(specT)+1} / ${L.length}`;return true;}
 function specStep(d){const L=specList();if(!L.length)return;if(specT&&specT.mesh&&specT.alive)specT.mesh.visible=true;const i=L.indexOf(specT);specT=L[((i<0?0:i)+d+L.length)%L.length];}
+// a camera point sitting in a solid block (a wall, a block you just built, the train)
+const camBuried=(x,y,z)=>solid(Math.floor(x),Math.floor(y),Math.floor(z));
+// pull the camera back toward a point that is in the air, using the same voxel ray as a shot
+function camSeat(lx,ly,lz){
+  const p=camera.position;if(!camBuried(p.x,p.y,p.z))return;
+  let dx=p.x-lx,dy=p.y-ly,dz=p.z-lz,dist=Math.hypot(dx,dy,dz);
+  if(dist<1e-3){dx=0;dy=1;dz=0;dist=1;}
+  const ux=dx/dist,uy=dy/dist,uz=dz/dist;let ox=lx,oy=ly,oz=lz,adv=0;
+  if(camBuried(ox,oy,oz)){for(let i=0;i<80&&camBuried(ox,oy,oz)&&adv<dist-.15;i++){ox+=ux*.2;oy+=uy*.2;oz+=uz*.2;adv+=.2;}}
+  if(!camBuried(ox,oy,oz)){const h=rayVoxel(ox,oy,oz,ux,uy,uz,Math.max(.5,dist-adv),false);
+    if(h&&h.t>.05){const t=Math.max(.15,h.t-.45);camera.position.set(ox+ux*t,oy+uy*t,oz+uz*t);}}
+  if(!camBuried(camera.position.x,camera.position.y,camera.position.z))return;
+  for(let t=.2;t<=dist+1;t+=.2){const x=p.x-ux*t,y=p.y-uy*t,z=p.z-uz*t;if(!camBuried(x,y,z)){camera.position.set(x,y,z);return;}}
+  for(let k=1;k<=28;k++){const y=ly+k;if(!camBuried(lx,y,lz)){camera.position.set(lx,y,lz);return;}}
+  const c=MAP.center;for(let k=1;k<=28;k++){const y=(c[1]||6)+k;if(!camBuried(c[0],y,c[2])){camera.position.set(c[0],y,c[2]);return;}}
+}
 function updateCamera(dt){if(KC.on){kcSafe(dt);return;}
   const p=player;
   if(specTick(dt)&&specT){const t=specT,s=t.ksv||1;camera.position.set(t.x,t.y+1.62*s+(t.smoothY||0),t.z);camera.rotation.set(t.pitch||0,t.yaw,0);
@@ -6191,6 +6216,10 @@ function updateCamera(dt){if(KC.on){kcSafe(dt);return;}
   const eye=(p.alive?1.62-.56*(1-(p.crv||1))/.28:.6)*(p.ksv||1);
   camera.position.set(p.x,p.y+eye+p.smoothY+(reduceMotion?0:Math.abs(Math.sin(vmBob))*.04*(1-adsK)),p.z);
   camera.rotation.set(p.pitch+sy,p.yaw+sx,0);
+  // jumping into a block you just built can leave the eyes inside it: step the camera back out
+  let ax=p.x,ay=p.y+eye,az=p.z;
+  if(camBuried(ax,ay,az)){const fx=-Math.sin(p.yaw),fz=-Math.cos(p.yaw);ax=p.x-fx*1.6;ay=p.y+Math.min(eye,1.1);az=p.z-fz*1.6;}
+  camSeat(ax,ay,az);
   adsK+=((ads&&p.alive&&reloadT<=0&&swapT<=0?1:0)-adsK)*Math.min(1,14*dt);
   const w=curW();
   camera.fov=baseFov+(w.adsFov-baseFov)*adsK;camera.updateProjectionMatrix();
@@ -9292,20 +9321,21 @@ function loadThen(fn){initAudio();if(isHost())netBroadcast({t:'load',map:MAP.key
 LD.seq=0;
 setInterval(()=>{try{if(LD.on&&state!=='play'&&performance.now()>LD.end+12000){LD.seq++;loadHide();$('menu').hidden=false;if(NET.mode)openLobby();toast('The match did not start. You are back in the lobby.');}}catch(e){}},1000);
 function loadCam(dt){LD.t+=dt;const c=MAP.center,T=LD.t,o=MAP.orbit||24;camera.fov=LD.shot==='scope'?28:62;camera.updateProjectionMatrix();
-  const pois=MAP.poi||[[c[0],c[2]]];
+  const pois=MAP.camPoi||MAP.poi||[[c[0],c[2]]];
   LD.fx-=dt;if(LD.fx<=0&&(LD.shot==='fight'||LD.shot==='aerial'||LD.shot==='king')){LD.fx=LD.shot==='aerial'?.9:1.7;const p=pois[(rand()*pois.length)|0],g=HM[(p[0]|0)+W*(p[1]|0)]||c[1];try{explodeFX(p[0]+.5,g+1.2,p[1]+.5,2.4,'Airstrike');}catch(e){}}
-  if(LD.shot==='aerial'){const a=LD.a0+T*.09;camera.position.set(c[0]+Math.cos(a)*o*1.2,c[1]+30-T*.8,c[2]+Math.sin(a)*o*1.2);camera.lookAt(c[0],c[1],c[2]);return;}
-  if(LD.shot==='king'&&LD.king&&LD.king.alive){const k=LD.king,a=LD.a0+Math.sin(T*.35)*.5,r=7.2;camera.position.set(k.x+Math.cos(a)*r,k.y+2.2,k.z+Math.sin(a)*r);camera.lookAt(k.x,k.y+3.3,k.z);
-    if(rand()<dt*6)burst(k.x+(rand()-.5)*2,k.y+5+rand(),k.z+(rand()-.5)*2,0xffd34a,2,2,.18,.9);return;}
+  if(LD.shot==='aerial'){const a=LD.a0+T*.09;camera.position.set(c[0]+Math.cos(a)*o*1.2,c[1]+30-T*.8,c[2]+Math.sin(a)*o*1.2);camera.lookAt(c[0],c[1],c[2]);camSeat(c[0],c[1],c[2]);return;}
+  if(LD.shot==='king'&&LD.king&&LD.king.alive){const k=LD.king,a=LD.a0+Math.sin(T*.35)*.5,r=7.2,s=Math.max(k.ksv||1,k.mesh?k.mesh.scale.y/.9:1);
+    camera.position.set(k.x+Math.cos(a)*r,k.y+2.2*s,k.z+Math.sin(a)*r);camera.lookAt(k.x,k.y+3.3*s,k.z);
+    if(rand()<dt*6)burst(k.x+(rand()-.5)*2,k.y+5*s+rand(),k.z+(rand()-.5)*2,0xffd34a,2,2,.18,.9);camSeat(k.x,k.y+1.62*s,k.z);return;}
   if(LD.shot==='scope'){const L=bots.filter(b=>b.alive&&b.inMatch!==false&&b.mesh),t=L[((T/3.3)|0)%Math.max(1,L.length)];
-    if(t){const a=LD.a0;camera.position.set(t.x+Math.cos(a)*30,t.y+6,t.z+Math.sin(a)*30);camera.lookAt(t.x,t.y+1.3,t.z);return;}}
+    if(t){const a=LD.a0;camera.position.set(t.x+Math.cos(a)*30,t.y+6,t.z+Math.sin(a)*30);camera.lookAt(t.x,t.y+1.3,t.z);camSeat(t.x,t.y+1.3,t.z);return;}}
   if(LD.shot==='site'){const p=pois[1]||pois[0],g=HM[(p[0]|0)+W*(p[1]|0)]||c[1],a=LD.a0+T*.2;camera.position.set(p[0]+Math.cos(a)*9,g+4.5,p[1]+Math.sin(a)*9);camera.lookAt(p[0],g+1,p[1]);
-    if(((T*2)|0)%2===0&&rand()<dt*10)burst(p[0]+.5,g+1.3,p[1]+.5,0xff3030,1,1,.12,.3);return;}
-  if(LD.shot==='tense'){const a=LD.a0+T*.12;camera.position.set(c[0]+Math.cos(a)*o*.7,c[1]+3,c[2]+Math.sin(a)*o*.7);camera.lookAt(c[0],c[1]+1,c[2]);return;}
-  if(LD.shot==='zombie'){const a=LD.a0+Math.sin(T*.3)*.6;camera.position.set(c[0]+Math.cos(a)*14,c[1]+3.5,c[2]+Math.sin(a)*14);camera.lookAt(c[0],c[1]+1,c[2]);return;}
-  if(LD.shot==='close'){LD.on=false;menuCam(dt);LD.on=true;return;}
+    if(((T*2)|0)%2===0&&rand()<dt*10)burst(p[0]+.5,g+1.3,p[1]+.5,0xff3030,1,1,.12,.3);camSeat(p[0],g+1,p[1]);return;}
+  if(LD.shot==='tense'){const a=LD.a0+T*.12;camera.position.set(c[0]+Math.cos(a)*o*.7,c[1]+3,c[2]+Math.sin(a)*o*.7);camera.lookAt(c[0],c[1]+1,c[2]);camSeat(c[0],c[1]+1,c[2]);return;}
+  if(LD.shot==='zombie'){const a=LD.a0+Math.sin(T*.3)*.6;camera.position.set(c[0]+Math.cos(a)*14,c[1]+3.5,c[2]+Math.sin(a)*14);camera.lookAt(c[0],c[1]+1,c[2]);camSeat(c[0],c[1]+1,c[2]);return;}
+  if(LD.shot==='close'){LD.on=false;menuCam(dt);LD.on=true;camSeat(camLook.x,camLook.y,camLook.z);return;}
   // fight: a low dolly through the middle of the map while bombs land
-  const a=LD.a0+Math.sin(T*.16)*.6,r=o*(.85-T*.025);camera.position.set(c[0]+Math.cos(a)*r,c[1]+4+T*.35,c[2]+Math.sin(a)*r);camera.lookAt(c[0],c[1]+1.5,c[2]);}
+  const a=LD.a0+Math.sin(T*.16)*.6,r=o*(.85-T*.025);camera.position.set(c[0]+Math.cos(a)*r,c[1]+4+T*.35,c[2]+Math.sin(a)*r);camera.lookAt(c[0],c[1]+1.5,c[2]);camSeat(c[0],c[1]+1.5,c[2]);}
 function menuCam(dt){if(LD.on){loadCam(dt);return;}
   const c=MAP.center;camT-=dt;
   if(camMap!==MAP){camMap=MAP;camT=0;camShot=0;}
