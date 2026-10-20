@@ -12,7 +12,7 @@ Copy this block for the next decision. Leave fields blank rather than guessing.
 - **Date:** YYYY-MM-DD
 - **Decision:** What was chosen, in one or two sentences.
 - **Rationale:** Why this and not another approach.
-- **Status:** proposed | active | in progress | shipped | dropped
+- **Status:** proposed | planned | active | in progress | shipped | deferred | dropped
 - **Notes:** Links, PR numbers, or follow-ups. Optional.
 ```
 
@@ -23,6 +23,7 @@ Copy this block for the next decision. Leave fields blank rather than guessing.
 | active | Accepted and in force (a rule, not a feature) |
 | in progress | Accepted, code not finished |
 | shipped | In the tree players or operators already have |
+| deferred | Accepted, deliberately waiting on something else |
 | dropped | No longer the plan |
 
 ## Already in the repo
@@ -41,39 +42,91 @@ No decision log was found under `.agents/`, `.claude/`, or `docs/` before this f
 ### 2026-10-20 — Server-authoritative economy
 
 - **Date:** 2026-10-20
-- **Decision:** Make the economy server-authoritative. Coins, XP, and purchases are validated in Supabase. The client save is not trusted for those.
-- **Rationale:** A client-side economy can be edited. This is also a prerequisite for monetization.
+- **Decision:** Make the economy server-authoritative. Coins, XP, and purchases are validated in Supabase. The client save is not trusted for those. Scope now also covers host-awarded reward farming and an offline-merge redesign.
+- **Rationale:** A client-side economy can be edited, including rewards the host hands out and merges done while offline. This is also a prerequisite for monetization. Auditability, a safety net before more parallel pull requests, and avoiding merge collisions.
 - **Status:** in progress (PR pending). The work touches save code in `blockfire/game/cabin-fever.html` and Supabase SQL.
-- **Notes:** The game checked in today still writes `players.data` from the client. [docs/BACKEND.md](BACKEND.md) describes that behavior. Do not document the new economy as live until the PR has merged.
+- **Notes:** The game checked in today still writes `players.data` from the client. [docs/BACKEND.md](BACKEND.md) describes that behavior. Do not document the new economy as live until the PR has merged. The economy branch rebases onto WO-10 once the live schema is in `supabase/migrations`.
 
 ### 2026-10-20 — WO-1: spawn-protection label
 
 - **Date:** 2026-10-20
-- **Decision:** WO-1: fix the SPAWN PROTECTION label so it clears.
-- **Rationale:** Top playtest bug. The change is small and isolated.
+- **Decision:** WO-1: fix the SPAWN PROTECTION label so it clears. The tutorial reuses `spawnProt`, which is why the label never goes away. The fix is a separate tutorial-safe flag, so spawn protection and the tutorial no longer share that timer.
+- **Rationale:** Top playtest bug. The change is small and isolated. The root cause is the shared `spawnProt` flag, not the label markup.
 - **Status:** in progress.
-- **Notes:** The label exists in the current client (`#protTag`). The fix is not in this tree.
+- **Assigned:** dev lead.
+- **Notes:** The label exists in the current client (`#protTag`). The separate tutorial-safe flag is not in this tree yet.
 
 ### 2026-10-20 — No parallel edits in unaudited regions
 
 - **Date:** 2026-10-20
 - **Decision:** No parallel pull requests may touch economy/save code, bots, mode HUD rules, or camera until a code audit has mapped those regions.
 - **Rationale:** Avoid merge collisions.
-- **Status:** active.
+- **Status:** active, relaxed for Batch 1.
+- **Notes:** Batch 1 below relaxes this rule for bots, the mode HUD, and the Rail Yard camera, because those work orders sit in separate regions and do not overlap each other or the economy/save work. Economy and save code stay serialized. SQL hardening still waits until the economy pull request has merged.
 
-### 2026-10-20 — Planned work, waiting on the code audit
+### 2026-10-20 — Batch 1, parallel work orders
 
 - **Date:** 2026-10-20
-- **Decision:** The following are planned. Priority order is not decided. They wait on the code audit named in the sequencing rule.
-  - Rail Yard camera clips through walls.
-  - Free-for-All still shows teams.
-  - Search & Destroy shows kills-to-win.
-  - Loading tips that do not apply to the mode.
-  - `BiquadFilter` 16000 console warning.
-  - Fewer steps to enter a match.
-  - Bots that play passively.
-  - Gear stat advantages; move gear to cosmetic-only.
-  - Empty online lobby; bot backfill / matchmaking.
-- **Rationale:** Known playtest and design follow-ups. Order is explicitly TBD.
+- **Decision:** Run these together. They touch separate code regions, so they do not wait on each other. This relaxes the sequencing rule above for these regions only.
+  - **WO-2:** more aggressive bots.
+  - **WO-3:** `BiquadFilter` warning (the 16000 Hz clamp in the audio code).
+  - **WO-4:** Rail Yard spawn and camera clipping through walls.
+  - **WO-5:** mode-correct UI. Free-for-All shows no teams. Search & Destroy, Elimination, and Kill the King do not show kills-to-win. Lobby slots show 8.
+  - **WO-6:** security. Strip the test hook from production builds, drop `unsafe-eval`, and hard-code the backend origin.
+  - **WO-7:** guest signup rate limit and captcha.
+- **Rationale:** Top playtest bugs plus P0 security, and the edits do not overlap.
 - **Status:** planned.
-- **Notes:** None of these are released. The 16000 Hz filter value is set in the game's audio code today (`BiquadFilter.frequency` clamped with an upper bound of 16000). That line is the current behavior, not a fix.
+- **Assigned:** dev lead.
+
+### 2026-10-20 — Queued behind Batch 1 and the economy work
+
+- **Date:** 2026-10-20
+- **Decision:** These stay queued. They are not part of Batch 1.
+  - **WO-8:** one-click PLAY and faster loading.
+  - **WO-9:** auto-listed bot matches so an empty lobby is not empty. Same owner as WO-8, because the two overlap.
+  - **Loading tips:** tips that do not apply to the current mode.
+  - **SQL hardening:** crash-report limits, the player-name trigger, and schema drift. Starts only after the economy work has merged.
+- **Rationale:** WO-8 and WO-9 share code, so they stay with one owner. SQL hardening touches the same save and schema surface as the economy change, so it waits for that merge.
+- **Status:** planned (queued).
+- **Assigned:** dev lead. WO-9 stays with the WO-8 owner.
+
+### 2026-10-20 — Gear stats stay until the economy lands
+
+- **Date:** 2026-10-20
+- **Decision:** Gear stat removal is deferred. Gear that changes health, shield, or speed stays as it is until the server-authoritative economy has landed and player feedback is in. The earlier plan to make gear cosmetic-only is not scheduled yet.
+- **Rationale:** The change overlaps shop code. The design call is still pending.
+- **Status:** deferred.
+- **Assigned:** unassigned until the design call.
+
+### 2026-10-20 — WO-10: dump the live schema into migrations
+
+- **Date:** 2026-10-20
+- **Decision:** WO-10: dump the live schema into `supabase/migrations`. Priority P0. This is done first. The economy work rebases on it.
+- **Rationale:** Auditability, a safety net before more parallel pull requests, and avoiding merge collisions. The live project has objects that are not in `schema.sql` or `identity.sql`, so later SQL work needs one checked-in history to rebase onto.
+- **Status:** planned.
+- **Assigned:** dev lead.
+- **Notes:** [docs/BACKEND.md](BACKEND.md) lists what git is missing. WO-10 is the plan to close that gap. It is not done in this tree.
+
+### 2026-10-20 — WO-11: Playwright CI on every pull request
+
+- **Date:** 2026-10-20
+- **Decision:** WO-11: continuous integration that runs the Playwright suites on every pull request and blocks merge when they fail. Priority P1.
+- **Rationale:** Auditability, a safety net before more parallel pull requests, and avoiding merge collisions.
+- **Status:** planned.
+- **Assigned:** dev lead.
+
+### 2026-10-20 — Queued lanes
+
+- **Date:** 2026-10-20
+- **Decision:** Two lanes stay queued. They are not part of Batch 1.
+  - **Perf:** world rebuild and effects allocations.
+  - **Multiplayer trust:** verified names, kick by id, and snapshot serialization.
+- **Rationale:** Auditability, a safety net before more parallel pull requests, and avoiding merge collisions. These lanes overlap hot code, so they wait instead of landing beside the parallel batch.
+- **Status:** planned (queued).
+
+### 2026-10-20 — Split the main file last
+
+- **Date:** 2026-10-20
+- **Decision:** Splitting `blockfire/game/cabin-fever.html` into modules is scheduled last, as a freeze window. No module split until the work orders above have landed.
+- **Rationale:** Auditability, a safety net before more parallel pull requests, and avoiding merge collisions. A file split touches every region at once, so it waits until the other edits are in.
+- **Status:** planned (last).
