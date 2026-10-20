@@ -1610,7 +1610,7 @@ try{localStorage.setItem('blockfire.users',JSON.stringify(USERS));}catch(e){}
 const ST=()=>{const S=profile.stats;if(S&&!S.kdv2){S.kdv2=1;S.kills=Math.max(0,(S.kills|0)-(S.zkills|0));S.heads=Math.min(S.heads|0,S.kills);}return S;};
 /* ---- online accounts: sign up once; progress lives in the database and comes back on any phone or link ---- */
 const CLOUD_CFG={url:'https://qnhogbwnumvounwpusmc.supabase.co',key:'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFuaG9nYndudW12b3Vud3B1c21jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE2NzYyNzQsImV4cCI6MjEwNzI1MjI3NH0.8c16Bx4eagKtW8Usp0bRXNmxXRW0I3zZ_jjpZJy6kyI'}; // Supabase project URL + its public (anon) key
-function cloudCfg(){let o=null;try{o=JSON.parse(localStorage.getItem('blockfire.cloudcfg')||'null');}catch(e){}return o&&o.url?o:CLOUD_CFG;}
+function cloudCfg(){return CLOUD_CFG;}
 // inside the Claude app the game runs in a closed sandbox that cannot reach the save server: accounts live in the full game
 const IN_CLAUDE=(()=>{try{if(window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform())return false;return /claude|anthropic/i.test(location.hostname)||localStorage.getItem('blockfire.fakeclaude')==='1';}catch(e){return false;}})();
 const cloudOn=()=>!IN_CLAUDE&&!!cloudCfg().url;
