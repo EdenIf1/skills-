@@ -9,6 +9,7 @@ Local servers the tests expect:
 | File | What it checks |
 |---|---|
 | invite.mjs | invite link → join → lobby → match → late joiner → leave → new room (direct and backup route) |
+| entry.mjs | one-click Play, room-code typing and Enter, quick play lists a room and a second tab joins it (puppeteer-core; `npm install` in this folder) |
 | build.mjs | building: place, shoot down, out of blocks, indestructible map, zombies off, multiplayer sync, cheating |
 | crate.mjs | odds, pity over 200k crates, duplicates, every prize kind, kill effects |
 | cloud.mjs, guest.mjs | accounts: guest, claim a name, login elsewhere, two devices, 90-day idle, wrong passwords |

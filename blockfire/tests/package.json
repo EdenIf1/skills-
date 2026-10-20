@@ -1,0 +1,7 @@
+{
+  "name": "blockfire-tests",
+  "private": true,
+  "dependencies": {
+    "puppeteer-core": "^24.15.0"
+  }
+}

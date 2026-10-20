@@ -406,7 +406,7 @@ html,body{overscroll-behavior:none}
 .hPanel{background:rgba(8,11,15,.74);border:1px solid var(--line);padding:8px 12px;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
 .hPanel h4{margin:0 0 5px;font-family:var(--f-hud);font-weight:400;font-size:15px;letter-spacing:.18em;color:var(--dim);text-transform:uppercase;display:flex;justify-content:space-between;align-items:baseline}.hPanel h4 a{color:var(--amber);cursor:pointer;font-size:14px;letter-spacing:.1em}
 .pm{display:flex;align-items:center;gap:8px;padding:3px 0}.pm i{width:26px;height:26px;display:grid;place-items:center;font-style:normal;font-family:var(--f-hud);font-size:17px;color:#fff;flex:none}.pm b{font-family:var(--f-hud);font-weight:400;font-size:18px;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pm small{font-family:var(--f-hud);font-size:13px;letter-spacing:.08em}
-.hJoin{display:flex;gap:6px;margin-top:6px}.hJoin input{width:0;flex:1;font-family:var(--f-hud);font-size:18px;letter-spacing:.12em;text-transform:uppercase}.hJoin .btn{flex:none}
+.hJoin{display:flex;gap:6px;margin-top:6px}.hJoin input{width:0;flex:1;min-width:72px;font-family:var(--f-hud);font-size:18px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink);background:rgba(0,0,0,.45);border:1px solid var(--line);padding:4px 8px;user-select:text;-webkit-user-select:text}.hJoin .btn{flex:none}
 .lbr{display:grid;grid-template-columns:22px 1fr auto;gap:6px;align-items:center;font-family:var(--f-hud);font-size:17px;padding:1px 0}.lbr i{font-style:normal;color:var(--dim)}.lbr.me b{color:var(--amber)}.lbr b{font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.lbr span{color:var(--dim);font-size:15px}
 .hNews .hn{display:flex;flex-direction:column;border-left:3px solid var(--amber);padding:2px 8px;margin:4px 0}.hNews .hn b{font-family:var(--f-hud);font-weight:400;font-size:18px}.hNews .hn span{font-size:12px;color:var(--dim)}
 .hBottom{position:absolute;left:0;right:0;bottom:0;display:flex;align-items:flex-end;justify-content:flex-end;gap:18px;padding:12px calc(var(--sr) + 16px) calc(var(--sb) + 14px) calc(var(--sl) + 16px);background:linear-gradient(transparent,rgba(6,9,12,.82));pointer-events:none}
@@ -1242,7 +1242,7 @@ body.cine #hud>*:not(#nukeFlash),body.cine #touch,body.cine #airTab{visibility:h
   </main>
   <footer class="hBottom">
     <div class="hSel"><span class="lbl2" id="modeTag">Team Deathmatch · 6 v 6</span><b id="hSelMap">Old Town</b></div>
-    <button class="btn ghost cut hQuick" id="quickPlay" title="Join an open room, or play with bots if none is open">⚡ Quick play</button>
+    <button class="btn ghost cut hQuick" id="hOnline" title="Browse open rooms">Online</button>
     <button class="btn cut hPlay" id="play">Play</button>
   </footer>
 </div>
@@ -6363,6 +6363,7 @@ function lbRows(){
     return{n,me:n===USERS.cur,priv,lv:levelInfo(P.xp||0).level,xp:P.xp||0,k:S.kills,kd:S.deaths?S.kills/S.deaths:S.kills,w:S.wins,z:S.zbest||0};});
 }
 let modeGroup=null;const modeGrp=m=>m&&(XRULES.includes(m.rule)||m.rule==='boom')?'party':'classic';
+const QP={busy:false};
 function renderHome(){try{evRender();}catch(e){}
   // mode tiles
   const mk=isClient()?(NET.mapKey||MAP.key):MAP.key,md=modeOf(mk);
@@ -6374,7 +6375,7 @@ function renderHome(){try{evRender();}catch(e){}
   $('hName').textContent=profile.name;
   {const hs=$('hSave');const show=cloudOn()&&!CS;hs.hidden=!(show||cloudMine());hs.textContent=show?'☁ Sign up to save your progress':CS&&CS.guest?'☁ Guest · saved online':'☁ Saved online';}
   const net=$('hNet');net.classList.toggle('off',!navigator.onLine);net.querySelector('span').textContent=NET.mode?`Room ${NET.code}`:navigator.onLine?'Online':'Offline';
-  $('play').textContent=NET.mode?'Lobby':'Play';
+  $('play').textContent=QP.busy?'Searching…':NET.mode?'Lobby':'Play';
   // party: you and the friends in your room
   const me=`<div class="pm"><i style="background:${player.team==='red'?'var(--red)':'var(--blue)'}">${esc((profile.name||'?').charAt(0).toUpperCase())}</i><b>${esc(profile.name)} <span class="prank">Lv ${levelInfo(profile.xp).level}</span></b><small class="ca">${isClient()?(NET.ready?'READY':'IN ROOM'):NET.mode?'♛ HOST':'YOU'}</small></div>`;
   let h=`<h4><span>Party${NET.mode?' · '+esc(NET.code):''}</span>${NET.mode?'<a id="hOpenLobby">Lobby ›</a>':''}</h4>`+me;
@@ -6385,8 +6386,10 @@ function renderHome(){try{evRender();}catch(e){}
   else if(NET.status&&NET.peer)h+=`<div class="note ca">${esc(NET.status)}</div><div class="hJoin"><button class="btn sm cut" id="openMP" style="flex:1">Open lobby</button><button class="btn sm ghost cut" id="hLeave">Stop</button></div>`;
   else if(!mpAvailable())h+=`<div class="note">Playing with friends works on the public link of the game, not inside Claude.</div><div class="hJoin"><a class="btn sm cut" href="${PUBLIC_URL}" target="_blank" rel="noopener" style="text-decoration:none">Open the public game</a></div>`;
   else h+=`<div class="hJoin"><button class="btn sm cut" id="hInvite" style="flex:1">＋ Create room</button><button class="btn sm ghost cut" id="openMP">Online rooms</button></div>
-    <div class="hJoin"><input id="hCode" maxlength="6" placeholder="ROOM CODE" autocomplete="off"><button class="btn sm ghost cut" id="hJoinBtn">Join</button></div>`;
+    <div class="hJoin"><input id="hCode" maxlength="6" placeholder="ROOM CODE" autocomplete="off" autocorrect="off" spellcheck="false" inputmode="text"><button class="btn sm ghost cut" id="hJoinBtn">Join</button></div>`;
+  const codeEl=$('hCode'),codeKeep=codeEl?{v:codeEl.value,f:document.activeElement===codeEl,a:codeEl.selectionStart,b:codeEl.selectionEnd}:null;
   $('hParty').innerHTML=h;
+  if(codeKeep){const i=$('hCode');if(i){i.value=codeKeep.v;if(codeKeep.f){try{i.focus();if(codeKeep.a!=null)i.setSelectionRange(codeKeep.a,codeKeep.b);}catch(e){}}}}
   // leaderboard widget
   const rows=lbRows().filter(r=>!r.priv).sort((a,b)=>b.xp-a.xp);
   if(rows.length>1)$('hLB').innerHTML=`<h4><span>Leaderboard · device</span><a data-open="lb">All ›</a></h4>`+rows.slice(0,5).map((r,i)=>`<div class="lbr ${r.me?'me':''}"><i>${i+1}</i><b>${esc(r.n)}</b><span>Lv ${r.lv} · ${r.k} kills</span></div>`).join('');
@@ -6394,12 +6397,14 @@ function renderHome(){try{evRender();}catch(e){}
 }
 $('evBar').addEventListener('click',e=>{const b=e.target.closest('[data-hmode]');if(!b||isClient())return;const m=MODES.find(x=>x.id===b.dataset.hmode);if(m){modeGroup=modeGrp(m);pickMode(m);toast(m.name+': +50% GP this week');}});
 $('hModes').addEventListener('click',e=>{const g=e.target.closest('[data-hgrp]');if(g){modeGroup=g.dataset.hgrp;if(modeGroup==='party'&&!profile.partySeen){profile.partySeen=1;saveProfile();}renderHome();return;}const b=e.target.closest('[data-hmode]');if(!b||isClient())return;pickMode(MODES.find(x=>x.id===b.dataset.hmode));});
+function joinTypedCode(){const i=$('hCode');if(!i)return;const c=String(i.value||'').trim();if(!c)return;openLobby();mpJoin(c);}
+$('hParty').addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target&&e.target.id==='hCode'){e.preventDefault();joinTypedCode();}});
 $('hParty').addEventListener('click',e=>{const t=e.target.closest('button,a');if(!t)return;
   if(t.id==='hInvite'){openLobby();mpHost();}
   if(t.id==='openMP'||t.id==='hOpenLobby')openLobby(true);
   if(t.id==='hSignup'){acTab='cloud';acMsg='';renderAcct();$('acct').hidden=false;}
   if(t.id==='hLeave'){mpLeave(false);renderHome();}
-  if(t.id==='hJoinBtn'){const c=$('hCode').value;openLobby();mpJoin(c);}});
+  if(t.id==='hJoinBtn')joinTypedCode();});
 $('hLB').addEventListener('click',e=>{if(e.target.closest('[data-open=lb]'))openLB();});
 $('hCard').addEventListener('click',()=>$('openAcct').click());
 addEventListener('online',()=>renderHome());addEventListener('offline',()=>renderHome());
@@ -8005,22 +8010,26 @@ $('share').addEventListener('click',()=>{
 });
 function openLobby(browse){NET.err='';if(browse&&!NET.mode&&mpAvailable()){NET.browse=true;}$('mp').hidden=false;renderMP();if(NET.browse&&!NET.mode)roomsFetch();}
 function toggleReady(){if(!isClient())return;NET.ready=!NET.ready;try{NET.host.send({t:'rdy',v:NET.ready});}catch(e){}renderMPPill();renderMP();renderHome();}
-function lobbyStart(){goFull();if(isClient()){toggleReady();return;}if(isHost()&&!mpAllReady()){toast('Waiting for everyone to press Ready');return;}if(LD.on)return;loadThen(startMatch);}
-$('play').addEventListener('click',()=>{goFull();openLobby(true);});
-// one tap into a match: the fullest open public room that still has a seat, or a bot match right away
-const QP={busy:false};
-async function quickPlay(){if(QP.busy||state==='play')return;QP.busy=true;goFull();
-  try{if(mpAvailable()&&!isKid()&&cloudOn()&&navigator.onLine!==false&&!NET.mode){
-      $('quickPlay').textContent='Searching…';await roomsFetch(true);
-      const R=(NET.rooms||[]).filter(r=>!r.locked&&(r.players|0)>0&&(r.players|0)<(r.max|0)&&!roomLate(r)&&r.state!=='ended'&&!isBlocked(r.host_name)).sort((a,b)=>(b.players|0)-(a.players|0));
+function lobbyStart(){goFull();if(isClient()){toggleReady();return;}if(isHost()&&!mpAllReady()){toast('Waiting for everyone to press Ready');return;}if(LD.on)return;if(!isHost()){startPublicMatch();return;}loadThen(startMatch);}
+$('play').addEventListener('click',()=>{goFull();if(NET.mode){openLobby();return;}quickPlay();});
+// one tap into a match: the fullest open public room that still has a seat, or a listed bot match on the map already picked
+function joinableRooms(){
+  return (NET.rooms||[]).filter(r=>!r.locked&&(r.players|0)>0&&(r.players|0)<(r.max|0)&&!roomLate(r)&&r.state!=='ended'&&!isBlocked(r.host_name))
+    .sort((a,b)=>(b.players|0)-(a.players|0)||String(a.code).localeCompare(String(b.code)));
+}
+async function quickPlay(){if(QP.busy||state==='play')return;if(NET.mode){openLobby();return;}QP.busy=true;goFull();
+  try{if(mpAvailable()&&!isKid()&&cloudOn()&&navigator.onLine!==false){
+      try{$('play').textContent='Searching…';}catch(e){}
+      await roomsFetch(true);
+      const R=joinableRooms();
       if(R.length){toast('Joining '+String(R[0].host_name||'a room').slice(0,16)+'…');mpJoin(R[0].code);return;}}
-    toast('No open room right now: starting a match with bots.');loadThen(startMatch);}
-  catch(e){reportErr('quickplay',e);loadThen(startMatch);}
-  finally{QP.busy=false;try{$('quickPlay').textContent='⚡ Quick play';}catch(e){}}}
-$('quickPlay').addEventListener('click',quickPlay);
+    toast('No open room right now: starting a match with bots.');await startPublicMatch();}
+  catch(e){reportErr('quickplay',e);try{await startPublicMatch();}catch(x){if(!LD.on&&state!=='play')loadThen(startMatch);}}
+  finally{QP.busy=false;try{if(state!=='play')$('play').textContent=NET.mode?'Lobby':'Play';}catch(e){}}}
+$('hOnline').addEventListener('click',()=>{goFull();openLobby(true);});
 $('navPlay').addEventListener('click',()=>{for(const id of['char','lb','shop','crate','acct','settings','mp'])$(id).hidden=true;renderProfile();});
 function backToMenu(){roomRegSoon();$('end').hidden=true;state='menu';if(isHost())setTimeout(()=>{try{netRoster();}catch(e){}},0);if(isClient()&&MAPS[NET.mapKey])MAP=MAPS[NET.mapKey];const lm=rollDaily();if(lm)toast(lm);resetMatch(false);renderProfile();$('menu').hidden=false;}
-$('again').addEventListener('click',()=>{if(NET.mode){backToMenu();openLobby();if(isClient()&&!NET.ready)toggleReady();}else{$('end').hidden=true;state='menu';resetMatch(false);loadThen(startMatch);}});
+$('again').addEventListener('click',()=>{if(NET.mode){backToMenu();openLobby();if(isClient()&&!NET.ready)toggleReady();}else{$('end').hidden=true;state='menu';resetMatch(false);startPublicMatch();}});
 $('toMenu').addEventListener('click',backToMenu);
 
 /* ================= input: desktop ================= */
@@ -8274,11 +8283,12 @@ function mpErr(t){const c=reportErr('net',t);t=t+' (code '+c+')';NET.err=t;NET.e
 function netFitBots(){
   if(isClient())return;
   // bots fill each side to 6 (4 survivors in Zombies); "fill my team" off leaves your side to real players only
+  // a human who just joined is already in ents as a remote, so teamCount leaves one less seat and a bot steps out
   const fill=profile.fillBots!==false,my=player.team;
   const TS=teamSize(),want=isZ()?{blue:fill?Math.max(0,4-teamCount('blue')):0,red:0}:{blue:Math.max(0,TS-teamCount('blue')),red:Math.max(0,TS-teamCount('red'))};
   if(!isZ()&&!fill)want[my]=0;
   for(const t of['blue','red']){let n=0;
-    for(const b of bots){if(b.team!==t)continue;const ok=!isZ()||ZALLY.includes(b.name),on=ok&&n<want[t];if(on)n++;
+    for(const b of bots){if(b.remote||b.isPlayer||b.team!==t)continue;const ok=!isZ()||ZALLY.includes(b.name),on=ok&&n<want[t];if(on)n++;
       if(on&&b.inMatch===false){b.inMatch=true;respawn(b);}
       if(!on&&b.inMatch!==false){b.inMatch=false;b.alive=false;b.mesh.visible=false;}}}
 }
@@ -8459,6 +8469,19 @@ function matchProgress(){if(state!=='play'&&state!=='end')return 0;if(state==='e
   return Math.max(0,Math.min(100,Math.round(p*100)));}
 const LATE_PCT=50;
 let roomRegT=0;function roomRegSoon(){if(!isHost())return;clearTimeout(roomRegT);roomRegT=setTimeout(roomReg,250);}
+// solo and quick play host a public room on the map and mode already chosen, then start the match.
+// the guest account is created first: signing in resets the menu match, so it must finish before the real one begins.
+let pubStart=0;
+async function startPublicMatch(){
+  if(state==='play'||LD.on)return;
+  const token=++pubStart;NET.public=true;
+  try{if(cloudOn()&&!isKid()&&!CS&&isGuest(USERS.cur)){
+    for(let i=0;i<40&&!CS&&token===pubStart;i++){try{await cloudGuest();}catch(e){}if(CS)break;await new Promise(r=>setTimeout(r,250));}}}catch(e){}
+  if(token!==pubStart||state==='play'||LD.on)return;
+  if(!isClient()&&!isHost()&&mpAvailable()&&cloudOn()&&!isKid()&&navigator.onLine!==false)mpHost();
+  if(token!==pubStart||state==='play'||LD.on)return;
+  loadThen(startMatch);
+}
 async function roomReg(){if(!isHost()||!cloudOn())return;
   if(!CS&&isGuest(USERS.cur))await cloudGuest();if(!roomsOn()||!isHost())return;
   if(NET.public===false){if(NET.listed){NET.listed=false;await cloudReq('/rest/v1/rpc/room_remove',{method:'POST',body:{}});}return;}
