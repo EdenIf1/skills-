@@ -264,6 +264,8 @@ The client posts to these RPCs. None of them appear in `schema.sql` or `identity
 
 **TODO:** friends, presence, referrals, ranked leaderboard, and `server_now` cannot be rebuilt from this repo. If they exist on the live project, they were applied outside git.
 
+WO-10 is planned to dump that live schema into `supabase/migrations` (see [BACKLOG_DECISIONS.md](BACKLOG_DECISIONS.md)). Until that dump lands, this page still describes only `schema.sql` and `identity.sql`.
+
 The client also reads and writes `public.push_subs` (`endpoint`, `user_id`, `p256dh`, `auth`, `tz_offset`) and calls edge function `push` (GET for a VAPID public key `{key}`, POST `{op:'test'}`). **No `push` function and no `push_subs` table are in git.**
 
 `retention` deletes from `public.economy_flags` where column `at` is older than 90 days. **`economy_flags` is not created in either SQL file.**

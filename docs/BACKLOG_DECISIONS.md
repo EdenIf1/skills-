@@ -42,10 +42,10 @@ No decision log was found under `.agents/`, `.claude/`, or `docs/` before this f
 ### 2026-10-20 — Server-authoritative economy
 
 - **Date:** 2026-10-20
-- **Decision:** Make the economy server-authoritative. Coins, XP, and purchases are validated in Supabase. The client save is not trusted for those.
-- **Rationale:** A client-side economy can be edited. This is also a prerequisite for monetization.
+- **Decision:** Make the economy server-authoritative. Coins, XP, and purchases are validated in Supabase. The client save is not trusted for those. Scope now also covers host-awarded reward farming and an offline-merge redesign.
+- **Rationale:** A client-side economy can be edited, including rewards the host hands out and merges done while offline. This is also a prerequisite for monetization. Auditability, a safety net before more parallel pull requests, and avoiding merge collisions.
 - **Status:** in progress (PR pending). The work touches save code in `blockfire/game/cabin-fever.html` and Supabase SQL.
-- **Notes:** The game checked in today still writes `players.data` from the client. [docs/BACKEND.md](BACKEND.md) describes that behavior. Do not document the new economy as live until the PR has merged.
+- **Notes:** The game checked in today still writes `players.data` from the client. [docs/BACKEND.md](BACKEND.md) describes that behavior. Do not document the new economy as live until the PR has merged. The economy branch rebases onto WO-10 once the live schema is in `supabase/migrations`.
 
 ### 2026-10-20 — WO-1: spawn-protection label
 
@@ -97,3 +97,36 @@ No decision log was found under `.agents/`, `.claude/`, or `docs/` before this f
 - **Rationale:** The change overlaps shop code. The design call is still pending.
 - **Status:** deferred.
 - **Assigned:** unassigned until the design call.
+
+### 2026-10-20 — WO-10: dump the live schema into migrations
+
+- **Date:** 2026-10-20
+- **Decision:** WO-10: dump the live schema into `supabase/migrations`. Priority P0. This is done first. The economy work rebases on it.
+- **Rationale:** Auditability, a safety net before more parallel pull requests, and avoiding merge collisions. The live project has objects that are not in `schema.sql` or `identity.sql`, so later SQL work needs one checked-in history to rebase onto.
+- **Status:** planned.
+- **Assigned:** dev lead.
+- **Notes:** [docs/BACKEND.md](BACKEND.md) lists what git is missing. WO-10 is the plan to close that gap. It is not done in this tree.
+
+### 2026-10-20 — WO-11: Playwright CI on every pull request
+
+- **Date:** 2026-10-20
+- **Decision:** WO-11: continuous integration that runs the Playwright suites on every pull request and blocks merge when they fail. Priority P1.
+- **Rationale:** Auditability, a safety net before more parallel pull requests, and avoiding merge collisions.
+- **Status:** planned.
+- **Assigned:** dev lead.
+
+### 2026-10-20 — Queued lanes
+
+- **Date:** 2026-10-20
+- **Decision:** Two lanes stay queued. They are not part of Batch 1.
+  - **Perf:** world rebuild and effects allocations.
+  - **Multiplayer trust:** verified names, kick by id, and snapshot serialization.
+- **Rationale:** Auditability, a safety net before more parallel pull requests, and avoiding merge collisions. These lanes overlap hot code, so they wait instead of landing beside the parallel batch.
+- **Status:** planned (queued).
+
+### 2026-10-20 — Split the main file last
+
+- **Date:** 2026-10-20
+- **Decision:** Splitting `blockfire/game/cabin-fever.html` into modules is scheduled last, as a freeze window. No module split until the work orders above have landed.
+- **Rationale:** Auditability, a safety net before more parallel pull requests, and avoiding merge collisions. A file split touches every region at once, so it waits until the other edits are in.
+- **Status:** planned (last).
