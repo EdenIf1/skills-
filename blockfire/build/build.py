@@ -29,10 +29,11 @@ meta='''<meta charset="utf-8">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 '''
-# a browser security policy (web and iPhone app). Scripts only from the game's own files plus the exact inline scripts
-# of this build (by hash): injected markup can never run code, inline event handlers are refused. No plugins, no forms
-# posting elsewhere, no changing the page's base address. Network: the game's servers over https/wss.
-CSP_TPL='<meta http-equiv="Content-Security-Policy" content="default-src \'self\'; script-src \'self\' __HASHES__ \'unsafe-eval\'; script-src-attr \'none\'; style-src \'self\' \'unsafe-inline\'; img-src \'self\' data: blob:; font-src \'self\' data:; media-src \'self\' data: blob:; connect-src \'self\' https: wss: data: blob: http://127.0.0.1:* ws://127.0.0.1:* http://localhost:* ws://localhost:*; worker-src \'self\' blob:; manifest-src \'self\'; object-src \'none\'; base-uri \'self\'; form-action \'none\'; frame-src \'none\'">\n<meta name="referrer" content="no-referrer">\n'
+# a browser security policy (web and iPhone app). Scripts only from the game's own files, the Cloudflare
+# Turnstile loader (guest-account check), plus the exact inline scripts of this build (by hash): injected markup
+# can never run code, inline event handlers are refused. The only iframe is the Turnstile challenge.
+# No plugins, no forms posting elsewhere, no changing the page's base address. Network: the game's servers over https/wss.
+CSP_TPL='<meta http-equiv="Content-Security-Policy" content="default-src \'self\'; script-src \'self\' https://challenges.cloudflare.com __HASHES__ \'unsafe-eval\'; script-src-attr \'none\'; style-src \'self\' \'unsafe-inline\'; img-src \'self\' data: blob:; font-src \'self\' data:; media-src \'self\' data: blob:; connect-src \'self\' https: wss: data: blob: http://127.0.0.1:* ws://127.0.0.1:* http://localhost:* ws://localhost:*; worker-src \'self\' blob:; manifest-src \'self\'; object-src \'none\'; base-uri \'self\'; form-action \'none\'; frame-src https://challenges.cloudflare.com">\n<meta name="referrer" content="no-referrer">\n'
 csp='__CSP__'
 sw='' if native else '<script>if("serviceWorker" in navigator&&(location.protocol==="https:"||location.hostname==="localhost"))navigator.serviceWorker.register("sw.js").catch(function(){});</script>\n'
 html='<!doctype html>\n<html lang="en">\n<head>\n'+csp+meta+head+'\n</head>\n<body>\n'+body+'\n'+sw+'</body>\n</html>\n'

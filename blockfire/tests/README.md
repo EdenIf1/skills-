@@ -12,5 +12,6 @@ Local servers the tests expect:
 | build.mjs | building: place, shoot down, out of blocks, indestructible map, zombies off, multiplayer sync, cheating |
 | crate.mjs | odds, pity over 200k crates, duplicates, every prize kind, kill effects |
 | cloud.mjs, guest.mjs | accounts: guest, claim a name, login elsewhere, two devices, 90-day idle, wrong passwords |
+| guest-protect.mjs | guest function abuse checks: Turnstile and per-IP / global rate limit. No servers: `node --experimental-strip-types --test tests/guest-protect.mjs` |
 | store.mjs | help form, account deletion, update-required screen, feature switches, crash guard, save migration |
 | leave.mjs, rly.mjs, rob.mjs, mpsuite.mjs | multiplayer robustness: leaving, relays, reloads, packet loss, 21 scenarios |

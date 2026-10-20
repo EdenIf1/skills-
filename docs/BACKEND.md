@@ -278,7 +278,7 @@ All under `blockfire/supabase/functions/<name>/index.ts`. `blockfire/supabase/RE
 
 | Function | Auth the code checks | Behavior |
 |---|---|---|
-| `guest` | None (service role creates the user) | Up to 6 tries to create `Guest-######` with a random password, email `name@players.blockfire.game`, `email_confirm: true`, `guest: true` on user and app metadata. Returns `{name, password}` |
+| `guest` | None (service role creates the user). When `TURNSTILE_SECRET_KEY` is set, the JSON body must include a valid Turnstile token (`turnstile`) and `guest_rate_hit` must be installed | Up to 6 tries to create `Guest-######` with a random password, email `name@players.blockfire.game`, `email_confirm: true`, `guest: true` on user and app metadata. Returns `{name, password}`. Refuses with `403 {error:turnstile}`, `429 {error:rate}`, or `503 {error:server}` when the captcha or the rate-limit store says no |
 | `signup` | None | Username + password. Password length 8–72. Refuses bad names, the name `player`, names starting with `guest`, and a blocklist (slurs and staff-like words). Email is the squashed username at `@players.blockfire.game`. `guest: false` |
 | `claim` | User JWT, and the user must be a guest | Same name and password rules. Updates that auth user (email, password, metadata) and patches `players.name` |
 | `device` | `create` and `revoke` need a user JWT. `login` needs `{uid, key}` | Stores SHA-256 of a random key. Login works for 30 days after `last_used_at`, then deletes the key. Keeps at most 8 keys per user. Login mints a magic link and returns a normal session |
@@ -295,6 +295,37 @@ Environment variables the functions read (Supabase injects these; do not commit 
 - `SUPABASE_URL`
 - `SUPABASE_ANON_KEY` (not read by `guest`, `signup`, or `retention`)
 - `SUPABASE_SERVICE_ROLE_KEY`
+
+### Guest abuse protection
+
+`functions/guest` is the one call that mints a confirmed account with no password from the player. It rate-limits that, and it checks Cloudflare Turnstile once the secret below is set.
+
+Code and SQL (no secret values in git):
+
+- `blockfire/supabase/functions/guest/index.ts` and `protect.ts` — the function
+- `blockfire/supabase/functions/guest/rate.sql` — run once in the Supabase SQL editor
+
+Secrets and settings (set these yourself in the Supabase dashboard; do not commit the values):
+
+| Name | Where | Required |
+|---|---|---|
+| `TURNSTILE_SECRET_KEY` | Supabase → Project Settings → Edge Functions → Secrets | Yes, or captcha stays off and new guests are still created |
+| `TURNSTILE_HOSTNAMES` | same secrets, comma-separated | No. Extra check on the hostname Turnstile reports |
+| `GUEST_RATE_LIMIT_HOUR` | same | No. Default 120 per IP per hour |
+| `GUEST_RATE_LIMIT_DAY` | same | No. Default 500 per IP per day |
+| `GUEST_RATE_LIMIT_GLOBAL_HOUR` | same | No. Default 5000 per hour for the whole project |
+
+The public site key is not a secret. Put it in `app_config` (the game reads it):
+
+```sql
+insert into public.app_config(key, value)
+values ('turnstile_site_key', to_jsonb('YOUR_SITE_KEY'::text))
+on conflict (key) do update set value = excluded.value, updated_at = now();
+```
+
+Turn the secret on only after `rate.sql` has been applied and a client build that sends the token is what players are running. With the secret set and the SQL missing, guest creation returns 503 instead of minting accounts. JWT verification on `guest` stays on; the game calls it with the anon key.
+
+Deploy the function after the secret is saved (`supabase functions deploy guest`). A new secret is picked up on the next deploy. The built page's content security policy must allow `https://challenges.cloudflare.com` as a script and as a frame (see `build/build.py`). Cloudflare Turnstile → the widget's hostname list must include every origin the game is served from (`edenif1.github.io`, any custom domain, and `localhost` for the iOS app, which loads the page from `https://localhost`). Widget mode: Invisible. Action: `guest`.
 
 ## Auth
 
