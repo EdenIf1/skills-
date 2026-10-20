@@ -14,3 +14,4 @@ Local servers the tests expect:
 | cloud.mjs, guest.mjs | accounts: guest, claim a name, login elsewhere, two devices, 90-day idle, wrong passwords |
 | store.mjs | help form, account deletion, update-required screen, feature switches, crash guard, save migration |
 | leave.mjs, rly.mjs, rob.mjs, mpsuite.mjs | multiplayer robustness: leaving, relays, reloads, packet loss, 21 scenarios |
+| bot-aggression.mjs | headless bot match, 5 seeds per difficulty, base vs head: time to first shot at the human, idle/perch %, engagements per minute, distance closed while idle, Easy K/D. Node 18+ (no Node 22 WebSocket global). Build with `--test`. |
