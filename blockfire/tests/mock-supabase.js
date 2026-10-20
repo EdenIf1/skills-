@@ -1,6 +1,6 @@
 // minimal stand-in for Supabase auth + one REST table, enough for the game's calls
 const http=require('http'),crypto=require('crypto');
-const users={},rows={},tokens={},refresh={};let log=[];const support=[],errors=[];let config=[{key:'min_version',value:'1.0.0'},{key:'motd',value:''},{key:'features',value:{building:true,crates:true,multiplayer:true}}];
+const users={},rows={},tokens={},refresh={};let log=[];const support=[],errors=[],rooms=new Map();let config=[{key:'min_version',value:'1.0.0'},{key:'motd',value:''},{key:'features',value:{building:true,crates:true,multiplayer:true}}];
 const tok=uid=>{const at='at_'+crypto.randomBytes(8).toString('hex'),rt='rt_'+crypto.randomBytes(8).toString('hex');tokens[at]=uid;refresh[rt]=uid;return{access_token:at,refresh_token:rt,expires_in:+(process.env.EXP||3600),user:{id:uid}};};
 http.createServer((q,s)=>{let b='';q.on('data',d=>b+=d);q.on('end',()=>{
   const H={'Access-Control-Allow-Origin':'*','Access-Control-Allow-Headers':'*','Access-Control-Allow-Methods':'*','Content-Type':'application/json'};
@@ -38,4 +38,12 @@ http.createServer((q,s)=>{let b='';q.on('data',d=>b+=d);q.on('end',()=>{
     if(q.method==='POST'){if(j.id!==uid)return send(403,{message:'row-level security'});rows[uid]={name:j.name,data:j.data,updated_at:j.updated_at};return send(201,/representation/.test(q.headers.prefer||'')?[rows[uid]]:undefined);}
     if(q.method==='PATCH'){const id=(u.searchParams.get('id')||'').replace('eq.',''),v=(u.searchParams.get('updated_at')||'').replace('eq.','');
       if(id!==uid||!rows[id]||(v&&rows[id].updated_at!==v))return send(200,[]);Object.assign(rows[id],j);return send(200,[rows[id]]);}}
+  if(u.pathname==='/rest/v1/rpc/room_upsert2'||u.pathname==='/rest/v1/rpc/room_upsert'){if(!uid)return send(401,{message:'JWT expired'});
+    const code=String(j.p_code||'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,6);
+    rooms.set(uid,{code,host_name:String(j.p_host_name||'').slice(0,20),mode:String(j.p_mode||'').slice(0,24),map:String(j.p_map||'').slice(0,24),players:j.p_players|0,max:j.p_max|0,locked:!!j.p_locked,state:String(j.p_state||'lobby'),proto:j.p_proto|0,progress:j.p_progress|0,updated_at:new Date().toISOString()});
+    return send(200,null);}
+  if(u.pathname==='/rest/v1/rpc/room_remove'){if(!uid)return send(401,{message:'JWT expired'});rooms.delete(uid);return send(200,null);}
+  if(u.pathname==='/rest/v1/rooms'&&q.method==='GET'){const proto=(u.searchParams.get('proto')||'').replace(/^eq\./,'');
+    const list=[...rooms.values()].filter(r=>!proto||String(r.proto)===String(proto)).sort((a,b)=>String(b.updated_at).localeCompare(String(a.updated_at))).slice(0,50);
+    return send(200,list.map(r=>({code:r.code,host_name:r.host_name,mode:r.mode,map:r.map,players:r.players,max:r.max,locked:r.locked,state:r.state,progress:r.progress})));}
   send(404,{message:'not found'});});}).listen(54321,'127.0.0.1',()=>console.log('supa up'));
