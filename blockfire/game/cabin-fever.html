@@ -3496,27 +3496,71 @@ function collides(px,py,pz){
   for(let y=y0;y<=y1;y++)for(let z=z0;z<=z1;z++)for(let x=x0;x<=x1;x++)if(solid(x,y,z))return true;
   return false;
 }
+// the body stays inside the map. An open edge is air you could walk off; a real wall already fills that column.
+function inPlay(x,z){return x>=ER&&z>=ER&&x<=W-ER&&z<=D-ER;}
+function edgeOpen(nx,nz,y){
+  let ix=nx<ER?0:nx>W-ER?W-1:Math.floor(nx),iz=nz<ER?0:nz>D-ER?D-1:Math.floor(nz);
+  ix=Math.max(0,Math.min(W-1,ix));iz=Math.max(0,Math.min(D-1,iz));
+  const y0=Math.floor(y+.15),y1=Math.floor(y+1.2);
+  for(let yy=y0;yy<=y1;yy++)if(yy>=0&&yy<H&&solid(ix,yy,iz))return false;
+  return true;
+}
+// soldiers in a live match ignore the implicit bedrock outside the map, so a jump can leave an open edge and fall
+function fallLive(e){return state==='play'&&!isClient()&&!(e&&e.zombie);}
+function hitBody(px,py,pz,e){
+  if(!fallLive(e))return collides(px,py,pz);
+  const x0=Math.floor(px-ER+1e-4),x1=Math.floor(px+ER-1e-4),y0=Math.floor(py+1e-4),y1=Math.floor(py+EH-1e-4),z0=Math.floor(pz-ER+1e-4),z1=Math.floor(pz+ER-1e-4);
+  for(let y=y0;y<=y1;y++)for(let z=z0;z<=z1;z++)for(let x=x0;x<=x1;x++){
+    if(y<0||y>=H||x<0||z<0||x>=W||z>=D)continue;
+    if(solid(x,y,z))return true;
+  }
+  return false;
+}
+let voidFloorK='',voidFloorY=0;
+function mapFloorY(){
+  const k=(MAP&&MAP.key||'')+'|'+W+'|'+D;
+  if(k===voidFloorK)return voidFloorY;
+  let m=1e9;
+  for(let x=0;x<W;x++){const a=SY[x],b=SY[x+W*(D-1)];if(a>=0&&a<m)m=a;if(b>=0&&b<m)m=b;}
+  for(let z=0;z<D;z++){const a=SY[z*W],b=SY[W-1+W*z];if(a>=0&&a<m)m=a;if(b>=0&&b<m)m=b;}
+  voidFloorK=k;voidFloorY=m>1e8?0:m;return voidFloorY;
+}
+function fallKill(e){
+  if(!e.alive||e.zombie)return;
+  e.voidFloor=null;e.spawnProt=0;
+  kill(e,null,false,'The fall','fall');
+  if(!isZ()&&!RS.on&&!e.xmOut)e.respawnT=e.isPlayer?.2:.45;
+}
+function voidCheck(e){
+  if(!e||!e.alive||!fallLive(e))return;
+  const outside=e.x<0||e.z<0||e.x>=W||e.z>=D;
+  if(!outside){if(e.onGround)e.voidFloor=e.y;}
+  const floor=e.voidFloor!=null?e.voidFloor:mapFloorY();
+  if(e.y<-10||e.y<0||(outside&&e.y<floor))fallKill(e);
+}
 function moveStep(e,dt){
   const wet=liqAt(e.x,e.y+.6,e.z)===B.WATER;
   if(MAP.pads&&e.onGround&&getV(Math.floor(e.x),Math.floor(e.y-.05),Math.floor(e.z))===B.PAD){e.vy=17;e.onGround=false;if(e===player){try{sfx.jet&&sfx.jet();}catch(x){}}}
   e.vy-=GRAV*(MAP.grav||1)*(wet?.3:1)*dt;if(e.vy<(wet?-3:-30))e.vy=wet?-3:-30;
   let blocked=false;
+  const guard=fallLive(e);
   const tryAxis=(nx,nz)=>{
-    if(!collides(nx,e.y,nz)){e.x=nx;e.z=nz;return;}
-    if(e.onGround){const sy=Math.floor(e.y+.01)+1;if(!collides(nx,sy,nz)&&!collides(e.x,sy,e.z)){e.smoothY-=sy-e.y;e.y=sy;e.x=nx;e.z=nz;return;}}
+    const wall=guard&&e.onGround&&!inPlay(nx,nz)&&edgeOpen(nx,nz,e.y);
+    if(!wall&&!hitBody(nx,e.y,nz,e)){e.x=nx;e.z=nz;return;}
+    if(e.onGround&&!wall){const sy=Math.floor(e.y+.01)+1;if(!hitBody(nx,sy,nz,e)&&!hitBody(e.x,sy,e.z,e)&&(!guard||inPlay(nx,nz))){e.smoothY-=sy-e.y;e.y=sy;e.x=nx;e.z=nz;return;}}
     blocked=true;
   };
   tryAxis(e.x+e.vx*dt,e.z);
   tryAxis(e.x,e.z+e.vz*dt);
   const ny=e.y+e.vy*dt;
-  if(collides(e.x,ny,e.z)){
+  if(hitBody(e.x,ny,e.z,e)){
     if(e.vy<0){e.y=Math.floor(ny)+1;e.onGround=true;}
     else{e.y=Math.floor(ny+EH)-EH-.001;}
     e.vy=0;
   }else{e.y=ny;e.onGround=false;}
   return blocked;
 }
-function physics(e,dt){const n=Math.ceil(dt/.017);let b=false;for(let i=0;i<n;i++)b=moveStep(e,dt/n)||b;e.smoothY*=Math.exp(-14*dt);return b;}
+function physics(e,dt){const n=Math.ceil(dt/.017);let b=false;for(let i=0;i<n;i++)b=moveStep(e,dt/n)||b;e.smoothY*=Math.exp(-14*dt);voidCheck(e);return b;}
 
 /* ================= audio ================= */
 let AC=null,master=null,noiseBuf=null,verbIn=null;
@@ -6152,6 +6196,7 @@ function updatePlayer(dt){
   if(wantUp&&p.onGround&&!p.climbing){p.vy=JUMP_V;p.onGround=false;}
   if(p.onGround)p.climbing=false;
   const wallHit=physics(p,dt);climbGround(p,dt);
+  if(!p.alive)return;
   if(wantUp&&wallHit&&ml>.2&&p.holdJ>.16&&!p.onGround){
     if(climbLeft(p)){p.vy=Math.max(p.vy,4.8);p.climbing=true;p.clx=p.x;p.clz=p.z;if((p.climbSnd=(p.climbSnd||0)-dt)<=0){p.climbSnd=.32;sfx.step&&sfx.step(.12);}}}
   else if(p.climbing&&!wallHit){p.climbing=false;if(wantUp&&p.vy>0&&p.y-p.climbFrom<CLIMB_MAX)p.vy=Math.max(p.vy,2.6);}
