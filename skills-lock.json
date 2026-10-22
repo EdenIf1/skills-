@@ -151,6 +151,12 @@
       "skillPath": "skills/remotion-to-hyperframes/SKILL.md",
       "computedHash": "17c26590575d28118b783f6a534288ac38df50fae5b95826ee9d4976328ad687"
     },
+    "skill-inspector": {
+      "source": "NVIDIA/SkillSpector",
+      "sourceType": "github",
+      "skillPath": "skills/skill-inspector/SKILL.md",
+      "computedHash": "7ee4fd8df9f38aa5345b7145e0ac795c28724aab2440c461f35fbc853bbad0dc"
+    },
     "slideshow": {
       "source": "heygen-com/hyperframes",
       "sourceType": "github",
