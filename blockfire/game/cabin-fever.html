@@ -1297,7 +1297,6 @@ body.cine #hud>*:not(#nukeFlash),body.cine #touch,body.cine #airTab{visibility:h
   <div class="sheet cut">
     <div class="shopHead"><h2>ADMIN</h2><button class="btn sm ghost cut" id="admClose">Close</button></div>
     <div class="tabs" id="admTabs"><button class="chip on" data-adt="cfg">Game settings</button><button class="chip" data-adt="msg">Player messages</button><button class="chip" data-adt="err">Crash reports</button><button class="chip" data-adt="ban">Bans</button></div>
-    <div class="row" style="margin:6px 0"><a class="btn sm ghost cut" id="admHQ" href="https://cubefront-hq.floot.app/admin" target="_blank" rel="noopener">Open full dashboard ↗</a></div>
     <div id="admBody"></div>
   </div>
 </div>
@@ -1915,7 +1914,7 @@ async function adminClaim(code){if(!CS||CS.guest)return 'Sign in to your own acc
   if(r.ok){CS.admin=true;cloudKeep();return '';}const e=r.j&&r.j.error;
   return !r.status?'No connection to the server.':e==='code'?'That code is not right.':e==='taken'?'This game already has its admin.':e==='guest'?'Guest accounts cannot be admins. Create your account first.':'The server said no (error '+r.status+').';}
 /* ================= version, remote settings, crash reports ================= */
-const APP_VERSION='1.9.12',BUILD_ID='__BUILD_ID__';
+const APP_VERSION='1.9.13',BUILD_ID='__BUILD_ID__';
 const verNum=v=>String(v||'0').split('.').slice(0,3).map(n=>parseInt(n)||0).reduce((a,n)=>a*1000+n,0);
 let RCFG={};try{RCFG=JSON.parse(localStorage.getItem('blockfire.rcfg')||'{}')||{};}catch(e){RCFG={};}
 const feat=k=>!(RCFG.features&&RCFG.features[k]===false);
@@ -6752,7 +6751,6 @@ $('admBody').addEventListener('click',async e=>{const b=e.target.closest('button
   if(b.id==='admClear'){if(!confirm('Delete every crash report?'))return;const r=await cloudReq('/rest/v1/client_errors?id=gt.0',{method:'DELETE'});admMsg=r.ok?'Crash reports cleared.':'!Could not clear (error '+r.status+').';admLoad();}});
 /* push notifications (web build only): rental ending, daily gift, friend invite. The iPhone app needs Apple push later. */
 const PUSH={busy:false,on:null};
-const HQ_URL='https://cubefront-hq.floot.app/';
 const pushFn=()=>cloudCfg().url.replace(/\/$/,'')+'/functions/v1/push';
 const PUSH_READY=true; // the offline helper (sw.js) shows the notifications
 function pushOk(){try{return PUSH_READY&&!CAP&&!IN_CLAUDE&&cloudOn()&&location.protocol==='https:'&&'serviceWorker' in navigator&&'PushManager' in window&&'Notification' in window;}catch(e){return false;}}
@@ -6788,7 +6786,6 @@ function extraSetRows(){let h='';
     h+=`<div class="setrow"><span>Notifications<small class="setHint">Rental ending, daily gift, friend invites</small></span><div class="opts"><button class="chip ${PUSH.on?'on':''}" id="pushTog" data-v="1">On</button><button class="chip ${PUSH.on?'':'on'}" id="pushTog0">Off</button></div></div>`;}
   else if(pushIOSHint())h+=`<div class="setrow"><span>Notifications<small class="setHint">On iPhone: tap Share → Add to Home Screen, open the game from there, then turn them on here.</small></span></div>`;
   {const on=!profile.tutDone;h+=`<div class="setrow"><span>First-match guide<small class="setHint">Short how-to-play steps at the start of a match</small></span><div class="opts"><button class="chip ${on?'on':''}" data-tut="1">Show next match</button><button class="chip ${on?'':'on'}" data-tut="0">Off</button></div></div>`;}
-  h+=`<div class="setrow"><span>Website<small class="setHint">Leaderboards, patch notes and news</small></span><div class="opts"><a class="chip" href="${HQ_URL}" target="_blank" rel="noopener">Open Cubefront HQ</a></div></div>`;
   if(cloudOn()&&CS&&CS.uid){const hide=!!profile.hideLb;
     h+=`<div class="setrow"><span>Public leaderboard<small class="setHint">Show my name and stats on the game's website</small></span><div class="opts"><button class="chip ${hide?'':'on'}" data-lb="0">Show</button><button class="chip ${hide?'on':''}" data-lb="1">Hide</button></div></div>`;}
   return h;}
