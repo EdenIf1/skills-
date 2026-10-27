@@ -1,6 +1,0 @@
-boot ok http://127.0.0.1:39403/cabin-fever.html
-spawns {"waves":40,"minView":4.5,"minGap":2,"shortWaves":0,"closeWaves":0,"perSide":20,"worst":{"team":"blue","n":12,"minView":4.5,"minGap":2,"worst":{"team":"blue","x":46.5,"z":5.5,"yaw":-3.12,"view":4.5}}}
-loadCam {"samples":13440,"buried":0,"kingDy":6.6,"examples":[]}
-buildJump {"placed":2,"first":{"ok":true,"x":48,"y":6,"z":1,"pitch":-0.45},"second":{"ok":true,"x":48,"y":6,"z":2,"pitch":-0.45},"frames":150,"buried":0,"examples":[],"near":0.04,"jumped":3.93,"y0":[[48,6,1],[48,6,2]]}
-consoleErrors []
-RESULT ALL PASSED
